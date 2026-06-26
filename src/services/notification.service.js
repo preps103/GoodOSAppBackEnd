@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const database = require("../config/database");
+const secretService = require("./secret.service");
 
 function dbQuery(sql, params = []) {
   if (typeof database.query === "function") return database.query(sql, params);
@@ -38,20 +39,51 @@ async function getTemplate(templateKey) {
   return result.rows[0] || null;
 }
 
-function smtpConfigured() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+async function secretOrEnv(key) {
+  try {
+    const secretValue = await secretService.getSecretValue(key);
+    if (secretValue) return secretValue;
+  } catch (_) {
+    // Fall back to environment variables if Secrets V2 is unavailable.
+  }
+
+  return process.env[key] || null;
 }
 
-function createTransporter() {
-  if (!smtpConfigured()) return null;
+async function getSmtpConfig() {
+  const host = await secretOrEnv("SMTP_HOST");
+  const user = await secretOrEnv("SMTP_USER");
+  const pass = await secretOrEnv("SMTP_PASS");
+
+  if (!host || !user || !pass) return null;
+
+  return {
+    host,
+    port: Number((await secretOrEnv("SMTP_PORT")) || 587),
+    secure: String((await secretOrEnv("SMTP_SECURE")) || "false") === "true",
+    user,
+    pass,
+    fromEmail: (await secretOrEnv("MAIL_FROM")) || (await secretOrEnv("SMTP_FROM")) || "no-reply@goodos.app",
+    fromName: (await secretOrEnv("MAIL_FROM_NAME")) || "GoodOS",
+    replyTo: (await secretOrEnv("MAIL_REPLY_TO")) || null,
+  };
+}
+
+async function smtpConfigured() {
+  return Boolean(await getSmtpConfig());
+}
+
+async function createTransporter() {
+  const config = await getSmtpConfig();
+  if (!config) return null;
 
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: String(process.env.SMTP_SECURE || "false") === "true",
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: config.user,
+      pass: config.pass,
     },
   });
 }
@@ -227,8 +259,10 @@ async function queueEmail(input = {}) {
   }
 
   const emailId = randomId("emailq");
-  const fromEmail = input.fromEmail || process.env.MAIL_FROM || process.env.SMTP_FROM || "no-reply@goodos.app";
-  const fromName = input.fromName || process.env.MAIL_FROM_NAME || "GoodOS";
+  const smtpConfig = await getSmtpConfig();
+  const smtpReady = Boolean(smtpConfig);
+  const fromEmail = input.fromEmail || smtpConfig?.fromEmail || process.env.MAIL_FROM || process.env.SMTP_FROM || "no-reply@goodos.app";
+  const fromName = input.fromName || smtpConfig?.fromName || process.env.MAIL_FROM_NAME || "GoodOS";
 
   await dbQuery(
     `
@@ -265,14 +299,14 @@ async function queueEmail(input = {}) {
       input.toName || null,
       fromEmail,
       fromName,
-      input.replyToEmail || process.env.MAIL_REPLY_TO || null,
+      input.replyToEmail || smtpConfig?.replyTo || process.env.MAIL_REPLY_TO || null,
       input.subject || "GoodOS notification",
       input.bodyText || "",
       input.bodyHtml || null,
-      smtpConfigured() ? "smtp" : "internal-dry-run",
+      smtpReady ? "smtp" : "internal-dry-run",
       Number(input.priority || 100),
       JSON.stringify(input.payload || {}),
-      JSON.stringify({ smtpConfigured: smtpConfigured(), phase: "23A" }),
+      JSON.stringify({ smtpConfigured: smtpReady, source: smtpReady ? "secrets-v2-or-env" : "dry-run", phase: "25A" }),
       input.organizationId || "org_goodos",
       input.projectId || "proj_goodos_platform",
       input.environmentId || "env_goodos_production",
@@ -282,7 +316,7 @@ async function queueEmail(input = {}) {
   return {
     id: emailId,
     status: "pending",
-    provider: smtpConfigured() ? "smtp" : "internal-dry-run",
+    provider: smtpReady ? "smtp" : "internal-dry-run",
   };
 }
 
@@ -299,7 +333,7 @@ async function processEmailQueue(limit = 10) {
     [Math.min(Math.max(Number(limit || 10), 1), 50)]
   );
 
-  const transporter = createTransporter();
+  const transporter = await createTransporter();
   const processed = [];
 
   for (const email of rows.rows) {
@@ -373,7 +407,7 @@ async function processEmailQueue(limit = 10) {
   return {
     processedCount: processed.length,
     processed,
-    smtpConfigured: smtpConfigured(),
+    smtpConfigured: Boolean(transporter),
   };
 }
 
