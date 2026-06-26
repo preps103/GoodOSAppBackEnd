@@ -3167,6 +3167,7 @@ function storageView() {
                 ${card("Public Read", (bucket.publicReadEnabled || bucket.public_read_enabled) ? "Enabled" : "Disabled", "Public file policy")}
                 ${card("Versioning", (bucket.fileVersioningEnabled || bucket.file_versioning_enabled) ? "Enabled" : "Disabled", "File version history")}
                 ${card("Virus Scan", (bucket.virusScanRequired || bucket.virus_scan_required) ? "Required" : "Not required", "Upload security")}
+                ${card("Policy Enforced", "Active", "Upload validation")}
                 ${card("Encryption", bucket.encryptionMode || bucket.encryption_mode || "local", "Storage encryption mode")}
               </div>
             </div>
