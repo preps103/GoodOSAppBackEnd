@@ -671,7 +671,7 @@ function goodosRenderNow() {
   else if (state.view === "auth") view.innerHTML = usersView();
   else if (state.view === "apps") view.innerHTML = appsView();
   else if (state.view === "database") view.innerHTML = databaseView();
-  else if (state.view === "storage") view.innerHTML = storageView();
+  else if (state.view === "storage" || state.view === "storage-files") view.innerHTML = storageView();
   else if (state.view === "api") view.innerHTML = apiKeysView();
   else if (state.view === "webhooks") view.innerHTML = webhooksView();
   else if (state.view === "realtime") view.innerHTML = realtimeView();
@@ -962,13 +962,13 @@ window.loadLiveDatabase = async function loadLiveDatabase() {
     state.databaseLiveLoading = false;
     state.databaseLiveError = "";
 
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     state.databaseLiveError = error.message || "Failed to load database page data.";
     state.databaseLiveLoading = false;
     alert("Database refresh failed: " + state.databaseLiveError);
     console.error(error);
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   }
 };
 
@@ -987,7 +987,7 @@ window.loadDatabaseTableRows = async function loadDatabaseTableRows(tableName, o
   state.databaseRowSearch = search;
   state.databaseRowsLoading = true;
   state.databaseRowsError = "";
-  goodosRenderNow();
+  if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
 
   try {
     const response = await fetch(
@@ -1013,13 +1013,13 @@ window.loadDatabaseTableRows = async function loadDatabaseTableRows(tableName, o
     state.selectedDbPagination = data.pagination || {};
     state.databaseRowsLoading = false;
     state.databaseRowsError = "";
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     state.databaseRowsLoading = false;
     state.databaseRowsError = error.message || "Failed to load table rows.";
     alert("Database row load failed: " + state.databaseRowsError);
     console.error(error);
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   }
 };
 
@@ -1050,7 +1050,7 @@ window.closeDatabaseRows = function closeDatabaseRows() {
   state.databaseRowSearch = "";
   state.databaseRowsError = "";
   state.databaseRowsLoading = false;
-  goodosRenderNow();
+  if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
 };
 
 
@@ -1270,7 +1270,7 @@ window.runDatabaseQuery = async function runDatabaseQuery(savedQueryId = null, s
   state.databaseQuerySql = sqlText;
   state.databaseQueryLoading = true;
   state.databaseQueryError = "";
-  goodosRenderNow();
+  if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
 
   try {
     const response = await fetch("/api/admin/database/query/run-safe", {
@@ -1299,13 +1299,13 @@ window.runDatabaseQuery = async function runDatabaseQuery(savedQueryId = null, s
     state.databaseQueryLoading = false;
     state.databaseQueryError = "";
     await window.loadSavedDatabaseQueries();
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     state.databaseQueryLoading = false;
     state.databaseQueryError = error.message || "Query failed.";
     alert("Query failed: " + state.databaseQueryError);
     console.error(error);
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   }
 };
 
@@ -1344,7 +1344,7 @@ window.saveDatabaseQuery = async function saveDatabaseQuery() {
 
     alert("Query saved.");
     await window.loadSavedDatabaseQueries();
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     alert("Save query failed: " + (error.message || "Unknown error"));
     console.error(error);
@@ -1356,7 +1356,7 @@ window.loadSavedQueryIntoEditor = function loadSavedQueryIntoEditor(id) {
   if (!saved) return alert("Saved query not found.");
 
   state.databaseQuerySql = saved.sqlText || saved.sql_text || "";
-  goodosRenderNow();
+  if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
 };
 
 window.runSavedDatabaseQuery = function runSavedDatabaseQuery(id) {
@@ -1391,7 +1391,7 @@ window.deleteSavedDatabaseQuery = async function deleteSavedDatabaseQuery(id) {
 
     alert("Saved query deleted.");
     await window.loadSavedDatabaseQueries();
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     alert("Delete query failed: " + (error.message || "Unknown error"));
     console.error(error);
@@ -1542,7 +1542,7 @@ window.loadDatabaseTableMetadata = async function loadDatabaseTableMetadata(tabl
   state.selectedDbMetadataTable = tableName;
   state.selectedDbMetadataLoading = true;
   state.selectedDbMetadataError = "";
-  goodosRenderNow();
+  if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
 
   try {
     const response = await fetch("/api/admin/database/tables/" + encodeURIComponent(tableName) + "/metadata?t=" + Date.now(), {
@@ -1563,13 +1563,13 @@ window.loadDatabaseTableMetadata = async function loadDatabaseTableMetadata(tabl
     state.selectedDbMetadata = data;
     state.selectedDbMetadataLoading = false;
     state.selectedDbMetadataError = "";
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     state.selectedDbMetadataLoading = false;
     state.selectedDbMetadataError = error.message || "Failed to load table metadata.";
     alert("Table metadata failed: " + state.selectedDbMetadataError);
     console.error(error);
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   }
 };
 
@@ -2046,13 +2046,13 @@ window.loadLiveBackups = async function loadLiveBackups() {
     state.backupsLiveLoading = false;
     state.backupsLiveError = "";
 
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     state.backupsLiveError = error.message || "Failed to load backups page data.";
     state.backupsLiveLoading = false;
     alert("Backups refresh failed: " + state.backupsLiveError);
     console.error(error);
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   }
 };
 
@@ -2410,13 +2410,13 @@ window.loadLiveSettings = async function loadLiveSettings() {
     state.settingsLiveLoading = false;
     state.settingsLiveError = "";
 
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   } catch (error) {
     state.settingsLiveError = error.message || "Failed to load settings page data.";
     state.settingsLiveLoading = false;
     alert("Settings refresh failed: " + state.settingsLiveError);
     console.error(error);
-    goodosRenderNow();
+    if (typeof goodosRenderNow === 'function') goodosRenderNow(); else if (typeof render === 'function') render();
   }
 };
 
@@ -2736,7 +2736,7 @@ function render() {
   else if (state.view === "auth") view.innerHTML = usersView();
   else if (state.view === "apps") view.innerHTML = appsView();
   else if (state.view === "database") view.innerHTML = databaseView();
-  else if (state.view === "storage") view.innerHTML = storageView();
+  else if (state.view === "storage" || state.view === "storage-files") view.innerHTML = storageView();
   else if (state.view === "api") view.innerHTML = apiKeysView();
   else if (state.view === "webhooks") view.innerHTML = webhooksView();
   else if (state.view === "realtime") view.innerHTML = realtimeView();
@@ -2947,6 +2947,59 @@ document.getElementById("searchInput").addEventListener("input", event => {
 });
 
 checkSession();
+
+window.goodosRenderStorageSafe = function goodosRenderStorageSafe() {
+  try {
+    const target = document.getElementById("view");
+    if (target && typeof storageView === "function") {
+      target.innerHTML = storageView();
+    } else if (typeof render === "function") {
+      render();
+    }
+  } catch (error) {
+    console.error("Storage render failed:", error);
+    alert("Storage render failed: " + (error.message || "Unknown error"));
+  }
+};
+
+window.openStorageFilesView = function openStorageFilesView() {
+  try {
+    state.view = "storage";
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.view === "storage");
+    });
+
+    window.goodosRenderStorageSafe();
+
+    setTimeout(() => {
+      if (typeof window.loadStorageManager === "function") {
+        window.loadStorageManager();
+      } else if (typeof window.loadLiveStorage === "function") {
+        window.loadLiveStorage();
+      }
+    }, 150);
+  } catch (error) {
+    console.error("Storage navigation failed:", error);
+    alert("Storage navigation failed: " + (error.message || "Unknown error"));
+  }
+};
+
+document.addEventListener("click", function goodosStorageNavClickFix(event) {
+  const button = event.target.closest('[data-view="storage"], [data-view="storage-files"]');
+
+  if (!button) return;
+
+  const label = (button.textContent || "").trim().toLowerCase();
+
+  if (!label.includes("storage")) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  window.openStorageFilesView();
+}, true);
+
 </script>
 </body>
 </html>
