@@ -574,32 +574,122 @@ async function checkSession() {
 }
 
 async function loadData() {
-  const payload = await request("/api/admin/console-data");
-  const data = payload.data || payload;
+  try {
+    const payload = await request("/api/admin/console-data");
+    const data = payload.data || payload;
 
-  state.overview = data.overview || {};
-  state.apps = data.apps || [];
-  state.users = data.users || [];
-  state.tables = data.tables || [];
-  state.memberships = data.memberships || [];
-  state.logs = Array.isArray(data.logs) ? data.logs : (data.logs?.logs || []);
-  state.backups = Array.isArray(data.backups) ? data.backups : (data.backups?.backups || []);
-  state.security = data.security || {};
-  state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : (data.apiKeys?.apiKeys || []);
-  state.webhooks = Array.isArray(data.webhooks)
-    ? data.webhooks
-    : (Array.isArray(data.webhooks?.webhooks) ? data.webhooks.webhooks : []);
+    state.overview = data.overview || {};
+    state.apps = data.apps || [];
+    state.users = data.users || [];
+    state.tables = data.tables || [];
+    state.memberships = data.memberships || [];
+    state.logs = Array.isArray(data.logs) ? data.logs : (data.logs?.logs || []);
+    state.backups = Array.isArray(data.backups) ? data.backups : (data.backups?.backups || []);
+    state.security = data.security || {};
+    state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : (data.apiKeys?.apiKeys || []);
+    state.webhooks = Array.isArray(data.webhooks)
+      ? data.webhooks
+      : (Array.isArray(data.webhooks?.webhooks) ? data.webhooks.webhooks : []);
 
-  state.webhookDeliveries = Array.isArray(data.webhookDeliveries)
-    ? data.webhookDeliveries
-    : (
-        Array.isArray(data.webhookDeliveries?.deliveries)
-          ? data.webhookDeliveries.deliveries
-          : (Array.isArray(data.deliveries) ? data.deliveries : [])
-      );
-  state.buckets = Array.isArray(data.buckets) ? data.buckets : (data.buckets?.buckets || []);
-  state.events = Array.isArray(data.events) ? data.events : (data.events?.events || []);
+    state.webhookDeliveries = Array.isArray(data.webhookDeliveries)
+      ? data.webhookDeliveries
+      : (
+          Array.isArray(data.webhookDeliveries?.deliveries)
+            ? data.webhookDeliveries.deliveries
+            : (Array.isArray(data.deliveries) ? data.deliveries : [])
+        );
+
+    state.buckets = Array.isArray(data.buckets) ? data.buckets : (data.buckets?.buckets || []);
+    state.events = Array.isArray(data.events) ? data.events : (data.events?.events || []);
+    return;
+  } catch (consoleDataError) {
+    console.warn("Primary console-data load failed. Falling back to live page routes:", consoleDataError.message);
+  }
+
+  try {
+    const dashboardPayload = await request("/api/admin/dashboard-page-data");
+    const dashboardData = dashboardPayload.data || dashboardPayload;
+    const counts = dashboardData.counts || {};
+    const runtime = dashboardData.runtime || {};
+
+    state.dashboardCounts = counts;
+    state.dashboardApps = Array.isArray(dashboardData.apps) ? dashboardData.apps : [];
+    state.dashboardRuntime = runtime;
+
+    state.overview = {
+      status: "operational",
+      environment: runtime.environment || "production",
+      version: runtime.version || "1.0.0",
+      runtime: {
+        node: runtime.node || "-",
+        uptimeFormatted: runtime.uptime || "-",
+        uptimeSeconds: runtime.uptimeSeconds || 0,
+        memoryMb: {
+          heapUsed: runtime.memoryHeapMb || "-"
+        }
+      },
+      stats: {
+        users: counts.users || 0,
+        activeApps: counts.apps || 0,
+        activeMemberships: counts.memberships || 0,
+        sessions: counts.sessions || 0,
+        apiKeys: counts.apiKeys || 0,
+        webhooks: counts.webhooks || 0,
+        buckets: counts.storageBuckets || 0,
+        files: counts.storageFiles || 0
+      }
+    };
+
+    state.apps = state.dashboardApps;
+    state.users = Array.isArray(state.users) ? state.users : [];
+    state.tables = Array.isArray(state.tables) ? state.tables : [];
+    state.memberships = Array.isArray(state.memberships) ? state.memberships : [];
+    state.logs = Array.isArray(state.logs) ? state.logs : [];
+    state.backups = Array.isArray(state.backups) ? state.backups : [];
+    state.security = state.security || {};
+    state.events = Array.isArray(state.events) ? state.events : [];
+
+    try {
+      const apiPayload = await request("/api/admin/api-keys-page-data");
+      const apiData = apiPayload.data || apiPayload;
+      state.apiKeys = Array.isArray(apiData.apiKeys) ? apiData.apiKeys : [];
+    } catch (error) {
+      state.apiKeys = Array.isArray(state.apiKeys) ? state.apiKeys : [];
+    }
+
+    try {
+      const storagePayload = await request("/api/admin/storage-page-data");
+      const storageData = storagePayload.data || storagePayload;
+      state.buckets = Array.isArray(storageData.buckets) ? storageData.buckets : [];
+      state.storageBuckets = state.buckets;
+      state.storageFiles = Array.isArray(storageData.files) ? storageData.files : [];
+      state.storageSignedUrls = Array.isArray(storageData.signedUrls) ? storageData.signedUrls : [];
+    } catch (error) {
+      state.buckets = Array.isArray(state.buckets) ? state.buckets : [];
+    }
+
+    try {
+      const webhookPayload = await request("/api/admin/webhooks-page-data");
+      const webhookData = webhookPayload.data || webhookPayload;
+      state.webhooks = Array.isArray(webhookData.webhooks) ? webhookData.webhooks : [];
+      state.webhookDeliveries = Array.isArray(webhookData.webhookDeliveries) ? webhookData.webhookDeliveries : [];
+    } catch (error) {
+      state.webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
+      state.webhookDeliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
+    }
+  } catch (fallbackError) {
+    console.error("Fallback dashboard load failed:", fallbackError);
+    state.overview = {
+      status: "data-error",
+      environment: "production",
+      version: "1.0.0",
+      stats: {},
+      runtime: {},
+      error: fallbackError.message || "Dashboard data failed to load."
+    };
+  }
 }
+
 
 function card(label, value, sub = "") {
   return '<div class="card"><div class="label">' + label + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>';
@@ -662,9 +752,9 @@ function dashboard() {
       ${moduleCard("Auth / Users", "Production SSO, users, sessions, invites, and workspace roles.", "Live")}
       ${moduleCard("App Registry", "Manage GoodOS apps, domains, status, and membership rules.", "Live")}
       ${moduleCard("Database Browser", "Inspect backend tables, row counts, and schema metadata.", "Live")}
-      ${moduleCard("Storage / Files", `${state.buckets.length} buckets configured. Signed URLs and upload handling come next.`, state.buckets.length ? "Live" : "Next")}
-      ${moduleCard("API Keys", `${state.apiKeys.length} active or historical backend keys.`, state.apiKeys.length ? "Live" : "Next")}
-      ${moduleCard("Webhooks", `${state.webhooks.length} webhook endpoints configured.`, state.webhooks.length ? "Live" : "Next")}
+      ${moduleCard("Storage / Files", `${state.buckets.length || state.overview?.stats?.buckets || 0} buckets configured. Signed URLs and upload handling are active.`, (state.buckets.length || state.overview?.stats?.buckets) ? "Live" : "Next")}
+      ${moduleCard("API Keys", `${state.apiKeys.length || state.overview?.stats?.apiKeys || 0} active or historical backend keys.`, (state.apiKeys.length || state.overview?.stats?.apiKeys) ? "Live" : "Next")}
+      ${moduleCard("Webhooks", `${state.webhooks.length || state.overview?.stats?.webhooks || 0} webhook endpoints configured.`, (state.webhooks.length || state.overview?.stats?.webhooks) ? "Live" : "Next")}
     </div>
   `;
 }
