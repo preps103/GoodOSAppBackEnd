@@ -730,7 +730,19 @@ router.post("/storage/buckets/:bucketId/files", upload.single("file"), async (re
 
     const bucketResult = await dbQuery(
       `
-        SELECT id, name, status
+        SELECT
+          id,
+          name,
+          status,
+          visibility,
+          max_file_size_bytes,
+          allowed_mime_types,
+          allowed_extensions,
+          public_read_enabled,
+          signed_url_ttl_seconds,
+          file_versioning_enabled,
+          virus_scan_required,
+          encryption_mode
         FROM backend_storage_buckets
         WHERE id = $1
         LIMIT 1
@@ -752,6 +764,102 @@ router.post("/storage/buckets/:bucketId/files", upload.single("file"), async (re
 
     if (!req.file) {
       return fail(res, "No file uploaded", 400);
+    }
+
+    const fileSize = Number(req.file.size || 0);
+    const maxFileSizeBytes = Number(bucket.max_file_size_bytes || 10485760);
+    const mimeType = String(req.file.mimetype || "application/octet-stream").toLowerCase();
+    const extension = path.extname(String(req.file.originalname || "")).toLowerCase();
+
+    const allowedMimeTypes = Array.isArray(bucket.allowed_mime_types)
+      ? bucket.allowed_mime_types.map((item) => String(item || "").toLowerCase()).filter(Boolean)
+      : [];
+
+    const allowedExtensions = Array.isArray(bucket.allowed_extensions)
+      ? bucket.allowed_extensions.map((item) => String(item || "").toLowerCase()).filter(Boolean)
+      : [];
+
+    const blockUpload = async (message, code) => {
+      let removedTempFile = false;
+
+      if (req.file?.path && fs.existsSync(req.file.path)) {
+        try {
+          fs.unlinkSync(req.file.path);
+          removedTempFile = true;
+        } catch {}
+      }
+
+      try {
+        await dbQuery(
+          `
+            INSERT INTO backend_admin_audit_logs (
+              id,
+              actor,
+              action,
+              target_type,
+              target_id,
+              after_json,
+              ip_address,
+              user_agent
+            )
+            VALUES ($1, $2, 'storage.policy.violation', 'storage_bucket', $3, $4::jsonb, $5, $6)
+          `,
+          [
+            `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+            req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+            bucket.id,
+            JSON.stringify({
+              code,
+              message,
+              removedTempFile,
+              file: {
+                originalname: req.file?.originalname || null,
+                mimetype: req.file?.mimetype || null,
+                size: req.file?.size || 0,
+                extension,
+              },
+              policy: {
+                maxFileSizeBytes,
+                allowedMimeTypes,
+                allowedExtensions,
+                virusScanRequired: Boolean(bucket.virus_scan_required),
+              },
+            }),
+            req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+            req.headers["user-agent"] || null,
+          ]
+        );
+      } catch {}
+
+      return fail(res, message, 400);
+    };
+
+    if (fileSize > maxFileSizeBytes) {
+      return blockUpload(
+        `File exceeds bucket max size. Max ${maxFileSizeBytes} bytes, received ${fileSize} bytes.`,
+        "storage_policy_size_exceeded"
+      );
+    }
+
+    if (allowedMimeTypes.length && !allowedMimeTypes.includes(mimeType)) {
+      return blockUpload(
+        `File MIME type is not allowed for this bucket: ${mimeType}`,
+        "storage_policy_mime_blocked"
+      );
+    }
+
+    if (allowedExtensions.length && !allowedExtensions.includes(extension)) {
+      return blockUpload(
+        `File extension is not allowed for this bucket: ${extension || "none"}`,
+        "storage_policy_extension_blocked"
+      );
+    }
+
+    if (bucket.virus_scan_required) {
+      return blockUpload(
+        "This bucket requires virus scanning, but no scanner is connected yet.",
+        "storage_policy_virus_scan_required"
+      );
     }
 
     const bucketFolderName = safeStorageName(bucket.name, "bucket");
@@ -778,18 +886,21 @@ router.post("/storage/buckets/:bucketId/files", upload.single("file"), async (re
           bucket_id,
           filename,
           original_filename,
+          display_name,
           mime_type,
           size_bytes,
           storage_path,
+          folder_path,
           status,
           created_by
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, '', 'active', $9)
       `,
       [
         fileId,
         bucket.id,
         storedFilename,
+        originalFilename,
         originalFilename,
         req.file.mimetype || "application/octet-stream",
         req.file.size || 0,
@@ -814,6 +925,7 @@ router.post("/storage/buckets/:bucketId/files", upload.single("file"), async (re
         bucketName: bucket.name,
         filename: storedFilename,
         originalFilename,
+        displayName: originalFilename,
         mimeType: req.file.mimetype || "application/octet-stream",
         sizeBytes: req.file.size || 0,
         status: "active",
@@ -847,18 +959,32 @@ router.get("/storage/signed-urls", async (req, res) => {
 router.post("/storage/files/:fileId/signed-url", async (req, res) => {
   try {
     const fileId = String(req.params.fileId || "").trim();
-    const expiresMinutes = Math.max(1, Math.min(10080, Number(req.body?.expiresMinutes || 60)));
+    const requestedMinutesRaw = Number(
+      req.body?.expiresMinutes ||
+      req.body?.expiresInMinutes ||
+      60
+    );
+
+    const requestedMinutes = Math.max(1, Math.min(10080, requestedMinutesRaw));
     const maxDownloads = Math.max(1, Math.min(1000, Number(req.body?.maxDownloads || 1)));
 
     const fileResult = await dbQuery(
       `
         SELECT
-          id,
-          filename,
-          original_filename AS "originalFilename",
-          status
-        FROM backend_storage_files
-        WHERE id = $1
+          f.id,
+          f.bucket_id,
+          f.filename,
+          f.original_filename AS "originalFilename",
+          f.display_name AS "displayName",
+          f.status,
+          f.deleted_at,
+          f.file_deleted,
+          b.name AS "bucketName",
+          b.signed_url_ttl_seconds,
+          b.visibility AS "bucketVisibility"
+        FROM backend_storage_files f
+        JOIN backend_storage_buckets b ON b.id = f.bucket_id
+        WHERE f.id = $1
         LIMIT 1
       `,
       [fileId]
@@ -867,12 +993,52 @@ router.post("/storage/files/:fileId/signed-url", async (req, res) => {
     const file = fileResult.rows[0];
 
     if (!file) return fail(res, "File not found", 404);
-    if (file.status !== "active") return fail(res, "File is not active", 400);
+
+    if (file.deleted_at || file.file_deleted) {
+      try {
+        await dbQuery(
+          `
+            INSERT INTO backend_admin_audit_logs (
+              id,
+              actor,
+              action,
+              target_type,
+              target_id,
+              after_json,
+              ip_address,
+              user_agent
+            )
+            VALUES ($1, $2, 'storage.policy.violation', 'storage_file', $3, $4::jsonb, $5, $6)
+          `,
+          [
+            `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+            req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+            fileId,
+            JSON.stringify({
+              code: "storage_signed_url_deleted_file_blocked",
+              message: "Cannot create a signed URL for a deleted file.",
+            }),
+            req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+            req.headers["user-agent"] || null,
+          ]
+        );
+      } catch {}
+
+      return fail(res, "Cannot create a signed URL for a deleted file.", 410);
+    }
+
+    if (file.status !== "active") {
+      return fail(res, "File is not active", 400);
+    }
+
+    const ttlSeconds = Number(file.signed_url_ttl_seconds || 3600);
+    const maxPolicyMinutes = Math.max(1, Math.floor(ttlSeconds / 60));
+    const expiresMinutes = Math.min(requestedMinutes, maxPolicyMinutes);
+    const expiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000);
 
     const id = `surl_${crypto.randomUUID().replace(/-/g, "")}`;
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = hashStorageToken(token);
-    const expiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000);
 
     const createdBy =
       req.user?.id ||
@@ -902,6 +1068,8 @@ router.post("/storage/files/:fileId/signed-url", async (req, res) => {
         fileId: file.id,
         expiresAt,
         maxDownloads,
+        requestedMinutes,
+        enforcedMinutes: expiresMinutes,
       });
     }
 
@@ -913,6 +1081,9 @@ router.post("/storage/files/:fileId/signed-url", async (req, res) => {
         expiresAt,
         maxDownloads,
         status: "active",
+        requestedMinutes,
+        enforcedMinutes: expiresMinutes,
+        bucketTtlSeconds: ttlSeconds,
       },
       warning: "Anyone with this URL can download the file until it expires or reaches its download limit.",
     });
