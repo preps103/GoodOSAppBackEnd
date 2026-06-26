@@ -2729,6 +2729,313 @@ function settingsView() {
 }
 
 
+
+window.loadStorageManager = async function loadStorageManager() {
+  try {
+    const response = await fetch("/api/admin/storage-manager-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Storage manager failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.storageBuckets = Array.isArray(data.buckets) ? data.buckets : [];
+    state.storageFiles = Array.isArray(data.files) ? data.files : [];
+    state.storageSignedUrls = Array.isArray(data.signedUrls) ? data.signedUrls : [];
+    state.storageBucketStats = data.bucketStats || {};
+    state.storageCounts = data.counts || {};
+    state.storageManagerLoaded = true;
+    state.storageManagerLoading = false;
+    state.storageManagerError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.storageManagerError = error.message || "Failed to load storage manager.";
+    state.storageManagerLoading = false;
+    alert("Storage refresh failed: " + state.storageManagerError);
+    console.error(error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshStorageManagerNow = async function refreshStorageManagerNow() {
+  return window.loadStorageManager();
+};
+
+window.selectStorageBucket = function selectStorageBucket(bucketId) {
+  state.selectedStorageBucket = bucketId;
+
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+};
+
+window.uploadStorageFile = function uploadStorageFile(bucketId) {
+  if (!bucketId) return alert("Missing bucket id.");
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.multiple = false;
+
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/admin/storage/buckets/" + encodeURIComponent(bucketId) + "/files", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+        body: formData
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload.success === false) {
+        throw new Error(payload.message || "Upload failed with status " + response.status);
+      }
+
+      alert("File uploaded.");
+      state.selectedStorageBucket = bucketId;
+      await window.loadStorageManager();
+    } catch (error) {
+      alert("Upload failed: " + (error.message || "Unknown error"));
+      console.error(error);
+    }
+  };
+
+  input.click();
+};
+
+window.downloadStorageFile = function downloadStorageFile(fileId) {
+  if (!fileId) return alert("Missing file id.");
+  window.open("/api/admin/storage/files/" + encodeURIComponent(fileId) + "/download", "_blank");
+};
+
+window.createStorageSignedUrl = async function createStorageSignedUrl(fileId) {
+  if (!fileId) return alert("Missing file id.");
+
+  const minutesText = prompt("Signed URL expiration in minutes:", "60");
+  if (minutesText === null) return;
+
+  const expiresInMinutes = Number(minutesText || 60);
+
+  try {
+    const response = await fetch("/api/admin/storage/files/" + encodeURIComponent(fileId) + "/signed-url", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ expiresInMinutes })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Signed URL failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    const signedUrl = data.url || data.signedUrl || data.signed_url || data.downloadUrl || "";
+
+    alert("Signed URL created. Copy it now:\n\n" + signedUrl);
+    await window.loadStorageManager();
+  } catch (error) {
+    alert("Signed URL failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.createStorageBucketSafe = async function createStorageBucketSafe() {
+  const name = prompt("Bucket name:", "uploads");
+  if (!name) return;
+
+  const visibility = prompt("Visibility: private or public", "private") || "private";
+
+  try {
+    const response = await fetch("/api/admin/storage/buckets/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, visibility })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create bucket failed with status " + response.status);
+    }
+
+    alert("Bucket created.");
+    await window.loadStorageManager();
+  } catch (error) {
+    alert("Create bucket failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function storageView() {
+  if (!state.storageManagerLoaded && !state.storageManagerLoading) {
+    state.storageManagerLoading = true;
+    setTimeout(() => window.loadStorageManager(), 100);
+  }
+
+  const buckets = Array.isArray(state.storageBuckets) ? state.storageBuckets : (Array.isArray(state.buckets) ? state.buckets : []);
+  const files = Array.isArray(state.storageFiles) ? state.storageFiles : [];
+  const counts = state.storageCounts || {};
+  const bucketStats = state.storageBucketStats || {};
+  const selectedBucket = state.selectedStorageBucket || (buckets[0]?.id || "");
+
+  const filesForBucket = (bucketId) => files.filter(file => {
+    return String(file.bucketId || file.bucket_id || "") === String(bucketId);
+  });
+
+  const inlineFileManager = (bucket) => {
+    const bucketId = bucket.id;
+    if (selectedBucket !== bucketId) return "";
+
+    const bucketFiles = filesForBucket(bucketId);
+
+    return `
+      <tr>
+        <td colspan="6" style="padding:0;">
+          <div class="card" style="margin:12px 0 18px 0; border-color:rgba(96,165,250,.35); background:rgba(96,165,250,.04);">
+            <div class="section-head">
+              <h3>Files: ${safeText(bucket.name || bucketId)}</h3>
+              <div>
+                <button class="logout" onclick="window.uploadStorageFile('${safeText(bucketId)}')">Upload File</button>
+                <button class="logout" onclick="window.refreshStorageManagerNow()">Refresh Files</button>
+              </div>
+            </div>
+
+            <div class="grid cards" style="margin-bottom:18px;">
+              ${card("Files", bucketFiles.length, "Files in this bucket")}
+              ${card("Bytes", bucketFiles.reduce((sum, file) => sum + Number(file.sizeBytes || file.size_bytes || 0), 0), "Tracked size")}
+              ${card("Visibility", bucket.visibility || "private", "Bucket policy")}
+              ${card("Status", bucket.status || "active", "Bucket status")}
+            </div>
+
+            <div style="overflow:auto; max-height:520px; border:1px solid rgba(255,255,255,.08); border-radius:14px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>File</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${bucketFiles.map(file => {
+                    const fileName = file.originalName || file.original_name || file.filename || file.fileName || file.file_name || file.name || file.id;
+                    const mimeType = file.mimeType || file.mime_type || file.type || "-";
+                    const size = file.sizeBytes || file.size_bytes || 0;
+                    const created = file.createdAt || file.created_at;
+
+                    return `
+                      <tr>
+                        <td><strong>${safeText(fileName || "-")}</strong><div class="muted">${safeText(file.id || "")}</div></td>
+                        <td>${safeText(mimeType)}</td>
+                        <td>${safeText(String(size))}</td>
+                        <td><span class="badge">${safeText(file.status || "active")}</span></td>
+                        <td>${created ? new Date(created).toLocaleString() : "-"}</td>
+                        <td>
+                          <button class="logout" onclick="window.downloadStorageFile('${safeText(file.id)}')">Download</button>
+                          <button class="logout" onclick="window.createStorageSignedUrl('${safeText(file.id)}')">Signed URL</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join("") || '<tr><td colspan="6" class="muted">No files in this bucket yet. Click Upload File.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  };
+
+  return `
+    ${hero("Storage / Files", "Buckets, uploads, signed URLs, downloads, and file lifecycle controls.")}
+    <div class="section-head">
+      <h3>Storage Buckets</h3>
+      <div>
+        <button class="logout" onclick="window.refreshStorageManagerNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createStorageBucketSafe()">Create Bucket</button>
+      </div>
+    </div>
+
+    ${state.storageManagerLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live storage data...</p></div>` : ""}
+    ${state.storageManagerError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Storage error: ${safeText(state.storageManagerError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Buckets", counts.buckets ?? buckets.length, "Active storage buckets")}
+      ${card("Files", counts.files ?? files.length, "Tracked files")}
+      ${card("Storage Bytes", counts.totalBytes ?? files.reduce((sum, file) => sum + Number(file.sizeBytes || file.size_bytes || 0), 0), "Total file bytes")}
+      ${card("Signed URLs", counts.signedUrls ?? (state.storageSignedUrls || []).length, "Private file delivery")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Buckets</h3><span class="badge">File Manager</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Bucket</th>
+            <th>Visibility</th>
+            <th>Files</th>
+            <th>Bytes</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${buckets.map(bucket => {
+            const bucketId = bucket.id;
+            const stats = bucketStats[bucketId] || {};
+            const isSelected = selectedBucket === bucketId;
+
+            return `
+              <tr style="${isSelected ? "background:rgba(96,165,250,.08);" : ""}">
+                <td><strong>${safeText(bucket.name || bucketId)}</strong><div class="muted">${safeText(bucketId)}</div></td>
+                <td>${safeText(bucket.visibility || "private")}</td>
+                <td>${safeText(String(stats.fileCount ?? filesForBucket(bucketId).length))}</td>
+                <td>${safeText(String(stats.totalBytes ?? 0))}</td>
+                <td><span class="badge">${safeText(bucket.status || "active")}</span></td>
+                <td>
+                  <button class="logout" onclick="window.selectStorageBucket('${safeText(bucketId)}')">${isSelected ? "Open" : "View Files"}</button>
+                  <button class="logout" onclick="window.uploadStorageFile('${safeText(bucketId)}')">Upload</button>
+                </td>
+              </tr>
+              ${inlineFileManager(bucket)}
+            `;
+          }).join("") || '<tr><td colspan="6" class="muted">No buckets created yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function render() {
   const view = document.getElementById("view");
 
