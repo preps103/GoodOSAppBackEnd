@@ -1920,6 +1920,37 @@ router.get("/webhook-deliveries-live", async (req, res) => {
 });
 
 
+
+router.get("/webhook-test-receipts-page-data", async (req, res) => {
+  try {
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          method,
+          path,
+          headers,
+          body,
+          query,
+          ip,
+          created_at AS "createdAt"
+        FROM backend_webhook_test_receipts
+        ORDER BY created_at DESC
+        LIMIT 250
+      `
+    );
+
+    return ok(res, {
+      receipts: result.rows,
+      counts: {
+        receipts: result.rows.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load webhook receiver receipts", 500, error.message);
+  }
+});
+
 router.get("/webhooks-page-data", async (req, res) => {
   try {
     const webhooks = await dbQuery(`

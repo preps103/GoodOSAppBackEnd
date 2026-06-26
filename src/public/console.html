@@ -3300,6 +3300,23 @@ window.loadLiveWebhooks = async function loadLiveWebhooks() {
     state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : [];
     state.webhookDeliveries = Array.isArray(data.deliveries) ? data.deliveries : (Array.isArray(data.webhookDeliveries) ? data.webhookDeliveries : []);
     state.webhookCounts = data.counts || {};
+
+    try {
+      const receiptsResponse = await fetch("/api/admin/webhook-test-receipts-page-data?t=" + Date.now(), {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+
+      const receiptsPayload = await receiptsResponse.json().catch(() => ({}));
+      const receiptsData = receiptsPayload.data || receiptsPayload;
+      state.webhookReceipts = Array.isArray(receiptsData.receipts) ? receiptsData.receipts : [];
+      state.webhookReceiptCounts = receiptsData.counts || {};
+    } catch (receiptError) {
+      state.webhookReceipts = Array.isArray(state.webhookReceipts) ? state.webhookReceipts : [];
+      state.webhookReceiptCounts = state.webhookReceiptCounts || {};
+    }
     state.webhooksLoaded = true;
     state.webhooksLoading = false;
     state.webhooksError = "";
@@ -3591,6 +3608,34 @@ window.processWebhookRetries = async function processWebhookRetries() {
   }
 };
 
+
+window.sendWebhookSystemTestEvent = async function sendWebhookSystemTestEvent() {
+  try {
+    const response = await fetch("/api/admin/events/test", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Test event failed with status " + response.status);
+    }
+
+    alert("Test event created. Matching active webhooks will receive it.");
+    setTimeout(() => window.loadLiveWebhooks(), 2500);
+  } catch (error) {
+    alert("Test event failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function webhooksView() {
   if (!state.webhooksLoaded && !state.webhooksLoading) {
     state.webhooksLoading = true;
@@ -3599,6 +3644,7 @@ function webhooksView() {
 
   const webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
   const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
+  const receipts = Array.isArray(state.webhookReceipts) ? state.webhookReceipts : [];
   const counts = state.webhookCounts || {};
   const activeWebhooks = webhooks.filter(item => item.status === "active");
   const failedDeliveries = deliveries.filter(item => item.status === "failed");
@@ -3609,6 +3655,7 @@ function webhooksView() {
       <h3>Webhook Endpoints</h3>
       <div>
         <button class="logout" onclick="window.refreshWebhooksNow()">Refresh Data</button>
+        <button class="logout" onclick="window.sendWebhookSystemTestEvent()">Send Test Event</button>
         <button class="logout" onclick="window.processWebhookRetries()">Process Retries</button>
         <button class="logout" onclick="window.createWebhook()">Create Webhook</button>
       </div>
@@ -3622,6 +3669,7 @@ function webhooksView() {
       ${card("Active", counts.active ?? activeWebhooks.length, "Receiving events")}
       ${card("Deliveries", counts.deliveries ?? deliveries.length, "Logged delivery attempts")}
       ${card("Failed", counts.failed ?? failedDeliveries.length, "Needs attention")}
+      ${card("Receipts", receipts.length, "Built-in receiver logs")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -3689,6 +3737,33 @@ function webhooksView() {
         </tbody>
       </table>
     </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Built-In Receiver Receipts</h3><span class="badge">Incoming Webhooks</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Receipt</th>
+            <th>Method</th>
+            <th>Path</th>
+            <th>IP</th>
+            <th>Received</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${receipts.slice(0, 20).map(receipt => `
+            <tr>
+              <td><strong>${safeText(receipt.id || "-")}</strong></td>
+              <td>${safeText(receipt.method || "-")}</td>
+              <td>${safeText(receipt.path || "-")}</td>
+              <td>${safeText(receipt.ip || "-")}</td>
+              <td>${receipt.createdAt ? new Date(receipt.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No built-in receiver receipts yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
   `;
 }
 
