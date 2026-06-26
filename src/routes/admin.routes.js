@@ -4991,4 +4991,186 @@ router.post("/storage/files/:fileId/delete-safe", async (req, res) => {
   }
 });
 
+
+function normalizeStorageFolderPath(value) {
+  let folder = String(value || "").trim();
+
+  folder = folder.replace(/^\/+|\/+$/g, "");
+  folder = folder.replace(/\/+/g, "/");
+
+  if (!folder) return "";
+
+  const parts = folder.split("/");
+
+  for (const part of parts) {
+    if (!/^[a-zA-Z0-9._-]{1,80}$/.test(part)) {
+      const error = new Error("Invalid folder path. Use letters, numbers, dashes, underscores, dots, and slashes only.");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  return folder;
+}
+
+function normalizeStorageDisplayName(value) {
+  const name = String(value || "").trim();
+
+  if (!name) {
+    const error = new Error("File name is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (name.length > 180 || /[\/\\]/.test(name)) {
+    const error = new Error("Invalid file name. Do not use slashes and keep it under 180 characters.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return name;
+}
+
+router.post("/storage/files/:fileId/rename-safe", async (req, res) => {
+  try {
+    const fileId = String(req.params.fileId || "").trim();
+    const displayName = normalizeStorageDisplayName(req.body?.displayName);
+
+    if (!fileId) return fail(res, "File id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_storage_files
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [fileId]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "File not found", 404);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_storage_files
+        SET
+          display_name = $2,
+          metadata_json = COALESCE(metadata_json, '{}'::jsonb) || jsonb_build_object('renamedAt', NOW(), 'renamedBy', $3)
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        fileId,
+        displayName,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'storage.file.rename', 'storage_file', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        fileId,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      file: result.rows[0],
+      message: "File renamed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to rename storage file", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/storage/files/:fileId/move-safe", async (req, res) => {
+  try {
+    const fileId = String(req.params.fileId || "").trim();
+    const folderPath = normalizeStorageFolderPath(req.body?.folderPath);
+
+    if (!fileId) return fail(res, "File id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_storage_files
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [fileId]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "File not found", 404);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_storage_files
+        SET
+          folder_path = $2,
+          metadata_json = COALESCE(metadata_json, '{}'::jsonb) || jsonb_build_object('movedAt', NOW(), 'movedBy', $3)
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        fileId,
+        folderPath,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'storage.file.move', 'storage_file', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        fileId,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      file: result.rows[0],
+      message: "File moved.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to move storage file", error.statusCode || 500, error.message);
+  }
+});
+
 module.exports = router;
