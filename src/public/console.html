@@ -822,31 +822,185 @@ function backupsView() {
   `;
 }
 
+
+window.loadLiveStorage = async function loadLiveStorage() {
+  try {
+    const response = await fetch("/api/admin/storage-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Storage refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.storageBuckets = Array.isArray(data.buckets) ? data.buckets : [];
+    state.storageFiles = Array.isArray(data.files) ? data.files : [];
+    state.storageSignedUrls = Array.isArray(data.signedUrls) ? data.signedUrls : [];
+    state.storageLiveLoaded = true;
+    state.storageLiveLoading = false;
+    state.storageLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.storageLiveError = error.message || "Failed to load storage page data.";
+    state.storageLiveLoading = false;
+    alert("Storage refresh failed: " + state.storageLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshStorageNow = async function refreshStorageNow() {
+  return window.loadLiveStorage();
+};
+
+window.createStorageBucket = async function createStorageBucket() {
+  const name = prompt("Bucket name:", "goodfleet");
+  if (!name) return;
+
+  const visibility = prompt("Visibility: private or public", "private");
+  if (!visibility) return;
+
+  try {
+    const response = await fetch("/api/admin/storage/buckets/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, visibility })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Bucket creation failed with status " + response.status);
+    }
+
+    alert("Storage bucket created.");
+    await window.loadLiveStorage();
+  } catch (error) {
+    alert("Bucket creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function storageView() {
+  if (!state.storageLiveLoaded && !state.storageLiveLoading) {
+    state.storageLiveLoading = true;
+    setTimeout(() => window.loadLiveStorage(), 100);
+  }
+
+  const buckets = Array.isArray(state.storageBuckets) ? state.storageBuckets : [];
+  const files = Array.isArray(state.storageFiles) ? state.storageFiles : [];
+  const signedUrls = Array.isArray(state.storageSignedUrls) ? state.storageSignedUrls : [];
+
+  const bucketFileCount = (bucketId) => files.filter(file => file.bucket_id === bucketId || file.bucketId === bucketId).length;
+
   return `
     ${hero("Storage / Files", "Buckets, uploads, signed URLs, and file permission rules.")}
     <div class="section-head">
       <h3>Storage Buckets</h3>
-      <button class="logout" onclick="createBucket()">Create Bucket</button>
+      <div>
+        <button class="logout" onclick="window.refreshStorageNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createStorageBucket()">Create Bucket</button>
+      </div>
     </div>
+
+    ${state.storageLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live storage data...</p></div>` : ""}
+    ${state.storageLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Storage load error: ${safeText(state.storageLiveError)}</p></div>` : ""}
+
     <div class="grid cards">
-      ${card("Buckets", state.buckets.length, "Active storage buckets")}
-      ${card("Files", state.buckets.reduce((sum, b) => sum + Number(b.fileCount || 0), 0), "Tracked files")}
-      ${card("Visibility", "Private", "Default bucket policy")}
-      ${card("Signed URLs", "Next", "Private file delivery")}
+      ${card("Buckets", buckets.length, "Active storage buckets")}
+      ${card("Files", files.length, "Tracked files")}
+      ${card("Visibility", buckets.find(bucket => bucket.visibility === "public") ? "Mixed" : "Private", "Default bucket policy")}
+      ${card("Signed URLs", signedUrls.length, "Private file delivery")}
     </div>
+
     <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Buckets</h3><span class="badge">Live</span></div>
       <table>
-        <thead><tr><th>Bucket</th><th>Visibility</th><th>Files</th><th>Status</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Bucket</th>
+            <th>Visibility</th>
+            <th>Files</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
         <tbody>
-          ${state.buckets.map(bucket => `
+          ${buckets.map(bucket => `
             <tr>
-              <td><strong>${safeText(bucket.name)}</strong><div class="muted">${safeText(bucket.id)}</div></td>
-              <td>${safeText(bucket.visibility)}</td>
-              <td>${safeText(bucket.fileCount ?? 0)}</td>
-              <td><span class="badge">${safeText(bucket.status)}</span></td>
+              <td><strong>${safeText(bucket.name || "-")}</strong><div class="muted">${safeText(bucket.id || "")}</div></td>
+              <td>${safeText(bucket.visibility || "-")}</td>
+              <td>${safeText(String(bucketFileCount(bucket.id)))}</td>
+              <td><span class="badge">${safeText(bucket.status || "-")}</span></td>
+              <td>${bucket.created_at ? new Date(bucket.created_at).toLocaleString() : bucket.createdAt ? new Date(bucket.createdAt).toLocaleString() : "-"}</td>
             </tr>
-          `).join("") || '<tr><td colspan="4" class="muted">No buckets created yet.</td></tr>'}
+          `).join("") || '<tr><td colspan="5" class="muted">No buckets created yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Files</h3><span class="badge">Last 250</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Bucket</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${files.map(file => `
+            <tr>
+              <td><strong>${safeText(file.original_name || file.filename || file.name || "-")}</strong><div class="muted">${safeText(file.id || "")}</div></td>
+              <td>${safeText(file.bucket_id || file.bucketId || "-")}</td>
+              <td>${safeText(file.mime_type || file.mimeType || "-")}</td>
+              <td>${safeText(String(file.size_bytes || file.sizeBytes || 0))}</td>
+              <td><span class="badge">${safeText(file.status || "-")}</span></td>
+              <td>${file.created_at ? new Date(file.created_at).toLocaleString() : file.createdAt ? new Date(file.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No files uploaded yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Signed URLs</h3><span class="badge">Private Delivery</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>File</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${signedUrls.map(url => `
+            <tr>
+              <td><strong>${safeText(url.id || "-")}</strong></td>
+              <td>${safeText(url.file_id || url.fileId || "-")}</td>
+              <td><span class="badge">${safeText(url.status || "active")}</span></td>
+              <td>${url.expires_at ? new Date(url.expires_at).toLocaleString() : url.expiresAt ? new Date(url.expiresAt).toLocaleString() : "-"}</td>
+              <td>${url.created_at ? new Date(url.created_at).toLocaleString() : url.createdAt ? new Date(url.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No signed URLs generated yet.</td></tr>'}
         </tbody>
       </table>
     </div>

@@ -1690,4 +1690,88 @@ router.post("/api-keys/create-scoped", async (req, res) => {
   }
 });
 
+
+router.get("/storage-page-data", async (req, res) => {
+  try {
+    const bucketsResult = await dbQuery(`
+      SELECT *
+      FROM backend_storage_buckets
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const filesResult = await dbQuery(`
+      SELECT *
+      FROM backend_storage_files
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const signedUrlsResult = await dbQuery(`
+      SELECT *
+      FROM backend_storage_signed_urls
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const buckets = bucketsResult.rows;
+    const files = filesResult.rows;
+    const signedUrls = signedUrlsResult.rows;
+
+    return ok(res, {
+      buckets,
+      files,
+      signedUrls,
+      counts: {
+        buckets: buckets.length,
+        files: files.length,
+        signedUrls: signedUrls.length,
+        privateBuckets: buckets.filter((row) => row.visibility === "private").length,
+        publicBuckets: buckets.filter((row) => row.visibility === "public").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load storage page data", 500, error.message);
+  }
+});
+
+router.post("/storage/buckets/create-safe", async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-");
+    const visibility = String(req.body?.visibility || "private").trim().toLowerCase();
+
+    if (!name) return fail(res, "Bucket name is required", 400);
+    if (!["private", "public"].includes(visibility)) {
+      return fail(res, "Visibility must be private or public", 400);
+    }
+
+    const id = `bucket_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_storage_buckets (
+          id,
+          name,
+          visibility,
+          status
+        )
+        VALUES ($1, $2, $3, 'active')
+        RETURNING *
+      `,
+      [id, name, visibility]
+    );
+
+    return ok(res, {
+      bucket: result.rows[0],
+      message: "Storage bucket created.",
+    });
+  } catch (error) {
+    if (String(error.message || "").includes("duplicate")) {
+      return fail(res, "A bucket with that name already exists", 409, error.message);
+    }
+
+    return fail(res, "Failed to create storage bucket", 500, error.message);
+  }
+});
+
 module.exports = router;
