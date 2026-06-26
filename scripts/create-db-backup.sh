@@ -11,6 +11,7 @@ FILE_NAME="${DB_NAME}_${NOW}_${RAND}.dump"
 FILE_PATH="$BACKUP_DIR/$FILE_NAME"
 
 mkdir -p "$BACKUP_DIR"
+chown postgres:postgres "$BACKUP_DIR"
 chmod 700 "$BACKUP_DIR"
 
 sudo -u postgres psql -d "$DB_NAME" -v ON_ERROR_STOP=1 <<SQL
