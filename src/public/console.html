@@ -1573,6 +1573,9 @@ function settingsView() {
     return String(value);
   };
 
+
+  const usageMetrics = Array.isArray(state.usageMetrics) ? state.usageMetrics : [];
+  const usageCounts = state.usageCounts || {};
   return `
     ${hero("Settings", "Complete backend platform configuration for auth, apps, API keys, storage, webhooks, realtime, functions, logs, backups, security, notifications, billing, usage, and developer operations.")}
     <div class="section-head">
