@@ -586,8 +586,17 @@ async function loadData() {
   state.backups = Array.isArray(data.backups) ? data.backups : (data.backups?.backups || []);
   state.security = data.security || {};
   state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : (data.apiKeys?.apiKeys || []);
-  state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : (data.webhooks?.webhooks || []);
-  state.webhookDeliveries = Array.isArray(data.webhookDeliveries) ? data.webhookDeliveries : (data.webhookDeliveries?.deliveries || []);
+  state.webhooks = Array.isArray(data.webhooks)
+    ? data.webhooks
+    : (Array.isArray(data.webhooks?.webhooks) ? data.webhooks.webhooks : []);
+
+  state.webhookDeliveries = Array.isArray(data.webhookDeliveries)
+    ? data.webhookDeliveries
+    : (
+        Array.isArray(data.webhookDeliveries?.deliveries)
+          ? data.webhookDeliveries.deliveries
+          : (Array.isArray(data.deliveries) ? data.deliveries : [])
+      );
   state.buckets = Array.isArray(data.buckets) ? data.buckets : (data.buckets?.buckets || []);
   state.events = Array.isArray(data.events) ? data.events : (data.events?.events || []);
 }

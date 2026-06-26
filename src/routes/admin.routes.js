@@ -519,6 +519,10 @@ router.get("/overview", async (req, res) => {
 
 router.get("/users", async (req, res) => {
   try {
+    const webhookConsolePayload = await getWebhookConsolePayloadDirect();
+    webhooks = webhookConsolePayload.webhooks;
+    webhookDeliveries = webhookConsolePayload.webhookDeliveries;
+
     return ok(res, { users: await getUsers() });
   } catch (error) {
     return fail(res, "Failed to load users", 500, error.message);
@@ -1238,6 +1242,51 @@ async function deliverWebhook(webhook, eventPayload) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+
+async function getWebhookConsolePayloadDirect() {
+  const webhooksResult = await dbQuery(`
+    SELECT
+      id,
+      name,
+      url,
+      events,
+      status,
+      created_at AS "createdAt",
+      last_triggered_at AS "lastTriggeredAt"
+    FROM backend_webhooks
+    ORDER BY
+      CASE WHEN status = 'active' THEN 0 ELSE 1 END,
+      created_at DESC
+  `);
+
+  const deliveriesResult = await dbQuery(`
+    SELECT
+      d.id,
+      d.webhook_id AS "webhookId",
+      COALESCE(w.name, d.webhook_id) AS "webhookName",
+      d.event_id AS "eventId",
+      d.event_type AS "eventType",
+      d.url,
+      d.response_status AS "responseStatus",
+      d.status,
+      d.attempt_count AS "attemptCount",
+      d.error_message AS "errorMessage",
+      d.next_retry_at AS "nextRetryAt",
+      d.delivered_at AS "deliveredAt",
+      d.created_at AS "createdAt",
+      d.updated_at AS "updatedAt"
+    FROM backend_webhook_deliveries d
+    LEFT JOIN backend_webhooks w ON w.id = d.webhook_id
+    ORDER BY d.created_at DESC
+    LIMIT 250
+  `);
+
+  return {
+    webhooks: webhooksResult.rows,
+    webhookDeliveries: deliveriesResult.rows,
+  };
 }
 
 router.get("/webhook-deliveries", async (req, res) => {
