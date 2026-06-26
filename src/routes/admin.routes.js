@@ -3468,62 +3468,135 @@ function readTailLines(filePath, lineCount = 80) {
   }
 }
 
+
+function findReadableLogFile(candidates = []) {
+  const fs = require("fs");
+
+  for (const candidate of candidates.filter(Boolean)) {
+    try {
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    } catch {}
+  }
+
+  return candidates.filter(Boolean)[0] || "";
+}
+
+function getGoodAppBackendLogPaths() {
+  return {
+    output: findReadableLogFile([
+      "/root/.pm2/logs/goodapp-backend-out.log",
+      "/root/.pm2/logs/goodapp-backend-out-19.log",
+      "/home/mgoodlo3/.pm2/logs/goodapp-backend-out.log",
+      "/home/mgoodlo3/.pm2/logs/goodapp-backend-out-19.log",
+    ]),
+    error: findReadableLogFile([
+      "/root/.pm2/logs/goodapp-backend-error.log",
+      "/root/.pm2/logs/goodapp-backend-error-19.log",
+      "/home/mgoodlo3/.pm2/logs/goodapp-backend-error.log",
+      "/home/mgoodlo3/.pm2/logs/goodapp-backend-error-19.log",
+    ]),
+  };
+}
+
+function safeLogLevel(value) {
+  const level = String(value || "info").trim().toLowerCase();
+  if (["debug", "info", "warn", "warning", "error", "output"].includes(level)) return level === "warning" ? "warn" : level;
+  return "info";
+}
+
+function tailLogFileStructured(filePath, level = "output", source = "pm2:goodapp-backend", lineCount = 120) {
+  return readTailLines(filePath, lineCount).map((line, index) => ({
+    id: `${level}_${index}`,
+    source,
+    level,
+    message: line,
+    filePath,
+    createdAt: null,
+    context: {
+      filePath,
+      lineIndex: index,
+    },
+  }));
+}
+
 router.get("/logs-page-data", async (req, res) => {
   try {
-    const dbLogsResult = await dbQuery(`
-      SELECT
-        id,
-        source,
-        level,
-        message,
-        context,
-        created_at AS "createdAt"
-      FROM backend_system_logs
-      ORDER BY created_at DESC
-      LIMIT 250
-    `);
+    const limit = Math.min(Math.max(Number(req.query?.limit || 250), 50), 1000);
+    const level = String(req.query?.level || "").trim().toLowerCase();
+    const search = String(req.query?.search || "").trim();
 
-    const pm2OutPath = "/root/.pm2/logs/goodapp-backend-out.log";
-    const pm2ErrorPath = "/root/.pm2/logs/goodapp-backend-error.log";
+    const params = [];
+    const where = [];
 
-    const outputLines = readTailLines(pm2OutPath, 120).map((line, index) => ({
-      id: `pm2_out_${index}`,
-      source: "pm2:goodapp-backend",
-      level: "output",
-      message: line,
-      filePath: pm2OutPath,
-      createdAt: null,
-    }));
+    if (level && level !== "all") {
+      params.push(level);
+      where.push(`level = $${params.length}`);
+    }
 
-    const errorLines = readTailLines(pm2ErrorPath, 120).map((line, index) => ({
-      id: `pm2_error_${index}`,
-      source: "pm2:goodapp-backend",
-      level: "error",
-      message: line,
-      filePath: pm2ErrorPath,
-      createdAt: null,
-    }));
+    if (search) {
+      params.push(`%${search}%`);
+      where.push(`(message ILIKE $${params.length} OR source ILIKE $${params.length})`);
+    }
 
+    params.push(limit);
+
+    const dbLogsResult = await dbQuery(
+      `
+        SELECT
+          id,
+          source,
+          level,
+          message,
+          context,
+          created_at AS "createdAt"
+        FROM backend_system_logs
+        ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+        ORDER BY created_at DESC
+        LIMIT $${params.length}
+      `,
+      params
+    );
+
+    const logPaths = getGoodAppBackendLogPaths();
+
+    const outputLines = tailLogFileStructured(logPaths.output, "output", "pm2:goodapp-backend", 160);
+    const errorLines = tailLogFileStructured(logPaths.error, "error", "pm2:goodapp-backend", 160);
     const databaseLogs = dbLogsResult.rows;
 
-    const logs = [
+    let logs = [
       ...databaseLogs,
       ...errorLines.reverse(),
       ...outputLines.reverse(),
-    ].slice(0, 250);
+    ].slice(0, limit);
+
+    if (level && level !== "all") {
+      logs = logs.filter((log) => String(log.level || "").toLowerCase() === level);
+    }
+
+    if (search) {
+      const term = search.toLowerCase();
+      logs = logs.filter((log) =>
+        String(log.message || "").toLowerCase().includes(term) ||
+        String(log.source || "").toLowerCase().includes(term)
+      );
+    }
 
     return ok(res, {
       logs,
       counts: {
-        logFiles: [pm2OutPath, pm2ErrorPath].length,
+        logFiles: [logPaths.output, logPaths.error].filter(Boolean).length,
         databaseLogs: databaseLogs.length,
         errors: logs.filter((log) => log.level === "error").length,
         output: logs.filter((log) => log.level === "output").length,
         total: logs.length,
       },
-      files: {
-        output: pm2OutPath,
-        error: pm2ErrorPath,
+      files: logPaths,
+      filters: {
+        level: level || "all",
+        search,
+        limit,
       },
     });
   } catch (error) {
@@ -3531,10 +3604,11 @@ router.get("/logs-page-data", async (req, res) => {
   }
 });
 
+
 router.post("/logs/create-test-safe", async (req, res) => {
   try {
     const id = `log_${crypto.randomUUID().replace(/-/g, "")}`;
-    const level = String(req.body?.level || "info").trim();
+    const level = safeLogLevel(req.body?.level || "info");
     const source = String(req.body?.source || "backend-console").trim();
     const message = String(req.body?.message || "Test log from GoodAppBackEnd console.").trim();
 
@@ -3567,6 +3641,14 @@ router.post("/logs/create-test-safe", async (req, res) => {
       [id, source, level, message, JSON.stringify(context)]
     );
 
+    if (level === "error") {
+      console.error("[console-test-error]", message, context);
+    } else if (level === "warn") {
+      console.warn("[console-test-warn]", message, context);
+    } else {
+      console.log("[console-test-log]", message, context);
+    }
+
     return ok(res, {
       log: result.rows[0],
       message: "Test log created.",
@@ -3575,6 +3657,113 @@ router.post("/logs/create-test-safe", async (req, res) => {
     return fail(res, "Failed to create test log", 500, error.message);
   }
 });
+
+router.get("/logs/pm2-file-safe", async (req, res) => {
+  try {
+    const file = String(req.query?.file || "output").trim().toLowerCase();
+    const lines = Math.min(Math.max(Number(req.query?.lines || 200), 20), 1000);
+    const logPaths = getGoodAppBackendLogPaths();
+    const selectedPath = file === "error" ? logPaths.error : logPaths.output;
+
+    const logs = tailLogFileStructured(
+      selectedPath,
+      file === "error" ? "error" : "output",
+      "pm2:goodapp-backend",
+      lines
+    );
+
+    return ok(res, {
+      file,
+      filePath: selectedPath,
+      lines: logs,
+      count: logs.length,
+    });
+  } catch (error) {
+    return fail(res, "Failed to read PM2 log file", 500, error.message);
+  }
+});
+
+router.get("/logs/:id/detail-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          source,
+          level,
+          message,
+          context,
+          created_at AS "createdAt"
+        FROM backend_system_logs
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const log = result.rows[0];
+
+    if (!log) return fail(res, "Database log not found", 404);
+
+    return ok(res, { log });
+  } catch (error) {
+    return fail(res, "Failed to load log detail", 500, error.message);
+  }
+});
+
+router.post("/logs/cleanup-safe", async (req, res) => {
+  try {
+    const keepLast = Math.min(Math.max(Number(req.body?.keepLast || 1000), 100), 50000);
+
+    const deleteResult = await dbQuery(
+      `
+        DELETE FROM backend_system_logs
+        WHERE id NOT IN (
+          SELECT id
+          FROM backend_system_logs
+          ORDER BY created_at DESC
+          LIMIT $1
+        )
+        RETURNING id
+      `,
+      [keepLast]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'logs.cleanup', 'backend_system_logs', 'bulk', $3::jsonb, $4, $5)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        JSON.stringify({ keepLast, deletedCount: deleteResult.rowCount || 0 }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      deletedCount: deleteResult.rowCount || 0,
+      keepLast,
+      message: "Log cleanup complete.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to cleanup logs", 500, error.message);
+  }
+});
+
 
 
 router.get("/backups-page-data", async (req, res) => {

@@ -1929,6 +1929,7 @@ function databaseView() {
 }
 
 
+
 function logsView() {
   if (!state.logsLiveLoaded && !state.logsLiveLoading) {
     state.logsLiveLoading = true;
@@ -1939,14 +1940,17 @@ function logsView() {
   const counts = state.logCounts || {};
   const errors = logs.filter(log => log.level === "error");
   const outputs = logs.filter(log => log.level === "output");
+  const databaseLogs = logs.filter(log => !String(log.id || "").startsWith("pm2_") && !String(log.id || "").startsWith("output_") && !String(log.id || "").startsWith("error_"));
 
   return `
-    ${hero("Logs & Monitoring", "Live PM2 log visibility and backend database log records.")}
+    ${hero("Logs & Monitoring", "Live PM2 log visibility, database log records, severity filters, details, and retention cleanup.")}
     <div class="section-head">
       <h3>Backend Logs</h3>
       <div>
         <button class="logout" onclick="window.refreshLogsNow()">Refresh Data</button>
-        <button class="logout" onclick="window.createTestLog()">Create Test Log</button>
+        <button class="logout" onclick="window.createTestLog('info')">Create Info Log</button>
+        <button class="logout" onclick="window.createTestLog('error')">Create Error Log</button>
+        <button class="logout" onclick="window.cleanupLogs()">Cleanup</button>
       </div>
     </div>
 
@@ -1957,22 +1961,44 @@ function logsView() {
       ${card("Log Files", counts.logFiles ?? 2, "Detected PM2 log files")}
       ${card("Errors", counts.errors ?? errors.length, "Error streams")}
       ${card("Output", counts.output ?? outputs.length, "Output streams")}
-      ${card("Database Logs", counts.databaseLogs ?? 0, "Stored log records")}
+      ${card("Database Logs", counts.databaseLogs ?? databaseLogs.length, "Stored log records")}
     </div>
 
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Log Sources</h3><span class="badge">Live</span></div>
       <table>
         <tbody>
-          <tr><td>PM2 Output</td><td>${safeText(state.logFiles?.output || "/root/.pm2/logs/goodapp-backend-out.log")}</td></tr>
-          <tr><td>PM2 Error</td><td>${safeText(state.logFiles?.error || "/root/.pm2/logs/goodapp-backend-error.log")}</td></tr>
-          <tr><td>Database Table</td><td>backend_system_logs</td></tr>
+          <tr>
+            <td>PM2 Output</td>
+            <td>${safeText(state.logFiles?.output || "-")}</td>
+            <td><button class="logout" onclick="window.viewPm2LogFile('output')">View Output</button></td>
+          </tr>
+          <tr>
+            <td>PM2 Error</td>
+            <td>${safeText(state.logFiles?.error || "-")}</td>
+            <td><button class="logout" onclick="window.viewPm2LogFile('error')">View Error</button></td>
+          </tr>
+          <tr><td>Database Table</td><td>backend_system_logs</td><td><span class="badge">Indexed</span></td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Recent Logs</h3><span class="badge">Last 250</span></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <input
+          value="${safeText(state.logSearch || "")}"
+          oninput="window.setLogSearch(this.value)"
+          placeholder="Search logs..."
+          style="flex:1; min-width:240px; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff;"
+        />
+        <button class="logout" onclick="window.loadLiveLogs()">Search</button>
+        <button class="logout" onclick="window.setLogLevelFilter('all')">All</button>
+        <button class="logout" onclick="window.setLogLevelFilter('info')">Info</button>
+        <button class="logout" onclick="window.setLogLevelFilter('warn')">Warn</button>
+        <button class="logout" onclick="window.setLogLevelFilter('error')">Error</button>
+        <button class="logout" onclick="window.setLogLevelFilter('output')">Output</button>
+      </div>
       <table>
         <thead>
           <tr>
@@ -1980,6 +2006,7 @@ function logsView() {
             <th>Level</th>
             <th>Source</th>
             <th>Message</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -1988,15 +2015,15 @@ function logsView() {
               <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : "-"}</td>
               <td><span class="badge">${safeText(log.level || "-")}</span></td>
               <td>${safeText(log.source || "-")}</td>
-              <td>${safeText(log.message || "-")}</td>
+              <td>${safeText(log.message || "-").slice(0, 280)}</td>
+              <td><button class="logout" onclick="window.viewLogDetail('${safeText(log.id)}')">Details</button></td>
             </tr>
-          `).join("") || '<tr><td colspan="4" class="muted">No logs returned yet. Click Create Test Log.</td></tr>'}
+          `).join("") || '<tr><td colspan="5" class="muted">No logs returned yet. Click Create Info Log.</td></tr>'}
         </tbody>
       </table>
     </div>
   `;
 }
-
 
 function securityView() {
   const security = state.security || {};
