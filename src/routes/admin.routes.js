@@ -1523,4 +1523,57 @@ router.get("/webhook-deliveries-live", async (req, res) => {
   }
 });
 
+
+router.get("/webhooks-page-data", async (req, res) => {
+  try {
+    const webhooks = await dbQuery(`
+      SELECT
+        id,
+        name,
+        url,
+        events,
+        status,
+        created_at AS "createdAt",
+        last_triggered_at AS "lastTriggeredAt"
+      FROM backend_webhooks
+      ORDER BY
+        CASE WHEN status = 'active' THEN 0 ELSE 1 END,
+        created_at DESC
+    `);
+
+    const deliveries = await dbQuery(`
+      SELECT
+        d.id,
+        d.webhook_id AS "webhookId",
+        COALESCE(w.name, d.webhook_id) AS "webhookName",
+        d.event_id AS "eventId",
+        d.event_type AS "eventType",
+        d.url,
+        d.response_status AS "responseStatus",
+        d.status,
+        d.attempt_count AS "attemptCount",
+        d.error_message AS "errorMessage",
+        d.delivered_at AS "deliveredAt",
+        d.created_at AS "createdAt"
+      FROM backend_webhook_deliveries d
+      LEFT JOIN backend_webhooks w ON w.id = d.webhook_id
+      ORDER BY d.created_at DESC
+      LIMIT 250
+    `);
+
+    return ok(res, {
+      webhooks: webhooks.rows,
+      deliveries: deliveries.rows,
+      counts: {
+        webhooks: webhooks.rows.length,
+        active: webhooks.rows.filter((row) => row.status === "active").length,
+        deliveries: deliveries.rows.length,
+        failed: deliveries.rows.filter((row) => row.status === "failed").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load webhooks page data", 500, error.message);
+  }
+});
+
 module.exports = router;

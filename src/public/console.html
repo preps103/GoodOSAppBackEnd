@@ -934,10 +934,51 @@ async function refreshWebhooksNow() {
   renderApp();
 }
 
+
+window.refreshWebhooksNow = async function refreshWebhooksNow() {
+  const button = document.querySelector('[data-webhook-refresh-button="true"]');
+  if (button) button.textContent = "LOADING...";
+
+  try {
+    const response = await fetch("/api/admin/webhooks-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Webhook refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+
+    state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : [];
+    state.webhookDeliveries = Array.isArray(data.deliveries) ? data.deliveries : [];
+    state.webhookLiveLoaded = true;
+    state.webhookLiveLoading = false;
+    state.webhookLiveError = "";
+
+    renderApp();
+  } catch (error) {
+    state.webhookLiveError = error.message || "Webhook refresh failed.";
+    alert("Webhook refresh failed: " + state.webhookLiveError);
+    console.error(error);
+    renderApp();
+  } finally {
+    const freshButton = document.querySelector('[data-webhook-refresh-button="true"]');
+    if (freshButton) freshButton.textContent = "REFRESH DATA";
+  }
+};
+
 function webhooksView() {
   if (!state.webhookLiveLoaded && !state.webhookLiveLoading) {
     state.webhookLiveLoading = true;
-    forceLoadWebhooksNow().then(() => renderApp());
+    setTimeout(() => window.refreshWebhooksNow(), 100);
   }
 
   const allWebhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
@@ -950,7 +991,7 @@ function webhooksView() {
     <div class="section-head">
       <h3>Webhook Endpoints</h3>
       <div>
-        <button class="logout" onclick="refreshWebhooksNow()">Refresh Data</button>
+        <button class="logout" data-webhook-refresh-button="true" onclick="window.refreshWebhooksNow()">Refresh Data</button>
         <button class="logout" onclick="createWebhook()">Create Webhook</button>
       </div>
     </div>
