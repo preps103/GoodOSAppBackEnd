@@ -1303,6 +1303,71 @@ window.createSafeBackup = async function createSafeBackup() {
   }
 };
 
+
+window.createRealBackup = async function createRealBackup() {
+  const confirmed = confirm("Create a real pg_dump database backup now?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/backups/create-real-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Real backup failed with status " + response.status);
+    }
+
+    alert("Real database backup created.");
+    await window.loadLiveBackups();
+  } catch (error) {
+    alert("Real backup failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.verifyBackup = async function verifyBackup(id) {
+  if (!id) return alert("Missing backup id.");
+
+  try {
+    const response = await fetch("/api/admin/backups/" + encodeURIComponent(id) + "/verify-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Backup verification failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert(data.matches ? "Backup checksum verified." : "Backup checksum mismatch.");
+  } catch (error) {
+    alert("Backup verification failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.downloadBackup = function downloadBackup(id) {
+  if (!id) return alert("Missing backup id.");
+  window.open("/api/admin/backups/" + encodeURIComponent(id) + "/download", "_blank");
+};
+
 function backupsView() {
   if (!state.backupsLiveLoaded && !state.backupsLiveLoading) {
     state.backupsLiveLoading = true;
@@ -1318,6 +1383,7 @@ function backupsView() {
       <h3>Backup Registry</h3>
       <div>
         <button class="logout" onclick="window.refreshBackupsNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createRealBackup()">Create Real Backup</button>
         <button class="logout" onclick="window.createSafeBackup()">Create Backup Record</button>
       </div>
     </div>
@@ -1343,6 +1409,9 @@ function backupsView() {
             <th>Path</th>
             <th>Completed</th>
             <th>Created</th>
+            <th>Size</th>
+            <th>Checksum</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -1354,8 +1423,14 @@ function backupsView() {
               <td>${safeText(backup.filePath || backup.file_path || "-")}</td>
               <td>${backup.completedAt ? new Date(backup.completedAt).toLocaleString() : backup.completed_at ? new Date(backup.completed_at).toLocaleString() : "-"}</td>
               <td>${backup.createdAt ? new Date(backup.createdAt).toLocaleString() : backup.created_at ? new Date(backup.created_at).toLocaleString() : "-"}</td>
+              <td>${safeText(String(backup.sizeBytes || backup.size_bytes || 0))}</td>
+              <td>${safeText((backup.checksumSha256 || backup.checksum_sha256 || "-").slice(0, 16))}</td>
+              <td>
+                <button class="logout" onclick="window.verifyBackup('${safeText(backup.id)}')">Verify</button>
+                <button class="logout" onclick="window.downloadBackup('${safeText(backup.id)}')">Download</button>
+              </td>
             </tr>
-          `).join("") || '<tr><td colspan="6" class="muted">No backup records found.</td></tr>'}
+          `).join("") || '<tr><td colspan="9" class="muted">No backup records found.</td></tr>'}
         </tbody>
       </table>
     </div>

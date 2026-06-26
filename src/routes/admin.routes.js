@@ -2394,7 +2394,11 @@ router.get("/backups-page-data", async (req, res) => {
         status,
         size_bytes AS "sizeBytes",
         file_path AS "filePath",
+        backup_format AS "backupFormat",
+        checksum_sha256 AS "checksumSha256",
+        database_name AS "databaseName",
         notes,
+        error_message AS "errorMessage",
         created_by AS "createdBy",
         completed_at AS "completedAt",
         created_at AS "createdAt"
@@ -2846,6 +2850,140 @@ router.post("/usage-quotas/update-safe", async (req, res) => {
     });
   } catch (error) {
     return fail(res, "Failed to update usage quota", 500, error.message);
+  }
+});
+
+
+router.post("/backups/create-real-safe", async (req, res) => {
+  try {
+    const childProcess = require("child_process");
+    const scriptPath = "/var/www/GoodAppBackEnd/scripts/create-db-backup.sh";
+
+    const output = childProcess.execFileSync(scriptPath, {
+      encoding: "utf8",
+      timeout: 120000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    const backupIdLine = output.split("\n").find((line) => line.startsWith("BACKUP_ID="));
+    const backupId = backupIdLine ? backupIdLine.replace("BACKUP_ID=", "").trim() : null;
+
+    let backup = null;
+
+    if (backupId) {
+      const backupResult = await dbQuery(
+        `
+          SELECT
+            id,
+            name,
+            type,
+            status,
+            size_bytes AS "sizeBytes",
+            file_path AS "filePath",
+            backup_format AS "backupFormat",
+            checksum_sha256 AS "checksumSha256",
+            database_name AS "databaseName",
+            notes,
+            error_message AS "errorMessage",
+            created_by AS "createdBy",
+            completed_at AS "completedAt",
+            created_at AS "createdAt"
+          FROM backend_backups
+          WHERE id = $1
+        `,
+        [backupId]
+      );
+
+      backup = backupResult.rows[0] || null;
+    }
+
+    return ok(res, {
+      backup,
+      output,
+      message: "Real database backup created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create real database backup", 500, error.message);
+  }
+});
+
+router.get("/backups/:id/download", async (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+
+    const id = String(req.params.id || "").trim();
+
+    const result = await dbQuery(
+      `
+        SELECT id, file_path, status
+        FROM backend_backups
+        WHERE id = $1
+      `,
+      [id]
+    );
+
+    const backup = result.rows[0];
+
+    if (!backup) return fail(res, "Backup not found", 404);
+    if (backup.status !== "completed") return fail(res, "Backup is not completed", 400);
+    if (!backup.file_path || !fs.existsSync(backup.file_path)) {
+      return fail(res, "Backup file does not exist on disk", 404);
+    }
+
+    const safeName = path.basename(backup.file_path);
+
+    return res.download(backup.file_path, safeName);
+  } catch (error) {
+    return fail(res, "Failed to download backup", 500, error.message);
+  }
+});
+
+router.post("/backups/:id/verify-safe", async (req, res) => {
+  try {
+    const fs = require("fs");
+    const childProcess = require("child_process");
+
+    const id = String(req.params.id || "").trim();
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          file_path AS "filePath",
+          checksum_sha256 AS "checksumSha256",
+          status
+        FROM backend_backups
+        WHERE id = $1
+      `,
+      [id]
+    );
+
+    const backup = result.rows[0];
+
+    if (!backup) return fail(res, "Backup not found", 404);
+    if (!backup.filePath || !fs.existsSync(backup.filePath)) {
+      return fail(res, "Backup file does not exist on disk", 404);
+    }
+
+    const output = childProcess.execFileSync("sha256sum", [backup.filePath], {
+      encoding: "utf8",
+      timeout: 30000,
+    });
+
+    const currentChecksum = output.split(/\s+/)[0];
+    const matches = currentChecksum === backup.checksumSha256;
+
+    return ok(res, {
+      backupId: id,
+      filePath: backup.filePath,
+      expectedChecksum: backup.checksumSha256,
+      currentChecksum,
+      matches,
+      message: matches ? "Backup checksum verified." : "Backup checksum mismatch.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to verify backup", 500, error.message);
   }
 });
 
