@@ -1072,6 +1072,169 @@ window.exportDatabaseTableRows = function exportDatabaseTableRows(format) {
   window.open(url, "_blank");
 };
 
+
+window.parseDatabasePromptValue = function parseDatabasePromptValue(value) {
+  if (value === null) return null;
+  const trimmed = String(value).trim();
+
+  if (trimmed === "") return "";
+  if (trimmed === "null") return null;
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (!Number.isNaN(Number(trimmed)) && trimmed !== "") return Number(trimmed);
+
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      return JSON.parse(trimmed);
+    } catch (error) {
+      return value;
+    }
+  }
+
+  return value;
+};
+
+window.insertDatabaseRow = async function insertDatabaseRow() {
+  if (!state.selectedDbTable) return alert("Select a table first.");
+
+  const jsonText = prompt(
+    "Enter row JSON. Example: {\"name\":\"Test\",\"status\":\"active\"}",
+    "{}"
+  );
+
+  if (jsonText === null) return;
+
+  let row;
+
+  try {
+    row = JSON.parse(jsonText);
+  } catch (error) {
+    alert("Invalid JSON.");
+    return;
+  }
+
+  if (!row || typeof row !== "object" || Array.isArray(row)) {
+    alert("Row must be a JSON object.");
+    return;
+  }
+
+  const confirmed = confirm("Insert this row into " + state.selectedDbTable + "?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/database/tables/" + encodeURIComponent(state.selectedDbTable) + "/rows/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ row })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Row insert failed with status " + response.status);
+    }
+
+    alert("Row inserted.");
+    await window.loadDatabaseTableRows(state.selectedDbTable, state.selectedDbPagination?.offset || 0);
+    await window.loadLiveDatabase();
+  } catch (error) {
+    alert("Row insert failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.editDatabaseRow = async function editDatabaseRow(rowCtid) {
+  if (!state.selectedDbTable) return alert("Select a table first.");
+  if (!rowCtid) return alert("Missing row id.");
+
+  const columns = (state.selectedDbColumns || []).map(column => column.columnName).filter(name => name !== "__ctid");
+  const columnName = prompt("Column to edit:\n" + columns.join(", "), columns[0] || "");
+
+  if (!columnName) return;
+  if (!columns.includes(columnName)) {
+    alert("Column not found in selected table.");
+    return;
+  }
+
+  const valueText = prompt("New value for " + columnName + ". Use null, true, false, number, text, or JSON:", "");
+  if (valueText === null) return;
+
+  const value = window.parseDatabasePromptValue(valueText);
+
+  const confirmed = confirm("Update " + state.selectedDbTable + "." + columnName + " for this row?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/database/tables/" + encodeURIComponent(state.selectedDbTable) + "/rows/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ctid: rowCtid,
+        columnName,
+        value
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Row update failed with status " + response.status);
+    }
+
+    alert("Row updated.");
+    await window.loadDatabaseTableRows(state.selectedDbTable, state.selectedDbPagination?.offset || 0);
+  } catch (error) {
+    alert("Row update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.deleteDatabaseRow = async function deleteDatabaseRow(rowCtid) {
+  if (!state.selectedDbTable) return alert("Select a table first.");
+  if (!rowCtid) return alert("Missing row id.");
+
+  const confirmed = confirm("Delete this row from " + state.selectedDbTable + "? This cannot be undone.");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/database/tables/" + encodeURIComponent(state.selectedDbTable) + "/rows/delete-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ctid: rowCtid
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Row delete failed with status " + response.status);
+    }
+
+    alert("Row deleted.");
+    await window.loadDatabaseTableRows(state.selectedDbTable, state.selectedDbPagination?.offset || 0);
+    await window.loadLiveDatabase();
+  } catch (error) {
+    alert("Row delete failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1115,6 +1278,7 @@ function databaseView() {
               <button class="logout" onclick="window.nextDatabaseRows()">Next</button>
               <button class="logout" onclick="window.exportDatabaseTableRows('csv')">Export CSV</button>
               <button class="logout" onclick="window.exportDatabaseTableRows('json')">Export JSON</button>
+              <button class="logout" onclick="window.insertDatabaseRow()">Insert Row</button>
             </div>
 
             <p class="muted" style="margin-bottom:12px;">
@@ -1126,12 +1290,17 @@ function databaseView() {
               <table>
                 <thead>
                   <tr>
+                    <th>Action</th>
                     ${selectedColumns.map(column => `<th>${safeText(column.columnName || "-")}</th>`).join("") || "<th>No columns loaded</th>"}
                   </tr>
                 </thead>
                 <tbody>
                   ${selectedRows.map(row => `
                     <tr>
+                      <td>
+                        <button class="logout" onclick="window.editDatabaseRow('${safeText(row.__ctid || "")}')">Edit</button>
+                        <button class="logout" onclick="window.deleteDatabaseRow('${safeText(row.__ctid || "")}')">Delete</button>
+                      </td>
                       ${selectedColumns.map(column => {
                         const value = row[column.columnName];
                         let display = value;
@@ -1140,7 +1309,7 @@ function databaseView() {
                         return `<td>${safeText(String(display)).slice(0, 240)}</td>`;
                       }).join("")}
                     </tr>
-                  `).join("") || `<tr><td class="muted" colspan="${Math.max(selectedColumns.length, 1)}">No rows loaded yet.</td></tr>`}
+                  `).join("") || `<tr><td class="muted" colspan="${Math.max(selectedColumns.length + 1, 1)}">No rows loaded yet.</td></tr>`}
                 </tbody>
               </table>
             </div>

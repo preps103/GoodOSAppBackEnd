@@ -3360,7 +3360,7 @@ router.get("/database/tables/:tableName/rows", async (req, res) => {
     `;
 
     const rowsSql = `
-      SELECT *
+      SELECT ctid::text AS "__ctid", *
       FROM ${quotedTable}
       ${whereSql}
       LIMIT $${search ? 2 : 1}
@@ -3441,7 +3441,7 @@ router.get("/database/tables/:tableName/export", async (req, res) => {
     }
 
     const rowsSql = `
-      SELECT *
+      SELECT ctid::text AS "__ctid", *
       FROM ${quotedTable}
       ${whereSql}
       LIMIT $${search ? 2 : 1}
@@ -3483,6 +3483,287 @@ router.get("/database/tables/:tableName/export", async (req, res) => {
     return res.send(csv);
   } catch (error) {
     return fail(res, "Failed to export table rows", 500, error.message);
+  }
+});
+
+
+const DATABASE_BROWSER_READ_ONLY_TABLES = new Set([
+  "backend_admin_audit_logs"
+]);
+
+async function getPublicTableColumns(tableName) {
+  const result = await dbQuery(
+    `
+      SELECT
+        column_name AS "columnName",
+        data_type AS "dataType",
+        is_nullable AS "isNullable",
+        column_default AS "columnDefault",
+        is_identity AS "isIdentity",
+        is_generated AS "isGenerated"
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = $1
+      ORDER BY ordinal_position ASC
+    `,
+    [tableName]
+  );
+
+  return result.rows;
+}
+
+function ensureTableWritable(tableName) {
+  if (DATABASE_BROWSER_READ_ONLY_TABLES.has(tableName)) {
+    const error = new Error("This table is read-only from the Database Browser.");
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+function normalizeDbBrowserValue(value, column) {
+  if (value === undefined) return null;
+  if (value === "") return null;
+
+  if (column && ["json", "jsonb"].includes(column.dataType)) {
+    if (typeof value === "string") {
+      try {
+        JSON.parse(value);
+        return value;
+      } catch (error) {
+        return JSON.stringify(value);
+      }
+    }
+    return JSON.stringify(value);
+  }
+
+  return value;
+}
+
+function valueExpressionForColumn(paramIndex, column) {
+  if (column && column.dataType === "jsonb") return `$${paramIndex}::jsonb`;
+  if (column && column.dataType === "json") return `$${paramIndex}::json`;
+  return `$${paramIndex}`;
+}
+
+router.post("/database/tables/:tableName/rows/create-safe", async (req, res) => {
+  try {
+    const tableName = String(req.params.tableName || "").trim();
+
+    if (!tableName) return fail(res, "Table name is required", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found or not allowed", 404);
+
+    ensureTableWritable(tableName);
+
+    const input = req.body?.row && typeof req.body.row === "object" ? req.body.row : {};
+    const columns = await getPublicTableColumns(tableName);
+    const writableColumns = columns.filter((column) => {
+      return column.isGenerated !== "ALWAYS" && column.isIdentity !== "YES";
+    });
+
+    const columnMap = new Map(writableColumns.map((column) => [column.columnName, column]));
+    const entries = Object.entries(input).filter(([key]) => columnMap.has(key));
+
+    if (!entries.length) return fail(res, "No valid writable columns provided", 400);
+
+    const quotedTable = quoteDbIdentifierSafe(tableName);
+    const quotedColumns = entries.map(([key]) => quoteDbIdentifierSafe(key));
+    const params = [];
+    const valueExpressions = [];
+
+    entries.forEach(([key, value], index) => {
+      const column = columnMap.get(key);
+      params.push(normalizeDbBrowserValue(value, column));
+      valueExpressions.push(valueExpressionForColumn(index + 1, column));
+    });
+
+    const sql = `
+      INSERT INTO ${quotedTable} (${quotedColumns.join(", ")})
+      VALUES (${valueExpressions.join(", ")})
+      RETURNING ctid::text AS "__ctid", *
+    `;
+
+    const result = await dbQuery(sql, params);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.row.create', 'database_row', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        tableName,
+        JSON.stringify({ row: result.rows[0] }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      row: result.rows[0],
+      message: "Row created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create row", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/database/tables/:tableName/rows/update-safe", async (req, res) => {
+  try {
+    const tableName = String(req.params.tableName || "").trim();
+    const rowCtid = String(req.body?.ctid || "").trim();
+    const columnName = String(req.body?.columnName || "").trim();
+    const value = req.body?.value;
+
+    if (!tableName) return fail(res, "Table name is required", 400);
+    if (!rowCtid) return fail(res, "Row ctid is required", 400);
+    if (!columnName) return fail(res, "Column name is required", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found or not allowed", 404);
+
+    ensureTableWritable(tableName);
+
+    const columns = await getPublicTableColumns(tableName);
+    const column = columns.find((item) => item.columnName === columnName);
+
+    if (!column) return fail(res, "Column not found", 404);
+    if (column.isGenerated === "ALWAYS" || column.isIdentity === "YES") {
+      return fail(res, "This column cannot be edited", 400);
+    }
+
+    const quotedTable = quoteDbIdentifierSafe(tableName);
+    const quotedColumn = quoteDbIdentifierSafe(columnName);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT ctid::text AS "__ctid", *
+        FROM ${quotedTable}
+        WHERE ctid = $1::tid
+        LIMIT 1
+      `,
+      [rowCtid]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Row not found", 404);
+
+    const normalizedValue = normalizeDbBrowserValue(value, column);
+    const expression = valueExpressionForColumn(1, column);
+
+    const result = await dbQuery(
+      `
+        UPDATE ${quotedTable}
+        SET ${quotedColumn} = ${expression}
+        WHERE ctid = $2::tid
+        RETURNING ctid::text AS "__ctid", *
+      `,
+      [normalizedValue, rowCtid]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.row.update', 'database_row', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        `${tableName}:${rowCtid}:${columnName}`,
+        JSON.stringify({ row: before }),
+        JSON.stringify({ row: result.rows[0], changedColumn: columnName }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      row: result.rows[0],
+      message: "Row updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update row", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/database/tables/:tableName/rows/delete-safe", async (req, res) => {
+  try {
+    const tableName = String(req.params.tableName || "").trim();
+    const rowCtid = String(req.body?.ctid || "").trim();
+
+    if (!tableName) return fail(res, "Table name is required", 400);
+    if (!rowCtid) return fail(res, "Row ctid is required", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found or not allowed", 404);
+
+    ensureTableWritable(tableName);
+
+    const quotedTable = quoteDbIdentifierSafe(tableName);
+
+    const result = await dbQuery(
+      `
+        DELETE FROM ${quotedTable}
+        WHERE ctid = $1::tid
+        RETURNING ctid::text AS "__ctid", *
+      `,
+      [rowCtid]
+    );
+
+    const deleted = result.rows[0];
+    if (!deleted) return fail(res, "Row not found", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.row.delete', 'database_row', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        `${tableName}:${rowCtid}`,
+        JSON.stringify({ row: deleted }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      row: deleted,
+      message: "Row deleted.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to delete row", error.statusCode || 500, error.message);
   }
 });
 
