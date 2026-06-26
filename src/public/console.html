@@ -885,7 +885,61 @@ function apiKeysView() {
   `;
 }
 
+
+async function directAdminGet(path) {
+  const response = await fetch(path + (path.includes("?") ? "&" : "?") + "t=" + Date.now(), {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+    headers: {
+      "Accept": "application/json"
+    }
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok || payload.success === false) {
+    throw new Error(payload.message || "Request failed: " + response.status);
+  }
+
+  return payload.data || payload;
+}
+
+async function forceLoadWebhooksNow() {
+  try {
+    state.webhookLiveLoading = true;
+
+    const webhooksPayload = await directAdminGet("/api/admin/webhooks-live");
+    const deliveriesPayload = await directAdminGet("/api/admin/webhook-deliveries-live");
+
+    state.webhooks = Array.isArray(webhooksPayload.webhooks)
+      ? webhooksPayload.webhooks
+      : [];
+
+    state.webhookDeliveries = Array.isArray(deliveriesPayload.deliveries)
+      ? deliveriesPayload.deliveries
+      : [];
+
+    state.webhookLiveLoaded = true;
+    state.webhookLiveLoading = false;
+  } catch (error) {
+    state.webhookLiveLoading = false;
+    state.webhookLiveError = error.message || "Failed to load webhook data.";
+    console.error("Webhook live load failed:", error);
+  }
+}
+
+async function refreshWebhooksNow() {
+  await forceLoadWebhooksNow();
+  renderApp();
+}
+
 function webhooksView() {
+  if (!state.webhookLiveLoaded && !state.webhookLiveLoading) {
+    state.webhookLiveLoading = true;
+    forceLoadWebhooksNow().then(() => renderApp());
+  }
+
   const allWebhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
   const webhooks = allWebhooks.filter(webhook => webhook.status === "active");
   const disabledWebhooks = allWebhooks.filter(webhook => webhook.status !== "active");
@@ -895,8 +949,13 @@ function webhooksView() {
     ${hero("Webhooks", "Send auth, app, storage, payment, and custom backend events to external services.")}
     <div class="section-head">
       <h3>Webhook Endpoints</h3>
-      <button class="logout" onclick="createWebhook()">Create Webhook</button>
+      <div>
+        <button class="logout" onclick="refreshWebhooksNow()">Refresh Data</button>
+        <button class="logout" onclick="createWebhook()">Create Webhook</button>
+      </div>
     </div>
+    ${state.webhookLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live webhook data...</p></div>` : ""}
+    ${state.webhookLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Webhook load error: ${safeText(state.webhookLiveError)}</p></div>` : ""}
 
     <div class="grid cards">
       ${card("Webhooks", allWebhooks.length, "Configured endpoints")}
