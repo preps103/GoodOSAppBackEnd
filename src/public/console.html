@@ -916,6 +916,42 @@ window.refreshApiKeysNow = async function refreshApiKeysNow() {
   }
 };
 
+
+window.revokeApiKey = async function revokeApiKey(id) {
+  if (!id) {
+    alert("Missing API key id.");
+    return;
+  }
+
+  const confirmed = confirm("Revoke this API key? This cannot be undone.");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/api-keys/" + encodeURIComponent(id) + "/revoke", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "API key revoke failed with status " + response.status);
+    }
+
+    alert("API key revoked.");
+    await window.refreshApiKeysNow();
+  } catch (error) {
+    alert("API key revoke failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 window.createScopedApiKey = async function createScopedApiKey() {
   const name = prompt("API key name:", "GoodFleet Read Key");
   if (!name) return;
