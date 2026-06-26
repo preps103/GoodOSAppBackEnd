@@ -931,9 +931,34 @@ async function forceLoadWebhooksNow() {
 
 async function refreshWebhooksNow() {
   await forceLoadWebhooksNow();
-  renderApp();
+  goodosRenderNow();
 }
 
+
+
+function goodosRenderNow() {
+  if (typeof render === "function") return render();
+  if (typeof renderConsole === "function") return renderConsole();
+  if (typeof renderPage === "function") return renderPage();
+  if (typeof renderView === "function") return renderView();
+  if (typeof renderDashboard === "function") return renderDashboard();
+  if (typeof updateApp === "function") return updateApp();
+  if (typeof mountApp === "function") return mountApp();
+
+  const target =
+    document.querySelector("#app") ||
+    document.querySelector("#root") ||
+    document.querySelector("main") ||
+    document.querySelector(".content") ||
+    document.querySelector(".main");
+
+  if (target && state && state.view === "webhooks" && typeof webhooksView === "function") {
+    target.innerHTML = webhooksView();
+    return;
+  }
+
+  console.warn("No known render function found.");
+}
 
 window.refreshWebhooksNow = async function refreshWebhooksNow() {
   const button = document.querySelector('[data-webhook-refresh-button="true"]');
@@ -963,12 +988,12 @@ window.refreshWebhooksNow = async function refreshWebhooksNow() {
     state.webhookLiveLoading = false;
     state.webhookLiveError = "";
 
-    renderApp();
+    goodosRenderNow();
   } catch (error) {
     state.webhookLiveError = error.message || "Webhook refresh failed.";
     alert("Webhook refresh failed: " + state.webhookLiveError);
     console.error(error);
-    renderApp();
+    goodosRenderNow();
   } finally {
     const freshButton = document.querySelector('[data-webhook-refresh-button="true"]');
     if (freshButton) freshButton.textContent = "REFRESH DATA";
