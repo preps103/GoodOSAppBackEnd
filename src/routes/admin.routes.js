@@ -6208,6 +6208,398 @@ function isSecuritySettingKeyAllowed(settingKey = "") {
   );
 }
 
+
+function normalizePolicyAdminArray(value, fallback = []) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  if (typeof value === "string" && value.trim()) {
+    return value.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  return fallback;
+}
+
+function normalizePolicyAdminSlug(value, fallback = "*") {
+  return String(value || fallback)
+    .trim()
+    .replace(/[^a-zA-Z0-9:_*.-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 140) || fallback;
+}
+
+function normalizePolicyEffect(value) {
+  const effect = String(value || "allow").trim().toLowerCase();
+  if (["allow", "deny"].includes(effect)) return effect;
+  return "allow";
+}
+
+function normalizePolicyTargetType(value) {
+  const targetType = String(value || "db_api").trim().toLowerCase();
+  if (["*", "db_api", "storage", "function", "webhook", "admin", "api_key", "realtime"].includes(targetType)) return targetType;
+  return "db_api";
+}
+
+function normalizePolicyOperation(value) {
+  const operation = String(value || "*").trim().toLowerCase();
+  if (["*", "read", "insert", "update", "delete", "execute", "write", "admin", "list"].includes(operation)) return operation;
+  return "*";
+}
+
+router.get("/policy-rules-page-data", async (req, res) => {
+  try {
+    const rulesResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        description,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        operation,
+        effect,
+        priority,
+        condition_json AS "conditionJson",
+        message,
+        status,
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId",
+        metadata_json AS "metadata",
+        created_by::text AS "createdBy",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_policy_rules
+      ORDER BY priority ASC, target_type ASC, target_id ASC, operation ASC
+      LIMIT 300
+    `);
+
+    const evaluationsResult = await dbQuery(`
+      SELECT
+        id,
+        policy_id AS "policyId",
+        decision,
+        reason,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        operation,
+        actor_type AS "actorType",
+        actor_id AS "actorId",
+        api_key_id AS "apiKeyId",
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId",
+        context_json AS "context",
+        created_at AS "createdAt"
+      FROM backend_policy_evaluations
+      ORDER BY created_at DESC
+      LIMIT 150
+    `);
+
+    const summaryResult = await dbQuery(`
+      SELECT
+        target_type AS "targetType",
+        decision,
+        COUNT(*)::int AS count
+      FROM backend_policy_evaluations
+      WHERE created_at > NOW() - INTERVAL '24 hours'
+      GROUP BY target_type, decision
+      ORDER BY target_type ASC, decision ASC
+    `);
+
+    const rules = rulesResult.rows;
+    const evaluations = evaluationsResult.rows;
+
+    return ok(res, {
+      rules,
+      evaluations,
+      summary: summaryResult.rows,
+      counts: {
+        rules: rules.length,
+        activeRules: rules.filter((rule) => rule.status === "active").length,
+        denyRules: rules.filter((rule) => rule.effect === "deny").length,
+        evaluations: evaluations.length,
+        denied24h: summaryResult.rows.filter((item) => item.decision === "deny").reduce((sum, item) => sum + Number(item.count || 0), 0),
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load policy rules page data", 500, error.message);
+  }
+});
+
+router.post("/policy-rules/create-safe", async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    if (!name) return fail(res, "Policy name is required", 400);
+
+    const targetType = normalizePolicyTargetType(req.body?.targetType);
+    const targetId = normalizePolicyAdminSlug(req.body?.targetId || "*");
+    const operation = normalizePolicyOperation(req.body?.operation || "*");
+    const effect = normalizePolicyEffect(req.body?.effect || "allow");
+    const priority = Math.min(Math.max(Number(req.body?.priority || 100), 1), 10000);
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+    const conditionJson = req.body?.conditionJson && typeof req.body.conditionJson === "object" ? req.body.conditionJson : {};
+    const description = String(req.body?.description || "").trim();
+    const message = String(req.body?.message || "").trim();
+
+    const id = `pol_${targetType}_${targetId}_${operation}_${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`
+      .replace(/[^a-zA-Z0-9_:-]/g, "_")
+      .slice(0, 160);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_policy_rules (
+          id,
+          name,
+          description,
+          target_type,
+          target_id,
+          operation,
+          effect,
+          priority,
+          condition_json,
+          message,
+          status,
+          organization_id,
+          project_id,
+          environment_id,
+          metadata_json,
+          created_by
+        )
+        VALUES ($1,$2,NULLIF($3,''),$4,$5,$6,$7,$8,$9::jsonb,NULLIF($10,''),$11,'org_goodos','proj_goodos_platform','env_goodos_production',$12::jsonb,(SELECT id FROM users ORDER BY created_at ASC LIMIT 1))
+        RETURNING
+          id,
+          name,
+          description,
+          target_type AS "targetType",
+          target_id AS "targetId",
+          operation,
+          effect,
+          priority,
+          condition_json AS "conditionJson",
+          message,
+          status,
+          organization_id AS "organizationId",
+          project_id AS "projectId",
+          environment_id AS "environmentId",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [
+        id,
+        name,
+        description,
+        targetType,
+        targetId,
+        operation,
+        effect,
+        priority,
+        JSON.stringify(conditionJson),
+        message,
+        status,
+        JSON.stringify({ createdFrom: "GoodAppBackEnd Console" }),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1,$2,'policy.rule.create','policy_rule',$3,$4::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',$5,$6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { rule: result.rows[0], message: "Policy rule created." });
+  } catch (error) {
+    return fail(res, "Failed to create policy rule", 500, error.message);
+  }
+});
+
+router.post("/policy-rules/:id/update-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const beforeResult = await dbQuery("SELECT * FROM backend_policy_rules WHERE id = $1 LIMIT 1", [id]);
+    const before = beforeResult.rows[0];
+
+    if (!before) return fail(res, "Policy rule not found", 404);
+
+    const patch = req.body && typeof req.body === "object" ? req.body : {};
+
+    const name = String(patch.name ?? before.name ?? "").trim();
+    const description = String(patch.description ?? before.description ?? "").trim();
+    const targetType = normalizePolicyTargetType(patch.targetType ?? before.target_type);
+    const targetId = normalizePolicyAdminSlug(patch.targetId ?? before.target_id ?? "*");
+    const operation = normalizePolicyOperation(patch.operation ?? before.operation ?? "*");
+    const effect = normalizePolicyEffect(patch.effect ?? before.effect ?? "allow");
+    const priority = Math.min(Math.max(Number(patch.priority ?? before.priority ?? 100), 1), 10000);
+    const conditionJson = patch.conditionJson && typeof patch.conditionJson === "object" ? patch.conditionJson : (before.condition_json || {});
+    const message = String(patch.message ?? before.message ?? "").trim();
+    const status = String(patch.status ?? before.status ?? "active").trim().toLowerCase();
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_policy_rules
+        SET
+          name = $2,
+          description = NULLIF($3, ''),
+          target_type = $4,
+          target_id = $5,
+          operation = $6,
+          effect = $7,
+          priority = $8,
+          condition_json = $9::jsonb,
+          message = NULLIF($10, ''),
+          status = $11,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          description,
+          target_type AS "targetType",
+          target_id AS "targetId",
+          operation,
+          effect,
+          priority,
+          condition_json AS "conditionJson",
+          message,
+          status,
+          organization_id AS "organizationId",
+          project_id AS "projectId",
+          environment_id AS "environmentId",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [
+        id,
+        name,
+        description,
+        targetType,
+        targetId,
+        operation,
+        effect,
+        priority,
+        JSON.stringify(conditionJson),
+        message,
+        status,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1,$2,'policy.rule.update','policy_rule',$3,$4::jsonb,$5::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',$6,$7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { rule: result.rows[0], message: "Policy rule updated." });
+  } catch (error) {
+    return fail(res, "Failed to update policy rule", 500, error.message);
+  }
+});
+
+router.post("/policy-rules/test-safe", async (req, res) => {
+  try {
+    const targetType = normalizePolicyTargetType(req.body?.targetType || "db_api");
+    const targetId = normalizePolicyAdminSlug(req.body?.targetId || "*");
+    const operation = normalizePolicyOperation(req.body?.operation || "read");
+    const scopes = normalizePolicyAdminArray(req.body?.scopes || ["read:db"]);
+    const appIds = normalizePolicyAdminArray(req.body?.allowedAppIds || ["*"]);
+
+    const policiesResult = await dbQuery(
+      `
+        SELECT
+          id,
+          name,
+          target_type AS "targetType",
+          target_id AS "targetId",
+          operation,
+          effect,
+          priority,
+          condition_json AS "conditionJson",
+          message,
+          status
+        FROM backend_policy_rules
+        WHERE status = 'active'
+          AND (target_type = '*' OR target_type = $1)
+          AND (target_id = '*' OR target_id = $2)
+          AND (operation = '*' OR operation = $3)
+        ORDER BY priority ASC, created_at ASC
+      `,
+      [targetType, targetId, operation]
+    );
+
+    const requiredMatches = (condition) => {
+      const requiredScopes = normalizePolicyAdminArray(condition.requiredScopes || condition.required_scopes || []);
+      if (requiredScopes.length && !requiredScopes.every((scope) => scopes.includes(scope))) return false;
+
+      const anyScopes = normalizePolicyAdminArray(condition.anyScopes || condition.any_scopes || []);
+      if (anyScopes.length && !anyScopes.some((scope) => scopes.includes(scope))) return false;
+
+      const allowedAppIds = normalizePolicyAdminArray(condition.allowedAppIds || condition.allowed_app_ids || []);
+      if (allowedAppIds.length && !allowedAppIds.some((appId) => appId === "*" || appIds.includes(appId))) return false;
+
+      return true;
+    };
+
+    const matched = policiesResult.rows.filter((policy) => requiredMatches(policy.conditionJson || {}));
+    const deny = matched.find((policy) => policy.effect === "deny");
+    const allow = matched.find((policy) => policy.effect === "allow");
+
+    const decision = deny
+      ? { allowed: false, decision: "deny", policy: deny, reason: deny.message || "Denied by policy." }
+      : allow
+        ? { allowed: true, decision: "allow", policy: allow, reason: allow.message || "Allowed by policy." }
+        : { allowed: true, decision: "allow", policy: null, reason: "No matching policy. Existing controls would decide." };
+
+    return ok(res, {
+      request: { targetType, targetId, operation, scopes, allowedAppIds: appIds },
+      matchedPolicies: matched,
+      decision,
+    });
+  } catch (error) {
+    return fail(res, "Failed to test policy", 500, error.message);
+  }
+});
+
 router.get("/security-page-data", async (req, res) => {
   try {
     const settingsResult = await dbQuery(`

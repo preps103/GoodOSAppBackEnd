@@ -1128,6 +1128,286 @@ function developerCenterSection() {
   `;
 }
 
+
+window.loadPolicyRulesCenter = async function loadPolicyRulesCenter() {
+  try {
+    const response = await fetch("/api/admin/policy-rules-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Policy Rules load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.policyRules = Array.isArray(data.rules) ? data.rules : [];
+    state.policyEvaluations = Array.isArray(data.evaluations) ? data.evaluations : [];
+    state.policySummary = Array.isArray(data.summary) ? data.summary : [];
+    state.policyCounts = data.counts || {};
+    state.policyRulesLoaded = true;
+    state.policyRulesLoading = false;
+    state.policyRulesError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.policyRulesLoaded = true;
+    state.policyRulesLoading = false;
+    state.policyRulesError = error.message || "Failed to load Policy Rules.";
+    console.error("Policy Rules load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshPolicyRulesCenterNow = async function refreshPolicyRulesCenterNow() {
+  state.policyRulesLoaded = false;
+  state.policyRulesLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadPolicyRulesCenter();
+};
+
+window.createPolicyRule = async function createPolicyRule() {
+  const name = prompt("Policy name:", "New GoodOS Policy");
+  if (!name) return;
+
+  const targetType = prompt("Target type: db_api, storage, function, webhook, admin, realtime, *", "db_api") || "db_api";
+  const targetId = prompt("Target id or *:", "*") || "*";
+  const operation = prompt("Operation: read, insert, update, delete, execute, admin, *", "read") || "read";
+  const effect = prompt("Effect: allow or deny", "allow") || "allow";
+  const priority = Number(prompt("Priority. Lower runs first:", "100") || 100);
+  const conditionInput = prompt("Condition JSON:", JSON.stringify({ requiredScopes: ["read:db"] }, null, 2));
+  if (conditionInput === null) return;
+
+  let conditionJson = {};
+  try {
+    conditionJson = JSON.parse(conditionInput || "{}");
+  } catch (error) {
+    return alert("Invalid condition JSON.");
+  }
+
+  try {
+    const response = await fetch("/api/admin/policy-rules/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        targetType,
+        targetId,
+        operation,
+        effect,
+        priority,
+        conditionJson,
+        status: "active",
+        message: "Policy created from GoodAppBackEnd Console."
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Policy creation failed with status " + response.status);
+    }
+
+    alert("Policy rule created.");
+    await window.loadPolicyRulesCenter();
+  } catch (error) {
+    alert("Policy rule creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.editPolicyRule = async function editPolicyRule(id) {
+  const rule = (state.policyRules || []).find(item => item.id === id);
+  if (!rule) return alert("Policy rule not found.");
+
+  const current = {
+    name: rule.name || "",
+    description: rule.description || "",
+    targetType: rule.targetType || "db_api",
+    targetId: rule.targetId || "*",
+    operation: rule.operation || "*",
+    effect: rule.effect || "allow",
+    priority: rule.priority || 100,
+    conditionJson: rule.conditionJson || {},
+    message: rule.message || "",
+    status: rule.status || "active"
+  };
+
+  const input = prompt("Edit Policy Rule JSON:", JSON.stringify(current, null, 2));
+  if (input === null) return;
+
+  let patch;
+  try {
+    patch = JSON.parse(input);
+  } catch (error) {
+    return alert("Invalid JSON.");
+  }
+
+  try {
+    const response = await fetch("/api/admin/policy-rules/" + encodeURIComponent(id) + "/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(patch)
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Policy update failed with status " + response.status);
+    }
+
+    alert("Policy rule updated.");
+    await window.loadPolicyRulesCenter();
+  } catch (error) {
+    alert("Policy rule update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.testPolicyRule = async function testPolicyRule() {
+  const targetType = prompt("Target type:", "db_api") || "db_api";
+  const targetId = prompt("Target id:", "apps") || "apps";
+  const operation = prompt("Operation:", "read") || "read";
+  const scopes = prompt("Scopes comma-separated:", "read:db") || "read:db";
+
+  try {
+    const response = await fetch("/api/admin/policy-rules/test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        targetType,
+        targetId,
+        operation,
+        scopes: scopes.split(",").map(item => item.trim()).filter(Boolean),
+        allowedAppIds: ["*"]
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Policy test failed with status " + response.status);
+    }
+
+    alert("Policy Test Result:\\n\\n" + prettyJsonForAlert(payload.data || payload));
+    await window.loadPolicyRulesCenter();
+  } catch (error) {
+    alert("Policy test failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function policyRulesSection() {
+  if (!state.policyRulesLoaded && !state.policyRulesLoading) {
+    state.policyRulesLoading = true;
+    setTimeout(() => window.loadPolicyRulesCenter(), 100);
+  }
+
+  const rules = Array.isArray(state.policyRules) ? state.policyRules : [];
+  const evaluations = Array.isArray(state.policyEvaluations) ? state.policyEvaluations : [];
+  const counts = state.policyCounts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Rules Engine / Policy Center</h3>
+      <div>
+        <button class="logout" onclick="window.refreshPolicyRulesCenterNow()">Refresh Policies</button>
+        <button class="logout" onclick="window.createPolicyRule()">Create Policy</button>
+        <button class="logout" onclick="window.testPolicyRule()">Test Policy</button>
+      </div>
+    </div>
+
+    ${state.policyRulesLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading policy rules...</p></div>` : ""}
+    ${state.policyRulesError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Policy error: ${safeText(state.policyRulesError)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Policy Rules", counts.rules ?? rules.length, "Central allow/deny controls")}
+      ${card("Active Rules", counts.activeRules ?? rules.filter(rule => rule.status === "active").length, "Currently enforced")}
+      ${card("Deny Rules", counts.denyRules ?? rules.filter(rule => rule.effect === "deny").length, "Blocking controls")}
+      ${card("Evaluations", counts.evaluations ?? evaluations.length, "Recent decisions")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Policy Rules</h3><span class="badge">${safeText(String(rules.length))} Rules</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Rule</th>
+            <th>Target</th>
+            <th>Operation</th>
+            <th>Effect</th>
+            <th>Condition</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rules.map(rule => `
+            <tr>
+              <td><strong>${safeText(rule.name || rule.id)}</strong><div class="muted">${safeText(rule.id || "")}</div><div class="muted">${safeText(rule.message || "")}</div></td>
+              <td>${safeText(rule.targetType || "-")} / ${safeText(rule.targetId || "*")}</td>
+              <td><span class="badge">${safeText(rule.operation || "*")}</span></td>
+              <td><span class="badge">${safeText(rule.effect || "-")}</span><div class="muted">Priority ${safeText(String(rule.priority || 100))}</div></td>
+              <td><code>${safeText(JSON.stringify(rule.conditionJson || {})).slice(0, 180)}</code></td>
+              <td><button class="logout" onclick="window.editPolicyRule('${safeText(rule.id)}')">Edit</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No policy rules found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent Policy Evaluations</h3><span class="badge">${safeText(String(evaluations.length))} Logs</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Target</th>
+            <th>Operation</th>
+            <th>API Key</th>
+            <th>Reason</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${evaluations.map(item => `
+            <tr>
+              <td><span class="badge">${safeText(item.decision || "-")}</span></td>
+              <td>${safeText(item.targetType || "-")} / ${safeText(item.targetId || "-")}</td>
+              <td>${safeText(item.operation || "-")}</td>
+              <td>${safeText(item.apiKeyId || "-")}</td>
+              <td>${safeText(item.reason || "-")}</td>
+              <td>${safeText(formatDate(item.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No policy evaluations yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function dashboard() {
   if (!state.activityLoaded && !state.activityLoading) {
     state.activityLoading = true;
@@ -1160,6 +1440,8 @@ function dashboard() {
     ${projectControlCenterSection()}
 
     ${developerCenterSection()}
+
+    ${policyRulesSection()}
 
     <div class="grid cards">
       ${card("Users", counts.activeUsers ?? stats.users ?? state.users.length, "Active GoodOS users")}

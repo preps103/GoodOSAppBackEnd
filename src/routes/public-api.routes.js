@@ -136,6 +136,258 @@ function requireScope(scope) {
 }
 
 
+
+
+function policyContextList(value, fallback = []) {
+  return normalizeList(value, fallback);
+}
+
+function policyIntersects(left = [], right = []) {
+  const a = policyContextList(left, []);
+  const b = policyContextList(right, []);
+  if (a.includes("*") || b.includes("*")) return true;
+  return a.some((item) => b.includes(item));
+}
+
+function policyConditionMatches(policy, context = {}) {
+  const condition = policy.conditionJson || {};
+  const apiKey = context.apiKey || {};
+  const apiKeyScopes = policyContextList(apiKey.scopes, []);
+  const apiKeyAllowedApps = allowedApps(apiKey);
+
+  const requiredScopes = policyContextList(condition.requiredScopes || condition.required_scopes, []);
+  if (requiredScopes.length && !requiredScopes.every((scope) => hasScope(apiKey, scope))) return false;
+
+  const anyScopes = policyContextList(condition.anyScopes || condition.any_scopes, []);
+  if (anyScopes.length && !anyScopes.some((scope) => hasScope(apiKey, scope))) return false;
+
+  const deniedScopes = policyContextList(condition.deniedScopes || condition.denied_scopes, []);
+  if (deniedScopes.length && deniedScopes.some((scope) => apiKeyScopes.includes(scope))) return false;
+
+  const allowedAppIds = policyContextList(condition.allowedAppIds || condition.allowed_app_ids, []);
+  if (allowedAppIds.length && !policyIntersects(allowedAppIds, apiKeyAllowedApps)) return false;
+
+  const deniedAppIds = policyContextList(condition.deniedAppIds || condition.denied_app_ids, []);
+  if (deniedAppIds.length && policyIntersects(deniedAppIds, apiKeyAllowedApps)) return false;
+
+  const apiKeyIds = policyContextList(condition.apiKeyIds || condition.api_key_ids, []);
+  if (apiKeyIds.length && !apiKeyIds.includes(String(apiKey.id || ""))) return false;
+
+  const projectIds = policyContextList(condition.projectIds || condition.project_ids, []);
+  if (projectIds.length && !projectIds.includes(String(apiKey.projectId || context.projectId || ""))) return false;
+
+  const environmentIds = policyContextList(condition.environmentIds || condition.environment_ids, []);
+  if (environmentIds.length && !environmentIds.includes(String(apiKey.environmentId || context.environmentId || ""))) return false;
+
+  const tableSlugs = policyContextList(condition.tableSlugs || condition.table_slugs, []);
+  if (tableSlugs.length && !tableSlugs.includes(String(context.tableSlug || context.apiSlug || ""))) return false;
+
+  const tableNames = policyContextList(condition.tableNames || condition.table_names, []);
+  if (tableNames.length && !tableNames.includes(String(context.tableName || ""))) return false;
+
+  return true;
+}
+
+async function logGoodOSPolicyEvaluation({
+  policyId = null,
+  decision = "allow",
+  reason = "",
+  targetType,
+  targetId,
+  operation,
+  actorType = "api_key",
+  actorId = null,
+  apiKey = {},
+  context = {},
+} = {}) {
+  try {
+    await dbQuery(
+      `
+        INSERT INTO backend_policy_evaluations (
+          id,
+          policy_id,
+          decision,
+          reason,
+          target_type,
+          target_id,
+          operation,
+          actor_type,
+          actor_id,
+          api_key_id,
+          organization_id,
+          project_id,
+          environment_id,
+          context_json
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb)
+      `,
+      [
+        `poleval_${crypto.randomUUID().replace(/-/g, "")}`,
+        policyId,
+        decision,
+        reason,
+        String(targetType || "*"),
+        String(targetId || "*"),
+        String(operation || "*"),
+        actorType,
+        actorId,
+        apiKey.id || null,
+        apiKey.organizationId || context.organizationId || null,
+        apiKey.projectId || context.projectId || null,
+        apiKey.environmentId || context.environmentId || null,
+        JSON.stringify({
+          ...context,
+          apiKey: apiKey.id
+            ? {
+                id: apiKey.id,
+                name: apiKey.name,
+                type: apiKey.type,
+                scopes: apiKey.scopes || [],
+                allowedAppIds: apiKey.allowedAppIds || [],
+              }
+            : null,
+        }),
+      ]
+    );
+  } catch {
+    // Policy evaluation logging must never break public API traffic.
+  }
+}
+
+async function evaluateGoodOSPolicy({
+  targetType,
+  targetId = "*",
+  operation = "*",
+  actorType = "api_key",
+  actorId = null,
+  apiKey = {},
+  context = {},
+} = {}) {
+  const result = await dbQuery(
+    `
+      SELECT
+        id,
+        name,
+        description,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        operation,
+        effect,
+        priority,
+        condition_json AS "conditionJson",
+        message,
+        status,
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId"
+      FROM backend_policy_rules
+      WHERE status = 'active'
+        AND (target_type = '*' OR target_type = $1)
+        AND (target_id = '*' OR target_id = $2)
+        AND (operation = '*' OR operation = $3)
+      ORDER BY priority ASC, created_at ASC
+    `,
+    [String(targetType || "*"), String(targetId || "*"), String(operation || "*")]
+  );
+
+  const matchedPolicies = result.rows.filter((policy) => policyConditionMatches(policy, {
+    ...context,
+    targetType,
+    targetId,
+    operation,
+    apiKey,
+  }));
+
+  const denyPolicy = matchedPolicies.find((policy) => String(policy.effect || "").toLowerCase() === "deny");
+  const allowPolicy = matchedPolicies.find((policy) => String(policy.effect || "").toLowerCase() === "allow");
+
+  if (denyPolicy) {
+    const decision = {
+      allowed: false,
+      decision: "deny",
+      policyId: denyPolicy.id,
+      policyName: denyPolicy.name,
+      reason: denyPolicy.message || "Request denied by GoodOS policy.",
+    };
+
+    await logGoodOSPolicyEvaluation({
+      policyId: denyPolicy.id,
+      decision: "deny",
+      reason: decision.reason,
+      targetType,
+      targetId,
+      operation,
+      actorType,
+      actorId,
+      apiKey,
+      context,
+    });
+
+    return decision;
+  }
+
+  if (allowPolicy) {
+    const decision = {
+      allowed: true,
+      decision: "allow",
+      policyId: allowPolicy.id,
+      policyName: allowPolicy.name,
+      reason: allowPolicy.message || "Request allowed by GoodOS policy.",
+    };
+
+    await logGoodOSPolicyEvaluation({
+      policyId: allowPolicy.id,
+      decision: "allow",
+      reason: decision.reason,
+      targetType,
+      targetId,
+      operation,
+      actorType,
+      actorId,
+      apiKey,
+      context,
+    });
+
+    return decision;
+  }
+
+  const decision = {
+    allowed: true,
+    decision: "allow",
+    policyId: null,
+    policyName: null,
+    reason: "No matching policy. Existing API scope/table controls allowed the request.",
+  };
+
+  await logGoodOSPolicyEvaluation({
+    policyId: null,
+    decision: "allow",
+    reason: decision.reason,
+    targetType,
+    targetId,
+    operation,
+    actorType,
+    actorId,
+    apiKey,
+    context,
+  });
+
+  return decision;
+}
+
+async function enforceGoodOSPolicy(params = {}) {
+  const decision = await evaluateGoodOSPolicy(params);
+
+  if (!decision.allowed) {
+    const error = new Error(decision.reason || "Denied by GoodOS policy.");
+    error.statusCode = 403;
+    error.policyDecision = decision;
+    throw error;
+  }
+
+  return decision;
+}
+
 function functionSlugFromPath(value) {
   return String(value || "")
     .trim()
@@ -451,6 +703,23 @@ async function publicCallableFunctionHandler(req, res) {
     }
 
     const input = normalizePublicFunctionInput(req);
+
+    await enforceGoodOSPolicy({
+      targetType: "function",
+      targetId: fn.id,
+      operation: "execute",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: {
+        functionId: fn.id,
+        functionName: fn.name,
+        routePath: fn.route_path,
+        method: req.method,
+        inputPreview: input,
+      }
+    });
+
     const run = await runPublicEdgeFunction(fn, input, req.goodosApiKey);
 
     return res.json({
@@ -540,6 +809,15 @@ router.get("/apps", apiKeyRequired, requireScope("read:apps"), async (req, res) 
 
 router.get("/storage/buckets", apiKeyRequired, requireScope("read:storage"), async (req, res) => {
   try {
+    await enforceGoodOSPolicy({
+      targetType: "storage",
+      targetId: "buckets",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/storage/buckets", method: req.method }
+    });
     const result = await dbQuery(`
       SELECT
         b.id,
@@ -572,6 +850,15 @@ router.get("/storage/buckets", apiKeyRequired, requireScope("read:storage"), asy
 
 router.get("/storage/files", apiKeyRequired, requireScope("read:storage"), async (req, res) => {
   try {
+    await enforceGoodOSPolicy({
+      targetType: "storage",
+      targetId: "files",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/storage/files", method: req.method }
+    });
     const result = await dbQuery(`
       SELECT
         f.id,
@@ -803,6 +1090,15 @@ function dbApiSafePublicError(res, error) {
 
 router.get("/db/tables", apiKeyRequired, requireScope("read:db"), async (req, res) => {
   try {
+    await enforceGoodOSPolicy({
+      targetType: "db_api",
+      targetId: "*",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/db/tables", method: req.method }
+    });
     const result = await dbQuery(
       `
         SELECT
@@ -846,6 +1142,23 @@ router.get("/db/tables", apiKeyRequired, requireScope("read:db"), async (req, re
 router.get("/db/:tableSlug/rows", apiKeyRequired, requireScope("read:db"), async (req, res) => {
   try {
     const rule = await getDbApiRule(req.params.tableSlug, "read", req.goodosApiKey);
+
+    await enforceGoodOSPolicy({
+      targetType: "db_api",
+      targetId: rule.apiSlug,
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: {
+        route: req.path,
+        method: req.method,
+        tableSlug: rule.apiSlug,
+        tableName: rule.tableName,
+        tableRuleId: rule.id
+      }
+    });
+
     const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
     const columnNames = columns.map((column) => column.columnName);
 
@@ -932,6 +1245,23 @@ router.get("/db/:tableSlug/rows", apiKeyRequired, requireScope("read:db"), async
 router.get("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("read:db"), async (req, res) => {
   try {
     const rule = await getDbApiRule(req.params.tableSlug, "read", req.goodosApiKey);
+
+    await enforceGoodOSPolicy({
+      targetType: "db_api",
+      targetId: rule.apiSlug,
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: {
+        route: req.path,
+        method: req.method,
+        tableSlug: rule.apiSlug,
+        tableName: rule.tableName,
+        tableRuleId: rule.id
+      }
+    });
+
     const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
     const columnNames = columns.map((column) => column.columnName);
     const primaryKey = await getDbApiPrimaryKey(rule.tableName);
@@ -976,6 +1306,23 @@ router.get("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("read:db"), a
 router.post("/db/:tableSlug/rows", apiKeyRequired, requireScope("write:db"), async (req, res) => {
   try {
     const rule = await getDbApiRule(req.params.tableSlug, "insert", req.goodosApiKey);
+
+    await enforceGoodOSPolicy({
+      targetType: "db_api",
+      targetId: rule.apiSlug,
+      operation: "insert",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: {
+        route: req.path,
+        method: req.method,
+        tableSlug: rule.apiSlug,
+        tableName: rule.tableName,
+        tableRuleId: rule.id
+      }
+    });
+
     const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
     const columnMap = new Map(columns.map((column) => [column.columnName, column]));
     const input = req.body?.row && typeof req.body.row === "object" ? req.body.row : (req.body && typeof req.body === "object" ? req.body : {});
@@ -1034,6 +1381,24 @@ router.post("/db/:tableSlug/rows", apiKeyRequired, requireScope("write:db"), asy
 router.patch("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("write:db"), async (req, res) => {
   try {
     const rule = await getDbApiRule(req.params.tableSlug, "update", req.goodosApiKey);
+
+    await enforceGoodOSPolicy({
+      targetType: "db_api",
+      targetId: rule.apiSlug,
+      operation: "update",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: {
+        route: req.path,
+        method: req.method,
+        tableSlug: rule.apiSlug,
+        tableName: rule.tableName,
+        tableRuleId: rule.id,
+        rowId: String(req.params.id || "")
+      }
+    });
+
     const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
     const columnMap = new Map(columns.map((column) => [column.columnName, column]));
     const primaryKey = await getDbApiPrimaryKey(rule.tableName);
@@ -1107,6 +1472,24 @@ router.patch("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("write:db")
 router.delete("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("write:db"), async (req, res) => {
   try {
     const rule = await getDbApiRule(req.params.tableSlug, "delete", req.goodosApiKey);
+
+    await enforceGoodOSPolicy({
+      targetType: "db_api",
+      targetId: rule.apiSlug,
+      operation: "delete",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: {
+        route: req.path,
+        method: req.method,
+        tableSlug: rule.apiSlug,
+        tableName: rule.tableName,
+        tableRuleId: rule.id,
+        rowId: String(req.params.id || "")
+      }
+    });
+
     const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
     const columnNames = columns.map((column) => column.columnName);
     const primaryKey = await getDbApiPrimaryKey(rule.tableName);
