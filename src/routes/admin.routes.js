@@ -2933,6 +2933,273 @@ router.post("/realtime-events/cleanup-safe", async (req, res) => {
   }
 });
 
+
+async function executeControlledEdgeFunction(fn, input = {}) {
+  const startedAt = Date.now();
+  const id = String(fn.id || "");
+  const type = String(fn.type || "http");
+  const triggerType = String(fn.trigger_type || fn.triggerType || "manual");
+
+  if (id === "fn_http_health_check" || fn.route_path === "/api/functions/health-check") {
+    const dbTime = await dbQuery("SELECT NOW() AS now");
+    return {
+      status: "success",
+      output: {
+        ok: true,
+        functionId: id,
+        name: fn.name,
+        type,
+        triggerType,
+        routePath: fn.route_path || fn.routePath || null,
+        runtime: process.version,
+        databaseTime: dbTime.rows[0]?.now || null,
+        uptimeSeconds: Math.floor(process.uptime()),
+        input,
+      },
+      durationMs: Date.now() - startedAt,
+    };
+  }
+
+  if (id === "fn_event_webhook_dispatcher" || triggerType === "webhook.event") {
+    const eventPayload = {
+      id: `evt_${crypto.randomUUID().replace(/-/g, "")}`,
+      type: String(input.eventType || "edge.function.test"),
+      eventType: String(input.eventType || "edge.function.test"),
+      source: "edge-function",
+      message: String(input.message || "Edge function event dispatch test."),
+      createdAt: new Date().toISOString(),
+      data: {
+        functionId: id,
+        functionName: fn.name,
+        input,
+      },
+    };
+
+    let webhookResult = { dispatched: 0 };
+
+    if (typeof dispatchWebhooksForEvent === "function") {
+      webhookResult = await dispatchWebhooksForEvent(eventPayload);
+    }
+
+    return {
+      status: "success",
+      output: {
+        ok: true,
+        functionId: id,
+        name: fn.name,
+        eventPayload,
+        webhookResult,
+      },
+      durationMs: Date.now() - startedAt,
+    };
+  }
+
+  if (id === "fn_scheduled_cleanup" || type === "scheduled") {
+    const realtimeCount = await dbQuery("SELECT COUNT(*)::int AS count FROM backend_realtime_events");
+    const logCount = await dbQuery("SELECT COUNT(*)::int AS count FROM backend_system_logs");
+
+    return {
+      status: "success",
+      output: {
+        ok: true,
+        functionId: id,
+        name: fn.name,
+        schedule: fn.schedule || "manual",
+        cleanupPreview: {
+          realtimeEvents: Number(realtimeCount.rows[0]?.count || 0),
+          systemLogs: Number(logCount.rows[0]?.count || 0),
+          destructiveCleanup: false,
+        },
+        input,
+      },
+      durationMs: Date.now() - startedAt,
+    };
+  }
+
+  return {
+    status: "success",
+    output: {
+      ok: true,
+      functionId: id,
+      name: fn.name,
+      type,
+      triggerType,
+      note: "Generic controlled Edge Function execution completed.",
+      input,
+    },
+    durationMs: Date.now() - startedAt,
+  };
+}
+
+async function runEdgeFunctionById(functionId, input = {}, actor = "console-user", triggerTypeOverride = "manual") {
+  const fnResult = await dbQuery(
+    `
+      SELECT
+        id,
+        name,
+        type,
+        runtime,
+        trigger_type,
+        route_path,
+        schedule,
+        description,
+        status,
+        timeout_seconds,
+        last_run_at,
+        created_at,
+        updated_at
+      FROM backend_edge_functions
+      WHERE id = $1
+      LIMIT 1
+    `,
+    [functionId]
+  );
+
+  const fn = fnResult.rows[0];
+
+  if (!fn) {
+    const error = new Error("Edge function not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (fn.status !== "active") {
+    const error = new Error("Edge function is not active");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const runId = `fnrun_${crypto.randomUUID().replace(/-/g, "")}`;
+  const startedAt = Date.now();
+  const triggerType = triggerTypeOverride || fn.trigger_type || "manual";
+
+  await dbQuery(
+    `
+      INSERT INTO backend_edge_function_runs (
+        id,
+        function_id,
+        function_name,
+        trigger_type,
+        status,
+        input_json,
+        created_by
+      )
+      VALUES ($1, $2, $3, $4, 'started', $5::jsonb, $6)
+    `,
+    [
+      runId,
+      fn.id,
+      fn.name,
+      triggerType,
+      JSON.stringify(input || {}),
+      actor,
+    ]
+  );
+
+  try {
+    const execution = await executeControlledEdgeFunction(fn, input || {});
+    const durationMs = Number(execution.durationMs || (Date.now() - startedAt));
+
+    const runResult = await dbQuery(
+      `
+        UPDATE backend_edge_function_runs
+        SET
+          status = $2,
+          output_json = $3::jsonb,
+          error_message = NULL,
+          duration_ms = $4,
+          completed_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          function_id AS "functionId",
+          function_name AS "functionName",
+          trigger_type AS "triggerType",
+          status,
+          input_json AS "input",
+          output_json AS "output",
+          error_message AS "errorMessage",
+          duration_ms AS "durationMs",
+          started_at AS "startedAt",
+          completed_at AS "completedAt",
+          created_by AS "createdBy"
+      `,
+      [
+        runId,
+        execution.status || "success",
+        JSON.stringify(execution.output || {}),
+        durationMs,
+      ]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          last_run_at = NOW(),
+          last_status = $2,
+          last_error = NULL,
+          run_count = run_count + 1,
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [fn.id, execution.status || "success"]
+    );
+
+    return {
+      function: fn,
+      run: runResult.rows[0],
+    };
+  } catch (error) {
+    const durationMs = Date.now() - startedAt;
+
+    const runResult = await dbQuery(
+      `
+        UPDATE backend_edge_function_runs
+        SET
+          status = 'failed',
+          error_message = $2,
+          duration_ms = $3,
+          completed_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          function_id AS "functionId",
+          function_name AS "functionName",
+          trigger_type AS "triggerType",
+          status,
+          input_json AS "input",
+          output_json AS "output",
+          error_message AS "errorMessage",
+          duration_ms AS "durationMs",
+          started_at AS "startedAt",
+          completed_at AS "completedAt",
+          created_by AS "createdBy"
+      `,
+      [runId, error.message, durationMs]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          last_run_at = NOW(),
+          last_status = 'failed',
+          last_error = $2,
+          run_count = run_count + 1,
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [fn.id, error.message]
+    );
+
+    return {
+      function: fn,
+      run: runResult.rows[0],
+    };
+  }
+}
+
 router.get("/edge-functions-page-data", async (req, res) => {
   try {
     const result = await dbQuery(`
@@ -2946,6 +3213,10 @@ router.get("/edge-functions-page-data", async (req, res) => {
         schedule,
         description,
         status,
+        timeout_seconds AS "timeoutSeconds",
+        run_count AS "runCount",
+        last_status AS "lastStatus",
+        last_error AS "lastError",
         last_run_at AS "lastRunAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
@@ -2954,22 +3225,46 @@ router.get("/edge-functions-page-data", async (req, res) => {
       LIMIT 250
     `);
 
+    const runsResult = await dbQuery(`
+      SELECT
+        id,
+        function_id AS "functionId",
+        function_name AS "functionName",
+        trigger_type AS "triggerType",
+        status,
+        input_json AS "input",
+        output_json AS "output",
+        error_message AS "errorMessage",
+        duration_ms AS "durationMs",
+        started_at AS "startedAt",
+        completed_at AS "completedAt",
+        created_by AS "createdBy"
+      FROM backend_edge_function_runs
+      ORDER BY started_at DESC
+      LIMIT 250
+    `);
+
     const functions = result.rows;
+    const runs = runsResult.rows;
 
     return ok(res, {
       functions,
+      runs,
       counts: {
         functions: functions.length,
         http: functions.filter((item) => item.type === "http").length,
         event: functions.filter((item) => item.type === "event").length,
         scheduled: functions.filter((item) => item.type === "scheduled").length,
         active: functions.filter((item) => item.status === "active").length,
+        runs: runs.length,
+        failedRuns: runs.filter((item) => item.status === "failed").length,
       },
     });
   } catch (error) {
     return fail(res, "Failed to load edge functions page data", 500, error.message);
   }
 });
+
 
 router.post("/edge-functions/create-test-safe", async (req, res) => {
   try {
@@ -3023,13 +3318,75 @@ router.post("/edge-functions/create-test-safe", async (req, res) => {
 router.post("/edge-functions/:id/run-test-safe", async (req, res) => {
   try {
     const id = String(req.params.id || "").trim();
+    const input = req.body?.input && typeof req.body.input === "object"
+      ? req.body.input
+      : {
+          test: true,
+          source: "console-run-test",
+          time: new Date().toISOString(),
+        };
+
+    const actor = req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user";
+    const result = await runEdgeFunctionById(id, input, actor, "manual");
+
+    return ok(res, {
+      ...result,
+      message: "Edge function executed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to run edge function", error.statusCode || 500, error.message);
+  }
+});
+
+router.get("/edge-functions/runs/:id/detail-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          function_id AS "functionId",
+          function_name AS "functionName",
+          trigger_type AS "triggerType",
+          status,
+          input_json AS "input",
+          output_json AS "output",
+          error_message AS "errorMessage",
+          duration_ms AS "durationMs",
+          started_at AS "startedAt",
+          completed_at AS "completedAt",
+          created_by AS "createdBy"
+        FROM backend_edge_function_runs
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const run = result.rows[0];
+
+    if (!run) return fail(res, "Edge function run not found", 404);
+
+    return ok(res, { run });
+  } catch (error) {
+    return fail(res, "Failed to load edge function run detail", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/:id/toggle-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = String(req.body?.status || "").trim().toLowerCase();
+
+    if (!["active", "disabled", "planned"].includes(status)) {
+      return fail(res, "Status must be active, disabled, or planned.", 400);
+    }
 
     const result = await dbQuery(
       `
         UPDATE backend_edge_functions
-        SET
-          last_run_at = NOW(),
-          updated_at = NOW()
+        SET status = $2, updated_at = NOW()
         WHERE id = $1
         RETURNING
           id,
@@ -3041,23 +3398,52 @@ router.post("/edge-functions/:id/run-test-safe", async (req, res) => {
           schedule,
           description,
           status,
+          timeout_seconds AS "timeoutSeconds",
+          run_count AS "runCount",
+          last_status AS "lastStatus",
+          last_error AS "lastError",
           last_run_at AS "lastRunAt",
           created_at AS "createdAt",
           updated_at AS "updatedAt"
       `,
-      [id]
+      [id, status]
     );
 
     if (!result.rows[0]) return fail(res, "Edge function not found", 404);
 
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'edge_function.status.update', 'edge_function', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ status }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
     return ok(res, {
       function: result.rows[0],
-      message: "Function test run recorded.",
+      message: "Edge function status updated.",
     });
   } catch (error) {
-    return fail(res, "Failed to run edge function test", 500, error.message);
+    return fail(res, "Failed to update edge function status", 500, error.message);
   }
 });
+
 
 
 function readTailLines(filePath, lineCount = 80) {

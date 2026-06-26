@@ -4255,6 +4255,286 @@ function realtimeView() {
 }
 
 
+
+window.loadEdgeFunctions = async function loadEdgeFunctions() {
+  try {
+    const response = await fetch("/api/admin/edge-functions-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Edge functions refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.edgeFunctions = Array.isArray(data.functions) ? data.functions : [];
+    state.edgeFunctionRuns = Array.isArray(data.runs) ? data.runs : [];
+    state.edgeFunctionCounts = data.counts || {};
+    state.edgeFunctionsLoaded = true;
+    state.edgeFunctionsLoading = false;
+    state.edgeFunctionsError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.edgeFunctionsLoading = false;
+    state.edgeFunctionsError = error.message || "Failed to load edge functions.";
+    alert("Edge functions refresh failed: " + state.edgeFunctionsError);
+    console.error(error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshEdgeFunctionsNow = async function refreshEdgeFunctionsNow() {
+  return window.loadEdgeFunctions();
+};
+
+window.createEdgeFunction = async function createEdgeFunction() {
+  const name = prompt("Function name:", "Console Test Function");
+  if (!name) return;
+
+  const type = prompt("Type: http, event, or scheduled", "http") || "http";
+  const triggerType = prompt("Trigger type:", type === "http" ? "manual" : type === "scheduled" ? "schedule" : "webhook.event") || "manual";
+  const routePath = type === "http" ? (prompt("Route path:", "/api/functions/custom-test") || "/api/functions/custom-test") : "";
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/create-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        type,
+        runtime: "node",
+        triggerType,
+        routePath,
+        description: "Created from GoodAppBackEnd console."
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create function failed with status " + response.status);
+    }
+
+    alert("Edge function created.");
+    await window.loadEdgeFunctions();
+  } catch (error) {
+    alert("Create function failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.runEdgeFunction = async function runEdgeFunction(id) {
+  if (!id) return alert("Missing function id.");
+
+  let input = {
+    source: "console-button",
+    time: new Date().toISOString()
+  };
+
+  const inputText = prompt("Optional JSON input:", JSON.stringify(input, null, 2));
+  if (inputText === null) return;
+
+  try {
+    input = JSON.parse(inputText || "{}");
+  } catch {
+    alert("Invalid JSON input.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(id) + "/run-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ input })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Run function failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Edge function run complete. Status: " + safeText(data.run?.status || "unknown"));
+    await window.loadEdgeFunctions();
+  } catch (error) {
+    alert("Run function failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.toggleEdgeFunction = async function toggleEdgeFunction(id, currentStatus) {
+  const nextStatus = currentStatus === "active" ? "disabled" : "active";
+
+  if (!confirm("Set this function to " + nextStatus + "?")) return;
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(id) + "/toggle-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ status: nextStatus })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Status update failed with status " + response.status);
+    }
+
+    alert("Function status updated.");
+    await window.loadEdgeFunctions();
+  } catch (error) {
+    alert("Function status update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewEdgeFunctionRunDetail = async function viewEdgeFunctionRunDetail(id) {
+  if (!id) return alert("Missing run id.");
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/runs/" + encodeURIComponent(id) + "/detail-safe?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Run detail failed with status " + response.status);
+    }
+
+    const run = (payload.data || payload).run || {};
+    alert("Edge Function Run Detail:\\n\\n" + prettyJsonForAlert(run));
+  } catch (error) {
+    alert("Run detail failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+
+function functionsView() {
+  if (!state.edgeFunctionsLoaded && !state.edgeFunctionsLoading) {
+    state.edgeFunctionsLoading = true;
+    setTimeout(() => window.loadEdgeFunctions(), 100);
+  }
+
+  const functions = Array.isArray(state.edgeFunctions) ? state.edgeFunctions : [];
+  const runs = Array.isArray(state.edgeFunctionRuns) ? state.edgeFunctionRuns : [];
+  const counts = state.edgeFunctionCounts || {};
+
+  return `
+    ${hero("Edge Functions", "Controlled backend functions, manual execution, status control, and run logs.")}
+    <div class="section-head">
+      <h3>Function Registry</h3>
+      <div>
+        <button class="logout" onclick="window.refreshEdgeFunctionsNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createEdgeFunction()">Create Function</button>
+      </div>
+    </div>
+
+    ${state.edgeFunctionsLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading edge functions...</p></div>` : ""}
+    ${state.edgeFunctionsError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Edge functions error: ${safeText(state.edgeFunctionsError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Functions", counts.functions ?? functions.length, "Registered functions")}
+      ${card("Active", counts.active ?? functions.filter(item => item.status === "active").length, "Executable")}
+      ${card("Runs", counts.runs ?? runs.length, "Execution logs")}
+      ${card("Failed Runs", counts.failedRuns ?? runs.filter(item => item.status === "failed").length, "Needs review")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Registered Functions</h3><span class="badge">Controlled Runtime</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Type</th>
+            <th>Trigger</th>
+            <th>Status</th>
+            <th>Runs</th>
+            <th>Last Run</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${functions.map(fn => `
+            <tr>
+              <td><strong>${safeText(fn.name || "-")}</strong><div class="muted">${safeText(fn.id || "")}</div><div class="muted">${safeText(fn.routePath || "")}</div></td>
+              <td>${safeText(fn.type || "-")}</td>
+              <td>${safeText(fn.triggerType || "-")}</td>
+              <td><span class="badge">${safeText(fn.status || "-")}</span></td>
+              <td>${safeText(String(fn.runCount || 0))}</td>
+              <td>${fn.lastRunAt ? new Date(fn.lastRunAt).toLocaleString() : "-"}</td>
+              <td>
+                <button class="logout" onclick="window.runEdgeFunction('${safeText(fn.id)}')">Run</button>
+                <button class="logout" onclick="window.toggleEdgeFunction('${safeText(fn.id)}','${safeText(fn.status || "")}')">${fn.status === "active" ? "Disable" : "Enable"}</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="7" class="muted">No edge functions found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Run Logs</h3><span class="badge">Newest First</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Function</th>
+            <th>Trigger</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Started</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${runs.map(run => `
+            <tr>
+              <td><strong>${safeText(run.id || "-")}</strong></td>
+              <td>${safeText(run.functionName || run.functionId || "-")}</td>
+              <td>${safeText(run.triggerType || "-")}</td>
+              <td><span class="badge">${safeText(run.status || "-")}</span></td>
+              <td>${safeText(String(run.durationMs || 0))}ms</td>
+              <td>${run.startedAt ? new Date(run.startedAt).toLocaleString() : "-"}</td>
+              <td><button class="logout" onclick="window.viewEdgeFunctionRunDetail('${safeText(run.id)}')">Details</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="7" class="muted">No function runs yet. Click Run on a function.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
 function render() {
   const view = document.getElementById("view");
 
