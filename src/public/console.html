@@ -1235,6 +1235,169 @@ window.deleteDatabaseRow = async function deleteDatabaseRow(rowCtid) {
   }
 };
 
+
+window.loadSavedDatabaseQueries = async function loadSavedDatabaseQueries() {
+  try {
+    const response = await fetch("/api/admin/database/saved-queries-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Saved queries failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.savedDatabaseQueries = Array.isArray(data.savedQueries) ? data.savedQueries : [];
+    state.databaseQueryExecutions = Array.isArray(data.executions) ? data.executions : [];
+  } catch (error) {
+    console.warn("Saved query load failed:", error.message);
+    state.savedDatabaseQueries = Array.isArray(state.savedDatabaseQueries) ? state.savedDatabaseQueries : [];
+    state.databaseQueryExecutions = Array.isArray(state.databaseQueryExecutions) ? state.databaseQueryExecutions : [];
+  }
+};
+
+window.runDatabaseQuery = async function runDatabaseQuery(savedQueryId = null, sqlOverride = null) {
+  const textarea = document.getElementById("database-query-sql");
+  const sqlText = sqlOverride || (textarea ? textarea.value : state.databaseQuerySql || "");
+
+  if (!sqlText.trim()) return alert("Enter a SQL query first.");
+
+  state.databaseQuerySql = sqlText;
+  state.databaseQueryLoading = true;
+  state.databaseQueryError = "";
+  goodosRenderNow();
+
+  try {
+    const response = await fetch("/api/admin/database/query/run-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        sqlText,
+        savedQueryId,
+        limit: 250
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Query failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.databaseQueryResult = data;
+    state.databaseQueryLoading = false;
+    state.databaseQueryError = "";
+    await window.loadSavedDatabaseQueries();
+    goodosRenderNow();
+  } catch (error) {
+    state.databaseQueryLoading = false;
+    state.databaseQueryError = error.message || "Query failed.";
+    alert("Query failed: " + state.databaseQueryError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.saveDatabaseQuery = async function saveDatabaseQuery() {
+  const textarea = document.getElementById("database-query-sql");
+  const sqlText = textarea ? textarea.value : state.databaseQuerySql || "";
+
+  if (!sqlText.trim()) return alert("Enter a SQL query first.");
+
+  const name = prompt("Saved query name:", "New Saved Query");
+  if (!name) return;
+
+  const description = prompt("Description:", "") || "";
+
+  try {
+    const response = await fetch("/api/admin/database/query/save-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        description,
+        sqlText
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Save query failed with status " + response.status);
+    }
+
+    alert("Query saved.");
+    await window.loadSavedDatabaseQueries();
+    goodosRenderNow();
+  } catch (error) {
+    alert("Save query failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.loadSavedQueryIntoEditor = function loadSavedQueryIntoEditor(id) {
+  const saved = (state.savedDatabaseQueries || []).find(item => item.id === id);
+  if (!saved) return alert("Saved query not found.");
+
+  state.databaseQuerySql = saved.sqlText || saved.sql_text || "";
+  goodosRenderNow();
+};
+
+window.runSavedDatabaseQuery = function runSavedDatabaseQuery(id) {
+  const saved = (state.savedDatabaseQueries || []).find(item => item.id === id);
+  if (!saved) return alert("Saved query not found.");
+  return window.runDatabaseQuery(id, saved.sqlText || saved.sql_text || "");
+};
+
+window.deleteSavedDatabaseQuery = async function deleteSavedDatabaseQuery(id) {
+  if (!id) return alert("Missing saved query id.");
+
+  const confirmed = confirm("Delete this saved query?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/database/saved-queries/" + encodeURIComponent(id) + "/delete-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Delete query failed with status " + response.status);
+    }
+
+    alert("Saved query deleted.");
+    await window.loadSavedDatabaseQueries();
+    goodosRenderNow();
+  } catch (error) {
+    alert("Delete query failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1369,6 +1532,116 @@ function databaseView() {
               ${inlineRowViewer(tableName)}
             `;
           }).join("") || '<tr><td colspan="5" class="muted">No database tables loaded yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head">
+        <h3>SQL Query Console</h3>
+        <span class="badge">Read Only</span>
+      </div>
+
+      <p class="muted" style="margin-bottom:12px;">
+        SELECT and read-only WITH queries only. Destructive SQL is blocked.
+      </p>
+
+      <textarea
+        id="database-query-sql"
+        style="width:100%; min-height:120px; padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff; font-family:monospace;"
+      >${safeText(state.databaseQuerySql || "SELECT id, name, domain, status FROM apps ORDER BY name ASC")}</textarea>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button class="logout" onclick="window.runDatabaseQuery()">Run Query</button>
+        <button class="logout" onclick="window.saveDatabaseQuery()">Save Query</button>
+      </div>
+
+      ${state.databaseQueryLoading ? `<p class="muted" style="margin-top:12px;">Running query...</p>` : ""}
+      ${state.databaseQueryError ? `<p class="muted" style="margin-top:12px;">Query error: ${safeText(state.databaseQueryError)}</p>` : ""}
+
+      ${(state.databaseQueryResult && Array.isArray(state.databaseQueryResult.rows)) ? `
+        <div style="margin-top:18px;">
+          <div class="section-head">
+            <h3>Query Results</h3>
+            <span class="badge">${safeText(String(state.databaseQueryResult.rowCount || 0))} Rows • ${safeText(String(state.databaseQueryResult.durationMs || 0))}ms</span>
+          </div>
+          <div style="overflow:auto; max-height:420px; border:1px solid rgba(255,255,255,.08); border-radius:14px;">
+            <table>
+              <thead>
+                <tr>
+                  ${(state.databaseQueryResult.columns || []).map(column => `<th>${safeText(column.name || "-")}</th>`).join("") || "<th>No columns</th>"}
+                </tr>
+              </thead>
+              <tbody>
+                ${(state.databaseQueryResult.rows || []).map(row => `
+                  <tr>
+                    ${(state.databaseQueryResult.columns || []).map(column => {
+                      const value = row[column.name];
+                      let display = value;
+                      if (typeof value === "object" && value !== null) display = JSON.stringify(value);
+                      if (display === null || display === undefined) display = "";
+                      return `<td>${safeText(String(display)).slice(0, 240)}</td>`;
+                    }).join("")}
+                  </tr>
+                `).join("") || '<tr><td class="muted">No rows returned.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ""}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Saved Queries</h3><span class="badge">${safeText(String((state.savedDatabaseQueries || []).length))} Saved</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>SQL</th>
+            <th>Created</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(state.savedDatabaseQueries || []).map(query => `
+            <tr>
+              <td><strong>${safeText(query.name || "-")}</strong><div class="muted">${safeText(query.description || "")}</div></td>
+              <td>${safeText(query.sqlText || query.sql_text || "").slice(0, 160)}</td>
+              <td>${query.createdAt ? new Date(query.createdAt).toLocaleString() : "-"}</td>
+              <td>
+                <button class="logout" onclick="window.loadSavedQueryIntoEditor('${safeText(query.id)}')">Load</button>
+                <button class="logout" onclick="window.runSavedDatabaseQuery('${safeText(query.id)}')">Run</button>
+                <button class="logout" onclick="window.deleteSavedDatabaseQuery('${safeText(query.id)}')">Delete</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No saved queries yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Query History</h3><span class="badge">Last 100</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Rows</th>
+            <th>Duration</th>
+            <th>SQL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(state.databaseQueryExecutions || []).map(exec => `
+            <tr>
+              <td>${exec.createdAt ? new Date(exec.createdAt).toLocaleString() : "-"}</td>
+              <td><span class="badge">${safeText(exec.status || "-")}</span></td>
+              <td>${safeText(String(exec.rowCount ?? 0))}</td>
+              <td>${safeText(String(exec.durationMs ?? 0))}ms</td>
+              <td>${safeText(exec.sqlText || exec.sql_text || "").slice(0, 160)}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No query history yet.</td></tr>'}
         </tbody>
       </table>
     </div>

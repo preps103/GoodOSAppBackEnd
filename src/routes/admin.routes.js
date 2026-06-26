@@ -3767,4 +3767,376 @@ router.post("/database/tables/:tableName/rows/delete-safe", async (req, res) => 
   }
 });
 
+
+function validateReadOnlySqlQuery(sqlText) {
+  const raw = String(sqlText || "").trim();
+
+  if (!raw) {
+    return { ok: false, message: "SQL query is required." };
+  }
+
+  const normalized = raw.replace(/\s+/g, " ").trim();
+  const withoutTrailingSemicolon = normalized.replace(/;+\s*$/, "");
+
+  if (withoutTrailingSemicolon.includes(";")) {
+    return { ok: false, message: "Only one SQL statement is allowed." };
+  }
+
+  if (!/^(select|with)\s/i.test(withoutTrailingSemicolon)) {
+    return { ok: false, message: "Only SELECT or read-only WITH queries are allowed." };
+  }
+
+  const blockedPatterns = [
+    /\binsert\b/i,
+    /\bupdate\b/i,
+    /\bdelete\b/i,
+    /\bdrop\b/i,
+    /\balter\b/i,
+    /\btruncate\b/i,
+    /\bcreate\b/i,
+    /\bgrant\b/i,
+    /\brevoke\b/i,
+    /\bcopy\b/i,
+    /\bcall\b/i,
+    /\bdo\s+\$\$/i,
+    /\bexecute\b/i,
+    /\bvacuum\b/i,
+    /\banalyze\b/i,
+    /\breindex\b/i,
+    /\bcluster\b/i,
+    /\brefresh\s+materialized\b/i,
+    /\bpg_sleep\b/i,
+    /\bpg_read_file\b/i,
+    /\bpg_ls_dir\b/i,
+    /\bpg_stat_file\b/i,
+    /\bdblink\b/i,
+    /\blo_import\b/i,
+    /\blo_export\b/i
+  ];
+
+  for (const pattern of blockedPatterns) {
+    if (pattern.test(withoutTrailingSemicolon)) {
+      return { ok: false, message: "This query contains a blocked keyword or function." };
+    }
+  }
+
+  return {
+    ok: true,
+    sql: withoutTrailingSemicolon,
+  };
+}
+
+router.get("/database/saved-queries-page-data", async (req, res) => {
+  try {
+    const savedResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        sql_text AS "sqlText",
+        description,
+        status,
+        created_by AS "createdBy",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_saved_queries
+      WHERE status = 'active'
+      ORDER BY updated_at DESC
+      LIMIT 250
+    `);
+
+    const executionsResult = await dbQuery(`
+      SELECT
+        id,
+        saved_query_id AS "savedQueryId",
+        sql_text AS "sqlText",
+        status,
+        row_count AS "rowCount",
+        duration_ms AS "durationMs",
+        error_message AS "errorMessage",
+        executed_by AS "executedBy",
+        created_at AS "createdAt"
+      FROM backend_query_executions
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    return ok(res, {
+      savedQueries: savedResult.rows,
+      executions: executionsResult.rows,
+    });
+  } catch (error) {
+    return fail(res, "Failed to load saved queries", 500, error.message);
+  }
+});
+
+router.post("/database/query/run-safe", async (req, res) => {
+  const started = Date.now();
+  let executionId = `query_exec_${crypto.randomUUID().replace(/-/g, "")}`;
+  let sqlText = String(req.body?.sqlText || "").trim();
+  let savedQueryId = req.body?.savedQueryId ? String(req.body.savedQueryId).trim() : null;
+
+  try {
+    const validation = validateReadOnlySqlQuery(sqlText);
+
+    if (!validation.ok) {
+      await dbQuery(
+        `
+          INSERT INTO backend_query_executions (
+            id,
+            saved_query_id,
+            sql_text,
+            status,
+            row_count,
+            duration_ms,
+            error_message,
+            executed_by
+          )
+          VALUES ($1, $2, $3, 'blocked', 0, $4, $5, $6)
+        `,
+        [
+          executionId,
+          savedQueryId,
+          sqlText,
+          Date.now() - started,
+          validation.message,
+          req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        ]
+      );
+
+      return fail(res, validation.message, 400);
+    }
+
+    const limit = Math.min(Math.max(Number(req.body?.limit || 250), 1), 500);
+    const wrappedSql = `SELECT * FROM (${validation.sql}) AS goodos_query_result LIMIT $1`;
+
+    const result = await dbQuery(wrappedSql, [limit]);
+    const durationMs = Date.now() - started;
+
+    const columns = result.fields.map((field) => ({
+      name: field.name,
+    }));
+
+    await dbQuery(
+      `
+        INSERT INTO backend_query_executions (
+          id,
+          saved_query_id,
+          sql_text,
+          status,
+          row_count,
+          duration_ms,
+          executed_by
+        )
+        VALUES ($1, $2, $3, 'completed', $4, $5, $6)
+      `,
+      [
+        executionId,
+        savedQueryId,
+        validation.sql,
+        result.rows.length,
+        durationMs,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.query.run', 'database_query', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        executionId,
+        JSON.stringify({ rowCount: result.rows.length, durationMs, savedQueryId }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      executionId,
+      columns,
+      rows: result.rows,
+      rowCount: result.rows.length,
+      durationMs,
+      limit,
+      sqlText: validation.sql,
+    });
+  } catch (error) {
+    const durationMs = Date.now() - started;
+
+    try {
+      await dbQuery(
+        `
+          INSERT INTO backend_query_executions (
+            id,
+            saved_query_id,
+            sql_text,
+            status,
+            row_count,
+            duration_ms,
+            error_message,
+            executed_by
+          )
+          VALUES ($1, $2, $3, 'failed', 0, $4, $5, $6)
+        `,
+        [
+          executionId,
+          savedQueryId,
+          sqlText,
+          durationMs,
+          error.message,
+          req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        ]
+      );
+    } catch (auditError) {}
+
+    return fail(res, "Failed to run query", 500, error.message);
+  }
+});
+
+router.post("/database/query/save-safe", async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const sqlText = String(req.body?.sqlText || "").trim();
+    const description = String(req.body?.description || "").trim();
+
+    if (!name) return fail(res, "Query name is required", 400);
+
+    const validation = validateReadOnlySqlQuery(sqlText);
+    if (!validation.ok) return fail(res, validation.message, 400);
+
+    const id = `saved_query_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_saved_queries (
+          id,
+          name,
+          sql_text,
+          description,
+          status,
+          created_by
+        )
+        VALUES ($1, $2, $3, $4, 'active', $5)
+        RETURNING
+          id,
+          name,
+          sql_text AS "sqlText",
+          description,
+          status,
+          created_by AS "createdBy",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [
+        id,
+        name,
+        validation.sql,
+        description,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.query.save', 'saved_query', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ name, sqlText: validation.sql }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      savedQuery: result.rows[0],
+      message: "Query saved.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to save query", 500, error.message);
+  }
+});
+
+router.post("/database/saved-queries/:id/delete-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Saved query id is required", 400);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_saved_queries
+        SET
+          status = 'deleted',
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          sql_text AS "sqlText",
+          status,
+          updated_at AS "updatedAt"
+      `,
+      [id]
+    );
+
+    if (!result.rows[0]) return fail(res, "Saved query not found", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.query.delete', 'saved_query', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      savedQuery: result.rows[0],
+      message: "Saved query deleted.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to delete saved query", 500, error.message);
+  }
+});
+
 module.exports = router;
