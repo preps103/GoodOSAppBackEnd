@@ -5173,4 +5173,163 @@ router.post("/storage/files/:fileId/move-safe", async (req, res) => {
   }
 });
 
+
+function normalizeStoragePolicyStringArray(value, kind) {
+  if (value === undefined || value === null) return [];
+
+  if (!Array.isArray(value)) {
+    const error = new Error(`${kind} must be an array.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return value
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, 100);
+}
+
+function normalizeStorageExtensions(value) {
+  return normalizeStoragePolicyStringArray(value, "allowedExtensions").map((item) => {
+    let ext = item.toLowerCase();
+    if (!ext.startsWith(".")) ext = "." + ext;
+    if (!/^\.[a-z0-9]{1,12}$/.test(ext)) {
+      const error = new Error(`Invalid extension: ${item}`);
+      error.statusCode = 400;
+      throw error;
+    }
+    return ext;
+  });
+}
+
+function normalizeStorageMimeTypes(value) {
+  return normalizeStoragePolicyStringArray(value, "allowedMimeTypes").map((item) => {
+    const mime = item.toLowerCase();
+    if (!/^[a-z0-9.+-]+\/[a-z0-9.+*-]+$/.test(mime)) {
+      const error = new Error(`Invalid MIME type: ${item}`);
+      error.statusCode = 400;
+      throw error;
+    }
+    return mime;
+  });
+}
+
+router.post("/storage/buckets/:bucketId/policy/update-safe", async (req, res) => {
+  try {
+    const bucketId = String(req.params.bucketId || "").trim();
+
+    if (!bucketId) return fail(res, "Bucket id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_storage_buckets
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [bucketId]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Bucket not found", 404);
+
+    const visibility = String(req.body?.visibility || before.visibility || "private").trim().toLowerCase();
+    if (!["private", "public"].includes(visibility)) {
+      return fail(res, "Visibility must be private or public.", 400);
+    }
+
+    const maxFileSizeBytes = Math.min(
+      Math.max(Number(req.body?.maxFileSizeBytes ?? req.body?.max_file_size_bytes ?? before.max_file_size_bytes ?? 10485760), 1024),
+      5368709120
+    );
+
+    const signedUrlTtlSeconds = Math.min(
+      Math.max(Number(req.body?.signedUrlTtlSeconds ?? req.body?.signed_url_ttl_seconds ?? before.signed_url_ttl_seconds ?? 3600), 60),
+      604800
+    );
+
+    const allowedMimeTypes = normalizeStorageMimeTypes(
+      req.body?.allowedMimeTypes ?? req.body?.allowed_mime_types ?? before.allowed_mime_types ?? []
+    );
+
+    const allowedExtensions = normalizeStorageExtensions(
+      req.body?.allowedExtensions ?? req.body?.allowed_extensions ?? before.allowed_extensions ?? []
+    );
+
+    const publicReadEnabled = req.body?.publicReadEnabled === true || req.body?.public_read_enabled === true;
+    const fileVersioningEnabled = req.body?.fileVersioningEnabled === true || req.body?.file_versioning_enabled === true;
+    const virusScanRequired = req.body?.virusScanRequired === true || req.body?.virus_scan_required === true;
+
+    const encryptionMode = String(req.body?.encryptionMode || req.body?.encryption_mode || before.encryption_mode || "local").trim().toLowerCase();
+
+    if (!["local", "managed", "external"].includes(encryptionMode)) {
+      return fail(res, "Encryption mode must be local, managed, or external.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_storage_buckets
+        SET
+          visibility = $2,
+          max_file_size_bytes = $3,
+          allowed_mime_types = $4,
+          allowed_extensions = $5,
+          public_read_enabled = $6,
+          signed_url_ttl_seconds = $7,
+          file_versioning_enabled = $8,
+          virus_scan_required = $9,
+          encryption_mode = $10,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        bucketId,
+        visibility,
+        maxFileSizeBytes,
+        allowedMimeTypes,
+        allowedExtensions,
+        publicReadEnabled,
+        signedUrlTtlSeconds,
+        fileVersioningEnabled,
+        virusScanRequired,
+        encryptionMode,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'storage.bucket.policy.update', 'storage_bucket', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        bucketId,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      bucket: result.rows[0],
+      message: "Bucket policy updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update bucket policy", error.statusCode || 500, error.message);
+  }
+});
+
 module.exports = router;

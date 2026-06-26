@@ -3009,6 +3009,71 @@ window.moveStorageFile = async function moveStorageFile(fileId, currentFolder = 
   }
 };
 
+
+window.editStorageBucketPolicy = async function editStorageBucketPolicy(bucketId) {
+  if (!bucketId) return alert("Missing bucket id.");
+
+  const bucket = (state.storageBuckets || []).find(item => item.id === bucketId);
+
+  if (!bucket) return alert("Bucket not found in current page data.");
+
+  const currentPolicy = {
+    visibility: bucket.visibility || "private",
+    maxFileSizeBytes: Number(bucket.maxFileSizeBytes || bucket.max_file_size_bytes || 10485760),
+    allowedMimeTypes: bucket.allowedMimeTypes || bucket.allowed_mime_types || [],
+    allowedExtensions: bucket.allowedExtensions || bucket.allowed_extensions || [],
+    publicReadEnabled: Boolean(bucket.publicReadEnabled || bucket.public_read_enabled),
+    signedUrlTtlSeconds: Number(bucket.signedUrlTtlSeconds || bucket.signed_url_ttl_seconds || 3600),
+    fileVersioningEnabled: Boolean(bucket.fileVersioningEnabled || bucket.file_versioning_enabled),
+    virusScanRequired: Boolean(bucket.virusScanRequired || bucket.virus_scan_required),
+    encryptionMode: bucket.encryptionMode || bucket.encryption_mode || "local"
+  };
+
+  const policyText = prompt(
+    "Edit bucket policy JSON:",
+    JSON.stringify(currentPolicy, null, 2)
+  );
+
+  if (policyText === null) return;
+
+  let policy;
+
+  try {
+    policy = JSON.parse(policyText);
+  } catch (error) {
+    alert("Invalid policy JSON.");
+    return;
+  }
+
+  const confirmed = confirm("Update policy for bucket " + (bucket.name || bucketId) + "?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/storage/buckets/" + encodeURIComponent(bucketId) + "/policy/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(policy)
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Policy update failed with status " + response.status);
+    }
+
+    alert("Bucket policy updated.");
+    await window.loadStorageManager();
+  } catch (error) {
+    alert("Policy update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function storageView() {
   if (!state.storageManagerLoaded && !state.storageManagerLoading) {
     state.storageManagerLoading = true;
@@ -3063,6 +3128,7 @@ function storageView() {
               <h3>Files: ${safeText(bucket.name || bucketId)}</h3>
               <div>
                 <button class="logout" onclick="window.uploadStorageFile('${safeText(bucketId)}')">Upload File</button>
+                <button class="logout" onclick="window.editStorageBucketPolicy('${safeText(bucketId)}')">Edit Policy</button>
                 <button class="logout" onclick="window.refreshStorageManagerNow()">Refresh Files</button>
               </div>
             </div>
@@ -3083,6 +3149,26 @@ function storageView() {
               ${card("Bytes", bucketFiles.reduce((sum, file) => sum + Number(file.sizeBytes || file.size_bytes || 0), 0), "Tracked size")}
               ${card("Folder", selectedFolder || "All", "Current folder filter")}
               ${card("Status", bucket.status || "active", "Bucket status")}
+            </div>
+
+
+            <div class="card" style="margin:0 0 18px 0; background:rgba(255,255,255,.035);">
+              <div class="section-head">
+                <h3>Bucket Policy</h3>
+                <span class="badge">Controls</span>
+              </div>
+              <div class="grid cards">
+                ${card("Max File Size", bucket.maxFileSizeBytes || bucket.max_file_size_bytes || 10485760, "Bytes per upload")}
+                ${card("Allowed MIME", ((bucket.allowedMimeTypes || bucket.allowed_mime_types || []).length ? (bucket.allowedMimeTypes || bucket.allowed_mime_types || []).join(", ") : "Any"), "MIME allowlist")}
+                ${card("Allowed Ext", ((bucket.allowedExtensions || bucket.allowed_extensions || []).length ? (bucket.allowedExtensions || bucket.allowed_extensions || []).join(", ") : "Any"), "Extension allowlist")}
+                ${card("Signed URL TTL", bucket.signedUrlTtlSeconds || bucket.signed_url_ttl_seconds || 3600, "Seconds")}
+              </div>
+              <div class="grid cards" style="margin-top:12px;">
+                ${card("Public Read", (bucket.publicReadEnabled || bucket.public_read_enabled) ? "Enabled" : "Disabled", "Public file policy")}
+                ${card("Versioning", (bucket.fileVersioningEnabled || bucket.file_versioning_enabled) ? "Enabled" : "Disabled", "File version history")}
+                ${card("Virus Scan", (bucket.virusScanRequired || bucket.virus_scan_required) ? "Required" : "Not required", "Upload security")}
+                ${card("Encryption", bucket.encryptionMode || bucket.encryption_mode || "local", "Storage encryption mode")}
+              </div>
             </div>
 
             <div style="overflow:auto; max-height:520px; border:1px solid rgba(255,255,255,.08); border-radius:14px;">
@@ -3180,6 +3266,7 @@ function storageView() {
                 <td>
                   <button class="logout" onclick="window.selectStorageBucket('${safeText(bucketId)}')">${isSelected ? "Open" : "View Files"}</button>
                   <button class="logout" onclick="window.uploadStorageFile('${safeText(bucketId)}')">Upload</button>
+                  <button class="logout" onclick="window.editStorageBucketPolicy('${safeText(bucketId)}')">Policy</button>
                 </td>
               </tr>
               ${inlineFileManager(bucket)}
