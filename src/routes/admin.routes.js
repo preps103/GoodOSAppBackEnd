@@ -2493,6 +2493,637 @@ function quoteIdentifier(value) {
   return '"' + String(value).replace(/"/g, '""') + '"';
 }
 
+
+function normalizeAuthRole(value, fallback = "member") {
+  const role = String(value || fallback).trim().toLowerCase();
+  if (["owner", "admin", "manager", "developer", "member", "viewer"].includes(role)) return role;
+  return fallback;
+}
+
+function normalizePlatformRole(value, fallback = "user") {
+  const role = String(value || fallback).trim().toLowerCase();
+  if (["owner", "admin", "manager", "developer", "user", "viewer"].includes(role)) return role;
+  return fallback;
+}
+
+function normalizeUserStatus(value, fallback = "active") {
+  const status = String(value || fallback).trim().toLowerCase();
+  if (["active", "pending", "disabled", "suspended"].includes(status)) return status;
+  return fallback;
+}
+
+function normalizeInviteStatus(value, fallback = "pending") {
+  const status = String(value || fallback).trim().toLowerCase();
+  if (["pending", "accepted", "revoked", "expired"].includes(status)) return status;
+  return fallback;
+}
+
+function hashInviteToken(token) {
+  return crypto.createHash("sha256").update(String(token || "")).digest("hex");
+}
+
+router.get("/users-page-data", async (req, res) => {
+  try {
+    const usersResult = await dbQuery(`
+      SELECT
+        id::text,
+        email,
+        first_name AS "firstName",
+        last_name AS "lastName",
+        display_name AS "displayName",
+        phone,
+        platform_role AS "platformRole",
+        status,
+        email_verified AS "emailVerified",
+        last_login_at AS "lastLoginAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const membershipsResult = await dbQuery(`
+      SELECT
+        am.id::text,
+        am.user_id::text AS "userId",
+        u.email,
+        COALESCE(u.display_name, u.email) AS "displayName",
+        am.app_id AS "appId",
+        a.name AS "appName",
+        a.domain AS "appDomain",
+        am.role,
+        am.status,
+        am.created_at AS "createdAt",
+        am.updated_at AS "updatedAt"
+      FROM app_memberships am
+      JOIN users u ON u.id = am.user_id
+      JOIN apps a ON a.id = am.app_id
+      ORDER BY am.created_at DESC
+      LIMIT 500
+    `);
+
+    const sessionsResult = await dbQuery(`
+      SELECT
+        s.id::text,
+        s.user_id::text AS "userId",
+        u.email,
+        COALESCE(u.display_name, u.email) AS "displayName",
+        s.ip_address::text AS "ipAddress",
+        s.user_agent AS "userAgent",
+        s.expires_at AS "expiresAt",
+        s.revoked_at AS "revokedAt",
+        s.created_at AS "createdAt",
+        CASE
+          WHEN s.revoked_at IS NOT NULL THEN 'revoked'
+          WHEN s.expires_at <= NOW() THEN 'expired'
+          ELSE 'active'
+        END AS status
+      FROM sessions s
+      JOIN users u ON u.id = s.user_id
+      ORDER BY s.created_at DESC
+      LIMIT 150
+    `);
+
+    const appsResult = await dbQuery(`
+      SELECT id, name, domain, status
+      FROM apps
+      ORDER BY name ASC
+      LIMIT 100
+    `);
+
+    const invitesResult = await dbQuery(`
+      SELECT
+        id,
+        email,
+        invited_by AS "invitedBy",
+        platform_role AS "platformRole",
+        app_id AS "appId",
+        app_role AS "appRole",
+        status,
+        expires_at AS "expiresAt",
+        accepted_at AS "acceptedAt",
+        metadata_json AS "metadata",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_user_invites
+      ORDER BY created_at DESC
+      LIMIT 150
+    `);
+
+    const auditResult = await dbQuery(`
+      SELECT
+        id,
+        actor,
+        action,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        after_json AS "afterJson",
+        ip_address AS "ipAddress",
+        created_at AS "createdAt"
+      FROM backend_admin_audit_logs
+      WHERE action ILIKE '%user%'
+         OR action ILIKE '%membership%'
+         OR action ILIKE '%invite%'
+         OR action ILIKE '%session%'
+         OR action ILIKE '%auth%'
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    const users = usersResult.rows;
+    const memberships = membershipsResult.rows;
+    const sessions = sessionsResult.rows;
+    const apps = appsResult.rows;
+    const invites = invitesResult.rows;
+    const auditLogs = auditResult.rows;
+
+    return ok(res, {
+      users,
+      memberships,
+      sessions,
+      apps,
+      invites,
+      auditLogs,
+      counts: {
+        users: users.length,
+        activeUsers: users.filter((user) => user.status === "active").length,
+        pendingUsers: users.filter((user) => user.status === "pending").length,
+        memberships: memberships.length,
+        activeMemberships: memberships.filter((item) => item.status === "active").length,
+        sessions: sessions.length,
+        activeSessions: sessions.filter((item) => item.status === "active").length,
+        invites: invites.length,
+        pendingInvites: invites.filter((item) => item.status === "pending").length,
+        apps: apps.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load users page data", 500, error.message);
+  }
+});
+
+router.post("/users/invites/create-safe", async (req, res) => {
+  try {
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const platformRole = normalizePlatformRole(req.body?.platformRole || "user");
+    const appId = String(req.body?.appId || "").trim();
+    const appRole = normalizeAuthRole(req.body?.appRole || "member");
+    const expiresDays = Math.min(Math.max(Number(req.body?.expiresDays || 7), 1), 30);
+
+    if (!email || !email.includes("@")) return fail(res, "Valid invite email is required", 400);
+
+    if (appId) {
+      const appCheck = await dbQuery("SELECT id FROM apps WHERE id = $1 LIMIT 1", [appId]);
+      if (!appCheck.rows[0]) return fail(res, "Selected app does not exist", 404);
+    }
+
+    const rawToken = `goinv_${crypto.randomUUID().replace(/-/g, "")}${crypto.randomUUID().replace(/-/g, "")}`;
+    const tokenHash = hashInviteToken(rawToken);
+    const id = `invite_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_user_invites (
+          id,
+          email,
+          invited_by,
+          platform_role,
+          app_id,
+          app_role,
+          token_hash,
+          status,
+          expires_at,
+          metadata_json
+        )
+        VALUES ($1, $2, $3, $4, NULLIF($5, ''), $6, $7, 'pending', NOW() + ($8 || ' days')::interval, $9::jsonb)
+        RETURNING
+          id,
+          email,
+          invited_by AS "invitedBy",
+          platform_role AS "platformRole",
+          app_id AS "appId",
+          app_role AS "appRole",
+          status,
+          expires_at AS "expiresAt",
+          created_at AS "createdAt"
+      `,
+      [
+        id,
+        email,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        platformRole,
+        appId,
+        appRole,
+        tokenHash,
+        expiresDays,
+        JSON.stringify({
+          createdFrom: "GoodAppBackEnd Console",
+          appId: appId || null,
+          appRole,
+        }),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.invite.create', 'user_invite', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ email, platformRole, appId: appId || null, appRole, expiresDays }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      invite: result.rows[0],
+      rawToken,
+      inviteUrl: `https://backend.goodos.app/invite/${rawToken}`,
+      message: "Invite record created. Copy the token now; it is not stored in plain text.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create invite", 500, error.message);
+  }
+});
+
+router.post("/users/invites/:id/status-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = normalizeInviteStatus(req.body?.status || "revoked");
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_user_invites
+        SET status = $2, updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          email,
+          invited_by AS "invitedBy",
+          platform_role AS "platformRole",
+          app_id AS "appId",
+          app_role AS "appRole",
+          status,
+          expires_at AS "expiresAt",
+          accepted_at AS "acceptedAt",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "Invite not found", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.invite.status_update', 'user_invite', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ status }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { invite: result.rows[0], message: "Invite status updated." });
+  } catch (error) {
+    return fail(res, "Failed to update invite status", 500, error.message);
+  }
+});
+
+router.post("/users/:id/status-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = normalizeUserStatus(req.body?.status || "active");
+
+    const result = await dbQuery(
+      `
+        UPDATE users
+        SET status = $2, updated_at = NOW()
+        WHERE id = $1::uuid
+        RETURNING
+          id::text,
+          email,
+          display_name AS "displayName",
+          platform_role AS "platformRole",
+          status,
+          email_verified AS "emailVerified",
+          updated_at AS "updatedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "User not found", 404);
+
+    if (["disabled", "suspended"].includes(status)) {
+      await dbQuery(
+        `
+          UPDATE sessions
+          SET revoked_at = NOW()
+          WHERE user_id = $1::uuid
+            AND revoked_at IS NULL
+        `,
+        [id]
+      );
+    }
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.user.status_update', 'user', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ status }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { user: result.rows[0], message: "User status updated." });
+  } catch (error) {
+    return fail(res, "Failed to update user status", 500, error.message);
+  }
+});
+
+router.post("/users/:id/platform-role-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const platformRole = normalizePlatformRole(req.body?.platformRole || "user");
+
+    const result = await dbQuery(
+      `
+        UPDATE users
+        SET platform_role = $2, updated_at = NOW()
+        WHERE id = $1::uuid
+        RETURNING
+          id::text,
+          email,
+          display_name AS "displayName",
+          platform_role AS "platformRole",
+          status,
+          email_verified AS "emailVerified",
+          updated_at AS "updatedAt"
+      `,
+      [id, platformRole]
+    );
+
+    if (!result.rows[0]) return fail(res, "User not found", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.user.platform_role_update', 'user', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ platformRole }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { user: result.rows[0], message: "User platform role updated." });
+  } catch (error) {
+    return fail(res, "Failed to update platform role", 500, error.message);
+  }
+});
+
+router.post("/memberships/upsert-safe", async (req, res) => {
+  try {
+    const userId = String(req.body?.userId || "").trim();
+    const appId = String(req.body?.appId || "").trim();
+    const role = normalizeAuthRole(req.body?.role || "member");
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!userId || !appId) return fail(res, "userId and appId are required", 400);
+    if (!["active", "pending", "disabled", "revoked"].includes(status)) return fail(res, "Invalid membership status", 400);
+
+    const userCheck = await dbQuery("SELECT id FROM users WHERE id = $1::uuid LIMIT 1", [userId]);
+    if (!userCheck.rows[0]) return fail(res, "User not found", 404);
+
+    const appCheck = await dbQuery("SELECT id FROM apps WHERE id = $1 LIMIT 1", [appId]);
+    if (!appCheck.rows[0]) return fail(res, "App not found", 404);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO app_memberships (
+          user_id,
+          app_id,
+          role,
+          status
+        )
+        VALUES ($1::uuid, $2, $3, $4)
+        ON CONFLICT (user_id, app_id) DO UPDATE
+        SET role = EXCLUDED.role,
+            status = EXCLUDED.status,
+            updated_at = NOW()
+        RETURNING
+          id::text,
+          user_id::text AS "userId",
+          app_id AS "appId",
+          role,
+          status,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [userId, appId, role, status]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.membership.upsert', 'app_membership', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        `${userId}:${appId}`,
+        JSON.stringify({ userId, appId, role, status }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { membership: result.rows[0], message: "Membership saved." });
+  } catch (error) {
+    return fail(res, "Failed to save membership", 500, error.message);
+  }
+});
+
+router.post("/memberships/:id/update-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const role = normalizeAuthRole(req.body?.role || "member");
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!["active", "pending", "disabled", "revoked"].includes(status)) return fail(res, "Invalid membership status", 400);
+
+    const result = await dbQuery(
+      `
+        UPDATE app_memberships
+        SET role = $2, status = $3, updated_at = NOW()
+        WHERE id = $1::uuid
+        RETURNING
+          id::text,
+          user_id::text AS "userId",
+          app_id AS "appId",
+          role,
+          status,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id, role, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "Membership not found", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.membership.update', 'app_membership', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ role, status }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { membership: result.rows[0], message: "Membership updated." });
+  } catch (error) {
+    return fail(res, "Failed to update membership", 500, error.message);
+  }
+});
+
+router.post("/users/sessions/:id/revoke-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (String(req.auth?.sessionId || "") === id) {
+      return fail(res, "Current session cannot be revoked here. Use Logout instead.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE sessions
+        SET revoked_at = NOW()
+        WHERE id = $1::uuid
+          AND revoked_at IS NULL
+        RETURNING
+          id::text,
+          user_id::text AS "userId",
+          ip_address::text AS "ipAddress",
+          user_agent AS "userAgent",
+          expires_at AS "expiresAt",
+          revoked_at AS "revokedAt",
+          created_at AS "createdAt"
+      `,
+      [id]
+    );
+
+    if (!result.rows[0]) return fail(res, "Session not found or already revoked", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'auth.session.revoke', 'session', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { session: result.rows[0], message: "Session revoked." });
+  } catch (error) {
+    return fail(res, "Failed to revoke user session", 500, error.message);
+  }
+});
+
 router.get("/database-page-data", async (req, res) => {
   try {
     const tablesResult = await dbQuery(`

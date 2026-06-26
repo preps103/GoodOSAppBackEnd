@@ -894,26 +894,490 @@ function moduleCard(name, desc, tag) {
   return '<div class="module"><h4>' + safeText(name) + '</h4><p>' + safeText(desc) + '</p><div class="tag">' + safeText(tag) + '</div></div>';
 }
 
+
+window.loadLiveUsers = async function loadLiveUsers() {
+  try {
+    const response = await fetch("/api/admin/users-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Users refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.users = Array.isArray(data.users) ? data.users : [];
+    state.memberships = Array.isArray(data.memberships) ? data.memberships : [];
+    state.sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    state.authApps = Array.isArray(data.apps) ? data.apps : [];
+    state.authInvites = Array.isArray(data.invites) ? data.invites : [];
+    state.authAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
+    state.authCounts = data.counts || {};
+    state.usersLiveLoaded = true;
+    state.usersLiveLoading = false;
+    state.usersLiveError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.usersLiveLoaded = true;
+    state.usersLiveLoading = false;
+    state.usersLiveError = error.message || "Failed to load Auth / Users.";
+    console.error("Users refresh failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshUsersNow = async function refreshUsersNow() {
+  state.usersLiveLoaded = false;
+  state.usersLiveLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadLiveUsers();
+};
+
+window.createUserInvite = async function createUserInvite() {
+  const email = prompt("Invite email:");
+  if (!email) return;
+
+  const platformRole = prompt("Platform role: owner, admin, manager, developer, user, viewer", "user") || "user";
+  const appId = prompt("Optional app id for first app access. Leave blank for none:", "goodhub") || "";
+  const appRole = appId ? (prompt("App role: owner, admin, manager, developer, member, viewer", "member") || "member") : "member";
+
+  try {
+    const response = await fetch("/api/admin/users/invites/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        platformRole,
+        appId,
+        appRole,
+        expiresDays: 7
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Invite creation failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Invite created. Copy this token/link now:\\n\\n" + (data.inviteUrl || data.rawToken || "Created"));
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("Invite creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.updateUserStatus = async function updateUserStatus(id, currentStatus) {
+  const status = prompt("User status: active, pending, disabled, suspended", currentStatus || "active");
+  if (!status) return;
+
+  try {
+    const response = await fetch("/api/admin/users/" + encodeURIComponent(id) + "/status-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "User status update failed with status " + response.status);
+    }
+
+    alert("User status updated.");
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("User status update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.updateUserPlatformRole = async function updateUserPlatformRole(id, currentRole) {
+  const platformRole = prompt("Platform role: owner, admin, manager, developer, user, viewer", currentRole || "user");
+  if (!platformRole) return;
+
+  try {
+    const response = await fetch("/api/admin/users/" + encodeURIComponent(id) + "/platform-role-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ platformRole })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Platform role update failed with status " + response.status);
+    }
+
+    alert("Platform role updated.");
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("Platform role update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.addUserMembership = async function addUserMembership(userId) {
+  const appId = prompt("App id to grant:", "goodhub");
+  if (!appId) return;
+
+  const role = prompt("Role: owner, admin, manager, developer, member, viewer", "member") || "member";
+  const status = prompt("Status: active, pending, disabled, revoked", "active") || "active";
+
+  try {
+    const response = await fetch("/api/admin/memberships/upsert-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ userId, appId, role, status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Membership save failed with status " + response.status);
+    }
+
+    alert("Membership saved.");
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("Membership save failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.updateMembership = async function updateMembership(id, currentRole, currentStatus) {
+  const role = prompt("Role:", currentRole || "member");
+  if (!role) return;
+
+  const status = prompt("Status: active, pending, disabled, revoked", currentStatus || "active") || "active";
+
+  try {
+    const response = await fetch("/api/admin/memberships/" + encodeURIComponent(id) + "/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ role, status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Membership update failed with status " + response.status);
+    }
+
+    alert("Membership updated.");
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("Membership update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.revokeAuthSession = async function revokeAuthSession(id) {
+  if (!confirm("Revoke this user session?")) return;
+
+  try {
+    const response = await fetch("/api/admin/users/sessions/" + encodeURIComponent(id) + "/revoke-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Session revoke failed with status " + response.status);
+    }
+
+    alert("Session revoked.");
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("Session revoke failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.updateInviteStatus = async function updateInviteStatus(id, currentStatus) {
+  const status = prompt("Invite status: pending, accepted, revoked, expired", currentStatus || "revoked");
+  if (!status) return;
+
+  try {
+    const response = await fetch("/api/admin/users/invites/" + encodeURIComponent(id) + "/status-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Invite status update failed with status " + response.status);
+    }
+
+    alert("Invite updated.");
+    await window.loadLiveUsers();
+  } catch (error) {
+    alert("Invite update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewAuthAuditDetail = function viewAuthAuditDetail(id) {
+  const audit = (state.authAuditLogs || []).find(item => item.id === id) || {};
+  alert("Auth Audit Detail:\\n\\n" + prettyJsonForAlert(audit));
+};
+
+
 function usersView() {
+  if (!state.usersLiveLoaded && !state.usersLiveLoading) {
+    state.usersLiveLoading = true;
+    setTimeout(() => window.loadLiveUsers(), 100);
+  }
+
+  const users = Array.isArray(state.users) ? state.users : [];
+  const memberships = Array.isArray(state.memberships) ? state.memberships : [];
+  const sessions = Array.isArray(state.sessions) ? state.sessions : [];
+  const apps = Array.isArray(state.authApps) ? state.authApps : [];
+  const invites = Array.isArray(state.authInvites) ? state.authInvites : [];
+  const auditLogs = Array.isArray(state.authAuditLogs) ? state.authAuditLogs : [];
+  const counts = state.authCounts || {};
+
   return `
-    ${hero("Auth / Users", "Manage GoodOS accounts, owner access, session state, and future invite flows.")}
-    <div class="card">
+    ${hero("Auth / Users", "Manage GoodOS accounts, invites, platform roles, app memberships, and session state.")}
+    <div class="section-head">
+      <h3>User Access Control</h3>
+      <div>
+        <button class="logout" onclick="window.refreshUsersNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createUserInvite()">Create Invite</button>
+      </div>
+    </div>
+
+    ${state.usersLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Auth / Users data...</p></div>` : ""}
+    ${state.usersLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Auth / Users load error: ${safeText(state.usersLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Users", counts.users ?? users.length, "GoodOS accounts")}
+      ${card("Active Users", counts.activeUsers ?? users.filter(user => user.status === "active").length, "Can sign in")}
+      ${card("Memberships", counts.activeMemberships ?? memberships.filter(item => item.status === "active").length, "Active app access")}
+      ${card("Pending Invites", counts.pendingInvites ?? invites.filter(item => item.status === "pending").length, "Awaiting acceptance")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Users</h3><span class="badge">${safeText(String(users.length))} Total</span></div>
       <table>
-        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Email Verified</th></tr></thead>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Platform Role</th>
+            <th>Status</th>
+            <th>Email Verified</th>
+            <th>Last Login</th>
+            <th>Action</th>
+          </tr>
+        </thead>
         <tbody>
-          ${state.users.map(user => `
+          ${users.map(user => `
             <tr>
-              <td><strong>${safeText(user.displayName || user.email)}</strong><div class="muted">${safeText(user.email)}</div></td>
-              <td>${safeText(user.platformRole)}</td>
-              <td><span class="badge">${safeText(user.status)}</span></td>
+              <td><strong>${safeText(user.displayName || user.email)}</strong><div class="muted">${safeText(user.email)}</div><div class="muted">${safeText(user.id || "")}</div></td>
+              <td><span class="badge">${safeText(user.platformRole || "-")}</span></td>
+              <td><span class="badge">${safeText(user.status || "-")}</span></td>
               <td>${user.emailVerified ? "Verified" : "Pending"}</td>
+              <td>${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "-"}</td>
+              <td>
+                <button class="logout" onclick="window.updateUserPlatformRole('${safeText(user.id)}','${safeText(user.platformRole || "user")}')">Role</button>
+                <button class="logout" onclick="window.updateUserStatus('${safeText(user.id)}','${safeText(user.status || "active")}')">Status</button>
+                <button class="logout" onclick="window.addUserMembership('${safeText(user.id)}')">Add App</button>
+              </td>
             </tr>
-          `).join("")}
+          `).join("") || '<tr><td colspan="6" class="muted">No users found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+      <div class="card">
+        <div class="section-head"><h3>Invites</h3><span class="badge">${safeText(String(invites.length))} Records</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Role</th>
+              <th>App</th>
+              <th>Status</th>
+              <th>Expires</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invites.map(invite => `
+              <tr>
+                <td><strong>${safeText(invite.email || "-")}</strong><div class="muted">${safeText(invite.id || "")}</div></td>
+                <td>${safeText(invite.platformRole || "-")}</td>
+                <td>${safeText(invite.appId || "-")} ${invite.appRole ? "(" + safeText(invite.appRole) + ")" : ""}</td>
+                <td><span class="badge">${safeText(invite.status || "-")}</span></td>
+                <td>${invite.expiresAt ? new Date(invite.expiresAt).toLocaleString() : "-"}</td>
+                <td><button class="logout" onclick="window.updateInviteStatus('${safeText(invite.id)}','${safeText(invite.status || "pending")}')">Status</button></td>
+              </tr>
+            `).join("") || '<tr><td colspan="6" class="muted">No invite records yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>Apps Available</h3><span class="badge">${safeText(String(apps.length))} Apps</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>App</th>
+              <th>Domain</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${apps.map(app => `
+              <tr>
+                <td><strong>${safeText(app.name || app.id)}</strong><div class="muted">${safeText(app.id || "")}</div></td>
+                <td>${safeText(app.domain || "-")}</td>
+                <td><span class="badge">${safeText(app.status || "-")}</span></td>
+              </tr>
+            `).join("") || '<tr><td colspan="3" class="muted">No apps found.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>App Memberships</h3><span class="badge">${safeText(String(memberships.length))} Grants</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>App</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${memberships.map(item => `
+            <tr>
+              <td><strong>${safeText(item.displayName || item.email || "-")}</strong><div class="muted">${safeText(item.email || "")}</div></td>
+              <td>${safeText(item.appName || item.appId || "-")}<div class="muted">${safeText(item.appDomain || "")}</div></td>
+              <td><span class="badge">${safeText(item.role || "-")}</span></td>
+              <td><span class="badge">${safeText(item.status || "-")}</span></td>
+              <td>${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : "-"}</td>
+              <td><button class="logout" onclick="window.updateMembership('${safeText(item.id)}','${safeText(item.role || "member")}','${safeText(item.status || "active")}')">Edit</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No memberships found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Sessions</h3><span class="badge">${safeText(String(counts.activeSessions ?? sessions.filter(item => item.status === "active").length))} Active</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>IP</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>User Agent</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sessions.map(session => `
+            <tr>
+              <td><strong>${safeText(session.displayName || session.email || "-")}</strong><div class="muted">${safeText(String(session.id || "").slice(0, 16))}</div></td>
+              <td>${safeText(session.ipAddress || "-")}</td>
+              <td><span class="badge">${safeText(session.status || "-")}</span></td>
+              <td>${session.expiresAt ? new Date(session.expiresAt).toLocaleString() : "-"}</td>
+              <td>${safeText(session.userAgent || "-").slice(0, 120)}</td>
+              <td>${session.status === "active" ? `<button class="logout" onclick="window.revokeAuthSession('${safeText(session.id)}')">Revoke</button>` : `<span class="muted">-</span>`}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No sessions found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Auth Audit</h3><span class="badge">Last 100</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Actor</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>IP</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${auditLogs.map(audit => `
+            <tr>
+              <td>${audit.createdAt ? new Date(audit.createdAt).toLocaleString() : "-"}</td>
+              <td>${safeText(audit.actor || "-")}</td>
+              <td><span class="badge">${safeText(audit.action || "-")}</span></td>
+              <td>${safeText(audit.targetType || "-")} ${safeText(audit.targetId || "")}</td>
+              <td>${safeText(audit.ipAddress || "-")}</td>
+              <td><button class="logout" onclick="window.viewAuthAuditDetail('${safeText(audit.id)}')">Details</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No auth audit entries yet.</td></tr>'}
         </tbody>
       </table>
     </div>
   `;
 }
+
 
 function appsView() {
   return `
