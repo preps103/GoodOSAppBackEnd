@@ -70,6 +70,43 @@
       return this.request("/apps");
     }
 
+    dbTables() {
+      return this.request("/db/tables");
+    }
+
+    dbRows(tableSlug, params = {}) {
+      const search = new URLSearchParams();
+      if (params.limit) search.set("limit", params.limit);
+      if (params.offset) search.set("offset", params.offset);
+      if (params.search) search.set("search", params.search);
+      const query = search.toString();
+      return this.request(`/db/${encodeURIComponent(tableSlug)}/rows${query ? `?${query}` : ""}`);
+    }
+
+    dbRow(tableSlug, id) {
+      return this.request(`/db/${encodeURIComponent(tableSlug)}/rows/${encodeURIComponent(id)}`);
+    }
+
+    createDbRow(tableSlug, row = {}) {
+      return this.request(`/db/${encodeURIComponent(tableSlug)}/rows`, {
+        method: "POST",
+        body: row,
+      });
+    }
+
+    updateDbRow(tableSlug, id, row = {}) {
+      return this.request(`/db/${encodeURIComponent(tableSlug)}/rows/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body: row,
+      });
+    }
+
+    deleteDbRow(tableSlug, id) {
+      return this.request(`/db/${encodeURIComponent(tableSlug)}/rows/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+    }
+
     storageBuckets() {
       return this.request("/storage/buckets");
     }

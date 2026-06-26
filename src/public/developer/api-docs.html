@@ -60,6 +60,30 @@
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
   --data '{"source":"api-docs","message":"Testing function call"}'</code></pre>
     </div>
+
+    <div class="card">
+      <h2><span class="badge">GET</span> /db/tables</h2>
+      <p>Scope: <code>read:db</code></p>
+      <pre><code>curl https://backend.goodos.app/api/v1/db/tables \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="badge">GET</span> /db/:tableSlug/rows</h2>
+      <p>Scope: <code>read:db</code></p>
+      <pre><code>curl "https://backend.goodos.app/api/v1/db/apps/rows?limit=10" \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="badge">POST</span> /db/:tableSlug/rows</h2>
+      <p>Scope: <code>write:db</code></p>
+      <pre><code>curl -X POST https://backend.goodos.app/api/v1/db/demo-items/rows \
+  -H "Content-Type: application/json" \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
+  --data '{"title":"Created from API Docs","status":"active"}'</code></pre>
+    </div>
+
   </main>
 </body>
 </html>

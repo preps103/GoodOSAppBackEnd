@@ -21,7 +21,10 @@
       "request": {
         "method": "GET",
         "header": [
-          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
         ],
         "url": "{{base_url}}/health"
       }
@@ -31,7 +34,10 @@
       "request": {
         "method": "GET",
         "header": [
-          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
         ],
         "url": "{{base_url}}/apps"
       }
@@ -41,7 +47,10 @@
       "request": {
         "method": "GET",
         "header": [
-          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
         ],
         "url": "{{base_url}}/storage/buckets"
       }
@@ -51,7 +60,10 @@
       "request": {
         "method": "GET",
         "header": [
-          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
         ],
         "url": "{{base_url}}/storage/files"
       }
@@ -61,14 +73,67 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
         ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"source\": \"postman\",\n  \"message\": \"Testing GoodOS callable function\"\n}"
         },
         "url": "{{base_url}}/functions/health-check"
+      }
+    },
+    {
+      "name": "Database API - Tables",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "url": "{{base_url}}/db/tables"
+      }
+    },
+    {
+      "name": "Database API - Apps Rows",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "url": "{{base_url}}/db/apps/rows"
+      }
+    },
+    {
+      "name": "Database API - Create Demo Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Created from Postman\",\n  \"status\": \"active\"\n}"
+        },
+        "url": "{{base_url}}/db/demo-items/rows"
       }
     }
   ]

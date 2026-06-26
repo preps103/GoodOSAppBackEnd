@@ -35,32 +35,53 @@
       "ApiKeyContext": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "type": { "type": "string" },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
           "scopes": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "allowedAppIds": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
       "SuccessResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean" }
+          "success": {
+            "type": "boolean"
+          }
         },
-        "required": ["success"]
+        "required": [
+          "success"
+        ]
       },
       "ErrorResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "const": false },
-          "message": { "type": "string" },
-          "detail": { "type": "string" }
+          "success": {
+            "type": "boolean",
+            "const": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
         }
       }
     }
@@ -70,7 +91,14 @@
       "get": {
         "summary": "Public API health check",
         "description": "Requires scope: read:health",
-        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "x-goodos-scope": "read:health",
         "responses": {
           "200": {
@@ -85,15 +113,21 @@
                     "id": "key_xxx",
                     "name": "Function Execute Key",
                     "type": "scoped",
-                    "scopes": ["read:health"]
+                    "scopes": [
+                      "read:health"
+                    ]
                   },
                   "time": "2026-06-26T00:00:00.000Z"
                 }
               }
             }
           },
-          "401": { "description": "API key required" },
-          "403": { "description": "Missing required scope" }
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          }
         }
       }
     },
@@ -101,7 +135,14 @@
       "get": {
         "summary": "List apps allowed for the API key",
         "description": "Requires scope: read:apps. App results are filtered by allowed_app_ids on the API key.",
-        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "x-goodos-scope": "read:apps",
         "responses": {
           "200": {
@@ -125,8 +166,12 @@
               }
             }
           },
-          "401": { "description": "API key required" },
-          "403": { "description": "Missing required scope" }
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          }
         }
       }
     },
@@ -134,12 +179,25 @@
       "get": {
         "summary": "List storage buckets",
         "description": "Requires scope: read:storage",
-        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "x-goodos-scope": "read:storage",
         "responses": {
-          "200": { "description": "Storage buckets" },
-          "401": { "description": "API key required" },
-          "403": { "description": "Missing required scope" }
+          "200": {
+            "description": "Storage buckets"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          }
         }
       }
     },
@@ -147,20 +205,35 @@
       "get": {
         "summary": "List storage files",
         "description": "Requires scope: read:storage",
-        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "x-goodos-scope": "read:storage",
         "parameters": [
           {
             "name": "bucket",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Storage files" },
-          "401": { "description": "API key required" },
-          "403": { "description": "Missing required scope" }
+          "200": {
+            "description": "Storage files"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          }
         }
       }
     },
@@ -168,35 +241,61 @@
       "get": {
         "summary": "Call an HTTP Edge Function using GET",
         "description": "Requires scope: execute:functions",
-        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "x-goodos-scope": "execute:functions",
         "parameters": [
           {
             "name": "slug",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "health-check"
           }
         ],
         "responses": {
-          "200": { "description": "Function execution result" },
-          "401": { "description": "API key required" },
-          "403": { "description": "Missing required scope" },
-          "404": { "description": "Function not found" }
+          "200": {
+            "description": "Function execution result"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          },
+          "404": {
+            "description": "Function not found"
+          }
         }
       },
       "post": {
         "summary": "Call an HTTP Edge Function using POST",
         "description": "Requires scope: execute:functions",
-        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "x-goodos-scope": "execute:functions",
         "parameters": [
           {
             "name": "slug",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "health-check"
           }
         ],
@@ -212,10 +311,253 @@
           }
         },
         "responses": {
-          "200": { "description": "Function execution result" },
-          "401": { "description": "API key required" },
-          "403": { "description": "Missing required scope" },
-          "404": { "description": "Function not found" }
+          "200": {
+            "description": "Function execution result"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          },
+          "404": {
+            "description": "Function not found"
+          }
+        }
+      }
+    },
+    "/db/tables": {
+      "get": {
+        "summary": "List published Database API tables",
+        "description": "Requires scope: read:db",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:db",
+        "responses": {
+          "200": {
+            "description": "Published tables"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope"
+          }
+        }
+      }
+    },
+    "/db/{tableSlug}/rows": {
+      "get": {
+        "summary": "List rows from a published table",
+        "description": "Requires scope: read:db",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:db",
+        "parameters": [
+          {
+            "name": "tableSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "apps"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Table rows"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope or table disabled"
+          },
+          "404": {
+            "description": "Published table not found"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a row in a write-enabled published table",
+        "description": "Requires scope: write:db and table insert permission",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "write:db",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "title": "New demo item",
+                "status": "active"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Row created"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Missing required scope or table disabled"
+          }
+        }
+      }
+    },
+    "/db/{tableSlug}/rows/{id}": {
+      "get": {
+        "summary": "Get one row from a published table",
+        "description": "Requires scope: read:db",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:db",
+        "parameters": [
+          {
+            "name": "tableSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Table row"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a row in a write-enabled published table",
+        "description": "Requires scope: write:db and table update permission",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "write:db",
+        "parameters": [
+          {
+            "name": "tableSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Row updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete or soft-delete a row in a write-enabled published table",
+        "description": "Requires scope: write:db and table delete permission",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "write:db",
+        "parameters": [
+          {
+            "name": "tableSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Row deleted"
+          }
         }
       }
     }

@@ -47,6 +47,12 @@ export class GoodOSClient {
   request<T = unknown>(path: string, options?: RequestInit & { body?: unknown }): Promise<GoodOSResponse<T>>;
   health(): Promise<GoodOSResponse>;
   apps(): Promise<GoodOSResponse<{ apps: GoodOSApp[] }>>;
+  dbTables(): Promise<GoodOSResponse>;
+  dbRows(tableSlug: string, params?: { limit?: number; offset?: number; search?: string }): Promise<GoodOSResponse>;
+  dbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
+  createDbRow(tableSlug: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
+  updateDbRow(tableSlug: string, id: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
+  deleteDbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
   storageBuckets(): Promise<GoodOSResponse>;
   storageFiles(params?: { bucket?: string }): Promise<GoodOSResponse>;
   callFunction<TInput = Record<string, unknown>, TOutput = unknown>(

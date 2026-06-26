@@ -139,6 +139,36 @@ console.log(response);</code></pre>
       Keep raw API keys private. Use separate keys for development, staging, production, and each app when possible.
     </div>
 
+
+    <h2>Generated Database API</h2>
+    <p>GoodOS can publish selected Postgres tables as scoped REST endpoints. Use <code>read:db</code> for reads and <code>write:db</code> for write-enabled tables.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Endpoint</th>
+          <th>Scope</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>GET</strong></td><td><code>/api/v1/db/tables</code></td><td><code>read:db</code></td><td>List published tables.</td></tr>
+        <tr><td><strong>GET</strong></td><td><code>/api/v1/db/:tableSlug/rows</code></td><td><code>read:db</code></td><td>List rows from a published table.</td></tr>
+        <tr><td><strong>GET</strong></td><td><code>/api/v1/db/:tableSlug/rows/:id</code></td><td><code>read:db</code></td><td>Read one published row.</td></tr>
+        <tr><td><strong>POST</strong></td><td><code>/api/v1/db/:tableSlug/rows</code></td><td><code>write:db</code></td><td>Create a row in a write-enabled table.</td></tr>
+        <tr><td><strong>PATCH</strong></td><td><code>/api/v1/db/:tableSlug/rows/:id</code></td><td><code>write:db</code></td><td>Update a row in a write-enabled table.</td></tr>
+        <tr><td><strong>DELETE</strong></td><td><code>/api/v1/db/:tableSlug/rows/:id</code></td><td><code>write:db</code></td><td>Delete or soft-delete a write-enabled row.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>const tables = await goodos.dbTables();
+const rows = await goodos.dbRows("apps", { limit: 10 });
+const created = await goodos.createDbRow("demo-items", {
+  title: "Created from SDK",
+  status: "active"
+});</code></pre>
+
     <h2>cURL Example</h2>
     <pre><code>curl https://backend.goodos.app/api/v1/health \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
