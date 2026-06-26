@@ -1,0 +1,75 @@
+{
+  "info": {
+    "name": "GoodOS Public API",
+    "_postman_id": "goodos-public-api",
+    "description": "GoodAppBackEnd public API collection. Set GOODOS_API_KEY in collection variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://backend.goodos.app/api/v1"
+    },
+    {
+      "key": "GOODOS_API_KEY",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+        ],
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "Apps",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+        ],
+        "url": "{{base_url}}/apps"
+      }
+    },
+    {
+      "name": "Storage Buckets",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+        ],
+        "url": "{{base_url}}/storage/buckets"
+      }
+    },
+    {
+      "name": "Storage Files",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+        ],
+        "url": "{{base_url}}/storage/files"
+      }
+    },
+    {
+      "name": "Call Function - Health Check",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-GoodOS-API-Key", "value": "{{GOODOS_API_KEY}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"source\": \"postman\",\n  \"message\": \"Testing GoodOS callable function\"\n}"
+        },
+        "url": "{{base_url}}/functions/health-check"
+      }
+    }
+  ]
+}

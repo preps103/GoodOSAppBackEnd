@@ -1087,6 +1087,47 @@ window.viewActivityDetail = function viewActivityDetail(kind, id) {
 };
 
 
+
+function developerCenterSection() {
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Developer Center</h3>
+      <div>
+        <a class="logout" href="/docs" target="_blank" rel="noopener">Open Docs</a>
+        <a class="logout" href="/openapi.json" target="_blank" rel="noopener">OpenAPI</a>
+      </div>
+    </div>
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("OpenAPI", "Ready", "Machine-readable API spec")}
+      ${card("JavaScript SDK", "Ready", "Browser and Node client")}
+      ${card("TypeScript", "Ready", "SDK type definitions")}
+      ${card("Postman", "Ready", "Importable API collection")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Developer Assets</h3><span class="badge">Public</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>URL</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Developer Docs</strong></td><td><a href="/docs" target="_blank" rel="noopener">/docs</a></td><td>Human-readable developer quickstart.</td></tr>
+          <tr><td><strong>API Reference</strong></td><td><a href="/api-docs" target="_blank" rel="noopener">/api-docs</a></td><td>Endpoint examples and scopes.</td></tr>
+          <tr><td><strong>OpenAPI JSON</strong></td><td><a href="/openapi.json" target="_blank" rel="noopener">/openapi.json</a></td><td>API schema for codegen and integrations.</td></tr>
+          <tr><td><strong>JavaScript SDK</strong></td><td><a href="/sdk/goodos.js" target="_blank" rel="noopener">/sdk/goodos.js</a></td><td>GoodOS client SDK.</td></tr>
+          <tr><td><strong>TypeScript Types</strong></td><td><a href="/sdk/goodos.d.ts" target="_blank" rel="noopener">/sdk/goodos.d.ts</a></td><td>Type definitions for developers.</td></tr>
+          <tr><td><strong>Postman Collection</strong></td><td><a href="/postman/goodos-postman-collection.json" target="_blank" rel="noopener">/postman/goodos-postman-collection.json</a></td><td>Importable API testing collection.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function dashboard() {
   if (!state.activityLoaded && !state.activityLoading) {
     state.activityLoading = true;
@@ -1117,6 +1158,8 @@ function dashboard() {
     ${state.activityError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Activity Center error: ${safeText(state.activityError)}</p></div>` : ""}
 
     ${projectControlCenterSection()}
+
+    ${developerCenterSection()}
 
     <div class="grid cards">
       ${card("Users", counts.activeUsers ?? stats.users ?? state.users.length, "Active GoodOS users")}

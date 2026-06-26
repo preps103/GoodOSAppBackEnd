@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const env = require("../config/env");
 const { success } = require("../utils/response");
 
@@ -29,6 +30,35 @@ router.use("/api/admin", adminRoutes);
 router.use("/api/v1", publicApiRoutes);
 router.use("/storage", storageRoutes);
 router.use("/webhook-test-receiver", webhookTestRoutes);
+
+
+function developerPublicFile(relativePath) {
+  return path.join(__dirname, "..", "public", relativePath);
+}
+
+router.get("/docs", (req, res) => {
+  res.type("html").sendFile(developerPublicFile("developer/docs.html"));
+});
+
+router.get("/api-docs", (req, res) => {
+  res.type("html").sendFile(developerPublicFile("developer/api-docs.html"));
+});
+
+router.get("/openapi.json", (req, res) => {
+  res.type("json").sendFile(developerPublicFile("developer/openapi.json"));
+});
+
+router.get("/sdk/goodos.js", (req, res) => {
+  res.type("application/javascript").sendFile(developerPublicFile("sdk/goodos.js"));
+});
+
+router.get("/sdk/goodos.d.ts", (req, res) => {
+  res.type("text/plain").sendFile(developerPublicFile("sdk/goodos.d.ts"));
+});
+
+router.get("/postman/goodos-postman-collection.json", (req, res) => {
+  res.type("json").sendFile(developerPublicFile("postman/goodos-postman-collection.json"));
+});
 
 router.get("/favicon.ico", (req, res) => res.status(204).end());
 

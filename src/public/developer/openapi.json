@@ -1,0 +1,223 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GoodOS Public API",
+    "version": "1.0.0",
+    "description": "GoodAppBackEnd public API for GoodOS apps. All public endpoints require an API key using X-GoodOS-API-Key or Authorization: Bearer."
+  },
+  "servers": [
+    {
+      "url": "https://backend.goodos.app/api/v1",
+      "description": "GoodOS Production Public API"
+    }
+  ],
+  "security": [
+    {
+      "GoodOSApiKey": []
+    },
+    {
+      "GoodOSBearer": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "GoodOSApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-GoodOS-API-Key"
+      },
+      "GoodOSBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "ApiKeyContext": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "scopes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "allowedAppIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        },
+        "required": ["success"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "const": false },
+          "message": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Public API health check",
+        "description": "Requires scope: read:health",
+        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "x-goodos-scope": "read:health",
+        "responses": {
+          "200": {
+            "description": "Health response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "service": "GoodAppBackEnd Public API",
+                  "status": "ok",
+                  "apiKey": {
+                    "id": "key_xxx",
+                    "name": "Function Execute Key",
+                    "type": "scoped",
+                    "scopes": ["read:health"]
+                  },
+                  "time": "2026-06-26T00:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": { "description": "API key required" },
+          "403": { "description": "Missing required scope" }
+        }
+      }
+    },
+    "/apps": {
+      "get": {
+        "summary": "List apps allowed for the API key",
+        "description": "Requires scope: read:apps. App results are filtered by allowed_app_ids on the API key.",
+        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "x-goodos-scope": "read:apps",
+        "responses": {
+          "200": {
+            "description": "Allowed apps",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "data": {
+                    "apps": [
+                      {
+                        "id": "goodfleet",
+                        "name": "GoodFleet",
+                        "domain": "fleet.goodos.app",
+                        "status": "active",
+                        "memberCount": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "API key required" },
+          "403": { "description": "Missing required scope" }
+        }
+      }
+    },
+    "/storage/buckets": {
+      "get": {
+        "summary": "List storage buckets",
+        "description": "Requires scope: read:storage",
+        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "x-goodos-scope": "read:storage",
+        "responses": {
+          "200": { "description": "Storage buckets" },
+          "401": { "description": "API key required" },
+          "403": { "description": "Missing required scope" }
+        }
+      }
+    },
+    "/storage/files": {
+      "get": {
+        "summary": "List storage files",
+        "description": "Requires scope: read:storage",
+        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "x-goodos-scope": "read:storage",
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Storage files" },
+          "401": { "description": "API key required" },
+          "403": { "description": "Missing required scope" }
+        }
+      }
+    },
+    "/functions/{slug}": {
+      "get": {
+        "summary": "Call an HTTP Edge Function using GET",
+        "description": "Requires scope: execute:functions",
+        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "x-goodos-scope": "execute:functions",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "health-check"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Function execution result" },
+          "401": { "description": "API key required" },
+          "403": { "description": "Missing required scope" },
+          "404": { "description": "Function not found" }
+        }
+      },
+      "post": {
+        "summary": "Call an HTTP Edge Function using POST",
+        "description": "Requires scope: execute:functions",
+        "security": [{ "GoodOSApiKey": [] }, { "GoodOSBearer": [] }],
+        "x-goodos-scope": "execute:functions",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "health-check"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "example": {
+                "source": "developer-docs",
+                "message": "Testing GoodOS callable function"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Function execution result" },
+          "401": { "description": "API key required" },
+          "403": { "description": "Missing required scope" },
+          "404": { "description": "Function not found" }
+        }
+      }
+    }
+  }
+}
