@@ -2383,4 +2383,86 @@ router.post("/logs/create-test-safe", async (req, res) => {
   }
 });
 
+
+router.get("/backups-page-data", async (req, res) => {
+  try {
+    const result = await dbQuery(`
+      SELECT
+        id,
+        name,
+        type,
+        status,
+        size_bytes AS "sizeBytes",
+        file_path AS "filePath",
+        notes,
+        created_by AS "createdBy",
+        completed_at AS "completedAt",
+        created_at AS "createdAt"
+      FROM backend_backups
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const backups = result.rows;
+
+    return ok(res, {
+      backups,
+      counts: {
+        backups: backups.length,
+        completed: backups.filter((item) => item.status === "completed").length,
+        failed: backups.filter((item) => item.status === "failed").length,
+        pending: backups.filter((item) => item.status === "pending").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load backups page data", 500, error.message);
+  }
+});
+
+router.post("/backups/create-safe", async (req, res) => {
+  try {
+    const id = `backup_${crypto.randomUUID().replace(/-/g, "")}`;
+    const now = new Date();
+    const name = String(req.body?.name || `Manual Backup ${now.toISOString()}`).trim();
+    const type = String(req.body?.type || "database").trim();
+    const notes = String(req.body?.notes || "Manual backup record created from GoodAppBackEnd console.").trim();
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_backups (
+          id,
+          name,
+          type,
+          status,
+          size_bytes,
+          file_path,
+          notes,
+          created_by,
+          completed_at
+        )
+        VALUES ($1, $2, $3, 'completed', 0, '/var/www/GoodAppBackEnd/backups', $4, 'console', NOW())
+        RETURNING
+          id,
+          name,
+          type,
+          status,
+          size_bytes AS "sizeBytes",
+          file_path AS "filePath",
+          notes,
+          created_by AS "createdBy",
+          completed_at AS "completedAt",
+          created_at AS "createdAt"
+      `,
+      [id, name, type, notes]
+    );
+
+    return ok(res, {
+      backup: result.rows[0],
+      message: "Backup record created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create backup record", 500, error.message);
+  }
+});
+
 module.exports = router;

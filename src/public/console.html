@@ -1204,979 +1204,134 @@ function securityView() {
   `;
 }
 
+
+window.loadLiveBackups = async function loadLiveBackups() {
+  try {
+    const response = await fetch("/api/admin/backups-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Backups refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.backups = Array.isArray(data.backups) ? data.backups : [];
+    state.backupCounts = data.counts || {};
+    state.backupsLiveLoaded = true;
+    state.backupsLiveLoading = false;
+    state.backupsLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.backupsLiveError = error.message || "Failed to load backups page data.";
+    state.backupsLiveLoading = false;
+    alert("Backups refresh failed: " + state.backupsLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshBackupsNow = async function refreshBackupsNow() {
+  return window.loadLiveBackups();
+};
+
+window.createSafeBackup = async function createSafeBackup() {
+  const name = prompt("Backup name:", "Manual Console Backup");
+  if (!name) return;
+
+  const notes = prompt("Notes:", "Manual backup record created from GoodAppBackEnd console.") || "";
+
+  try {
+    const response = await fetch("/api/admin/backups/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        type: "database",
+        notes
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Backup creation failed with status " + response.status);
+    }
+
+    alert("Backup record created.");
+    await window.loadLiveBackups();
+  } catch (error) {
+    alert("Backup creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function backupsView() {
+  if (!state.backupsLiveLoaded && !state.backupsLiveLoading) {
+    state.backupsLiveLoading = true;
+    setTimeout(() => window.loadLiveBackups(), 100);
+  }
+
   const backups = Array.isArray(state.backups) ? state.backups : [];
+  const counts = state.backupCounts || {};
 
   return `
-    ${hero("Backups", "Server-side backup inventory with manual JSON database snapshots.")}
+    ${hero("Backups", "Database backup records, restore points, and retention visibility.")}
     <div class="section-head">
-      <h3>Backup Inventory</h3>
-      <button class="logout" onclick="createBackup()">Create Backup Snapshot</button>
-    </div>
-    <div class="grid cards">
-      ${card("Backups", backups.length, "Tracked backup entries")}
-      ${card("Snapshots", backups.filter(item => String(item.name || "").includes("snapshot")).length, "Database snapshots")}
-      ${card("Restore", "Next", "Restore workflow")}
-      ${card("Schedule", "Next", "Automated snapshots")}
-    </div>
-    <div class="card" style="margin-top:18px;">
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Modified</th><th>Size</th></tr></thead>
-        <tbody>
-          ${backups.map(item => `
-            <tr>
-              <td><strong>${safeText(item.name)}</strong></td>
-              <td>${safeText(item.type)}</td>
-              <td>${item.modifiedAt ? new Date(item.modifiedAt).toLocaleString() : "-"}</td>
-              <td>${safeText(item.size || 0)}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="4" class="muted">No backups found yet. Create a snapshot to begin.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-
-window.loadLiveStorage = async function loadLiveStorage() {
-  try {
-    const response = await fetch("/api/admin/storage-page-data?t=" + Date.now(), {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Storage refresh failed with status " + response.status);
-    }
-
-    const data = payload.data || payload;
-    state.storageBuckets = Array.isArray(data.buckets) ? data.buckets : [];
-    state.storageFiles = Array.isArray(data.files) ? data.files : [];
-    state.storageSignedUrls = Array.isArray(data.signedUrls) ? data.signedUrls : [];
-    state.storageLiveLoaded = true;
-    state.storageLiveLoading = false;
-    state.storageLiveError = "";
-
-    goodosRenderNow();
-  } catch (error) {
-    state.storageLiveError = error.message || "Failed to load storage page data.";
-    state.storageLiveLoading = false;
-    alert("Storage refresh failed: " + state.storageLiveError);
-    console.error(error);
-    goodosRenderNow();
-  }
-};
-
-window.refreshStorageNow = async function refreshStorageNow() {
-  return window.loadLiveStorage();
-};
-
-window.createStorageBucket = async function createStorageBucket() {
-  const name = prompt("Bucket name:", "goodfleet");
-  if (!name) return;
-
-  const visibility = prompt("Visibility: private or public", "private");
-  if (!visibility) return;
-
-  try {
-    const response = await fetch("/api/admin/storage/buckets/create-safe", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name, visibility })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Bucket creation failed with status " + response.status);
-    }
-
-    alert("Storage bucket created.");
-    await window.loadLiveStorage();
-  } catch (error) {
-    alert("Bucket creation failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-function storageView() {
-  if (!state.storageLiveLoaded && !state.storageLiveLoading) {
-    state.storageLiveLoading = true;
-    setTimeout(() => window.loadLiveStorage(), 100);
-  }
-
-  const buckets = Array.isArray(state.storageBuckets) ? state.storageBuckets : [];
-  const files = Array.isArray(state.storageFiles) ? state.storageFiles : [];
-  const signedUrls = Array.isArray(state.storageSignedUrls) ? state.storageSignedUrls : [];
-
-  const bucketFileCount = (bucketId) => files.filter(file => file.bucket_id === bucketId || file.bucketId === bucketId).length;
-
-  return `
-    ${hero("Storage / Files", "Buckets, uploads, signed URLs, and file permission rules.")}
-    <div class="section-head">
-      <h3>Storage Buckets</h3>
+      <h3>Backup Registry</h3>
       <div>
-        <button class="logout" onclick="window.refreshStorageNow()">Refresh Data</button>
-        <button class="logout" onclick="window.createStorageBucket()">Create Bucket</button>
+        <button class="logout" onclick="window.refreshBackupsNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createSafeBackup()">Create Backup Record</button>
       </div>
     </div>
 
-    ${state.storageLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live storage data...</p></div>` : ""}
-    ${state.storageLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Storage load error: ${safeText(state.storageLiveError)}</p></div>` : ""}
+    ${state.backupsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live backup data...</p></div>` : ""}
+    ${state.backupsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Backups load error: ${safeText(state.backupsLiveError)}</p></div>` : ""}
 
     <div class="grid cards">
-      ${card("Buckets", buckets.length, "Active storage buckets")}
-      ${card("Files", files.length, "Tracked files")}
-      ${card("Visibility", buckets.find(bucket => bucket.visibility === "public") ? "Mixed" : "Private", "Default bucket policy")}
-      ${card("Signed URLs", signedUrls.length, "Private file delivery")}
+      ${card("Backups", counts.backups ?? backups.length, "Total backup records")}
+      ${card("Completed", counts.completed ?? backups.filter(item => item.status === "completed").length, "Ready restore points")}
+      ${card("Failed", counts.failed ?? backups.filter(item => item.status === "failed").length, "Failed backup records")}
+      ${card("Retention", "Next", "Retention rules")}
     </div>
 
     <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Buckets</h3><span class="badge">Live</span></div>
+      <div class="section-head"><h3>Backup Records</h3><span class="badge">Live</span></div>
       <table>
         <thead>
           <tr>
-            <th>Bucket</th>
-            <th>Visibility</th>
-            <th>Files</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${buckets.map(bucket => `
-            <tr>
-              <td><strong>${safeText(bucket.name || "-")}</strong><div class="muted">${safeText(bucket.id || "")}</div></td>
-              <td>${safeText(bucket.visibility || "-")}</td>
-              <td>${safeText(String(bucketFileCount(bucket.id)))}</td>
-              <td><span class="badge">${safeText(bucket.status || "-")}</span></td>
-              <td>${bucket.created_at ? new Date(bucket.created_at).toLocaleString() : bucket.createdAt ? new Date(bucket.createdAt).toLocaleString() : "-"}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No buckets created yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Files</h3><span class="badge">Last 250</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>File</th>
-            <th>Bucket</th>
+            <th>Backup</th>
             <th>Type</th>
-            <th>Size</th>
             <th>Status</th>
+            <th>Path</th>
+            <th>Completed</th>
             <th>Created</th>
           </tr>
         </thead>
         <tbody>
-          ${files.map(file => `
+          ${backups.map(backup => `
             <tr>
-              <td><strong>${safeText(file.original_name || file.filename || file.name || "-")}</strong><div class="muted">${safeText(file.id || "")}</div></td>
-              <td>${safeText(file.bucket_id || file.bucketId || "-")}</td>
-              <td>${safeText(file.mime_type || file.mimeType || "-")}</td>
-              <td>${safeText(String(file.size_bytes || file.sizeBytes || 0))}</td>
-              <td><span class="badge">${safeText(file.status || "-")}</span></td>
-              <td>${file.created_at ? new Date(file.created_at).toLocaleString() : file.createdAt ? new Date(file.createdAt).toLocaleString() : "-"}</td>
+              <td><strong>${safeText(backup.name || "-")}</strong><div class="muted">${safeText(backup.id || "")}</div></td>
+              <td>${safeText(backup.type || "-")}</td>
+              <td><span class="badge">${safeText(backup.status || "-")}</span></td>
+              <td>${safeText(backup.filePath || backup.file_path || "-")}</td>
+              <td>${backup.completedAt ? new Date(backup.completedAt).toLocaleString() : backup.completed_at ? new Date(backup.completed_at).toLocaleString() : "-"}</td>
+              <td>${backup.createdAt ? new Date(backup.createdAt).toLocaleString() : backup.created_at ? new Date(backup.created_at).toLocaleString() : "-"}</td>
             </tr>
-          `).join("") || '<tr><td colspan="6" class="muted">No files uploaded yet.</td></tr>'}
+          `).join("") || '<tr><td colspan="6" class="muted">No backup records found.</td></tr>'}
         </tbody>
       </table>
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Signed URLs</h3><span class="badge">Private Delivery</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>File</th>
-            <th>Status</th>
-            <th>Expires</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${signedUrls.map(url => `
-            <tr>
-              <td><strong>${safeText(url.id || "-")}</strong></td>
-              <td>${safeText(url.file_id || url.fileId || "-")}</td>
-              <td><span class="badge">${safeText(url.status || "active")}</span></td>
-              <td>${url.expires_at ? new Date(url.expires_at).toLocaleString() : url.expiresAt ? new Date(url.expiresAt).toLocaleString() : "-"}</td>
-              <td>${url.created_at ? new Date(url.created_at).toLocaleString() : url.createdAt ? new Date(url.createdAt).toLocaleString() : "-"}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No signed URLs generated yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-
-function goodosRenderNow() {
-  if (typeof render === "function") return render();
-  if (typeof renderConsole === "function") return renderConsole();
-  if (typeof renderPage === "function") return renderPage();
-  if (typeof renderView === "function") return renderView();
-
-  const target =
-    document.querySelector("#app") ||
-    document.querySelector("#root") ||
-    document.querySelector("main") ||
-    document.querySelector(".content") ||
-    document.querySelector(".main");
-
-  if (target && state && typeof views !== "undefined" && views[state.view]) {
-    target.innerHTML = views[state.view]();
-    return;
-  }
-
-  if (target && state && state.view === "api-keys" && typeof apiKeysView === "function") {
-    target.innerHTML = apiKeysView();
-    return;
-  }
-
-  console.warn("No known render function found.");
-}
-
-window.refreshApiKeysNow = async function refreshApiKeysNow() {
-  const button = document.querySelector('[data-api-key-refresh-button="true"]');
-  if (button) button.textContent = "LOADING...";
-
-  try {
-    const response = await fetch("/api/admin/api-keys-page-data?t=" + Date.now(), {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "API key refresh failed with status " + response.status);
-    }
-
-    const data = payload.data || payload;
-    state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : [];
-    state.apiKeysLiveLoaded = true;
-    state.apiKeysLiveLoading = false;
-    state.apiKeysLiveError = "";
-
-    goodosRenderNow();
-  } catch (error) {
-    state.apiKeysLiveError = error.message || "API key refresh failed.";
-    alert("API key refresh failed: " + state.apiKeysLiveError);
-    console.error(error);
-    goodosRenderNow();
-  } finally {
-    const freshButton = document.querySelector('[data-api-key-refresh-button="true"]');
-    if (freshButton) freshButton.textContent = "REFRESH DATA";
-  }
-};
-
-
-window.revokeApiKey = async function revokeApiKey(id) {
-  if (!id) {
-    alert("Missing API key id.");
-    return;
-  }
-
-  const confirmed = confirm("Revoke this API key? This cannot be undone.");
-  if (!confirmed) return;
-
-  try {
-    const response = await fetch("/api/admin/api-keys/" + encodeURIComponent(id) + "/revoke", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({})
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "API key revoke failed with status " + response.status);
-    }
-
-    alert("API key revoked.");
-    await window.refreshApiKeysNow();
-  } catch (error) {
-    alert("API key revoke failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-window.createScopedApiKey = async function createScopedApiKey() {
-  const name = prompt("API key name:", "GoodFleet Read Key");
-  if (!name) return;
-
-  const scopesRaw = prompt("Scopes, comma separated:", "read:health,read:apps");
-  if (!scopesRaw) return;
-
-  const appsRaw = prompt("Allowed app IDs. Use * for all apps, or goodfleet,goodqr,etc:", "goodfleet");
-  if (!appsRaw) return;
-
-  const description = prompt("Description:", "Created from GoodAppBackEnd console") || "";
-
-  const scopes = scopesRaw.split(",").map(item => item.trim()).filter(Boolean);
-  const allowedAppIds = appsRaw.split(",").map(item => item.trim()).filter(Boolean);
-
-  try {
-    const response = await fetch("/api/admin/api-keys/create-scoped", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name,
-        type: "scoped",
-        scopes,
-        allowedAppIds,
-        description
-      })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "API key creation failed with status " + response.status);
-    }
-
-    const secret = payload.data?.secret || payload.secret || "";
-    if (secret) {
-      prompt("API key created. Copy this key now. It will not be shown again:", secret);
-    } else {
-      alert("API key created.");
-    }
-
-    await window.refreshApiKeysNow();
-  } catch (error) {
-    alert("API key creation failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-function apiKeysView() {
-  if (!state.apiKeysLiveLoaded && !state.apiKeysLiveLoading) {
-    state.apiKeysLiveLoading = true;
-    setTimeout(() => window.refreshApiKeysNow(), 100);
-  }
-
-  const keys = Array.isArray(state.apiKeys) ? state.apiKeys : [];
-  const activeKeys = keys.filter(key => key.status === "active");
-  const revokedKeys = keys.filter(key => key.status !== "active");
-
-  return `
-    ${hero("API Keys", "Create scoped project keys, rotate secrets, and manage server integration tokens.")}
-    <div class="section-head">
-      <h3>Project Keys</h3>
-      <div>
-        <button class="logout" data-api-key-refresh-button="true" onclick="window.refreshApiKeysNow()">Refresh Data</button>
-        <button class="logout" onclick="window.createScopedApiKey()">Create Scoped Key</button>
-      </div>
-    </div>
-
-    ${state.apiKeysLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading API keys...</p></div>` : ""}
-    ${state.apiKeysLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">API key load error: ${safeText(state.apiKeysLiveError)}</p></div>` : ""}
-
-    <div class="grid cards">
-      ${card("API Keys", keys.length, "Stored key records")}
-      ${card("Active", activeKeys.length, "Usable keys")}
-      ${card("Revoked", revokedKeys.length, "Disabled keys")}
-      ${card("Scoped", keys.filter(key => key.type === "scoped").length, "Fine-grained permissions")}
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Active Keys</h3><span class="badge">Live</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Prefix</th>
-            <th>Type</th>
-            <th>Scopes</th>
-            <th>Apps</th>
-            <th>Status</th>
-            <th>Last Used</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${activeKeys.map(key => `
-            <tr>
-              <td><strong>${safeText(key.name)}</strong><div class="muted">${safeText(key.id)}</div></td>
-              <td>${safeText(key.keyPrefix || key.key_prefix || "-")}</td>
-              <td>${safeText(key.type || "-")}</td>
-              <td>${safeText((key.scopes || []).join(", ") || "-")}</td>
-              <td>${safeText((key.allowedAppIds || key.allowed_app_ids || []).join(", ") || "-")}</td>
-              <td><span class="badge">${safeText(key.status || "-")}</span></td>
-              <td>${key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleString() : "-"}</td>
-              <td><button class="logout" onclick="revokeApiKey('${safeText(key.id)}')">Revoke</button></td>
-            </tr>
-          `).join("") || '<tr><td colspan="8" class="muted">No active API keys.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-
-    ${revokedKeys.length ? `
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Revoked Keys</h3><span class="badge">Disabled</span></div>
-      <table>
-        <thead><tr><th>Name</th><th>Prefix</th><th>Type</th><th>Scopes</th><th>Status</th><th>Revoked</th></tr></thead>
-        <tbody>
-          ${revokedKeys.map(key => `
-            <tr>
-              <td><strong>${safeText(key.name)}</strong><div class="muted">${safeText(key.id)}</div></td>
-              <td>${safeText(key.keyPrefix || key.key_prefix || "-")}</td>
-              <td>${safeText(key.type || "-")}</td>
-              <td>${safeText((key.scopes || []).join(", ") || "-")}</td>
-              <td><span class="badge">${safeText(key.status || "-")}</span></td>
-              <td>${key.revokedAt ? new Date(key.revokedAt).toLocaleString() : "-"}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-    ` : ""}
-
-    <div class="card" style="margin-top:18px;">
-      <h3>Scope Examples</h3>
-      <p class="muted">read:health, read:apps, read:storage, read:*, write:*, *</p>
-      <p class="muted">Allowed apps can be * for all apps or IDs like goodfleet, goodqr, goodads.</p>
-    </div>
-  `;
-}
-
-
-window.loadLiveWebhooks = async function loadLiveWebhooks() {
-  try {
-    const response = await fetch("/api/admin/webhooks-page-data?t=" + Date.now(), {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Webhook refresh failed with status " + response.status);
-    }
-
-    const data = payload.data || payload;
-    state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : [];
-    state.webhookDeliveries = Array.isArray(data.webhookDeliveries) ? data.webhookDeliveries : [];
-    state.webhooksLiveLoaded = true;
-    state.webhooksLiveLoading = false;
-    state.webhooksLiveError = "";
-
-    goodosRenderNow();
-  } catch (error) {
-    state.webhooksLiveError = error.message || "Failed to load webhook page data.";
-    state.webhooksLiveLoading = false;
-    alert("Webhook refresh failed: " + state.webhooksLiveError);
-    console.error(error);
-    goodosRenderNow();
-  }
-};
-
-window.createWebhook = async function createWebhook() {
-  const name = prompt("Webhook name:", "GoodOS Webhook");
-  if (!name) return;
-
-  const url = prompt("Webhook URL:", "https://backend.goodos.app/webhook-test-receiver");
-  if (!url) return;
-
-  const eventsRaw = prompt("Events, comma separated. Use * for all events:", "*");
-  if (!eventsRaw) return;
-
-  const events = eventsRaw.split(",").map(item => item.trim()).filter(Boolean);
-
-  try {
-    const response = await fetch("/api/admin/webhooks/create-safe", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name, url, events })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Webhook creation failed with status " + response.status);
-    }
-
-    const secret = payload.data?.secret || payload.secret || "";
-    if (secret) {
-      prompt("Webhook created. Copy this secret now. It will not be shown again:", secret);
-    } else {
-      alert("Webhook created.");
-    }
-
-    await window.loadLiveWebhooks();
-  } catch (error) {
-    alert("Webhook creation failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-window.refreshWebhooksNow = async function refreshWebhooksNow() {
-  return window.loadLiveWebhooks();
-};
-
-function webhooksView() {
-  if (!state.webhookLiveLoaded && !state.webhookLiveLoading) {
-    state.webhookLiveLoading = true;
-    setTimeout(() => window.refreshWebhooksNow(), 100);
-  }
-
-  const allWebhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
-  const webhooks = allWebhooks.filter(webhook => webhook.status === "active");
-  const disabledWebhooks = allWebhooks.filter(webhook => webhook.status !== "active");
-  const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
-
-  return `
-    ${hero("Webhooks", "Send auth, app, storage, payment, and custom backend events to external services.")}
-    <div class="section-head">
-      <h3>Webhook Endpoints</h3>
-      <div>
-        <button class="logout" data-webhook-refresh-button="true" onclick="window.refreshWebhooksNow()">Refresh Data</button>
-        <button class="logout" onclick="createWebhook()">Create Webhook</button>
-      </div>
-    </div>
-    ${state.webhookLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live webhook data...</p></div>` : ""}
-    ${state.webhookLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Webhook load error: ${safeText(state.webhookLiveError)}</p></div>` : ""}
-
-    <div class="grid cards">
-      ${card("Webhooks", allWebhooks.length, "Configured endpoints")}
-      ${card("Active", webhooks.length, "Receiving events")}
-      ${card("Deliveries", deliveries.length, "Delivery attempts")}
-      ${card("Failed", deliveries.filter(d => d.status === "failed").length, "Needs retry")}
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Endpoints</h3><span class="badge">Live</span></div>
-      <table>
-        <thead><tr><th>Name</th><th>URL</th><th>Events</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>
-          ${webhooks.map(webhook => `
-            <tr>
-              <td><strong>${safeText(webhook.name)}</strong><div class="muted">${safeText(webhook.id)}</div></td>
-              <td>${safeText(webhook.url)}</td>
-              <td>${safeText((webhook.events || []).join(", "))}</td>
-              <td><span class="badge">${safeText(webhook.status)}</span></td>
-              <td>
-                <button class="logout" onclick="sendTestWebhook('${safeText(webhook.id)}')">Send Test</button>
-                ${webhook.status === "active" ? `<button class="logout" onclick="disableWebhook('${safeText(webhook.id)}')">Disable</button>` : ""}
-              </td>
-            </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No webhooks created yet. Click Create Webhook to begin.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-
-    ${disabledWebhooks.length ? `
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Disabled Webhooks</h3><span class="badge">Hidden</span></div>
-      <table>
-        <thead><tr><th>Name</th><th>URL</th><th>Status</th></tr></thead>
-        <tbody>
-          ${disabledWebhooks.map(webhook => `
-            <tr>
-              <td><strong>${safeText(webhook.name)}</strong><div class="muted">${safeText(webhook.id)}</div></td>
-              <td>${safeText(webhook.url)}</td>
-              <td><span class="badge">${safeText(webhook.status)}</span></td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-    ` : ""}
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Delivery Logs</h3><span class="badge">Retry Queue</span></div>
-      <table>
-        <thead><tr><th>Delivery</th><th>Webhook</th><th>Event</th><th>Status</th><th>Response</th><th>Attempts</th><th>Action</th></tr></thead>
-        <tbody>
-          ${deliveries.map(delivery => `
-            <tr>
-              <td><strong>${safeText(delivery.id)}</strong><div class="muted">${delivery.createdAt ? new Date(delivery.createdAt).toLocaleString() : "-"}</div></td>
-              <td>${safeText(delivery.webhookName || delivery.webhookId || "-")}</td>
-              <td>${safeText(delivery.eventType || "-")}</td>
-              <td><span class="badge">${safeText(delivery.status)}</span></td>
-              <td>${safeText(delivery.responseStatus || delivery.errorMessage || "-")}</td>
-              <td>${safeText(delivery.attemptCount ?? 0)}</td>
-              <td>${delivery.status === "failed" ? `<button class="logout" onclick="retryWebhookDelivery('${safeText(delivery.id)}')">Retry</button>` : "-"}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="7" class="muted">No webhook deliveries yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-
-window.loadLiveRealtime = async function loadLiveRealtime() {
-  try {
-    const response = await fetch("/api/admin/realtime-page-data?t=" + Date.now(), {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Realtime refresh failed with status " + response.status);
-    }
-
-    const data = payload.data || payload;
-    state.events = Array.isArray(data.events) ? data.events : [];
-    state.realtimeChannels = Array.isArray(data.channels) ? data.channels : [];
-    state.realtimeLiveLoaded = true;
-    state.realtimeLiveLoading = false;
-    state.realtimeLiveError = "";
-
-    goodosRenderNow();
-  } catch (error) {
-    state.realtimeLiveError = error.message || "Failed to load realtime page data.";
-    state.realtimeLiveLoading = false;
-    alert("Realtime refresh failed: " + state.realtimeLiveError);
-    console.error(error);
-    goodosRenderNow();
-  }
-};
-
-window.refreshRealtimeNow = async function refreshRealtimeNow() {
-  return window.loadLiveRealtime();
-};
-
-window.createRealtimeTestEvent = async function createRealtimeTestEvent() {
-  const eventType = prompt("Event type:", "system.test");
-  if (!eventType) return;
-
-  const channel = prompt("Channel:", "system");
-  if (!channel) return;
-
-  const message = prompt("Message:", "Realtime test event from GoodAppBackEnd console");
-  if (!message) return;
-
-  try {
-    const response = await fetch("/api/admin/realtime-events/create-test-safe", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        eventType,
-        source: "backend-console",
-        channel,
-        message,
-        payload: {
-          test: true,
-          createdFrom: "GoodAppBackEnd Console",
-          time: new Date().toISOString()
-        }
-      })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Realtime test event failed with status " + response.status);
-    }
-
-    alert("Realtime test event created.");
-    await window.loadLiveRealtime();
-  } catch (error) {
-    alert("Realtime test event failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-function realtimeView() {
-  if (!state.realtimeLiveLoaded && !state.realtimeLiveLoading) {
-    state.realtimeLiveLoading = true;
-    setTimeout(() => window.loadLiveRealtime(), 100);
-  }
-
-  const events = Array.isArray(state.events) ? state.events : [];
-  const channels = Array.isArray(state.realtimeChannels) ? state.realtimeChannels : [];
-
-  return `
-    ${hero("Realtime Events", "Backend event stream and future socket channels for live app updates.")}
-    <div class="section-head">
-      <h3>Backend Events</h3>
-      <div>
-        <button class="logout" onclick="window.refreshRealtimeNow()">Refresh Data</button>
-        <button class="logout" onclick="window.createRealtimeTestEvent()">Create Test Event</button>
-      </div>
-    </div>
-
-    ${state.realtimeLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live realtime data...</p></div>` : ""}
-    ${state.realtimeLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Realtime load error: ${safeText(state.realtimeLiveError)}</p></div>` : ""}
-
-    <div class="grid cards">
-      ${card("Events", events.length, "Recent backend events")}
-      ${card("Channels", channels.length, "Socket channels")}
-      ${card("Broadcast", events.filter(event => event.status === "recorded").length, "App event fanout")}
-      ${card("Consumers", "Next", "Event subscribers")}
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Events</h3><span class="badge">Live</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Event</th>
-            <th>Source</th>
-            <th>Channel</th>
-            <th>Message</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${events.map(event => `
-            <tr>
-              <td><strong>${safeText(event.eventType || event.event_type || "-")}</strong><div class="muted">${safeText(event.id || "")}</div></td>
-              <td>${safeText(event.source || "-")}</td>
-              <td>${safeText(event.channel || "-")}</td>
-              <td>${safeText(event.message || "-")}</td>
-              <td><span class="badge">${safeText(event.status || "-")}</span></td>
-              <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : event.created_at ? new Date(event.created_at).toLocaleString() : "-"}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="6" class="muted">No events recorded yet. Click Create Test Event.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Channels</h3><span class="badge">Metadata</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Channel</th>
-            <th>Events</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${channels.map(channel => `
-            <tr>
-              <td><strong>${safeText(channel.channel || "-")}</strong></td>
-              <td>${safeText(String(channel.count || 0))}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="2" class="muted">No channels recorded yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-
-
-window.loadLiveFunctions = async function loadLiveFunctions() {
-  try {
-    const response = await fetch("/api/admin/edge-functions-page-data?t=" + Date.now(), {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Edge functions refresh failed with status " + response.status);
-    }
-
-    const data = payload.data || payload;
-    state.edgeFunctions = Array.isArray(data.functions) ? data.functions : [];
-    state.functionsLiveLoaded = true;
-    state.functionsLiveLoading = false;
-    state.functionsLiveError = "";
-
-    goodosRenderNow();
-  } catch (error) {
-    state.functionsLiveError = error.message || "Failed to load edge functions page data.";
-    state.functionsLiveLoading = false;
-    alert("Edge functions refresh failed: " + state.functionsLiveError);
-    console.error(error);
-    goodosRenderNow();
-  }
-};
-
-window.refreshFunctionsNow = async function refreshFunctionsNow() {
-  return window.loadLiveFunctions();
-};
-
-window.createTestEdgeFunction = async function createTestEdgeFunction() {
-  const name = prompt("Function name:", "Console Test Function");
-  if (!name) return;
-
-  const type = prompt("Function type: http, event, or scheduled", "http");
-  if (!type) return;
-
-  const routePath = prompt("Route path:", "/api/functions/console-test");
-  if (!routePath) return;
-
-  const description = prompt("Description:", "Test function created from GoodAppBackEnd console.") || "";
-
-  try {
-    const response = await fetch("/api/admin/edge-functions/create-test-safe", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name,
-        type,
-        runtime: "node",
-        triggerType: type === "event" ? "backend.event" : type === "scheduled" ? "schedule" : "manual",
-        routePath,
-        description
-      })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Function creation failed with status " + response.status);
-    }
-
-    alert("Edge function record created.");
-    await window.loadLiveFunctions();
-  } catch (error) {
-    alert("Function creation failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-window.runTestEdgeFunction = async function runTestEdgeFunction(id) {
-  if (!id) return alert("Missing function id.");
-
-  try {
-    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(id) + "/run-test-safe", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({})
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Function test run failed with status " + response.status);
-    }
-
-    alert("Function test run recorded.");
-    await window.loadLiveFunctions();
-  } catch (error) {
-    alert("Function test run failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
-
-function functionsView() {
-  if (!state.functionsLiveLoaded && !state.functionsLiveLoading) {
-    state.functionsLiveLoading = true;
-    setTimeout(() => window.loadLiveFunctions(), 100);
-  }
-
-  const functions = Array.isArray(state.edgeFunctions) ? state.edgeFunctions : [];
-  const httpFunctions = functions.filter(item => item.type === "http");
-  const eventFunctions = functions.filter(item => item.type === "event");
-  const scheduledFunctions = functions.filter(item => item.type === "scheduled");
-
-  return `
-    ${hero("Edge Functions", "Deploy backend automations, callable HTTP routes, event functions, and scheduled server jobs.")}
-    <div class="section-head">
-      <h3>Function Registry</h3>
-      <div>
-        <button class="logout" onclick="window.refreshFunctionsNow()">Refresh Data</button>
-        <button class="logout" onclick="window.createTestEdgeFunction()">Create Test Function</button>
-      </div>
-    </div>
-
-    ${state.functionsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live edge function data...</p></div>` : ""}
-    ${state.functionsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Edge function load error: ${safeText(state.functionsLiveError)}</p></div>` : ""}
-
-    <div class="grid cards">
-      ${card("Functions", functions.length, "Registered backend functions")}
-      ${card("HTTP", httpFunctions.length, "Callable API routes")}
-      ${card("Event", eventFunctions.length, "Backend event triggers")}
-      ${card("Scheduled", scheduledFunctions.length, "Recurring automation jobs")}
-    </div>
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Registered Functions</h3><span class="badge">Live</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Function</th>
-            <th>Type</th>
-            <th>Runtime</th>
-            <th>Trigger</th>
-            <th>Route / Schedule</th>
-            <th>Status</th>
-            <th>Last Run</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${functions.map(fn => `
-            <tr>
-              <td><strong>${safeText(fn.name || "-")}</strong><div class="muted">${safeText(fn.id || "")}</div></td>
-              <td>${safeText(fn.type || "-")}</td>
-              <td>${safeText(fn.runtime || "-")}</td>
-              <td>${safeText(fn.triggerType || fn.trigger_type || "-")}</td>
-              <td>${safeText(fn.routePath || fn.route_path || fn.schedule || "-")}</td>
-              <td><span class="badge">${safeText(fn.status || "-")}</span></td>
-              <td>${fn.lastRunAt ? new Date(fn.lastRunAt).toLocaleString() : fn.last_run_at ? new Date(fn.last_run_at).toLocaleString() : "-"}</td>
-              <td><button class="logout" onclick="window.runTestEdgeFunction('${safeText(fn.id)}')">Run Test</button></td>
-            </tr>
-          `).join("") || '<tr><td colspan="8" class="muted">No edge functions registered yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="grid module-grid" style="margin-top:18px;">
-      ${moduleCard("HTTP Functions", "Deploy callable API routes for automation workflows.", httpFunctions.length ? "Live" : "Next")}
-      ${moduleCard("Event Functions", "Run backend actions when auth, storage, app, or webhook events happen.", eventFunctions.length ? "Live" : "Next")}
-      ${moduleCard("Scheduled Jobs", "Run recurring tasks like backups, syncs, cleanup jobs, and reports.", scheduledFunctions.length ? "Live" : "Next")}
     </div>
   `;
 }
