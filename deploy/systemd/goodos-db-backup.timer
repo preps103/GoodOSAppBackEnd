@@ -1,0 +1,10 @@
+[Unit]
+Description=Run GoodOS database backup daily
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+Persistent=true
+Unit=goodos-db-backup.service
+
+[Install]
+WantedBy=timers.target
