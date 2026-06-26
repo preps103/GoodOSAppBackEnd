@@ -7,6 +7,7 @@ const authRequired = require("../middleware/authRequired");
 const database = require("../config/database");
 const notificationService = require("../services/notification.service");
 const jobService = require("../services/job.service");
+const secretService = require("../services/secret.service");
 
 const router = express.Router();
 
@@ -7943,6 +7944,73 @@ router.get("/settings-audit-page-data", async (req, res) => {
 
 
 
+
+
+router.get("/secrets-v2-page-data", async (req, res) => {
+  try {
+    const snapshot = await secretService.listSecrets();
+    return ok(res, snapshot);
+  } catch (error) {
+    return fail(res, "Failed to load Secrets V2 page data", 500, error.message);
+  }
+});
+
+router.post("/secrets/create-safe", async (req, res) => {
+  try {
+    const secret = await secretService.createOrRotateSecret({
+      secretKey: req.body?.secretKey || req.body?.secret_key,
+      secretValue: req.body?.secretValue || req.body?.secret_value,
+      displayName: req.body?.displayName || req.body?.display_name,
+      category: req.body?.category || "general",
+      description: req.body?.description || "",
+      actorId: currentUserId(req) || "admin-console",
+    });
+
+    return ok(res, {
+      secret,
+      message: "Secret created or rotated safely.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create or rotate secret", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/secrets/:key/rotate-safe", async (req, res) => {
+  try {
+    const secret = await secretService.createOrRotateSecret({
+      secretKey: req.params.key,
+      secretValue: req.body?.secretValue || req.body?.secret_value,
+      displayName: req.body?.displayName || req.body?.display_name || req.params.key,
+      category: req.body?.category || "general",
+      description: req.body?.description || "Rotated from admin console.",
+      actorId: currentUserId(req) || "admin-console",
+    });
+
+    return ok(res, {
+      secret,
+      message: "Secret rotated safely.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to rotate secret", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/secrets/:key/resolve-test-safe", async (req, res) => {
+  try {
+    const value = await secretService.getSecretValue(req.params.key);
+
+    if (!value) return fail(res, "Secret not found", 404);
+
+    return ok(res, {
+      resolved: true,
+      length: String(value).length,
+      preview: String(value).slice(0, 3) + "***",
+      warning: "Raw value was resolved for test but not returned.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to resolve secret test", 500, error.message);
+  }
+});
 
 router.get("/jobs-page-data", async (req, res) => {
   try {
