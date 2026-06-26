@@ -2409,8 +2409,33 @@ router.get("/backups-page-data", async (req, res) => {
 
     const backups = result.rows;
 
+    let restoreTests = [];
+
+    try {
+      const restoreTestsResult = await dbQuery(`
+        SELECT
+          id,
+          backup_id AS "backupId",
+          test_database AS "testDatabase",
+          status,
+          table_count AS "tableCount",
+          row_count AS "rowCount",
+          error_message AS "errorMessage",
+          started_at AS "startedAt",
+          completed_at AS "completedAt",
+          created_at AS "createdAt"
+        FROM backend_backup_restore_tests
+        ORDER BY created_at DESC
+        LIMIT 100
+      `);
+      restoreTests = restoreTestsResult.rows;
+    } catch (restoreTestError) {
+      restoreTests = [];
+    }
+
     return ok(res, {
       backups,
+      restoreTests,
       counts: {
         backups: backups.length,
         completed: backups.filter((item) => item.status === "completed").length,
@@ -2984,6 +3009,59 @@ router.post("/backups/:id/verify-safe", async (req, res) => {
     });
   } catch (error) {
     return fail(res, "Failed to verify backup", 500, error.message);
+  }
+});
+
+
+router.post("/backups/:id/restore-verify-safe", async (req, res) => {
+  try {
+    const childProcess = require("child_process");
+    const id = String(req.params.id || "").trim();
+    const scriptPath = "/var/www/GoodAppBackEnd/scripts/verify-db-restore.sh";
+
+    if (!id) return fail(res, "Backup id is required", 400);
+
+    const output = childProcess.execFileSync(scriptPath, [id], {
+      encoding: "utf8",
+      timeout: 180000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    const testIdLine = output.split("\n").find((line) => line.startsWith("TEST_ID="));
+    const testId = testIdLine ? testIdLine.replace("TEST_ID=", "").trim() : null;
+
+    let restoreTest = null;
+
+    if (testId) {
+      const testResult = await dbQuery(
+        `
+          SELECT
+            id,
+            backup_id AS "backupId",
+            test_database AS "testDatabase",
+            status,
+            table_count AS "tableCount",
+            row_count AS "rowCount",
+            error_message AS "errorMessage",
+            started_at AS "startedAt",
+            completed_at AS "completedAt",
+            created_at AS "createdAt"
+          FROM backend_backup_restore_tests
+          WHERE id = $1
+        `,
+        [testId]
+      );
+
+      restoreTest = testResult.rows[0] || null;
+    }
+
+    return ok(res, {
+      restoreTest,
+      output,
+      message: "Backup restore verification completed safely.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to verify backup restore", 500, error.message);
   }
 });
 

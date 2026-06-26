@@ -1249,6 +1249,7 @@ window.loadLiveBackups = async function loadLiveBackups() {
     const data = payload.data || payload;
     state.backups = Array.isArray(data.backups) ? data.backups : [];
     state.backupCounts = data.counts || {};
+    state.restoreTests = Array.isArray(data.restoreTests) ? data.restoreTests : [];
     state.backupsLiveLoaded = true;
     state.backupsLiveLoading = false;
     state.backupsLiveError = "";
@@ -1368,6 +1369,42 @@ window.downloadBackup = function downloadBackup(id) {
   window.open("/api/admin/backups/" + encodeURIComponent(id) + "/download", "_blank");
 };
 
+
+window.restoreVerifyBackup = async function restoreVerifyBackup(id) {
+  if (!id) return alert("Missing backup id.");
+
+  const confirmed = confirm("Safely restore this backup into a temporary database for verification? Production will not be touched.");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/backups/" + encodeURIComponent(id) + "/restore-verify-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Restore verification failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    const test = data.restoreTest || {};
+
+    alert("Restore verified. Tables: " + (test.tableCount ?? "-") + " Rows: " + (test.rowCount ?? "-"));
+    await window.loadLiveBackups();
+  } catch (error) {
+    alert("Restore verification failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function backupsView() {
   if (!state.backupsLiveLoaded && !state.backupsLiveLoading) {
     state.backupsLiveLoading = true;
@@ -1426,7 +1463,8 @@ function backupsView() {
               <td>${safeText(String(backup.sizeBytes || backup.size_bytes || 0))}</td>
               <td>${safeText((backup.checksumSha256 || backup.checksum_sha256 || "-").slice(0, 16))}</td>
               <td>
-                <button class="logout" onclick="window.verifyBackup('${safeText(backup.id)}')">Verify</button>
+                <button class="logout" onclick="window.verifyBackup('${safeText(backup.id)}')">Checksum</button>
+                <button class="logout" onclick="window.restoreVerifyBackup('${safeText(backup.id)}')">Restore Test</button>
                 <button class="logout" onclick="window.downloadBackup('${safeText(backup.id)}')">Download</button>
               </td>
             </tr>
