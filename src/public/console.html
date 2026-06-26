@@ -719,9 +719,14 @@ function appsTable() {
 
 function dashboard() {
   const stats = state.overview?.stats || {};
+  const apiKeys = Array.isArray(state.apiKeys) ? state.apiKeys : [];
+  const buckets = Array.isArray(state.buckets) ? state.buckets : (Array.isArray(state.storageBuckets) ? state.storageBuckets : []);
+  const files = Array.isArray(state.storageFiles) ? state.storageFiles : [];
+  const webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
+  const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
+
   return `
-    ${state.overview?.error ? '<div class="card" style="border-color:rgba(251,113,133,.35);color:#fecdd3;margin-bottom:18px;"><strong>Console data error:</strong><br>' + safeText(state.overview.error) + '</div>' : ''}
-    ${hero("Backend Console", "GoodAppBackEnd is moving from a simple health monitor into a full backend platform with auth, app registry, database visibility, API management, webhooks, logs, storage, realtime, and security controls.", state.overview?.status || "operational")}
+    ${hero("Backend Console", "GoodAppBackEnd live production backend data: auth, apps, storage, API keys, webhooks, logs, realtime, and security controls.", state.overview?.status || "operational")}
 
     <div class="grid cards">
       ${card("Users", stats.users ?? state.users.length, "GoodOS accounts")}
@@ -730,11 +735,19 @@ function dashboard() {
       ${card("Sessions", stats.sessions ?? 0, "Active session table")}
     </div>
 
-    <div class="grid two">
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Storage Buckets", buckets.length || stats.buckets || 0, "Real bucket records")}
+      ${card("Storage Files", files.length || stats.files || 0, "Real uploaded files")}
+      ${card("API Keys", apiKeys.length || stats.apiKeys || 0, "Real API key records")}
+      ${card("Webhooks", webhooks.length || stats.webhooks || 0, "Real webhook endpoints")}
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
       <div class="card">
         <div class="section-head"><h3>Registered Apps</h3><span class="badge">Live Registry</span></div>
         ${appsTable()}
       </div>
+
       <div class="card">
         <div class="section-head"><h3>Runtime</h3><span class="badge">Healthy</span></div>
         <table>
@@ -748,16 +761,141 @@ function dashboard() {
       </div>
     </div>
 
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Actual API Keys</h3><span class="badge">Live Data</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Prefix</th>
+            <th>Type</th>
+            <th>Scopes</th>
+            <th>Apps</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${apiKeys.slice(0, 8).map(key => `
+            <tr>
+              <td><strong>${safeText(key.name || "-")}</strong><div class="muted">${safeText(key.id || "")}</div></td>
+              <td>${safeText(key.keyPrefix || key.key_prefix || "-")}</td>
+              <td>${safeText(key.type || "-")}</td>
+              <td>${safeText((key.scopes || []).join(", ") || "-")}</td>
+              <td>${safeText((key.allowedAppIds || key.allowed_app_ids || []).join(", ") || "-")}</td>
+              <td><span class="badge">${safeText(key.status || "-")}</span></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No API key records loaded.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+      <div class="card">
+        <div class="section-head"><h3>Actual Storage Buckets</h3><span class="badge">Live Data</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Bucket</th>
+              <th>Visibility</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${buckets.slice(0, 8).map(bucket => `
+              <tr>
+                <td><strong>${safeText(bucket.name || "-")}</strong><div class="muted">${safeText(bucket.id || "")}</div></td>
+                <td>${safeText(bucket.visibility || "-")}</td>
+                <td><span class="badge">${safeText(bucket.status || "-")}</span></td>
+                <td>${bucket.created_at ? new Date(bucket.created_at).toLocaleString() : bucket.createdAt ? new Date(bucket.createdAt).toLocaleString() : "-"}</td>
+              </tr>
+            `).join("") || '<tr><td colspan="4" class="muted">No storage bucket records loaded.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>Actual Webhooks</h3><span class="badge">Live Data</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Events</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${webhooks.slice(0, 8).map(webhook => `
+              <tr>
+                <td><strong>${safeText(webhook.name || "-")}</strong><div class="muted">${safeText(webhook.url || "")}</div></td>
+                <td>${safeText((webhook.events || []).join(", ") || "-")}</td>
+                <td><span class="badge">${safeText(webhook.status || "-")}</span></td>
+              </tr>
+            `).join("") || '<tr><td colspan="3" class="muted">No webhook records loaded.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+      <div class="card">
+        <div class="section-head"><h3>Actual Storage Files</h3><span class="badge">Live Data</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Bucket</th>
+              <th>Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${files.slice(0, 8).map(file => `
+              <tr>
+                <td><strong>${safeText(file.original_name || file.filename || file.name || "-")}</strong><div class="muted">${safeText(file.id || "")}</div></td>
+                <td>${safeText(file.bucket_id || file.bucketId || "-")}</td>
+                <td>${safeText(String(file.size_bytes || file.sizeBytes || 0))}</td>
+              </tr>
+            `).join("") || '<tr><td colspan="3" class="muted">No storage file records loaded.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>Recent Webhook Deliveries</h3><span class="badge">Live Data</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Webhook</th>
+              <th>Event</th>
+              <th>Status</th>
+              <th>Response</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${deliveries.slice(0, 8).map(delivery => `
+              <tr>
+                <td>${safeText(delivery.webhookName || delivery.webhookId || "-")}</td>
+                <td>${safeText(delivery.eventType || "-")}</td>
+                <td><span class="badge">${safeText(delivery.status || "-")}</span></td>
+                <td>${safeText(String(delivery.responseStatus || "-"))}</td>
+              </tr>
+            `).join("") || '<tr><td colspan="4" class="muted">No webhook delivery records loaded.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="grid module-grid" style="margin-top:18px;">
       ${moduleCard("Auth / Users", "Production SSO, users, sessions, invites, and workspace roles.", "Live")}
       ${moduleCard("App Registry", "Manage GoodOS apps, domains, status, and membership rules.", "Live")}
       ${moduleCard("Database Browser", "Inspect backend tables, row counts, and schema metadata.", "Live")}
-      ${moduleCard("Storage / Files", `${state.buckets.length || state.overview?.stats?.buckets || 0} buckets configured. Signed URLs and upload handling are active.`, (state.buckets.length || state.overview?.stats?.buckets) ? "Live" : "Next")}
-      ${moduleCard("API Keys", `${state.apiKeys.length || state.overview?.stats?.apiKeys || 0} active or historical backend keys.`, (state.apiKeys.length || state.overview?.stats?.apiKeys) ? "Live" : "Next")}
-      ${moduleCard("Webhooks", `${state.webhooks.length || state.overview?.stats?.webhooks || 0} webhook endpoints configured.`, (state.webhooks.length || state.overview?.stats?.webhooks) ? "Live" : "Next")}
+      ${moduleCard("Storage / Files", `${buckets.length || stats.buckets || 0} buckets configured. Signed URLs and upload handling are active.`, (buckets.length || stats.buckets) ? "Live" : "Next")}
+      ${moduleCard("API Keys", `${apiKeys.length || stats.apiKeys || 0} active or historical backend keys.`, (apiKeys.length || stats.apiKeys) ? "Live" : "Next")}
+      ${moduleCard("Webhooks", `${webhooks.length || stats.webhooks || 0} webhook endpoints configured.`, (webhooks.length || stats.webhooks) ? "Live" : "Next")}
     </div>
   `;
 }
+
 
 function moduleCard(name, desc, tag) {
   return '<div class="module"><h4>' + safeText(name) + '</h4><p>' + safeText(desc) + '</p><div class="tag">' + safeText(tag) + '</div></div>';
