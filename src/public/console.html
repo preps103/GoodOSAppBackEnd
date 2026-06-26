@@ -877,7 +877,9 @@ function apiKeysView() {
 }
 
 function webhooksView() {
-  const webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
+  const allWebhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
+  const webhooks = allWebhooks.filter(webhook => webhook.status === "active");
+  const disabledWebhooks = allWebhooks.filter(webhook => webhook.status !== "active");
   const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
 
   return `
@@ -888,8 +890,8 @@ function webhooksView() {
     </div>
 
     <div class="grid cards">
-      ${card("Webhooks", webhooks.length, "Configured endpoints")}
-      ${card("Active", webhooks.filter(w => w.status === "active").length, "Receiving events")}
+      ${card("Webhooks", allWebhooks.length, "Configured endpoints")}
+      ${card("Active", webhooks.length, "Receiving events")}
       ${card("Deliveries", deliveries.length, "Delivery attempts")}
       ${card("Failed", deliveries.filter(d => d.status === "failed").length, "Needs retry")}
     </div>
@@ -914,6 +916,24 @@ function webhooksView() {
         </tbody>
       </table>
     </div>
+
+    ${disabledWebhooks.length ? `
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Disabled Webhooks</h3><span class="badge">Hidden</span></div>
+      <table>
+        <thead><tr><th>Name</th><th>URL</th><th>Status</th></tr></thead>
+        <tbody>
+          ${disabledWebhooks.map(webhook => `
+            <tr>
+              <td><strong>${safeText(webhook.name)}</strong><div class="muted">${safeText(webhook.id)}</div></td>
+              <td>${safeText(webhook.url)}</td>
+              <td><span class="badge">${safeText(webhook.status)}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+    ` : ""}
 
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Delivery Logs</h3><span class="badge">Retry Queue</span></div>
