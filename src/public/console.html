@@ -3858,6 +3858,259 @@ function webhooksView() {
 }
 
 
+
+window.loadRealtimePageData = async function loadRealtimePageData() {
+  try {
+    const response = await fetch("/api/admin/realtime-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Realtime refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.realtimeEvents = Array.isArray(data.events) ? data.events : [];
+    state.realtimeChannels = Array.isArray(data.channels) ? data.channels : [];
+    state.realtimeClients = Array.isArray(data.clients) ? data.clients : [];
+    state.realtimeCounts = data.counts || {};
+    state.realtimeLoaded = true;
+    state.realtimeLoading = false;
+    state.realtimeError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.realtimeLoading = false;
+    state.realtimeError = error.message || "Failed to load realtime events.";
+    alert("Realtime refresh failed: " + state.realtimeError);
+    console.error(error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshRealtimeNow = async function refreshRealtimeNow() {
+  return window.loadRealtimePageData();
+};
+
+window.sendRealtimeTestEvent = async function sendRealtimeTestEvent() {
+  const channel = prompt("Realtime channel:", state.realtimeSelectedChannel || "system");
+  if (channel === null) return;
+
+  const message = prompt("Realtime message:", "Realtime test event from GoodAppBackEnd console");
+  if (message === null) return;
+
+  try {
+    const response = await fetch("/api/admin/realtime-events/create-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        channel: channel || "system",
+        message,
+        eventType: "system.test",
+        payload: {
+          test: true,
+          source: "console-button",
+          time: new Date().toISOString()
+        }
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Realtime test failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Realtime event created. Live clients reached: " + String(data.deliveredClients || 0));
+    await window.loadRealtimePageData();
+  } catch (error) {
+    alert("Realtime test failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.connectRealtimeStream = function connectRealtimeStream() {
+  const channel = prompt("Subscribe to channel. Use * for all channels:", state.realtimeSelectedChannel || "system");
+  if (channel === null) return;
+
+  if (state.realtimeEventSource) {
+    try { state.realtimeEventSource.close(); } catch {}
+    state.realtimeEventSource = null;
+  }
+
+  state.realtimeSelectedChannel = channel || "system";
+  state.realtimeLiveStatus = "connecting";
+
+  const source = new EventSource("/api/admin/realtime-events/stream-safe?channel=" + encodeURIComponent(state.realtimeSelectedChannel));
+
+  source.addEventListener("connected", (event) => {
+    state.realtimeLiveStatus = "connected";
+    state.realtimeConnection = JSON.parse(event.data || "{}");
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  });
+
+  source.addEventListener("realtime", (event) => {
+    const liveEvent = JSON.parse(event.data || "{}");
+    state.realtimeEvents = [liveEvent, ...(Array.isArray(state.realtimeEvents) ? state.realtimeEvents : [])].slice(0, 250);
+    state.realtimeLastEvent = liveEvent;
+    state.realtimeLiveStatus = "receiving";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  });
+
+  source.addEventListener("ping", () => {
+    state.realtimeLastPing = new Date().toISOString();
+  });
+
+  source.onerror = function realtimeStreamError() {
+    state.realtimeLiveStatus = "error-or-reconnecting";
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  };
+
+  state.realtimeEventSource = source;
+
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+};
+
+window.disconnectRealtimeStream = function disconnectRealtimeStream() {
+  if (state.realtimeEventSource) {
+    try { state.realtimeEventSource.close(); } catch {}
+  }
+
+  state.realtimeEventSource = null;
+  state.realtimeLiveStatus = "disconnected";
+  state.realtimeConnection = null;
+
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+};
+
+
+function realtimeView() {
+  if (!state.realtimeLoaded && !state.realtimeLoading) {
+    state.realtimeLoading = true;
+    setTimeout(() => window.loadRealtimePageData(), 100);
+  }
+
+  const events = Array.isArray(state.realtimeEvents) ? state.realtimeEvents : [];
+  const channels = Array.isArray(state.realtimeChannels) ? state.realtimeChannels : [];
+  const clients = Array.isArray(state.realtimeClients) ? state.realtimeClients : [];
+  const counts = state.realtimeCounts || {};
+  const liveStatus = state.realtimeLiveStatus || "disconnected";
+
+  return `
+    ${hero("Realtime Events", "Live channel streaming, event records, connected clients, and test broadcasts.")}
+    <div class="section-head">
+      <h3>Realtime Channels</h3>
+      <div>
+        <button class="logout" onclick="window.refreshRealtimeNow()">Refresh Data</button>
+        <button class="logout" onclick="window.connectRealtimeStream()">Connect Stream</button>
+        <button class="logout" onclick="window.disconnectRealtimeStream()">Disconnect</button>
+        <button class="logout" onclick="window.sendRealtimeTestEvent()">Send Test Event</button>
+      </div>
+    </div>
+
+    ${state.realtimeLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading realtime events...</p></div>` : ""}
+    ${state.realtimeError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Realtime error: ${safeText(state.realtimeError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Events", counts.events ?? events.length, "Recorded realtime events")}
+      ${card("Channels", counts.channels ?? channels.length, "Active channel names")}
+      ${card("Consumers", counts.consumers ?? clients.length, "Connected SSE clients")}
+      ${card("Live Stream", liveStatus, "Current browser connection")}
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+      <div class="card">
+        <div class="section-head"><h3>Channels</h3><span class="badge">Live Index</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Channel</th>
+              <th>Events</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${channels.map(channel => `
+              <tr>
+                <td><strong>${safeText(channel.channel || "-")}</strong></td>
+                <td>${safeText(String(channel.count || 0))}</td>
+              </tr>
+            `).join("") || '<tr><td colspan="2" class="muted">No realtime channels yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>Connected Clients</h3><span class="badge">SSE</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Channel</th>
+              <th>Connected</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${clients.map(client => `
+              <tr>
+                <td><strong>${safeText(client.id || "-")}</strong></td>
+                <td>${safeText(client.channel || "-")}</td>
+                <td>${client.connectedAt ? new Date(client.connectedAt).toLocaleString() : "-"}</td>
+              </tr>
+            `).join("") || '<tr><td colspan="3" class="muted">No connected realtime clients yet. Connect this browser stream to see one.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Realtime Event Log</h3><span class="badge">Newest First</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Channel</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${events.map(event => `
+            <tr>
+              <td><strong>${safeText(event.eventType || event.event_type || "-")}</strong><div class="muted">${safeText(event.message || "")}</div><div class="muted">${safeText(event.id || "")}</div></td>
+              <td>${safeText(event.channel || "-")}</td>
+              <td>${safeText(event.source || "-")}</td>
+              <td><span class="badge">${safeText(event.status || "recorded")}</span></td>
+              <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No realtime events found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
 function render() {
   const view = document.getElementById("view");
 

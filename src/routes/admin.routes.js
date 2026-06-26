@@ -2550,6 +2550,150 @@ router.get("/database-page-data", async (req, res) => {
 });
 
 
+
+function getRealtimeClientMap() {
+  if (!global.__goodosRealtimeClients) {
+    global.__goodosRealtimeClients = new Map();
+  }
+
+  return global.__goodosRealtimeClients;
+}
+
+function normalizeRealtimeChannel(value) {
+  const channel = String(value || "system")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9:_-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 80);
+
+  return channel || "system";
+}
+
+function formatRealtimeSse(eventName, payload) {
+  return `event: ${eventName}\ndata: ${JSON.stringify(payload || {})}\n\n`;
+}
+
+function broadcastRealtimeEventToClients(event) {
+  const clients = getRealtimeClientMap();
+  let delivered = 0;
+
+  for (const client of clients.values()) {
+    try {
+      if (client.channel === "*" || client.channel === event.channel) {
+        client.res.write(formatRealtimeSse("realtime", event));
+        delivered += 1;
+      }
+    } catch (error) {
+      clients.delete(client.id);
+    }
+  }
+
+  return delivered;
+}
+
+async function createRealtimeEventRecord({
+  eventType = "system.test",
+  source = "backend-console",
+  channel = "system",
+  message = "Realtime event",
+  payload = {},
+  status = "recorded",
+} = {}) {
+  const id = `evt_${crypto.randomUUID().replace(/-/g, "")}`;
+  const normalizedChannel = normalizeRealtimeChannel(channel);
+
+  const result = await dbQuery(
+    `
+      INSERT INTO backend_realtime_events (
+        id,
+        event_type,
+        source,
+        channel,
+        message,
+        payload,
+        status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)
+      RETURNING
+        id,
+        event_type AS "eventType",
+        source,
+        channel,
+        message,
+        payload,
+        status,
+        created_at AS "createdAt"
+    `,
+    [
+      id,
+      String(eventType || "system.test").trim(),
+      String(source || "backend-console").trim(),
+      normalizedChannel,
+      String(message || "Realtime event").trim(),
+      JSON.stringify(payload || {}),
+      status,
+    ]
+  );
+
+  const event = result.rows[0];
+  const deliveredClients = broadcastRealtimeEventToClients(event);
+
+  return {
+    event,
+    deliveredClients,
+  };
+}
+
+router.get("/realtime-events/stream-safe", async (req, res) => {
+  const channel = normalizeRealtimeChannel(req.query?.channel || "system");
+  const clientId = `rt_${crypto.randomUUID().replace(/-/g, "")}`;
+  const clients = getRealtimeClientMap();
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+
+  const client = {
+    id: clientId,
+    channel,
+    connectedAt: new Date(),
+    ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+    res,
+  };
+
+  clients.set(clientId, client);
+
+  res.write(formatRealtimeSse("connected", {
+    type: "connected",
+    clientId,
+    channel,
+    connectedAt: client.connectedAt.toISOString(),
+  }));
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(formatRealtimeSse("ping", {
+        type: "ping",
+        clientId,
+        channel,
+        time: new Date().toISOString(),
+      }));
+    } catch {
+      clearInterval(heartbeat);
+      clients.delete(clientId);
+    }
+  }, 25000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    clients.delete(clientId);
+  });
+});
+
 router.get("/realtime-page-data", async (req, res) => {
   try {
     const eventsResult = await dbQuery(`
@@ -2574,17 +2718,25 @@ router.get("/realtime-page-data", async (req, res) => {
       ORDER BY channel ASC
     `);
 
+    const clients = Array.from(getRealtimeClientMap().values()).map((client) => ({
+      id: client.id,
+      channel: client.channel,
+      connectedAt: client.connectedAt,
+      ip: client.ip,
+    }));
+
     const events = eventsResult.rows;
     const channels = channelsResult.rows;
 
     return ok(res, {
       events,
       channels,
+      clients,
       counts: {
         events: events.length,
         channels: channels.length,
         broadcasts: events.filter((event) => event.status === "recorded").length,
-        consumers: 0,
+        consumers: clients.length,
       },
     });
   } catch (error) {
@@ -2594,11 +2746,9 @@ router.get("/realtime-page-data", async (req, res) => {
 
 router.post("/realtime-events/create-test-safe", async (req, res) => {
   try {
-    const id = `evt_${crypto.randomUUID().replace(/-/g, "")}`;
-
     const eventType = String(req.body?.eventType || "system.test").trim();
     const source = String(req.body?.source || "backend-console").trim();
-    const channel = String(req.body?.channel || "system").trim();
+    const channel = normalizeRealtimeChannel(req.body?.channel || "system");
     const message = String(req.body?.message || "Realtime test event from GoodAppBackEnd console").trim();
 
     const payload = req.body?.payload && typeof req.body.payload === "object"
@@ -2609,34 +2759,19 @@ router.post("/realtime-events/create-test-safe", async (req, res) => {
           time: new Date().toISOString(),
         };
 
-    const result = await dbQuery(
-      `
-        INSERT INTO backend_realtime_events (
-          id,
-          event_type,
-          source,
-          channel,
-          message,
-          payload,
-          status
-        )
-        VALUES ($1, $2, $3, $4, $5, $6::jsonb, 'recorded')
-        RETURNING
-          id,
-          event_type AS "eventType",
-          source,
-          channel,
-          message,
-          payload,
-          status,
-          created_at AS "createdAt"
-      `,
-      [id, eventType, source, channel, message, JSON.stringify(payload)]
-    );
+    const result = await createRealtimeEventRecord({
+      eventType,
+      source,
+      channel,
+      message,
+      payload,
+      status: "recorded",
+    });
 
     return ok(res, {
-      event: result.rows[0],
-      message: "Realtime test event created.",
+      event: result.event,
+      deliveredClients: result.deliveredClients,
+      message: "Realtime test event created and broadcast.",
     });
   } catch (error) {
     return fail(res, "Failed to create realtime test event", 500, error.message);
