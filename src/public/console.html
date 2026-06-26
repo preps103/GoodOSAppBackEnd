@@ -1714,38 +1714,168 @@ function webhooksView() {
   `;
 }
 
+
+window.loadLiveRealtime = async function loadLiveRealtime() {
+  try {
+    const response = await fetch("/api/admin/realtime-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Realtime refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.events = Array.isArray(data.events) ? data.events : [];
+    state.realtimeChannels = Array.isArray(data.channels) ? data.channels : [];
+    state.realtimeLiveLoaded = true;
+    state.realtimeLiveLoading = false;
+    state.realtimeLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.realtimeLiveError = error.message || "Failed to load realtime page data.";
+    state.realtimeLiveLoading = false;
+    alert("Realtime refresh failed: " + state.realtimeLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshRealtimeNow = async function refreshRealtimeNow() {
+  return window.loadLiveRealtime();
+};
+
+window.createRealtimeTestEvent = async function createRealtimeTestEvent() {
+  const eventType = prompt("Event type:", "system.test");
+  if (!eventType) return;
+
+  const channel = prompt("Channel:", "system");
+  if (!channel) return;
+
+  const message = prompt("Message:", "Realtime test event from GoodAppBackEnd console");
+  if (!message) return;
+
+  try {
+    const response = await fetch("/api/admin/realtime-events/create-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        eventType,
+        source: "backend-console",
+        channel,
+        message,
+        payload: {
+          test: true,
+          createdFrom: "GoodAppBackEnd Console",
+          time: new Date().toISOString()
+        }
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Realtime test event failed with status " + response.status);
+    }
+
+    alert("Realtime test event created.");
+    await window.loadLiveRealtime();
+  } catch (error) {
+    alert("Realtime test event failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function realtimeView() {
+  if (!state.realtimeLiveLoaded && !state.realtimeLiveLoading) {
+    state.realtimeLiveLoading = true;
+    setTimeout(() => window.loadLiveRealtime(), 100);
+  }
+
   const events = Array.isArray(state.events) ? state.events : [];
+  const channels = Array.isArray(state.realtimeChannels) ? state.realtimeChannels : [];
 
   return `
     ${hero("Realtime Events", "Backend event stream and future socket channels for live app updates.")}
     <div class="section-head">
       <h3>Backend Events</h3>
-      <button class="logout" onclick="createTestEvent()">Create Test Event</button>
+      <div>
+        <button class="logout" onclick="window.refreshRealtimeNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createRealtimeTestEvent()">Create Test Event</button>
+      </div>
     </div>
+
+    ${state.realtimeLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live realtime data...</p></div>` : ""}
+    ${state.realtimeLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Realtime load error: ${safeText(state.realtimeLiveError)}</p></div>` : ""}
+
     <div class="grid cards">
       ${card("Events", events.length, "Recent backend events")}
-      ${card("Channels", "Next", "Socket channels")}
-      ${card("Broadcast", "Next", "App event fanout")}
+      ${card("Channels", channels.length, "Socket channels")}
+      ${card("Broadcast", events.filter(event => event.status === "recorded").length, "App event fanout")}
       ${card("Consumers", "Next", "Event subscribers")}
     </div>
+
     <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Events</h3><span class="badge">Live</span></div>
       <table>
-        <thead><tr><th>Event</th><th>Source</th><th>Message</th><th>Created</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Source</th>
+            <th>Channel</th>
+            <th>Message</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
         <tbody>
           ${events.map(event => `
             <tr>
-              <td><strong>${safeText(event.eventType)}</strong><div class="muted">${safeText(event.id)}</div></td>
-              <td>${safeText(event.source)}</td>
-              <td>${safeText(event.message)}</td>
-              <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : "-"}</td>
+              <td><strong>${safeText(event.eventType || event.event_type || "-")}</strong><div class="muted">${safeText(event.id || "")}</div></td>
+              <td>${safeText(event.source || "-")}</td>
+              <td>${safeText(event.channel || "-")}</td>
+              <td>${safeText(event.message || "-")}</td>
+              <td><span class="badge">${safeText(event.status || "-")}</span></td>
+              <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : event.created_at ? new Date(event.created_at).toLocaleString() : "-"}</td>
             </tr>
-          `).join("") || '<tr><td colspan="4" class="muted">No events recorded yet.</td></tr>'}
+          `).join("") || '<tr><td colspan="6" class="muted">No events recorded yet. Click Create Test Event.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Channels</h3><span class="badge">Metadata</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Events</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${channels.map(channel => `
+            <tr>
+              <td><strong>${safeText(channel.channel || "-")}</strong></td>
+              <td>${safeText(String(channel.count || 0))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="2" class="muted">No channels recorded yet.</td></tr>'}
         </tbody>
       </table>
     </div>
   `;
 }
+
 
 function functionsView() {
   return `

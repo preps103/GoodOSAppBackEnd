@@ -2031,4 +2031,98 @@ router.get("/database-page-data", async (req, res) => {
   }
 });
 
+
+router.get("/realtime-page-data", async (req, res) => {
+  try {
+    const eventsResult = await dbQuery(`
+      SELECT
+        id,
+        event_type AS "eventType",
+        source,
+        channel,
+        message,
+        payload,
+        status,
+        created_at AS "createdAt"
+      FROM backend_realtime_events
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const channelsResult = await dbQuery(`
+      SELECT channel, COUNT(*)::int AS count
+      FROM backend_realtime_events
+      GROUP BY channel
+      ORDER BY channel ASC
+    `);
+
+    const events = eventsResult.rows;
+    const channels = channelsResult.rows;
+
+    return ok(res, {
+      events,
+      channels,
+      counts: {
+        events: events.length,
+        channels: channels.length,
+        broadcasts: events.filter((event) => event.status === "recorded").length,
+        consumers: 0,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load realtime page data", 500, error.message);
+  }
+});
+
+router.post("/realtime-events/create-test-safe", async (req, res) => {
+  try {
+    const id = `evt_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    const eventType = String(req.body?.eventType || "system.test").trim();
+    const source = String(req.body?.source || "backend-console").trim();
+    const channel = String(req.body?.channel || "system").trim();
+    const message = String(req.body?.message || "Realtime test event from GoodAppBackEnd console").trim();
+
+    const payload = req.body?.payload && typeof req.body.payload === "object"
+      ? req.body.payload
+      : {
+          test: true,
+          createdFrom: "GoodAppBackEnd Console",
+          time: new Date().toISOString(),
+        };
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_realtime_events (
+          id,
+          event_type,
+          source,
+          channel,
+          message,
+          payload,
+          status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6::jsonb, 'recorded')
+        RETURNING
+          id,
+          event_type AS "eventType",
+          source,
+          channel,
+          message,
+          payload,
+          status,
+          created_at AS "createdAt"
+      `,
+      [id, eventType, source, channel, message, JSON.stringify(payload)]
+    );
+
+    return ok(res, {
+      event: result.rows[0],
+      message: "Realtime test event created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create realtime test event", 500, error.message);
+  }
+});
+
 module.exports = router;
