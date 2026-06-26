@@ -3881,6 +3881,389 @@ router.post("/backups/create-safe", async (req, res) => {
 });
 
 
+
+function getSecuritySettingValue(row = {}) {
+  const valueJson = row.valueJson || row.value_json || {};
+  if (valueJson && typeof valueJson === "object" && Object.prototype.hasOwnProperty.call(valueJson, "value")) {
+    return valueJson.value;
+  }
+
+  return valueJson;
+}
+
+function normalizeSecuritySettingValue(value, valueType = "string") {
+  const type = String(valueType || "string").toLowerCase();
+
+  if (type === "boolean") {
+    if (typeof value === "boolean") return value;
+    return ["true", "1", "yes", "on", "enabled", "active"].includes(String(value || "").trim().toLowerCase());
+  }
+
+  if (type === "number") {
+    const numberValue = Number(value);
+    if (!Number.isFinite(numberValue)) return 0;
+    return numberValue;
+  }
+
+  if (type === "json") {
+    if (value && typeof value === "object") return value;
+    try {
+      return JSON.parse(String(value || "{}"));
+    } catch {
+      return {};
+    }
+  }
+
+  return String(value ?? "").trim();
+}
+
+function isSecuritySettingKeyAllowed(settingKey = "") {
+  const key = String(settingKey || "").toLowerCase();
+  return (
+    key.startsWith("security.") ||
+    key.startsWith("auth.") ||
+    key.startsWith("domain.cors") ||
+    key.includes("cookie") ||
+    key.includes("jwt") ||
+    key.includes("rate")
+  );
+}
+
+router.get("/security-page-data", async (req, res) => {
+  try {
+    const settingsResult = await dbQuery(`
+      SELECT
+        id,
+        category,
+        setting_key AS "settingKey",
+        label,
+        value_json AS "valueJson",
+        value_type AS "valueType",
+        is_secret AS "isSecret",
+        is_editable AS "isEditable",
+        description,
+        status,
+        updated_at AS "updatedAt"
+      FROM backend_platform_settings
+      WHERE category ILIKE '%security%'
+         OR category ILIKE '%auth%'
+         OR category ILIKE '%cors%'
+         OR setting_key ILIKE '%security%'
+         OR setting_key ILIKE '%auth%'
+         OR setting_key ILIKE '%cors%'
+         OR setting_key ILIKE '%cookie%'
+         OR setting_key ILIKE '%jwt%'
+         OR setting_key ILIKE '%rate%'
+      ORDER BY category ASC, label ASC
+      LIMIT 150
+    `);
+
+    const sessionsResult = await dbQuery(`
+      SELECT
+        id::text,
+        user_id::text AS "userId",
+        ip_address::text AS "ipAddress",
+        user_agent AS "userAgent",
+        expires_at AS "expiresAt",
+        revoked_at AS "revokedAt",
+        created_at AS "createdAt",
+        CASE
+          WHEN revoked_at IS NULL AND expires_at > NOW() THEN true
+          ELSE false
+        END AS "isActive"
+      FROM sessions
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    const auditResult = await dbQuery(`
+      SELECT
+        id,
+        actor,
+        action,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        before_json AS "beforeJson",
+        after_json AS "afterJson",
+        ip_address AS "ipAddress",
+        user_agent AS "userAgent",
+        created_at AS "createdAt"
+      FROM backend_admin_audit_logs
+      WHERE action ILIKE '%security%'
+         OR action ILIKE '%auth%'
+         OR action ILIKE '%session%'
+         OR action ILIKE '%api_key%'
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    const countsResult = await dbQuery(`
+      SELECT
+        (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NULL AND expires_at > NOW()) AS active_sessions,
+        (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NOT NULL) AS revoked_sessions,
+        (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NULL AND expires_at <= NOW()) AS expired_sessions,
+        (SELECT COUNT(*)::int FROM backend_api_keys WHERE status = 'active') AS active_api_keys,
+        (SELECT COUNT(*)::int FROM backend_platform_settings WHERE status = 'active') AS active_settings
+    `);
+
+    const settings = settingsResult.rows;
+    const sessions = sessionsResult.rows;
+    const auditLogs = auditResult.rows;
+    const counts = countsResult.rows[0] || {};
+
+    const settingMap = {};
+    for (const setting of settings) {
+      settingMap[setting.settingKey] = getSecuritySettingValue(setting);
+    }
+
+    const currentSessionId = req.auth?.sessionId || null;
+
+    return ok(res, {
+      security: {
+        headers: {
+          helmet: true,
+          hsts: true,
+          csp: true,
+          frameOptions: true,
+          noSniff: true,
+          referrerPolicy: true,
+          crossOriginProtection: true,
+        },
+        cors: {
+          credentials: true,
+          allowedDomain: settingMap["auth.sso_domain"] || process.env.AUTH_COOKIE_DOMAIN || ".goodos.app",
+          sameSite: process.env.AUTH_COOKIE_SAMESITE || "lax",
+          goodosSubdomainsAllowed: true,
+        },
+        auth: {
+          cookieName: settingMap["auth.cookie_name"] || process.env.AUTH_COOKIE_NAME || "goodos_session",
+          cookieDomain: settingMap["auth.sso_domain"] || process.env.AUTH_COOKIE_DOMAIN || ".goodos.app",
+          sessionDays: settingMap["auth.session_days"] || process.env.SESSION_DAYS || "7",
+          jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+          ownerOnlyAdmin: settingMap["auth.owner_only_admin"] ?? true,
+          emailVerification: settingMap["auth.email_verification"] ?? true,
+        },
+        rateLimit: {
+          status: settingMap["security.rate_limit"] || "planned",
+          loginLimiter: true,
+        },
+      },
+      settings,
+      sessions: sessions.map((session) => ({
+        ...session,
+        isCurrent: String(session.id) === String(currentSessionId),
+      })),
+      auditLogs,
+      counts: {
+        activeSessions: Number(counts.active_sessions || 0),
+        revokedSessions: Number(counts.revoked_sessions || 0),
+        expiredSessions: Number(counts.expired_sessions || 0),
+        activeApiKeys: Number(counts.active_api_keys || 0),
+        activeSettings: Number(counts.active_settings || 0),
+        auditLogs: auditLogs.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load security page data", 500, error.message);
+  }
+});
+
+router.post("/security/settings/:id/update-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const existingResult = await dbQuery(
+      `
+        SELECT
+          id,
+          category,
+          setting_key AS "settingKey",
+          label,
+          value_json AS "valueJson",
+          value_type AS "valueType",
+          is_editable AS "isEditable",
+          status
+        FROM backend_platform_settings
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const existing = existingResult.rows[0];
+
+    if (!existing) return fail(res, "Security setting not found", 404);
+    if (!existing.isEditable) return fail(res, "This setting is not editable", 400);
+    if (!isSecuritySettingKeyAllowed(existing.settingKey)) return fail(res, "This setting is not allowed from Security Rules", 400);
+
+    const newValue = normalizeSecuritySettingValue(req.body?.value, existing.valueType);
+    const newValueJson = { value: newValue };
+
+    const updateResult = await dbQuery(
+      `
+        UPDATE backend_platform_settings
+        SET
+          value_json = $2::jsonb,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          category,
+          setting_key AS "settingKey",
+          label,
+          value_json AS "valueJson",
+          value_type AS "valueType",
+          is_secret AS "isSecret",
+          is_editable AS "isEditable",
+          description,
+          status,
+          updated_at AS "updatedAt"
+      `,
+      [id, JSON.stringify(newValueJson)]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'security.setting.update', 'platform_setting', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(existing),
+        JSON.stringify(updateResult.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      setting: updateResult.rows[0],
+      message: "Security setting updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update security setting", 500, error.message);
+  }
+});
+
+router.post("/security/sessions/:id/revoke-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Session id is required", 400);
+
+    if (String(req.auth?.sessionId || "") === id) {
+      return fail(res, "Current session cannot be revoked from this control. Use Logout instead.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE sessions
+        SET revoked_at = NOW()
+        WHERE id = $1::uuid
+          AND revoked_at IS NULL
+        RETURNING
+          id::text,
+          user_id::text AS "userId",
+          ip_address::text AS "ipAddress",
+          user_agent AS "userAgent",
+          expires_at AS "expiresAt",
+          revoked_at AS "revokedAt",
+          created_at AS "createdAt"
+      `,
+      [id]
+    );
+
+    const session = result.rows[0];
+
+    if (!session) return fail(res, "Session not found or already revoked", 404);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'security.session.revoke', 'session', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(session),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      session,
+      message: "Session revoked.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to revoke session", 500, error.message);
+  }
+});
+
+router.post("/security/sessions/cleanup-expired-safe", async (req, res) => {
+  try {
+    const result = await dbQuery(`
+      UPDATE sessions
+      SET revoked_at = NOW()
+      WHERE revoked_at IS NULL
+        AND expires_at <= NOW()
+      RETURNING id::text
+    `);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'security.sessions.cleanup_expired', 'sessions', 'expired', $3::jsonb, $4, $5)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        JSON.stringify({ revokedCount: result.rowCount || 0 }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      revokedCount: result.rowCount || 0,
+      message: "Expired session cleanup complete.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to cleanup expired sessions", 500, error.message);
+  }
+});
+
 router.get("/settings-page-data", async (req, res) => {
   try {
     const settingsResult = await dbQuery(`

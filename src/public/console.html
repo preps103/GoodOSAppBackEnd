@@ -2079,25 +2079,327 @@ function logsView() {
   `;
 }
 
+
+window.loadLiveSecurity = async function loadLiveSecurity() {
+  try {
+    const response = await fetch("/api/admin/security-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Security refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.security = data.security || {};
+    state.securitySettings = Array.isArray(data.settings) ? data.settings : [];
+    state.securitySessions = Array.isArray(data.sessions) ? data.sessions : [];
+    state.securityAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
+    state.securityCounts = data.counts || {};
+    state.securityLiveLoaded = true;
+    state.securityLiveLoading = false;
+    state.securityLiveError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.securityLiveLoaded = true;
+    state.securityLiveLoading = false;
+    state.securityLiveError = error.message || "Failed to load security rules.";
+    console.error("Security refresh failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshSecurityNow = async function refreshSecurityNow() {
+  state.securityLiveLoaded = false;
+  state.securityLiveLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadLiveSecurity();
+};
+
+window.editSecuritySetting = async function editSecuritySetting(id, label, currentValue, valueType) {
+  if (!id) return alert("Missing setting id.");
+
+  const nextValueText = prompt("New value for " + (label || "setting") + ":", currentValue ?? "");
+  if (nextValueText === null) return;
+
+  let value = nextValueText;
+
+  if (String(valueType || "").toLowerCase() === "boolean") {
+    value = ["true", "1", "yes", "on", "enabled", "active"].includes(String(nextValueText).toLowerCase());
+  } else if (String(valueType || "").toLowerCase() === "number") {
+    value = Number(nextValueText || 0);
+  } else if (String(valueType || "").toLowerCase() === "json") {
+    try {
+      value = JSON.parse(nextValueText || "{}");
+    } catch {
+      alert("Invalid JSON value.");
+      return;
+    }
+  }
+
+  try {
+    const response = await fetch("/api/admin/security/settings/" + encodeURIComponent(id) + "/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ value })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Security setting update failed with status " + response.status);
+    }
+
+    alert("Security setting updated.");
+    await window.loadLiveSecurity();
+  } catch (error) {
+    alert("Security setting update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.revokeSecuritySession = async function revokeSecuritySession(id) {
+  if (!id) return alert("Missing session id.");
+  if (!confirm("Revoke this session now?")) return;
+
+  try {
+    const response = await fetch("/api/admin/security/sessions/" + encodeURIComponent(id) + "/revoke-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Session revoke failed with status " + response.status);
+    }
+
+    alert("Session revoked.");
+    await window.loadLiveSecurity();
+  } catch (error) {
+    alert("Session revoke failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.cleanupExpiredSecuritySessions = async function cleanupExpiredSecuritySessions() {
+  if (!confirm("Revoke all expired sessions now?")) return;
+
+  try {
+    const response = await fetch("/api/admin/security/sessions/cleanup-expired-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Expired session cleanup failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Expired session cleanup complete. Revoked: " + String(data.revokedCount || 0));
+    await window.loadLiveSecurity();
+  } catch (error) {
+    alert("Expired session cleanup failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewSecurityAuditDetail = function viewSecurityAuditDetail(id) {
+  const audit = (state.securityAuditLogs || []).find(item => item.id === id) || {};
+  alert("Security Audit Detail:\\n\\n" + prettyJsonForAlert(audit));
+};
+
+function securitySettingDisplayValue(setting) {
+  const valueJson = setting.valueJson || setting.value_json || {};
+  const value = valueJson && typeof valueJson === "object" && Object.prototype.hasOwnProperty.call(valueJson, "value")
+    ? valueJson.value
+    : valueJson;
+
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value ?? "");
+}
+
+
 function securityView() {
+  if (!state.securityLiveLoaded && !state.securityLiveLoading) {
+    state.securityLiveLoading = true;
+    setTimeout(() => window.loadLiveSecurity(), 100);
+  }
+
   const security = state.security || {};
-  const headers = security.headers || { helmet: true, hsts: true, csp: true };
+  const headers = security.headers || {};
+  const auth = security.auth || {};
+  const cors = security.cors || {};
+  const rateLimit = security.rateLimit || {};
+  const settings = Array.isArray(state.securitySettings) ? state.securitySettings : [];
+  const sessions = Array.isArray(state.securitySessions) ? state.securitySessions : [];
+  const auditLogs = Array.isArray(state.securityAuditLogs) ? state.securityAuditLogs : [];
+  const counts = state.securityCounts || {};
 
   return `
-    ${hero("Security Rules", "Current authentication, cookie, CORS, and security header settings.")}
-    <div class="grid cards">
-      ${card("Cookie", security.auth?.cookieName || "goodos_session", "SSO cookie")}
-      ${card("Domain", security.cors?.allowedDomain || ".goodos.app", "Cross-subdomain SSO")}
-      ${card("SameSite", security.cors?.sameSite || "lax", "Cookie policy")}
-      ${card("JWT", security.auth?.jwtExpiresIn || "7d", "Token expiration")}
+    ${hero("Security Rules", "Live security headers, SSO configuration, session controls, security settings, and audit visibility.")}
+    <div class="section-head">
+      <h3>Security Control Center</h3>
+      <div>
+        <button class="logout" onclick="window.refreshSecurityNow()">Refresh Data</button>
+        <button class="logout" onclick="window.cleanupExpiredSecuritySessions()">Cleanup Expired Sessions</button>
+      </div>
     </div>
+
+    ${state.securityLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading security rules...</p></div>` : ""}
+    ${state.securityLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Security load error: ${safeText(state.securityLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Cookie", auth.cookieName || "goodos_session", "SSO cookie")}
+      ${card("Active Sessions", counts.activeSessions ?? sessions.filter(item => item.isActive).length, "Currently valid")}
+      ${card("API Keys", counts.activeApiKeys ?? 0, "Active API keys")}
+      ${card("Rate Limit", rateLimit.status || "planned", "Security throttle")}
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+      <div class="card">
+        <div class="section-head"><h3>Security Headers</h3><span class="badge">Live</span></div>
+        <table>
+          <tbody>
+            <tr><td>Helmet</td><td><span class="badge">${headers.helmet ? "Enabled" : "Pending"}</span></td></tr>
+            <tr><td>HSTS</td><td><span class="badge">${headers.hsts ? "Enabled" : "Pending"}</span></td></tr>
+            <tr><td>CSP</td><td><span class="badge">${headers.csp ? "Enabled" : "Pending"}</span></td></tr>
+            <tr><td>Frame Options</td><td><span class="badge">${headers.frameOptions ? "Enabled" : "Pending"}</span></td></tr>
+            <tr><td>No Sniff</td><td><span class="badge">${headers.noSniff ? "Enabled" : "Pending"}</span></td></tr>
+            <tr><td>Referrer Policy</td><td><span class="badge">${headers.referrerPolicy ? "Enabled" : "Pending"}</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>Auth / CORS</h3><span class="badge">SSO</span></div>
+        <table>
+          <tbody>
+            <tr><td>Cookie Name</td><td>${safeText(auth.cookieName || "-")}</td></tr>
+            <tr><td>Cookie Domain</td><td>${safeText(auth.cookieDomain || "-")}</td></tr>
+            <tr><td>SameSite</td><td>${safeText(cors.sameSite || "-")}</td></tr>
+            <tr><td>Credentials</td><td><span class="badge">${cors.credentials !== false ? "Enabled" : "Pending"}</span></td></tr>
+            <tr><td>GoodOS Subdomains</td><td><span class="badge">${cors.goodosSubdomainsAllowed ? "Allowed" : "Pending"}</span></td></tr>
+            <tr><td>Session Days</td><td>${safeText(String(auth.sessionDays || "-"))}</td></tr>
+            <tr><td>JWT Expiration</td><td>${safeText(auth.jwtExpiresIn || "-")}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Security Headers</h3><span class="badge">Active</span></div>
+      <div class="section-head"><h3>Editable Security Settings</h3><span class="badge">${safeText(String(settings.length))} Settings</span></div>
       <table>
-        <tr><td>Helmet</td><td><span class="badge">${headers.helmet ? "Enabled" : "Pending"}</span></td></tr>
-        <tr><td>HSTS</td><td><span class="badge">${headers.hsts ? "Enabled" : "Pending"}</span></td></tr>
-        <tr><td>CSP</td><td><span class="badge">${headers.csp ? "Enabled" : "Pending"}</span></td></tr>
-        <tr><td>Credentials</td><td><span class="badge">${security.cors?.cookieCredentials !== false ? "Enabled" : "Pending"}</span></td></tr>
+        <thead>
+          <tr>
+            <th>Setting</th>
+            <th>Category</th>
+            <th>Value</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${settings.map(setting => {
+            const displayValue = securitySettingDisplayValue(setting);
+            return `
+              <tr>
+                <td><strong>${safeText(setting.label || setting.settingKey || "-")}</strong><div class="muted">${safeText(setting.settingKey || "")}</div></td>
+                <td>${safeText(setting.category || "-")}</td>
+                <td>${safeText(displayValue).slice(0, 120)}</td>
+                <td><span class="badge">${safeText(setting.status || "-")}</span></td>
+                <td>${setting.updatedAt ? new Date(setting.updatedAt).toLocaleString() : "-"}</td>
+                <td>${setting.isEditable ? `<button class="logout" onclick="window.editSecuritySetting('${safeText(setting.id)}','${safeText(setting.label || setting.settingKey || "Setting")}','${safeText(displayValue)}','${safeText(setting.valueType || "string")}')">Edit</button>` : `<span class="muted">Locked</span>`}</td>
+              </tr>
+            `;
+          }).join("") || '<tr><td colspan="6" class="muted">No security settings found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Sessions</h3><span class="badge">${safeText(String(counts.activeSessions ?? sessions.filter(item => item.isActive).length))} Active</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Session</th>
+            <th>IP</th>
+            <th>User Agent</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sessions.map(session => `
+            <tr>
+              <td><strong>${safeText(String(session.id || "").slice(0, 12))}</strong>${session.isCurrent ? `<div class="muted">Current Session</div>` : ""}</td>
+              <td>${safeText(session.ipAddress || "-")}</td>
+              <td>${safeText(session.userAgent || "-").slice(0, 130)}</td>
+              <td><span class="badge">${session.isActive ? "Active" : session.revokedAt ? "Revoked" : "Expired"}</span></td>
+              <td>${session.expiresAt ? new Date(session.expiresAt).toLocaleString() : "-"}</td>
+              <td>${session.isActive && !session.isCurrent ? `<button class="logout" onclick="window.revokeSecuritySession('${safeText(session.id)}')">Revoke</button>` : `<span class="muted">-</span>`}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No sessions found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Security Audit</h3><span class="badge">Last 100</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Actor</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>IP</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${auditLogs.map(audit => `
+            <tr>
+              <td>${audit.createdAt ? new Date(audit.createdAt).toLocaleString() : "-"}</td>
+              <td>${safeText(audit.actor || "-")}</td>
+              <td><span class="badge">${safeText(audit.action || "-")}</span></td>
+              <td>${safeText(audit.targetType || "-")} ${safeText(audit.targetId || "")}</td>
+              <td>${safeText(audit.ipAddress || "-")}</td>
+              <td><button class="logout" onclick="window.viewSecurityAuditDetail('${safeText(audit.id)}')">Details</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No security audit entries yet.</td></tr>'}
+        </tbody>
       </table>
     </div>
   `;
