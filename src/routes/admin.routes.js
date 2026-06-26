@@ -1613,4 +1613,81 @@ router.get("/api-keys-page-data", async (req, res) => {
   }
 });
 
+
+router.post("/api-keys/create-scoped", async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const type = String(req.body?.type || "scoped").trim();
+    const description = String(req.body?.description || "").trim();
+
+    const scopes = Array.isArray(req.body?.scopes) && req.body.scopes.length
+      ? req.body.scopes.map((item) => String(item).trim()).filter(Boolean)
+      : ["read:health"];
+
+    const allowedAppIds = Array.isArray(req.body?.allowedAppIds) && req.body.allowedAppIds.length
+      ? req.body.allowedAppIds.map((item) => String(item).trim()).filter(Boolean)
+      : ["*"];
+
+    if (!name) return fail(res, "API key name is required", 400);
+
+    const id = `key_${crypto.randomUUID().replace(/-/g, "")}`;
+    const secret = `gak_${crypto.randomBytes(32).toString("hex")}`;
+    const keyHash = crypto.createHash("sha256").update(secret).digest("hex");
+    const keyPrefix = secret.slice(0, 18);
+
+    const createdBy =
+      req.user?.id ||
+      req.auth?.user?.id ||
+      req.session?.user?.id ||
+      null;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_api_keys (
+          id,
+          name,
+          type,
+          key_prefix,
+          key_hash,
+          scopes,
+          allowed_app_ids,
+          description,
+          status,
+          created_by
+        )
+        VALUES ($1, $2, $3, $4, $5, $6::text[], $7::text[], $8, 'active', $9)
+        RETURNING
+          id,
+          name,
+          type,
+          key_prefix AS "keyPrefix",
+          scopes,
+          allowed_app_ids AS "allowedAppIds",
+          description,
+          status,
+          created_at AS "createdAt"
+      `,
+      [
+        id,
+        name,
+        type,
+        keyPrefix,
+        keyHash,
+        scopes,
+        allowedAppIds,
+        description || null,
+        createdBy,
+      ]
+    );
+
+    return ok(res, {
+      apiKey: result.rows[0],
+      secret,
+      warning: "Copy this key now. It will not be shown again.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create scoped API key", 500, error.message);
+  }
+});
+
 module.exports = router;
