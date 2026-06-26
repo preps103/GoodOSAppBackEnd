@@ -1384,6 +1384,37 @@ window.loadLiveSettings = async function loadLiveSettings() {
     state.platformSettingCategories = Array.isArray(data.categories) ? data.categories : [];
     state.settingsRuntime = data.runtime || {};
     state.settingsCounts = data.counts || {};
+
+    try {
+      const readinessResponse = await fetch("/api/admin/settings-readiness-page-data?t=" + Date.now(), {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+      const readinessPayload = await readinessResponse.json().catch(() => ({}));
+      const readinessData = readinessPayload.data || readinessPayload;
+      state.platformReadiness = readinessData || {};
+    } catch (readinessError) {
+      console.warn("Settings readiness refresh failed:", readinessError.message);
+      state.platformReadiness = state.platformReadiness || {};
+    }
+
+    try {
+      const auditResponse = await fetch("/api/admin/settings-audit-page-data?t=" + Date.now(), {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+      const auditPayload = await auditResponse.json().catch(() => ({}));
+      const auditData = auditPayload.data || auditPayload;
+      state.settingsAuditLogs = Array.isArray(auditData.auditLogs) ? auditData.auditLogs : [];
+    } catch (auditError) {
+      console.warn("Settings audit refresh failed:", auditError.message);
+      state.settingsAuditLogs = Array.isArray(state.settingsAuditLogs) ? state.settingsAuditLogs : [];
+    }
+
     state.settingsLiveLoaded = true;
     state.settingsLiveLoading = false;
     state.settingsLiveError = "";
@@ -1461,6 +1492,10 @@ function settingsView() {
   const categories = Array.isArray(state.platformSettingCategories) ? state.platformSettingCategories : [];
   const runtime = state.settingsRuntime || {};
   const counts = state.settingsCounts || {};
+  const readiness = state.platformReadiness || {};
+  const readinessChecks = Array.isArray(readiness.checks) ? readiness.checks : [];
+  const readinessScore = readiness.score || {};
+  const auditLogs = Array.isArray(state.settingsAuditLogs) ? state.settingsAuditLogs : [];
 
   const byCategory = {};
   settings.forEach(setting => {
@@ -1503,6 +1538,63 @@ function settingsView() {
       ${card("Categories", counts.categories ?? categories.length, "Platform sections")}
       ${card("Active", counts.active ?? settings.filter(item => item.status === "active").length, "Production-ready settings")}
       ${card("Planned", counts.planned ?? settings.filter(item => item.status === "planned").length, "Roadmap controls")}
+    </div>
+
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Platform Readiness</h3><span class="badge">${safeText(String(readinessScore.percent || 0))}% Ready</span></div>
+      <div class="grid cards" style="margin-bottom:18px;">
+        ${card("Ready", readinessScore.ready || 0, "Production-ready checks")}
+        ${card("Partial", readinessScore.partial || 0, "Needs improvement")}
+        ${card("Missing", readinessScore.missing || 0, "Not connected yet")}
+        ${card("Total", readinessScore.total || readinessChecks.length || 0, "Backend checks")}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Check</th>
+            <th>Status</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${readinessChecks.map(check => `
+            <tr>
+              <td>${safeText(check.category || "-")}</td>
+              <td><strong>${safeText(check.label || "-")}</strong></td>
+              <td><span class="badge">${safeText(check.status || "-")}</span></td>
+              <td>${safeText(String(check.value ?? "-"))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No readiness checks loaded yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Settings Audit Trail</h3><span class="badge">Last 250</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Actor</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${auditLogs.map(log => `
+            <tr>
+              <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : "-"}</td>
+              <td>${safeText(log.actor || "-")}</td>
+              <td><span class="badge">${safeText(log.action || "-")}</span></td>
+              <td>${safeText(log.targetType || "-")} / ${safeText(log.targetId || "-")}</td>
+              <td>${safeText(log.ipAddress || "-")}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No audit records loaded yet.</td></tr>'}
+        </tbody>
+      </table>
     </div>
 
     <div class="card" style="margin-top:18px;">

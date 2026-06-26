@@ -2574,12 +2574,123 @@ router.post("/settings/update-safe", async (req, res) => {
       [settingKey, JSON.stringify({ value })]
     );
 
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'settings.update', 'platform_setting', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        settingKey,
+        JSON.stringify({ value }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
     return ok(res, {
       setting: result.rows[0],
       message: "Setting updated.",
     });
   } catch (error) {
     return fail(res, "Failed to update setting", 500, error.message);
+  }
+});
+
+
+router.get("/settings-readiness-page-data", async (req, res) => {
+  try {
+    const countsResult = await dbQuery(`
+      SELECT
+        (SELECT COUNT(*)::int FROM users WHERE status = 'active') AS users,
+        (SELECT COUNT(*)::int FROM apps WHERE status = 'active') AS apps,
+        (SELECT COUNT(*)::int FROM app_memberships WHERE status = 'active') AS memberships,
+        (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NULL AND expires_at > NOW()) AS sessions,
+        (SELECT COUNT(*)::int FROM backend_api_keys WHERE status = 'active') AS "activeApiKeys",
+        (SELECT COUNT(*)::int FROM backend_storage_buckets WHERE status = 'active') AS buckets,
+        (SELECT COUNT(*)::int FROM backend_storage_files) AS files,
+        (SELECT COUNT(*)::int FROM backend_webhooks WHERE status = 'active') AS "activeWebhooks",
+        (SELECT COUNT(*)::int FROM backend_webhook_deliveries) AS "webhookDeliveries",
+        (SELECT COUNT(*)::int FROM backend_realtime_events) AS "realtimeEvents",
+        (SELECT COUNT(*)::int FROM backend_edge_functions) AS "edgeFunctions",
+        (SELECT COUNT(*)::int FROM backend_system_logs) AS "systemLogs",
+        (SELECT COUNT(*)::int FROM backend_backups) AS backups,
+        (SELECT COUNT(*)::int FROM backend_platform_settings) AS settings
+    `);
+
+    const counts = countsResult.rows[0] || {};
+
+    const checks = [
+      { category: "Auth", label: "Owner account exists", status: counts.users > 0 ? "ready" : "missing", value: counts.users },
+      { category: "Apps", label: "App registry populated", status: counts.apps >= 10 ? "ready" : "partial", value: counts.apps },
+      { category: "Apps", label: "Owner app memberships", status: counts.memberships >= counts.apps ? "ready" : "partial", value: counts.memberships },
+      { category: "Sessions", label: "Active session tracking", status: counts.sessions > 0 ? "ready" : "missing", value: counts.sessions },
+      { category: "API Keys", label: "Active scoped API keys", status: counts.activeApiKeys > 0 ? "ready" : "missing", value: counts.activeApiKeys },
+      { category: "Storage", label: "Storage buckets configured", status: counts.buckets > 0 ? "ready" : "missing", value: counts.buckets },
+      { category: "Storage", label: "File tracking active", status: counts.files > 0 ? "ready" : "missing", value: counts.files },
+      { category: "Webhooks", label: "Webhook endpoints active", status: counts.activeWebhooks > 0 ? "ready" : "missing", value: counts.activeWebhooks },
+      { category: "Webhooks", label: "Delivery logs active", status: counts.webhookDeliveries > 0 ? "ready" : "missing", value: counts.webhookDeliveries },
+      { category: "Realtime", label: "Realtime event table active", status: counts.realtimeEvents > 0 ? "ready" : "missing", value: counts.realtimeEvents },
+      { category: "Functions", label: "Edge function registry active", status: counts.edgeFunctions > 0 ? "ready" : "missing", value: counts.edgeFunctions },
+      { category: "Logs", label: "System logging active", status: counts.systemLogs > 0 ? "ready" : "missing", value: counts.systemLogs },
+      { category: "Backups", label: "Backup registry active", status: counts.backups > 0 ? "ready" : "missing", value: counts.backups },
+      { category: "Settings", label: "Platform settings registry active", status: counts.settings >= 40 ? "ready" : "partial", value: counts.settings },
+    ];
+
+    const ready = checks.filter((check) => check.status === "ready").length;
+    const partial = checks.filter((check) => check.status === "partial").length;
+    const missing = checks.filter((check) => check.status === "missing").length;
+
+    return ok(res, {
+      checks,
+      counts,
+      score: {
+        ready,
+        partial,
+        missing,
+        total: checks.length,
+        percent: Math.round((ready / checks.length) * 100),
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load settings readiness data", 500, error.message);
+  }
+});
+
+router.get("/settings-audit-page-data", async (req, res) => {
+  try {
+    const result = await dbQuery(`
+      SELECT
+        id,
+        actor,
+        action,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        before_json AS "beforeJson",
+        after_json AS "afterJson",
+        ip_address AS "ipAddress",
+        user_agent AS "userAgent",
+        created_at AS "createdAt"
+      FROM backend_admin_audit_logs
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    return ok(res, {
+      auditLogs: result.rows,
+    });
+  } catch (error) {
+    return fail(res, "Failed to load settings audit data", 500, error.message);
   }
 });
 
