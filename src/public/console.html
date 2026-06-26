@@ -1142,6 +1142,24 @@ async function retryWebhookDelivery(deliveryId) {
   await refreshConsole();
 }
 
+
+async function loadLiveWebhooks() {
+  try {
+    const webhooksPayload = await request("/api/admin/webhooks-live");
+    const deliveriesPayload = await request("/api/admin/webhook-deliveries-live");
+
+    state.webhooks = Array.isArray(webhooksPayload.data?.webhooks)
+      ? webhooksPayload.data.webhooks
+      : [];
+
+    state.webhookDeliveries = Array.isArray(deliveriesPayload.data?.deliveries)
+      ? deliveriesPayload.data.deliveries
+      : [];
+  } catch (error) {
+    console.error("Failed to load live webhooks:", error);
+  }
+}
+
 async function createWebhook() {
   const name = prompt("Webhook name:");
   if (!name) return;
