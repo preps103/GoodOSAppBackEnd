@@ -2522,6 +2522,453 @@ function hashInviteToken(token) {
   return crypto.createHash("sha256").update(String(token || "")).digest("hex");
 }
 
+
+function normalizeAppId(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+}
+
+function normalizeAppStatus(value, fallback = "active") {
+  const status = String(value || fallback).trim().toLowerCase();
+  if (["active", "planned", "disabled", "archived"].includes(status)) return status;
+  return fallback;
+}
+
+function normalizeAppDomain(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "")
+    .slice(0, 180);
+}
+
+async function auditAppRegistryAction(req, action, targetType, targetId, afterJson = {}, beforeJson = null) {
+  await dbQuery(
+    `
+      INSERT INTO backend_admin_audit_logs (
+        id,
+        actor,
+        action,
+        target_type,
+        target_id,
+        before_json,
+        after_json,
+        ip_address,
+        user_agent
+      )
+      VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9)
+    `,
+    [
+      `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+      req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+      action,
+      targetType,
+      targetId,
+      beforeJson ? JSON.stringify(beforeJson) : null,
+      JSON.stringify(afterJson || {}),
+      req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+      req.headers["user-agent"] || null,
+    ]
+  );
+}
+
+router.get("/apps-page-data", async (req, res) => {
+  try {
+    const appsResult = await dbQuery(`
+      SELECT
+        a.id,
+        a.name,
+        a.domain,
+        a.status,
+        a.description,
+        a.created_at AS "createdAt",
+        a.updated_at AS "updatedAt",
+        COUNT(am.id) FILTER (WHERE am.status = 'active')::int AS "activeMemberships",
+        COUNT(am.id)::int AS "totalMemberships"
+      FROM apps a
+      LEFT JOIN app_memberships am ON am.app_id = a.id
+      GROUP BY a.id, a.name, a.domain, a.status, a.description, a.created_at, a.updated_at
+      ORDER BY
+        CASE WHEN a.status = 'active' THEN 0 ELSE 1 END,
+        a.name ASC
+      LIMIT 250
+    `);
+
+    const membershipsResult = await dbQuery(`
+      SELECT
+        am.id::text,
+        am.user_id::text AS "userId",
+        u.email,
+        COALESCE(u.display_name, u.email) AS "displayName",
+        am.app_id AS "appId",
+        a.name AS "appName",
+        a.domain AS "appDomain",
+        am.role,
+        am.status,
+        am.created_at AS "createdAt",
+        am.updated_at AS "updatedAt"
+      FROM app_memberships am
+      LEFT JOIN users u ON u.id = am.user_id
+      LEFT JOIN apps a ON a.id = am.app_id
+      ORDER BY a.name ASC, u.email ASC
+      LIMIT 500
+    `);
+
+    const apiKeysResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        key_prefix AS "keyPrefix",
+        type,
+        scopes,
+        allowed_app_ids AS "allowedAppIds",
+        status,
+        last_used_at AS "lastUsedAt",
+        created_at AS "createdAt"
+      FROM backend_api_keys
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    const auditResult = await dbQuery(`
+      SELECT
+        id,
+        actor,
+        action,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        after_json AS "afterJson",
+        ip_address AS "ipAddress",
+        created_at AS "createdAt"
+      FROM backend_admin_audit_logs
+      WHERE action ILIKE '%app%'
+         OR action ILIKE '%membership%'
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    const apps = appsResult.rows;
+    const memberships = membershipsResult.rows;
+    const apiKeys = apiKeysResult.rows;
+    const auditLogs = auditResult.rows;
+
+    return ok(res, {
+      apps,
+      memberships,
+      apiKeys,
+      auditLogs,
+      counts: {
+        apps: apps.length,
+        activeApps: apps.filter((app) => app.status === "active").length,
+        plannedApps: apps.filter((app) => app.status === "planned").length,
+        disabledApps: apps.filter((app) => app.status === "disabled").length,
+        memberships: memberships.length,
+        activeMemberships: memberships.filter((item) => item.status === "active").length,
+        apiKeys: apiKeys.length,
+        appRestrictedKeys: apiKeys.filter((key) => Array.isArray(key.allowedAppIds) && !key.allowedAppIds.includes("*")).length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load app registry page data", 500, error.message);
+  }
+});
+
+router.get("/apps/:id/detail-safe", async (req, res) => {
+  try {
+    const id = normalizeAppId(req.params.id);
+
+    const appResult = await dbQuery(
+      `
+        SELECT
+          id,
+          name,
+          domain,
+          status,
+          description,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+        FROM apps
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const app = appResult.rows[0];
+    if (!app) return fail(res, "App not found", 404);
+
+    const membershipsResult = await dbQuery(
+      `
+        SELECT
+          am.id::text,
+          am.user_id::text AS "userId",
+          u.email,
+          COALESCE(u.display_name, u.email) AS "displayName",
+          am.role,
+          am.status,
+          am.created_at AS "createdAt",
+          am.updated_at AS "updatedAt"
+        FROM app_memberships am
+        LEFT JOIN users u ON u.id = am.user_id
+        WHERE am.app_id = $1
+        ORDER BY u.email ASC
+      `,
+      [id]
+    );
+
+    const apiKeysResult = await dbQuery(
+      `
+        SELECT
+          id,
+          name,
+          key_prefix AS "keyPrefix",
+          scopes,
+          allowed_app_ids AS "allowedAppIds",
+          status,
+          last_used_at AS "lastUsedAt",
+          created_at AS "createdAt"
+        FROM backend_api_keys
+        WHERE $1 = ANY(allowed_app_ids)
+           OR '*' = ANY(allowed_app_ids)
+        ORDER BY created_at DESC
+        LIMIT 100
+      `,
+      [id]
+    );
+
+    return ok(res, {
+      app,
+      memberships: membershipsResult.rows,
+      apiKeys: apiKeysResult.rows,
+    });
+  } catch (error) {
+    return fail(res, "Failed to load app detail", 500, error.message);
+  }
+});
+
+router.post("/apps/create-safe", async (req, res) => {
+  try {
+    const id = normalizeAppId(req.body?.id || req.body?.name);
+    const name = String(req.body?.name || "").trim();
+    const domain = normalizeAppDomain(req.body?.domain || "");
+    const status = normalizeAppStatus(req.body?.status || "active");
+    const description = String(req.body?.description || "").trim();
+
+    if (!id) return fail(res, "App id is required", 400);
+    if (!name) return fail(res, "App name is required", 400);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO apps (
+          id,
+          name,
+          domain,
+          status,
+          description
+        )
+        VALUES ($1, $2, NULLIF($3, ''), $4, NULLIF($5, ''))
+        RETURNING
+          id,
+          name,
+          domain,
+          status,
+          description,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id, name, domain, status, description]
+    );
+
+    await auditAppRegistryAction(req, "app.create", "app", id, result.rows[0]);
+
+    return ok(res, {
+      app: result.rows[0],
+      message: "App created.",
+    });
+  } catch (error) {
+    if (String(error.message || "").includes("duplicate key")) {
+      return fail(res, "App id already exists", 409, error.message);
+    }
+
+    return fail(res, "Failed to create app", 500, error.message);
+  }
+});
+
+router.post("/apps/:id/update-safe", async (req, res) => {
+  try {
+    const id = normalizeAppId(req.params.id);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT id, name, domain, status, description, created_at, updated_at
+        FROM apps
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "App not found", 404);
+
+    const name = String(req.body?.name || before.name || "").trim();
+    const domain = normalizeAppDomain(req.body?.domain ?? before.domain ?? "");
+    const status = normalizeAppStatus(req.body?.status || before.status || "active");
+    const description = String(req.body?.description ?? before.description ?? "").trim();
+
+    const result = await dbQuery(
+      `
+        UPDATE apps
+        SET
+          name = $2,
+          domain = NULLIF($3, ''),
+          status = $4,
+          description = NULLIF($5, ''),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          domain,
+          status,
+          description,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id, name, domain, status, description]
+    );
+
+    await auditAppRegistryAction(req, "app.update", "app", id, result.rows[0], before);
+
+    return ok(res, {
+      app: result.rows[0],
+      message: "App updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update app", 500, error.message);
+  }
+});
+
+router.post("/apps/:id/status-safe", async (req, res) => {
+  try {
+    const id = normalizeAppId(req.params.id);
+    const status = normalizeAppStatus(req.body?.status || "active");
+
+    const result = await dbQuery(
+      `
+        UPDATE apps
+        SET status = $2, updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          domain,
+          status,
+          description,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "App not found", 404);
+
+    await auditAppRegistryAction(req, "app.status_update", "app", id, { status });
+
+    return ok(res, {
+      app: result.rows[0],
+      message: "App status updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update app status", 500, error.message);
+  }
+});
+
+router.post("/apps/:id/memberships/create-safe", async (req, res) => {
+  try {
+    const appId = normalizeAppId(req.params.id);
+    const userId = String(req.body?.userId || "").trim();
+    const role = normalizeAuthRole ? normalizeAuthRole(req.body?.role || "member") : String(req.body?.role || "member").trim().toLowerCase();
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!userId) return fail(res, "User id is required", 400);
+    if (!["active", "pending", "disabled", "revoked"].includes(status)) return fail(res, "Invalid membership status", 400);
+
+    const existingResult = await dbQuery(
+      `
+        SELECT id
+        FROM app_memberships
+        WHERE user_id = $1::uuid
+          AND app_id = $2
+        LIMIT 1
+      `,
+      [userId, appId]
+    );
+
+    let result;
+
+    if (existingResult.rows[0]) {
+      result = await dbQuery(
+        `
+          UPDATE app_memberships
+          SET role = $2, status = $3, updated_at = NOW()
+          WHERE id = $1::uuid
+          RETURNING
+            id::text,
+            user_id::text AS "userId",
+            app_id AS "appId",
+            role,
+            status,
+            created_at AS "createdAt",
+            updated_at AS "updatedAt"
+        `,
+        [existingResult.rows[0].id, role, status]
+      );
+    } else {
+      result = await dbQuery(
+        `
+          INSERT INTO app_memberships (
+            user_id,
+            app_id,
+            role,
+            status
+          )
+          VALUES ($1::uuid, $2, $3, $4)
+          RETURNING
+            id::text,
+            user_id::text AS "userId",
+            app_id AS "appId",
+            role,
+            status,
+            created_at AS "createdAt",
+            updated_at AS "updatedAt"
+        `,
+        [userId, appId, role, status]
+      );
+    }
+
+    await auditAppRegistryAction(req, "app.membership.save", "app_membership", `${userId}:${appId}`, {
+      userId,
+      appId,
+      role,
+      status,
+    });
+
+    return ok(res, {
+      membership: result.rows[0],
+      message: "App membership saved.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to save app membership", 500, error.message);
+  }
+});
+
 router.get("/users-page-data", async (req, res) => {
   try {
     const usersResult = await dbQuery(`

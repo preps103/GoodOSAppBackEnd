@@ -1380,30 +1380,357 @@ function usersView() {
 }
 
 
+
+window.loadLiveApps = async function loadLiveApps() {
+  try {
+    const response = await fetch("/api/admin/apps-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "App Registry refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.apps = Array.isArray(data.apps) ? data.apps : [];
+    state.memberships = Array.isArray(data.memberships) ? data.memberships : [];
+    state.appRegistryApiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : [];
+    state.appRegistryAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
+    state.appRegistryCounts = data.counts || {};
+    state.appsLiveLoaded = true;
+    state.appsLiveLoading = false;
+    state.appsLiveError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.appsLiveLoaded = true;
+    state.appsLiveLoading = false;
+    state.appsLiveError = error.message || "Failed to load App Registry.";
+    console.error("App Registry refresh failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshAppsNow = async function refreshAppsNow() {
+  state.appsLiveLoaded = false;
+  state.appsLiveLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadLiveApps();
+};
+
+window.createAppRegistryApp = async function createAppRegistryApp() {
+  const name = prompt("App name:", "GoodNewApp");
+  if (!name) return;
+
+  const id = prompt("App id:", name.toLowerCase().replace(/[^a-z0-9_-]/g, "-")) || "";
+  const domain = prompt("Domain:", id ? id + ".goodos.app" : "") || "";
+  const status = prompt("Status: active, planned, disabled, archived", "active") || "active";
+  const description = prompt("Description:", "GoodOS registered app.") || "";
+
+  try {
+    const response = await fetch("/api/admin/apps/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id, name, domain, status, description })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "App creation failed with status " + response.status);
+    }
+
+    alert("App created.");
+    await window.loadLiveApps();
+  } catch (error) {
+    alert("App creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.editAppRegistryApp = async function editAppRegistryApp(id) {
+  const app = (state.apps || []).find(item => item.id === id) || {};
+  const name = prompt("App name:", app.name || "");
+  if (!name) return;
+
+  const domain = prompt("Domain:", app.domain || "") || "";
+  const status = prompt("Status: active, planned, disabled, archived", app.status || "active") || "active";
+  const description = prompt("Description:", app.description || "") || "";
+
+  try {
+    const response = await fetch("/api/admin/apps/" + encodeURIComponent(id) + "/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, domain, status, description })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "App update failed with status " + response.status);
+    }
+
+    alert("App updated.");
+    await window.loadLiveApps();
+  } catch (error) {
+    alert("App update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.updateAppRegistryStatus = async function updateAppRegistryStatus(id, currentStatus) {
+  const status = prompt("Status: active, planned, disabled, archived", currentStatus || "active");
+  if (!status) return;
+
+  try {
+    const response = await fetch("/api/admin/apps/" + encodeURIComponent(id) + "/status-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "App status update failed with status " + response.status);
+    }
+
+    alert("App status updated.");
+    await window.loadLiveApps();
+  } catch (error) {
+    alert("App status update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewAppRegistryDetail = async function viewAppRegistryDetail(id) {
+  try {
+    const response = await fetch("/api/admin/apps/" + encodeURIComponent(id) + "/detail-safe?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "App detail failed with status " + response.status);
+    }
+
+    alert("App Detail:\\n\\n" + prettyJsonForAlert(payload.data || payload));
+  } catch (error) {
+    alert("App detail failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.addAppRegistryMembership = async function addAppRegistryMembership(appId) {
+  const userId = prompt("User ID to grant app access:");
+  if (!userId) return;
+
+  const role = prompt("Role: owner, admin, manager, developer, member, viewer", "member") || "member";
+  const status = prompt("Status: active, pending, disabled, revoked", "active") || "active";
+
+  try {
+    const response = await fetch("/api/admin/apps/" + encodeURIComponent(appId) + "/memberships/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ userId, role, status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Membership save failed with status " + response.status);
+    }
+
+    alert("App membership saved.");
+    await window.loadLiveApps();
+  } catch (error) {
+    alert("Membership save failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewAppRegistryAuditDetail = function viewAppRegistryAuditDetail(id) {
+  const audit = (state.appRegistryAuditLogs || []).find(item => item.id === id) || {};
+  alert("App Registry Audit Detail:\\n\\n" + prettyJsonForAlert(audit));
+};
+
+
 function appsView() {
+  if (!state.appsLiveLoaded && !state.appsLiveLoading) {
+    state.appsLiveLoading = true;
+    setTimeout(() => window.loadLiveApps(), 100);
+  }
+
+  const apps = Array.isArray(state.apps) ? state.apps : [];
+  const memberships = Array.isArray(state.memberships) ? state.memberships : [];
+  const apiKeys = Array.isArray(state.appRegistryApiKeys) ? state.appRegistryApiKeys : [];
+  const auditLogs = Array.isArray(state.appRegistryAuditLogs) ? state.appRegistryAuditLogs : [];
+  const counts = state.appRegistryCounts || {};
+
   return `
-    ${hero("App Registry", "Registered apps and access memberships loaded from GoodAppBackEnd.")}
-    <div class="grid two">
-      <div class="card"><div class="section-head"><h3>Apps</h3><span class="badge">Live</span></div>${appsTable()}</div>
+    ${hero("App Registry", "Manage GoodOS apps, domains, status, app memberships, API key restrictions, and app audit history.")}
+    <div class="section-head">
+      <h3>App Control Center</h3>
+      <div>
+        <button class="logout" onclick="window.refreshAppsNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createAppRegistryApp()">Create App</button>
+      </div>
+    </div>
+
+    ${state.appsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading App Registry...</p></div>` : ""}
+    ${state.appsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">App Registry load error: ${safeText(state.appsLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Apps", counts.apps ?? apps.length, "Registered GoodOS apps")}
+      ${card("Active Apps", counts.activeApps ?? apps.filter(app => app.status === "active").length, "Live apps")}
+      ${card("Memberships", counts.activeMemberships ?? memberships.filter(item => item.status === "active").length, "Active app access")}
+      ${card("Restricted Keys", counts.appRestrictedKeys ?? apiKeys.filter(key => Array.isArray(key.allowedAppIds) && !key.allowedAppIds.includes("*")).length, "App scoped API keys")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Registered Apps</h3><span class="badge">${safeText(String(apps.length))} Apps</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>App</th>
+            <th>Domain</th>
+            <th>Status</th>
+            <th>Memberships</th>
+            <th>Updated</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${apps.map(app => `
+            <tr>
+              <td><strong>${safeText(app.name || app.id)}</strong><div class="muted">${safeText(app.id || "")}</div><div class="muted">${safeText(app.description || "")}</div></td>
+              <td>${safeText(app.domain || "-")}</td>
+              <td><span class="badge">${safeText(app.status || "-")}</span></td>
+              <td>${safeText(String(app.activeMemberships ?? 0))} active / ${safeText(String(app.totalMemberships ?? 0))} total</td>
+              <td>${app.updatedAt ? new Date(app.updatedAt).toLocaleString() : "-"}</td>
+              <td>
+                <button class="logout" onclick="window.viewAppRegistryDetail('${safeText(app.id)}')">Details</button>
+                <button class="logout" onclick="window.editAppRegistryApp('${safeText(app.id)}')">Edit</button>
+                <button class="logout" onclick="window.updateAppRegistryStatus('${safeText(app.id)}','${safeText(app.status || "active")}')">Status</button>
+                <button class="logout" onclick="window.addAppRegistryMembership('${safeText(app.id)}')">Add User</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No apps found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
       <div class="card">
-        <div class="section-head"><h3>Memberships</h3><span class="badge">Live</span></div>
+        <div class="section-head"><h3>App Memberships</h3><span class="badge">${safeText(String(memberships.length))} Grants</span></div>
         <table>
-          <thead><tr><th>User</th><th>App</th><th>Role</th><th>Status</th></tr></thead>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>App</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
           <tbody>
-            ${state.memberships.map(item => `
+            ${memberships.map(item => `
               <tr>
-                <td>${safeText(item.email)}</td>
-                <td>${safeText(item.appName)}</td>
-                <td>${safeText(item.role)}</td>
-                <td><span class="badge">${safeText(item.status)}</span></td>
+                <td><strong>${safeText(item.displayName || item.email || "-")}</strong><div class="muted">${safeText(item.email || "")}</div></td>
+                <td>${safeText(item.appName || item.appId || "-")}<div class="muted">${safeText(item.appDomain || "")}</div></td>
+                <td><span class="badge">${safeText(item.role || "-")}</span></td>
+                <td><span class="badge">${safeText(item.status || "-")}</span></td>
               </tr>
-            `).join("")}
+            `).join("") || '<tr><td colspan="4" class="muted">No memberships found.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>API Key App Restrictions</h3><span class="badge">${safeText(String(apiKeys.length))} Keys</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Allowed Apps</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${apiKeys.map(key => `
+              <tr>
+                <td><strong>${safeText(key.name || "-")}</strong><div class="muted">${safeText(key.keyPrefix || "")}</div></td>
+                <td>${safeText(Array.isArray(key.allowedAppIds) ? key.allowedAppIds.join(", ") : "-")}</td>
+                <td><span class="badge">${safeText(key.status || "-")}</span></td>
+              </tr>
+            `).join("") || '<tr><td colspan="3" class="muted">No API key records found.</td></tr>'}
           </tbody>
         </table>
       </div>
     </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>App Registry Audit</h3><span class="badge">Last 100</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Actor</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>IP</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${auditLogs.map(audit => `
+            <tr>
+              <td>${audit.createdAt ? new Date(audit.createdAt).toLocaleString() : "-"}</td>
+              <td>${safeText(audit.actor || "-")}</td>
+              <td><span class="badge">${safeText(audit.action || "-")}</span></td>
+              <td>${safeText(audit.targetType || "-")} ${safeText(audit.targetId || "")}</td>
+              <td>${safeText(audit.ipAddress || "-")}</td>
+              <td><button class="logout" onclick="window.viewAppRegistryAuditDetail('${safeText(audit.id)}')">Details</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No app audit entries yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
   `;
 }
+
 
 
 window.loadLiveDatabase = async function loadLiveDatabase() {
