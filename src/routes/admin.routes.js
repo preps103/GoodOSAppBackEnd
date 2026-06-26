@@ -2376,6 +2376,360 @@ router.get("/dashboard-page-data", async (req, res) => {
 });
 
 
+
+function buildModuleReadiness(counts = {}) {
+  const checks = [
+    { module: "Auth / Users", key: "users", value: Number(counts.users || 0), required: 1, status: Number(counts.users || 0) >= 1 ? "ready" : "missing", detail: "Owner account and user records" },
+    { module: "App Registry", key: "apps", value: Number(counts.apps || 0), required: 10, status: Number(counts.apps || 0) >= 10 ? "ready" : "partial", detail: "Registered GoodOS apps" },
+    { module: "App Memberships", key: "memberships", value: Number(counts.memberships || 0), required: Number(counts.apps || 0), status: Number(counts.memberships || 0) >= Number(counts.apps || 0) ? "ready" : "partial", detail: "App access grants" },
+    { module: "API Keys", key: "apiKeys", value: Number(counts.apiKeys || 0), required: 1, status: Number(counts.apiKeys || 0) >= 1 ? "ready" : "missing", detail: "Scoped public API keys" },
+    { module: "Storage / Files", key: "buckets", value: Number(counts.buckets || 0), required: 1, status: Number(counts.buckets || 0) >= 1 ? "ready" : "missing", detail: "Storage buckets configured" },
+    { module: "Storage Files", key: "files", value: Number(counts.files || 0), required: 1, status: Number(counts.files || 0) >= 1 ? "ready" : "partial", detail: "File tracking records" },
+    { module: "Webhooks", key: "webhooks", value: Number(counts.webhooks || 0), required: 1, status: Number(counts.webhooks || 0) >= 1 ? "ready" : "missing", detail: "Webhook endpoints" },
+    { module: "Webhook Deliveries", key: "webhookDeliveries", value: Number(counts.webhookDeliveries || 0), required: 1, status: Number(counts.webhookDeliveries || 0) >= 1 ? "ready" : "partial", detail: "Delivery logs" },
+    { module: "Realtime Events", key: "realtimeEvents", value: Number(counts.realtimeEvents || 0), required: 1, status: Number(counts.realtimeEvents || 0) >= 1 ? "ready" : "partial", detail: "Realtime stream records" },
+    { module: "Edge Functions", key: "edgeFunctions", value: Number(counts.edgeFunctions || 0), required: 1, status: Number(counts.edgeFunctions || 0) >= 1 ? "ready" : "missing", detail: "Function registry" },
+    { module: "Function Runs", key: "functionRuns", value: Number(counts.functionRuns || 0), required: 1, status: Number(counts.functionRuns || 0) >= 1 ? "ready" : "partial", detail: "Execution logs" },
+    { module: "Backups", key: "backups", value: Number(counts.backups || 0), required: 1, status: Number(counts.backups || 0) >= 1 ? "ready" : "partial", detail: "Database backups" },
+    { module: "Settings", key: "settings", value: Number(counts.settings || 0), required: 40, status: Number(counts.settings || 0) >= 40 ? "ready" : "partial", detail: "Platform settings" },
+    { module: "Audit Trail", key: "auditLogs", value: Number(counts.auditLogs || 0), required: 1, status: Number(counts.auditLogs || 0) >= 1 ? "ready" : "partial", detail: "Admin audit records" },
+    { module: "System Logs", key: "systemLogs", value: Number(counts.systemLogs || 0), required: 1, status: Number(counts.systemLogs || 0) >= 1 ? "ready" : "partial", detail: "Operational logs" },
+  ];
+
+  const ready = checks.filter((item) => item.status === "ready").length;
+  const partial = checks.filter((item) => item.status === "partial").length;
+  const missing = checks.filter((item) => item.status === "missing").length;
+
+  return {
+    checks,
+    score: {
+      ready,
+      partial,
+      missing,
+      total: checks.length,
+      percent: Math.round((ready / checks.length) * 100),
+    },
+  };
+}
+
+async function activityCenterCounts() {
+  const result = await dbQuery(`
+    SELECT
+      (SELECT COUNT(*)::int FROM users) AS users,
+      (SELECT COUNT(*)::int FROM users WHERE status = 'active') AS "activeUsers",
+      (SELECT COUNT(*)::int FROM apps) AS apps,
+      (SELECT COUNT(*)::int FROM apps WHERE status = 'active') AS "activeApps",
+      (SELECT COUNT(*)::int FROM app_memberships) AS memberships,
+      (SELECT COUNT(*)::int FROM app_memberships WHERE status = 'active') AS "activeMemberships",
+      (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NULL AND expires_at > NOW()) AS sessions,
+      (SELECT COUNT(*)::int FROM backend_api_keys) AS "apiKeys",
+      (SELECT COUNT(*)::int FROM backend_api_keys WHERE status = 'active') AS "activeApiKeys",
+      (SELECT COUNT(*)::int FROM backend_storage_buckets) AS buckets,
+      (SELECT COUNT(*)::int FROM backend_storage_files) AS files,
+      (SELECT COUNT(*)::int FROM backend_webhooks) AS webhooks,
+      (SELECT COUNT(*)::int FROM backend_webhooks WHERE status = 'active') AS "activeWebhooks",
+      (SELECT COUNT(*)::int FROM backend_webhook_deliveries) AS "webhookDeliveries",
+      (SELECT COUNT(*)::int FROM backend_realtime_events) AS "realtimeEvents",
+      (SELECT COUNT(*)::int FROM backend_edge_functions) AS "edgeFunctions",
+      (SELECT COUNT(*)::int FROM backend_edge_function_runs) AS "functionRuns",
+      (SELECT COUNT(*)::int FROM backend_database_backups) AS backups,
+      (SELECT COUNT(*)::int FROM backend_platform_settings) AS settings,
+      (SELECT COUNT(*)::int FROM backend_admin_audit_logs) AS "auditLogs",
+      (SELECT COUNT(*)::int FROM backend_system_logs) AS "systemLogs",
+      (SELECT COUNT(*)::int FROM backend_events) AS events
+  `);
+
+  return result.rows[0] || {};
+}
+
+router.get("/activity-center-page-data", async (req, res) => {
+  try {
+    const counts = await activityCenterCounts();
+    const readiness = buildModuleReadiness(counts);
+
+    const eventsResult = await dbQuery(`
+      SELECT
+        id,
+        event_type AS "eventType",
+        source,
+        message,
+        payload,
+        created_at AS "createdAt"
+      FROM backend_events
+      ORDER BY created_at DESC
+      LIMIT 80
+    `);
+
+    const auditResult = await dbQuery(`
+      SELECT
+        id,
+        actor,
+        action,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        after_json AS "afterJson",
+        ip_address AS "ipAddress",
+        created_at AS "createdAt"
+      FROM backend_admin_audit_logs
+      ORDER BY created_at DESC
+      LIMIT 80
+    `);
+
+    const logsResult = await dbQuery(`
+      SELECT
+        id,
+        source,
+        level,
+        message,
+        context,
+        created_at AS "createdAt"
+      FROM backend_system_logs
+      ORDER BY created_at DESC
+      LIMIT 80
+    `);
+
+    const recentAppsResult = await dbQuery(`
+      SELECT id, name, domain, status, updated_at AS "updatedAt"
+      FROM apps
+      ORDER BY updated_at DESC NULLS LAST, created_at DESC
+      LIMIT 20
+    `);
+
+    const runtimeMemory = process.memoryUsage();
+
+    return ok(res, {
+      counts,
+      readiness,
+      events: eventsResult.rows,
+      auditLogs: auditResult.rows,
+      logs: logsResult.rows,
+      recentApps: recentAppsResult.rows,
+      runtime: {
+        environment: process.env.NODE_ENV || "production",
+        version: process.env.APP_VERSION || "1.0.0",
+        node: process.version,
+        uptimeSeconds: Math.floor(process.uptime()),
+        uptimeFormatted: `${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m`,
+        memoryMb: {
+          heapUsed: Math.round(runtimeMemory.heapUsed / 1024 / 1024),
+          heapTotal: Math.round(runtimeMemory.heapTotal / 1024 / 1024),
+          rss: Math.round(runtimeMemory.rss / 1024 / 1024),
+        },
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load activity center", 500, error.message);
+  }
+});
+
+router.get("/global-search-safe", async (req, res) => {
+  try {
+    const q = String(req.query?.q || "").trim();
+    const limit = Math.min(Math.max(Number(req.query?.limit || 10), 3), 25);
+
+    if (!q || q.length < 2) {
+      return ok(res, {
+        query: q,
+        results: [],
+        counts: { total: 0 },
+      });
+    }
+
+    const term = `%${q}%`;
+    const results = [];
+
+    const apps = await dbQuery(
+      `
+        SELECT id, name, domain, status, description
+        FROM apps
+        WHERE id ILIKE $1 OR name ILIKE $1 OR domain ILIKE $1 OR description ILIKE $1
+        ORDER BY name ASC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...apps.rows.map((row) => ({
+      type: "App",
+      title: row.name || row.id,
+      subtitle: row.domain || row.status || "",
+      detail: row.description || "",
+      id: row.id,
+      view: "apps",
+    })));
+
+    const users = await dbQuery(
+      `
+        SELECT id::text, email, display_name, platform_role, status
+        FROM users
+        WHERE email ILIKE $1 OR display_name ILIKE $1 OR platform_role ILIKE $1 OR status ILIKE $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...users.rows.map((row) => ({
+      type: "User",
+      title: row.display_name || row.email,
+      subtitle: row.email || row.platform_role || "",
+      detail: `${row.platform_role || ""} ${row.status || ""}`.trim(),
+      id: row.id,
+      view: "users",
+    })));
+
+    const apiKeys = await dbQuery(
+      `
+        SELECT id, name, key_prefix, status, scopes, allowed_app_ids
+        FROM backend_api_keys
+        WHERE name ILIKE $1 OR key_prefix ILIKE $1 OR id ILIKE $1 OR $3 = ANY(scopes) OR $3 = ANY(allowed_app_ids)
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit, q]
+    );
+
+    results.push(...apiKeys.rows.map((row) => ({
+      type: "API Key",
+      title: row.name || row.id,
+      subtitle: row.key_prefix || "",
+      detail: `${row.status || ""} ${(row.scopes || []).join(", ")}`.trim(),
+      id: row.id,
+      view: "keys",
+    })));
+
+    const storage = await dbQuery(
+      `
+        SELECT id, original_name, display_name, bucket_name, folder_path, status
+        FROM backend_storage_files
+        WHERE id ILIKE $1 OR original_name ILIKE $1 OR display_name ILIKE $1 OR bucket_name ILIKE $1 OR folder_path ILIKE $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...storage.rows.map((row) => ({
+      type: "Storage File",
+      title: row.display_name || row.original_name || row.id,
+      subtitle: row.bucket_name || "",
+      detail: `${row.folder_path || ""} ${row.status || ""}`.trim(),
+      id: row.id,
+      view: "storage",
+    })));
+
+    const webhooks = await dbQuery(
+      `
+        SELECT id, name, url, status, events
+        FROM backend_webhooks
+        WHERE id ILIKE $1 OR name ILIKE $1 OR url ILIKE $1 OR $3 = ANY(events)
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit, q]
+    );
+
+    results.push(...webhooks.rows.map((row) => ({
+      type: "Webhook",
+      title: row.name || row.id,
+      subtitle: row.url || "",
+      detail: `${row.status || ""} ${(row.events || []).join(", ")}`.trim(),
+      id: row.id,
+      view: "webhooks",
+    })));
+
+    const functions = await dbQuery(
+      `
+        SELECT id, name, route_path, status, description
+        FROM backend_edge_functions
+        WHERE id ILIKE $1 OR name ILIKE $1 OR route_path ILIKE $1 OR description ILIKE $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...functions.rows.map((row) => ({
+      type: "Edge Function",
+      title: row.name || row.id,
+      subtitle: row.route_path || "",
+      detail: `${row.status || ""} ${row.description || ""}`.trim(),
+      id: row.id,
+      view: "functions",
+    })));
+
+    const settings = await dbQuery(
+      `
+        SELECT id, category, setting_key, label, status
+        FROM backend_platform_settings
+        WHERE category ILIKE $1 OR setting_key ILIKE $1 OR label ILIKE $1
+        ORDER BY category ASC, setting_key ASC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...settings.rows.map((row) => ({
+      type: "Setting",
+      title: row.label || row.setting_key,
+      subtitle: row.category || "",
+      detail: `${row.setting_key || ""} ${row.status || ""}`.trim(),
+      id: row.id,
+      view: "settings",
+    })));
+
+    const logs = await dbQuery(
+      `
+        SELECT id, source, level, message, created_at
+        FROM backend_system_logs
+        WHERE source ILIKE $1 OR level ILIKE $1 OR message ILIKE $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...logs.rows.map((row) => ({
+      type: "Log",
+      title: row.message || row.id,
+      subtitle: `${row.level || ""} ${row.source || ""}`.trim(),
+      detail: row.created_at,
+      id: row.id,
+      view: "logs",
+    })));
+
+    const audit = await dbQuery(
+      `
+        SELECT id, actor, action, target_type, target_id, created_at
+        FROM backend_admin_audit_logs
+        WHERE actor ILIKE $1 OR action ILIKE $1 OR target_type ILIKE $1 OR target_id ILIKE $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      `,
+      [term, limit]
+    );
+
+    results.push(...audit.rows.map((row) => ({
+      type: "Audit",
+      title: row.action || row.id,
+      subtitle: `${row.target_type || ""} ${row.target_id || ""}`.trim(),
+      detail: `${row.actor || ""} ${row.created_at || ""}`.trim(),
+      id: row.id,
+      view: "dashboard",
+    })));
+
+    return ok(res, {
+      query: q,
+      results: results.slice(0, 80),
+      counts: {
+        total: results.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Global search failed", 500, error.message);
+  }
+});
+
 router.get("/dashboard-real-page-data", async (req, res) => {
   try {
     const countsResult = await dbQuery(`

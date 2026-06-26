@@ -710,121 +710,231 @@ function appsTable() {
   `;
 }
 
+
+window.loadActivityCenter = async function loadActivityCenter() {
+  try {
+    const response = await fetch("/api/admin/activity-center-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Activity Center failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.activityCenter = data || {};
+    state.activityEvents = Array.isArray(data.events) ? data.events : [];
+    state.activityAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
+    state.activityLogs = Array.isArray(data.logs) ? data.logs : [];
+    state.activityReadiness = data.readiness || {};
+    state.activityRuntime = data.runtime || {};
+    state.activityCounts = data.counts || {};
+    state.activityLoaded = true;
+    state.activityLoading = false;
+    state.activityError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.activityLoaded = true;
+    state.activityLoading = false;
+    state.activityError = error.message || "Failed to load Activity Center.";
+    console.error("Activity Center load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshActivityCenterNow = async function refreshActivityCenterNow() {
+  state.activityLoaded = false;
+  state.activityLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadActivityCenter();
+};
+
+window.runGlobalSearch = async function runGlobalSearch(query) {
+  const q = String(query ?? state.globalSearchQuery ?? "").trim();
+  state.globalSearchQuery = q;
+
+  if (!q || q.length < 2) {
+    state.globalSearchResults = [];
+    state.globalSearchLoaded = true;
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/admin/global-search-safe?q=" + encodeURIComponent(q) + "&limit=12&t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Search failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.globalSearchResults = Array.isArray(data.results) ? data.results : [];
+    state.globalSearchLoaded = true;
+    state.globalSearchError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.globalSearchError = error.message || "Search failed.";
+    console.error("Global search failed:", error);
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.goToSearchResult = function goToSearchResult(view) {
+  if (view) {
+    state.view = view;
+    document.querySelectorAll("[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === view));
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.viewActivityDetail = function viewActivityDetail(kind, id) {
+  let source = [];
+
+  if (kind === "event") source = state.activityEvents || [];
+  else if (kind === "audit") source = state.activityAuditLogs || [];
+  else if (kind === "log") source = state.activityLogs || [];
+
+  const item = source.find(entry => entry.id === id) || {};
+  alert("Activity Detail:\\n\\n" + prettyJsonForAlert(item));
+};
+
+
 function dashboard() {
+  if (!state.activityLoaded && !state.activityLoading) {
+    state.activityLoading = true;
+    setTimeout(() => window.loadActivityCenter(), 100);
+  }
+
   const stats = state.overview?.stats || {};
-  const apiKeys = Array.isArray(state.apiKeys) ? state.apiKeys : [];
-  const buckets = Array.isArray(state.buckets) ? state.buckets : (Array.isArray(state.storageBuckets) ? state.storageBuckets : []);
-  const files = Array.isArray(state.storageFiles) ? state.storageFiles : [];
-  const webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
-  const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
+  const counts = state.activityCounts || {};
+  const readiness = state.activityReadiness || {};
+  const readinessScore = readiness.score || {};
+  const readinessChecks = Array.isArray(readiness.checks) ? readiness.checks : [];
+  const activityEvents = Array.isArray(state.activityEvents) ? state.activityEvents : [];
+  const activityAuditLogs = Array.isArray(state.activityAuditLogs) ? state.activityAuditLogs : [];
+  const activityLogs = Array.isArray(state.activityLogs) ? state.activityLogs : [];
+  const runtime = state.activityRuntime || state.overview?.runtime || {};
+  const searchResults = Array.isArray(state.globalSearchResults) ? state.globalSearchResults : [];
 
   return `
-    ${hero("Backend Console", "GoodAppBackEnd live production backend data: auth, apps, storage, API keys, webhooks, logs, realtime, and security controls.", state.overview?.status || "operational")}
+    ${hero("Backend Console", "GoodAppBackEnd command center for live production modules, activity, readiness, logs, audit trail, and global search.", state.overview?.status || "operational")}
+    <div class="section-head">
+      <h3>Activity Center</h3>
+      <div>
+        <button class="logout" onclick="window.refreshActivityCenterNow()">Refresh Activity</button>
+      </div>
+    </div>
+
+    ${state.activityLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Activity Center...</p></div>` : ""}
+    ${state.activityError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Activity Center error: ${safeText(state.activityError)}</p></div>` : ""}
 
     <div class="grid cards">
-      ${card("Users", stats.users ?? state.users.length, "GoodOS accounts")}
-      ${card("Apps", stats.activeApps ?? state.apps.length, "Active registered apps")}
-      ${card("Memberships", stats.activeMemberships ?? state.memberships.length, "Active app access grants")}
-      ${card("Sessions", stats.sessions ?? 0, "Active session table")}
+      ${card("Users", counts.activeUsers ?? stats.users ?? state.users.length, "Active GoodOS users")}
+      ${card("Apps", counts.activeApps ?? stats.activeApps ?? state.apps.length, "Active registered apps")}
+      ${card("Memberships", counts.activeMemberships ?? stats.activeMemberships ?? state.memberships.length, "Active access grants")}
+      ${card("Readiness", `${safeText(String(readinessScore.percent || 0))}%`, "Platform completion")}
     </div>
 
     <div class="grid cards" style="margin-top:18px;">
-      ${card("Storage Buckets", buckets.length || stats.buckets || 0, "Real bucket records")}
-      ${card("Storage Files", files.length || stats.files || 0, "Real uploaded files")}
-      ${card("API Keys", apiKeys.length || stats.apiKeys || 0, "Real API key records")}
-      ${card("Webhooks", webhooks.length || stats.webhooks || 0, "Real webhook endpoints")}
-    </div>
-
-    <div class="grid two" style="margin-top:18px;">
-      <div class="card">
-        <div class="section-head"><h3>Registered Apps</h3><span class="badge">Live Registry</span></div>
-        ${appsTable()}
-      </div>
-
-      <div class="card">
-        <div class="section-head"><h3>Runtime</h3><span class="badge">Healthy</span></div>
-        <table>
-          <tr><td>Environment</td><td>${safeText(state.overview?.environment || "production")}</td></tr>
-          <tr><td>Version</td><td>${safeText(state.overview?.version || "1.0.0")}</td></tr>
-          <tr><td>Node</td><td>${safeText(state.overview?.runtime?.node || "-")}</td></tr>
-          <tr><td>Uptime</td><td>${safeText(state.overview?.runtime?.uptimeFormatted || state.overview?.runtime?.uptimeSeconds || "-")}</td></tr>
-          <tr><td>Memory</td><td>${safeText(state.overview?.runtime?.memoryMb?.heapUsed || "-")} MB heap</td></tr>
-          <tr><td>Database</td><td><span class="badge">Connected</span></td></tr>
-        </table>
-      </div>
+      ${card("API Keys", counts.activeApiKeys ?? stats.apiKeys ?? 0, "Active scoped keys")}
+      ${card("Webhooks", counts.activeWebhooks ?? stats.webhooks ?? 0, "Active endpoints")}
+      ${card("Realtime", counts.realtimeEvents ?? 0, "Realtime events")}
+      ${card("Function Runs", counts.functionRuns ?? 0, "Edge executions")}
     </div>
 
     <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Actual API Keys</h3><span class="badge">Live Data</span></div>
+      <div class="section-head"><h3>Global Search</h3><span class="badge">Apps • Users • Keys • Files • Hooks • Logs</span></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <input
+          value="${safeText(state.globalSearchQuery || "")}"
+          oninput="state.globalSearchQuery=this.value"
+          placeholder="Search apps, users, API keys, files, webhooks, settings, logs..."
+          style="flex:1; min-width:260px; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff;"
+        />
+        <button class="logout" onclick="window.runGlobalSearch(state.globalSearchQuery)">Search</button>
+      </div>
       <table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Prefix</th>
             <th>Type</th>
-            <th>Scopes</th>
-            <th>Apps</th>
-            <th>Status</th>
+            <th>Result</th>
+            <th>Detail</th>
+            <th>Go</th>
           </tr>
         </thead>
         <tbody>
-          ${apiKeys.slice(0, 8).map(key => `
+          ${searchResults.map(result => `
             <tr>
-              <td><strong>${safeText(key.name || "-")}</strong><div class="muted">${safeText(key.id || "")}</div></td>
-              <td>${safeText(key.keyPrefix || key.key_prefix || "-")}</td>
-              <td>${safeText(key.type || "-")}</td>
-              <td>${safeText((key.scopes || []).join(", ") || "-")}</td>
-              <td>${safeText((key.allowedAppIds || key.allowed_app_ids || []).join(", ") || "-")}</td>
-              <td><span class="badge">${safeText(key.status || "-")}</span></td>
+              <td><span class="badge">${safeText(result.type || "-")}</span></td>
+              <td><strong>${safeText(result.title || "-").slice(0, 120)}</strong><div class="muted">${safeText(result.subtitle || "")}</div></td>
+              <td>${safeText(result.detail || "").slice(0, 180)}</td>
+              <td><button class="logout" onclick="window.goToSearchResult('${safeText(result.view || "dashboard")}')">Open</button></td>
             </tr>
-          `).join("") || '<tr><td colspan="6" class="muted">No API key records loaded.</td></tr>'}
+          `).join("") || '<tr><td colspan="4" class="muted">Type two or more characters and click Search.</td></tr>'}
         </tbody>
       </table>
     </div>
 
     <div class="grid two" style="margin-top:18px;">
       <div class="card">
-        <div class="section-head"><h3>Actual Storage Buckets</h3><span class="badge">Live Data</span></div>
-        <table>
+        <div class="section-head"><h3>Platform Readiness</h3><span class="badge">${safeText(String(readinessScore.percent || 0))}% Ready</span></div>
+        <div class="grid cards">
+          ${card("Ready", readinessScore.ready || 0, "Production-ready")}
+          ${card("Partial", readinessScore.partial || 0, "Needs polish")}
+        </div>
+        <table style="margin-top:14px;">
           <thead>
             <tr>
-              <th>Bucket</th>
-              <th>Visibility</th>
+              <th>Module</th>
               <th>Status</th>
-              <th>Created</th>
+              <th>Value</th>
             </tr>
           </thead>
           <tbody>
-            ${buckets.slice(0, 8).map(bucket => `
+            ${readinessChecks.map(check => `
               <tr>
-                <td><strong>${safeText(bucket.name || "-")}</strong><div class="muted">${safeText(bucket.id || "")}</div></td>
-                <td>${safeText(bucket.visibility || "-")}</td>
-                <td><span class="badge">${safeText(bucket.status || "-")}</span></td>
-                <td>${bucket.created_at ? new Date(bucket.created_at).toLocaleString() : bucket.createdAt ? new Date(bucket.createdAt).toLocaleString() : "-"}</td>
+                <td><strong>${safeText(check.module || "-")}</strong><div class="muted">${safeText(check.detail || "")}</div></td>
+                <td><span class="badge">${safeText(check.status || "-")}</span></td>
+                <td>${safeText(String(check.value ?? 0))} / ${safeText(String(check.required ?? 0))}</td>
               </tr>
-            `).join("") || '<tr><td colspan="4" class="muted">No storage bucket records loaded.</td></tr>'}
+            `).join("") || '<tr><td colspan="3" class="muted">No readiness checks loaded yet.</td></tr>'}
           </tbody>
         </table>
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>Actual Webhooks</h3><span class="badge">Live Data</span></div>
+        <div class="section-head"><h3>Runtime</h3><span class="badge">${safeText(runtime.environment || "production")}</span></div>
         <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Events</th>
-              <th>Status</th>
-            </tr>
-          </thead>
           <tbody>
-            ${webhooks.slice(0, 8).map(webhook => `
-              <tr>
-                <td><strong>${safeText(webhook.name || "-")}</strong><div class="muted">${safeText(webhook.url || "")}</div></td>
-                <td>${safeText((webhook.events || []).join(", ") || "-")}</td>
-                <td><span class="badge">${safeText(webhook.status || "-")}</span></td>
-              </tr>
-            `).join("") || '<tr><td colspan="3" class="muted">No webhook records loaded.</td></tr>'}
+            <tr><td>Environment</td><td>${safeText(runtime.environment || state.overview?.environment || "production")}</td></tr>
+            <tr><td>Version</td><td>${safeText(runtime.version || state.overview?.version || "1.0.0")}</td></tr>
+            <tr><td>Node</td><td>${safeText(runtime.node || "-")}</td></tr>
+            <tr><td>Uptime</td><td>${safeText(runtime.uptimeFormatted || state.overview?.runtime?.uptimeFormatted || "-")}</td></tr>
+            <tr><td>Heap Used</td><td>${safeText(String(runtime.memoryMb?.heapUsed || state.overview?.runtime?.memoryMb?.heapUsed || "-"))} MB</td></tr>
+            <tr><td>RSS</td><td>${safeText(String(runtime.memoryMb?.rss || "-"))} MB</td></tr>
+            <tr><td>Database</td><td><span class="badge">Connected</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -832,63 +942,90 @@ function dashboard() {
 
     <div class="grid two" style="margin-top:18px;">
       <div class="card">
-        <div class="section-head"><h3>Actual Storage Files</h3><span class="badge">Live Data</span></div>
+        <div class="section-head"><h3>Recent Backend Events</h3><span class="badge">${safeText(String(activityEvents.length))} Events</span></div>
         <table>
           <thead>
             <tr>
-              <th>File</th>
-              <th>Bucket</th>
-              <th>Size</th>
+              <th>Event</th>
+              <th>Source</th>
+              <th>Time</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            ${files.slice(0, 8).map(file => `
+            ${activityEvents.slice(0, 20).map(event => `
               <tr>
-                <td><strong>${safeText(file.original_name || file.filename || file.name || "-")}</strong><div class="muted">${safeText(file.id || "")}</div></td>
-                <td>${safeText(file.bucket_id || file.bucketId || "-")}</td>
-                <td>${safeText(String(file.size_bytes || file.sizeBytes || 0))}</td>
+                <td><strong>${safeText(event.eventType || event.event_type || "-")}</strong><div class="muted">${safeText(event.message || "")}</div></td>
+                <td>${safeText(event.source || "-")}</td>
+                <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : "-"}</td>
+                <td><button class="logout" onclick="window.viewActivityDetail('event','${safeText(event.id)}')">Details</button></td>
               </tr>
-            `).join("") || '<tr><td colspan="3" class="muted">No storage file records loaded.</td></tr>'}
+            `).join("") || '<tr><td colspan="4" class="muted">No backend events yet.</td></tr>'}
           </tbody>
         </table>
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>Recent Webhook Deliveries</h3><span class="badge">Live Data</span></div>
+        <div class="section-head"><h3>Recent Audit Trail</h3><span class="badge">${safeText(String(activityAuditLogs.length))} Audit</span></div>
         <table>
           <thead>
             <tr>
-              <th>Webhook</th>
-              <th>Event</th>
-              <th>Status</th>
-              <th>Response</th>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Time</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            ${deliveries.slice(0, 8).map(delivery => `
+            ${activityAuditLogs.slice(0, 20).map(audit => `
               <tr>
-                <td>${safeText(delivery.webhookName || delivery.webhookId || "-")}</td>
-                <td>${safeText(delivery.eventType || "-")}</td>
-                <td><span class="badge">${safeText(delivery.status || "-")}</span></td>
-                <td>${safeText(String(delivery.responseStatus || "-"))}</td>
+                <td><strong>${safeText(audit.action || "-")}</strong><div class="muted">${safeText(audit.actor || "")}</div></td>
+                <td>${safeText(audit.targetType || "-")} ${safeText(audit.targetId || "")}</td>
+                <td>${audit.createdAt ? new Date(audit.createdAt).toLocaleString() : "-"}</td>
+                <td><button class="logout" onclick="window.viewActivityDetail('audit','${safeText(audit.id)}')">Details</button></td>
               </tr>
-            `).join("") || '<tr><td colspan="4" class="muted">No webhook delivery records loaded.</td></tr>'}
+            `).join("") || '<tr><td colspan="4" class="muted">No audit records yet.</td></tr>'}
           </tbody>
         </table>
       </div>
     </div>
 
-    <div class="grid module-grid" style="margin-top:18px;">
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent System Logs</h3><span class="badge">${safeText(String(activityLogs.length))} Logs</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>Source</th>
+            <th>Message</th>
+            <th>Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${activityLogs.slice(0, 30).map(log => `
+            <tr>
+              <td><span class="badge">${safeText(log.level || "-")}</span></td>
+              <td>${safeText(log.source || "-")}</td>
+              <td>${safeText(log.message || "-").slice(0, 220)}</td>
+              <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : "-"}</td>
+              <td><button class="logout" onclick="window.viewActivityDetail('log','${safeText(log.id)}')">Details</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No system logs yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="module-grid" style="margin-top:18px;">
       ${moduleCard("Auth / Users", "Production SSO, users, sessions, invites, and workspace roles.", "Live")}
       ${moduleCard("App Registry", "Manage GoodOS apps, domains, status, and membership rules.", "Live")}
       ${moduleCard("Database Browser", "Inspect backend tables, row counts, and schema metadata.", "Live")}
-      ${moduleCard("Storage / Files", `${buckets.length || stats.buckets || 0} buckets configured. Signed URLs and upload handling are active.`, (buckets.length || stats.buckets) ? "Live" : "Next")}
-      ${moduleCard("API Keys", `${apiKeys.length || stats.apiKeys || 0} active or historical backend keys.`, (apiKeys.length || stats.apiKeys) ? "Live" : "Next")}
-      ${moduleCard("Webhooks", `${webhooks.length || stats.webhooks || 0} webhook endpoints configured.`, (webhooks.length || stats.webhooks) ? "Live" : "Next")}
+      ${moduleCard("Storage / Files", `${counts.buckets || stats.buckets || 0} buckets configured.`, (counts.buckets || stats.buckets) ? "Live" : "Next")}
+      ${moduleCard("API Keys", `${counts.activeApiKeys || stats.apiKeys || 0} active scoped keys.`, (counts.activeApiKeys || stats.apiKeys) ? "Live" : "Next")}
+      ${moduleCard("Webhooks", `${counts.activeWebhooks || stats.webhooks || 0} active webhook endpoints.`, (counts.activeWebhooks || stats.webhooks) ? "Live" : "Next")}
     </div>
   `;
 }
-
 
 function moduleCard(name, desc, tag) {
   return '<div class="module"><h4>' + safeText(name) + '</h4><p>' + safeText(desc) + '</p><div class="tag">' + safeText(tag) + '</div></div>';
@@ -5980,6 +6117,31 @@ document.addEventListener("click", function goodosStorageNavClickFix(event) {
 
   window.openStorageFilesView();
 }, true);
+
+
+if (!window.__goodosGlobalSearchListenerInstalled) {
+  window.__goodosGlobalSearchListenerInstalled = true;
+  let goodosGlobalSearchTimer = null;
+  setTimeout(() => {
+    const globalSearchInput = document.getElementById("searchInput");
+    if (globalSearchInput) {
+      globalSearchInput.addEventListener("input", (event) => {
+        clearTimeout(goodosGlobalSearchTimer);
+        const value = event.target.value || "";
+        state.globalSearchQuery = value;
+        goodosGlobalSearchTimer = setTimeout(() => {
+          if (value.trim().length >= 2) {
+            if (state.view !== "dashboard") {
+              state.view = "dashboard";
+              document.querySelectorAll("[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === "dashboard"));
+            }
+            window.runGlobalSearch(value);
+          }
+        }, 350);
+      });
+    }
+  }, 500);
+}
 
 </script>
 </body>
