@@ -2412,42 +2412,68 @@ function buildModuleReadiness(counts = {}) {
   };
 }
 
-async function activityCenterCounts() {
-  const result = await dbQuery(`
-    SELECT
-      (SELECT COUNT(*)::int FROM users) AS users,
-      (SELECT COUNT(*)::int FROM users WHERE status = 'active') AS "activeUsers",
-      (SELECT COUNT(*)::int FROM apps) AS apps,
-      (SELECT COUNT(*)::int FROM apps WHERE status = 'active') AS "activeApps",
-      (SELECT COUNT(*)::int FROM app_memberships) AS memberships,
-      (SELECT COUNT(*)::int FROM app_memberships WHERE status = 'active') AS "activeMemberships",
-      (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NULL AND expires_at > NOW()) AS sessions,
-      (SELECT COUNT(*)::int FROM backend_api_keys) AS "apiKeys",
-      (SELECT COUNT(*)::int FROM backend_api_keys WHERE status = 'active') AS "activeApiKeys",
-      (SELECT COUNT(*)::int FROM backend_storage_buckets) AS buckets,
-      (SELECT COUNT(*)::int FROM backend_storage_files) AS files,
-      (SELECT COUNT(*)::int FROM backend_webhooks) AS webhooks,
-      (SELECT COUNT(*)::int FROM backend_webhooks WHERE status = 'active') AS "activeWebhooks",
-      (SELECT COUNT(*)::int FROM backend_webhook_deliveries) AS "webhookDeliveries",
-      (SELECT COUNT(*)::int FROM backend_realtime_events) AS "realtimeEvents",
-      (SELECT COUNT(*)::int FROM backend_edge_functions) AS "edgeFunctions",
-      (SELECT COUNT(*)::int FROM backend_edge_function_runs) AS "functionRuns",
-      (SELECT COUNT(*)::int FROM backend_database_backups) AS backups,
-      (SELECT COUNT(*)::int FROM backend_platform_settings) AS settings,
-      (SELECT COUNT(*)::int FROM backend_admin_audit_logs) AS "auditLogs",
-      (SELECT COUNT(*)::int FROM backend_system_logs) AS "systemLogs",
-      (SELECT COUNT(*)::int FROM backend_events) AS events
-  `);
 
-  return result.rows[0] || {};
+async function safeActivityCount(tableName, whereClause = "") {
+  try {
+    const safeName = String(tableName || "").trim();
+    if (!/^[a-zA-Z0-9_]+$/.test(safeName)) return 0;
+
+    const exists = await dbQuery("SELECT to_regclass($1) AS table_name", [`public.${safeName}`]);
+    if (!exists.rows[0]?.table_name) return 0;
+
+    const whereSql = whereClause ? ` WHERE ${whereClause}` : "";
+    const result = await dbQuery(`SELECT COUNT(*)::int AS count FROM ${safeName}${whereSql}`);
+    return Number(result.rows[0]?.count || 0);
+  } catch (error) {
+    console.warn("[activity-center] safe count failed:", tableName, error.message);
+    return 0;
+  }
 }
+
+async function safeActivityRows(label, sql, params = []) {
+  try {
+    const result = await dbQuery(sql, params);
+    return result.rows || [];
+  } catch (error) {
+    console.warn("[activity-center] safe rows failed:", label, error.message);
+    return [];
+  }
+}
+
+async function activityCenterCounts() {
+  return {
+    users: await safeActivityCount("users"),
+    activeUsers: await safeActivityCount("users", "status = 'active'"),
+    apps: await safeActivityCount("apps"),
+    activeApps: await safeActivityCount("apps", "status = 'active'"),
+    memberships: await safeActivityCount("app_memberships"),
+    activeMemberships: await safeActivityCount("app_memberships", "status = 'active'"),
+    sessions: await safeActivityCount("sessions", "revoked_at IS NULL AND expires_at > NOW()"),
+    apiKeys: await safeActivityCount("backend_api_keys"),
+    activeApiKeys: await safeActivityCount("backend_api_keys", "status = 'active'"),
+    buckets: await safeActivityCount("backend_storage_buckets"),
+    files: await safeActivityCount("backend_storage_files"),
+    webhooks: await safeActivityCount("backend_webhooks"),
+    activeWebhooks: await safeActivityCount("backend_webhooks", "status = 'active'"),
+    webhookDeliveries: await safeActivityCount("backend_webhook_deliveries"),
+    realtimeEvents: await safeActivityCount("backend_realtime_events"),
+    edgeFunctions: await safeActivityCount("backend_edge_functions"),
+    functionRuns: await safeActivityCount("backend_edge_function_runs"),
+    backups: await safeActivityCount("backend_database_backups"),
+    settings: await safeActivityCount("backend_platform_settings"),
+    auditLogs: await safeActivityCount("backend_admin_audit_logs"),
+    systemLogs: await safeActivityCount("backend_system_logs"),
+    events: await safeActivityCount("backend_events"),
+  };
+}
+
 
 router.get("/activity-center-page-data", async (req, res) => {
   try {
     const counts = await activityCenterCounts();
     const readiness = buildModuleReadiness(counts);
 
-    const eventsResult = await dbQuery(`
+    const events = await safeActivityRows("backend_events", `
       SELECT
         id,
         event_type AS "eventType",
@@ -2460,7 +2486,7 @@ router.get("/activity-center-page-data", async (req, res) => {
       LIMIT 80
     `);
 
-    const auditResult = await dbQuery(`
+    const auditLogs = await safeActivityRows("backend_admin_audit_logs", `
       SELECT
         id,
         actor,
@@ -2475,7 +2501,7 @@ router.get("/activity-center-page-data", async (req, res) => {
       LIMIT 80
     `);
 
-    const logsResult = await dbQuery(`
+    const logs = await safeActivityRows("backend_system_logs", `
       SELECT
         id,
         source,
@@ -2488,8 +2514,13 @@ router.get("/activity-center-page-data", async (req, res) => {
       LIMIT 80
     `);
 
-    const recentAppsResult = await dbQuery(`
-      SELECT id, name, domain, status, updated_at AS "updatedAt"
+    const recentApps = await safeActivityRows("apps", `
+      SELECT
+        id,
+        name,
+        domain,
+        status,
+        updated_at AS "updatedAt"
       FROM apps
       ORDER BY updated_at DESC NULLS LAST, created_at DESC
       LIMIT 20
@@ -2500,10 +2531,10 @@ router.get("/activity-center-page-data", async (req, res) => {
     return ok(res, {
       counts,
       readiness,
-      events: eventsResult.rows,
-      auditLogs: auditResult.rows,
-      logs: logsResult.rows,
-      recentApps: recentAppsResult.rows,
+      events,
+      auditLogs,
+      logs,
+      recentApps,
       runtime: {
         environment: process.env.NODE_ENV || "production",
         version: process.env.APP_VERSION || "1.0.0",
@@ -2518,9 +2549,31 @@ router.get("/activity-center-page-data", async (req, res) => {
       },
     });
   } catch (error) {
-    return fail(res, "Failed to load activity center", 500, error.message);
+    console.error("[activity-center] route failed:", error);
+    return ok(res, {
+      counts: {},
+      readiness: buildModuleReadiness({}),
+      events: [],
+      auditLogs: [],
+      logs: [],
+      recentApps: [],
+      runtime: {
+        environment: process.env.NODE_ENV || "production",
+        version: process.env.APP_VERSION || "1.0.0",
+        node: process.version,
+        uptimeSeconds: Math.floor(process.uptime()),
+        uptimeFormatted: `${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m`,
+        memoryMb: {
+          heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+          heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+          rss: Math.round(process.memoryUsage().rss / 1024 / 1024),
+        },
+      },
+      warning: error.message,
+    });
   }
 });
+
 
 router.get("/global-search-safe", async (req, res) => {
   try {
