@@ -257,6 +257,7 @@ async function getOverview() {
       sessions,
       apiKeys,
       webhooks,
+      webhookDeliveries,
       buckets,
       events,
       tables: tables.length,
@@ -972,6 +973,7 @@ router.get("/console-data", async (req, res) => {
       memberships,
       apiKeys,
       webhooks,
+      webhookDeliveries,
       buckets,
       events,
     ] = await Promise.all([
@@ -982,6 +984,7 @@ router.get("/console-data", async (req, res) => {
       getMemberships(),
       getApiKeys(),
       getWebhooks(),
+      getWebhookDeliveries(),
       getBuckets(),
       getEvents(),
     ]);
@@ -994,6 +997,7 @@ router.get("/console-data", async (req, res) => {
       memberships,
       apiKeys,
       webhooks,
+      webhookDeliveries,
       buckets,
       events,
       logs: getPm2Logs(),
