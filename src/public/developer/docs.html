@@ -141,6 +141,17 @@ console.log(response);</code></pre>
 
 
 
+
+    <h2>Edge Functions V2</h2>
+    <p>Edge Functions V2 adds versioning, deployment records, runtime limits, secret references, and structured execution metadata. Public calls still use <code>/api/v1/functions/:slug</code> with the <code>execute:functions</code> scope.</p>
+
+    <pre><code>const result = await goodos.callFunctionV2("health-check", {
+  source: "sdk",
+  message: "Testing Edge Functions V2"
+});
+
+console.log(result.data.output._runtime);</code></pre>
+
     <h2>Storage V2 / CDN</h2>
     <p>Storage V2 adds provider metadata, local/S3-compatible planning fields, object keys, checksums, version records, public object URLs, and CDN URL mapping.</p>
 

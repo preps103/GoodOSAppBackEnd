@@ -505,9 +505,116 @@ async function executePublicControlledFunction(fn, input = {}, apiKey = {}) {
   };
 }
 
+
+function getEdgeFunctionV2Number(value, fallback, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(Math.max(number, min), max);
+}
+
+function buildEdgeFunctionV2Context(fn = {}, input = {}, apiKey = {}) {
+  const timeoutMs = getEdgeFunctionV2Number(fn.timeoutMs || fn.timeout_ms || (Number(fn.timeout_seconds || 5) * 1000), 5000, 500, 30000);
+  const memoryMb = getEdgeFunctionV2Number(fn.memoryMb || fn.memory_mb, 128, 32, 1024);
+  const maxInputBytes = getEdgeFunctionV2Number(fn.maxInputBytes || fn.max_input_bytes, 262144, 1024, 1048576);
+  const runtimeVersion = String(fn.runtimeVersion || fn.runtime_version || "node-v22");
+  const runtimeProfile = String(fn.runtimeProfile || fn.runtime_profile || "controlled");
+  const sandboxMode = String(fn.sandboxMode || fn.sandbox_mode || "goodos-controlled");
+
+  return {
+    runtimeVersion,
+    runtimeProfile,
+    sandboxMode,
+    timeoutMs,
+    memoryMb,
+    maxInputBytes,
+    networkAccessEnabled: fn.networkAccessEnabled === true || fn.network_access_enabled === true,
+    secretsEnabled: fn.secretsEnabled !== false && fn.secrets_enabled !== false,
+    deploymentId: fn.deploymentId || fn.deployment_id || null,
+    versionId: fn.currentVersionId || fn.current_version_id || null,
+    versionNumber: Number(fn.versionNumber || fn.version_number || 1),
+    codeHash: fn.codeHash || fn.code_hash || null,
+    handlerName: fn.handlerName || fn.handler_name || "handler",
+    logLevel: fn.logLevel || fn.log_level || "info",
+    apiKeyId: apiKey.id || null,
+    inputBytes: Buffer.byteLength(JSON.stringify(input || {}), "utf8"),
+  };
+}
+
+async function executePublicControlledFunctionV2(fn, input = {}, apiKey = {}, runtimeContext = {}) {
+  if (runtimeContext.inputBytes > runtimeContext.maxInputBytes) {
+    const error = new Error(`Function input exceeds max_input_bytes. Max ${runtimeContext.maxInputBytes}, received ${runtimeContext.inputBytes}.`);
+    error.statusCode = 413;
+    throw error;
+  }
+
+  const startedAt = Date.now();
+  let timeoutHandle;
+
+  try {
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        const error = new Error(`Function timed out after ${runtimeContext.timeoutMs}ms.`);
+        error.statusCode = 504;
+        error.timedOut = true;
+        reject(error);
+      }, runtimeContext.timeoutMs);
+    });
+
+    const execution = await Promise.race([
+      executePublicControlledFunction(fn, input, apiKey),
+      timeoutPromise,
+    ]);
+
+    const durationMs = Number(execution.durationMs || (Date.now() - startedAt));
+    const memoryUsage = process.memoryUsage();
+
+    return {
+      ...execution,
+      durationMs,
+      output: {
+        ...(execution.output || {}),
+        _runtime: {
+          engine: "GoodOS Edge Functions V2",
+          runtimeVersion: runtimeContext.runtimeVersion,
+          runtimeProfile: runtimeContext.runtimeProfile,
+          sandboxMode: runtimeContext.sandboxMode,
+          timeoutMs: runtimeContext.timeoutMs,
+          memoryMb: runtimeContext.memoryMb,
+          memoryUsedMb: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+          maxInputBytes: runtimeContext.maxInputBytes,
+          inputBytes: runtimeContext.inputBytes,
+          networkAccessEnabled: runtimeContext.networkAccessEnabled,
+          secretsEnabled: runtimeContext.secretsEnabled,
+          deploymentId: runtimeContext.deploymentId,
+          versionId: runtimeContext.versionId,
+          versionNumber: runtimeContext.versionNumber,
+          codeHash: runtimeContext.codeHash,
+          handlerName: runtimeContext.handlerName,
+        },
+      },
+      logs: [
+        {
+          level: "info",
+          message: "Edge Function executed through GoodOS V2 controlled runtime.",
+          time: new Date().toISOString(),
+        },
+      ],
+      metrics: {
+        durationMs,
+        memoryUsedMb: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+        inputBytes: runtimeContext.inputBytes,
+        timeoutMs: runtimeContext.timeoutMs,
+      },
+    };
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+  }
+}
+
 async function runPublicEdgeFunction(fn, input = {}, apiKey = {}) {
   const runId = `fnrun_${crypto.randomUUID().replace(/-/g, "")}`;
   const startedAt = Date.now();
+  const runtimeContext = buildEdgeFunctionV2Context(fn, input, apiKey);
 
   await dbQuery(
     `
@@ -531,8 +638,46 @@ async function runPublicEdgeFunction(fn, input = {}, apiKey = {}) {
     ]
   );
 
+  await dbQuery(
+    `
+      UPDATE backend_edge_function_runs
+      SET
+        runtime_version = $2,
+        runtime_profile = $3,
+        sandbox_mode = $4,
+        timeout_ms = $5,
+        memory_mb = $6,
+        context_json = $7::jsonb,
+        deployment_id = $8,
+        version_id = $9,
+        code_hash = $10,
+        invocation_source = 'public_api',
+        request_id = $11,
+        created_at = COALESCE(created_at, started_at, NOW())
+      WHERE id = $1
+    `,
+    [
+      runId,
+      runtimeContext.runtimeVersion,
+      runtimeContext.runtimeProfile,
+      runtimeContext.sandboxMode,
+      runtimeContext.timeoutMs,
+      runtimeContext.memoryMb,
+      JSON.stringify({
+        runtime: runtimeContext,
+        inputPreview: input,
+        apiKey: apiKey.id || null,
+      }),
+      runtimeContext.deploymentId,
+      runtimeContext.versionId,
+      runtimeContext.codeHash,
+      `req_${crypto.randomUUID().replace(/-/g, "")}`,
+    ]
+  );
+
+
   try {
-    const execution = await executePublicControlledFunction(fn, input, apiKey);
+    const execution = await executePublicControlledFunctionV2(fn, input, apiKey, runtimeContext);
     const durationMs = Number(execution.durationMs || (Date.now() - startedAt));
 
     const runResult = await dbQuery(
@@ -564,6 +709,30 @@ async function runPublicEdgeFunction(fn, input = {}, apiKey = {}) {
         execution.status || "success",
         JSON.stringify(execution.output || {}),
         durationMs,
+      ]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_edge_function_runs
+        SET
+          logs_json = $2::jsonb,
+          metrics_json = $3::jsonb,
+          deployment_id = $4,
+          version_id = $5,
+          code_hash = $6,
+          memory_used_mb = $7,
+          timed_out = false
+        WHERE id = $1
+      `,
+      [
+        runId,
+        JSON.stringify(execution.logs || []),
+        JSON.stringify(execution.metrics || {}),
+        runtimeContext.deploymentId,
+        runtimeContext.versionId,
+        runtimeContext.codeHash,
+        execution.metrics?.memoryUsedMb || Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
       ]
     );
 
@@ -655,6 +824,24 @@ async function publicCallableFunctionHandler(req, res) {
           description,
           status,
           timeout_seconds,
+          current_version_id AS "currentVersionId",
+          deployment_id AS "deploymentId",
+          runtime_version AS "runtimeVersion",
+          runtime_profile AS "runtimeProfile",
+          sandbox_mode AS "sandboxMode",
+          timeout_ms AS "timeoutMs",
+          memory_mb AS "memoryMb",
+          max_input_bytes AS "maxInputBytes",
+          network_access_enabled AS "networkAccessEnabled",
+          secrets_enabled AS "secretsEnabled",
+          public_invocation_enabled AS "publicInvocationEnabled",
+          require_api_key AS "requireApiKey",
+          environment_json AS "environment",
+          permissions_json AS "permissions",
+          limits_json AS "limits",
+          code_hash AS "codeHash",
+          version_number AS "versionNumber",
+          log_level AS "logLevel",
           run_count,
           last_status,
           last_error,
@@ -742,10 +929,12 @@ async function publicCallableFunctionHandler(req, res) {
       },
     });
   } catch (error) {
-    return res.status(500).json({
+    const status = Number(error.statusCode || error.status || 500);
+    return res.status(status).json({
       success: false,
-      message: "Callable function execution failed.",
+      message: status === 403 ? (error.message || "Denied by GoodOS policy.") : "Callable function execution failed.",
       detail: error.message,
+      code: error.timedOut ? "function_timeout" : undefined,
     });
   }
 }

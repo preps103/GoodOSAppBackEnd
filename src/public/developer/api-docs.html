@@ -91,6 +91,16 @@
       <pre><code>curl https://backend.goodos.app/storage/public/storage-v2-public/v2-public-health.txt</code></pre>
     </div>
 
+
+    <div class="card">
+      <h2><span class="badge">POST</span> /functions/:slug — Edge Functions V2 runtime</h2>
+      <p>Scope: <code>execute:functions</code>. Response includes <code>output._runtime</code> with version, deployment, timeout, memory, and sandbox metadata.</p>
+      <pre><code>curl -X POST https://backend.goodos.app/api/v1/functions/health-check \
+  -H "Content-Type: application/json" \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
+  --data '{"source":"docs","message":"Edge Functions V2"}'</code></pre>
+    </div>
+
   </main>
 </body>
 </html>

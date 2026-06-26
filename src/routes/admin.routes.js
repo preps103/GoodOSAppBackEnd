@@ -5479,6 +5479,547 @@ async function runEdgeFunctionById(functionId, input = {}, actor = "console-user
   }
 }
 
+
+function edgeV2SafeJson(value, fallback = {}) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    try { return JSON.parse(value); } catch {}
+  }
+  return fallback;
+}
+
+function edgeV2Bool(value, fallback = false) {
+  if (value === true || value === "true" || value === 1 || value === "1") return true;
+  if (value === false || value === "false" || value === 0 || value === "0") return false;
+  return fallback;
+}
+
+function edgeV2CleanText(value, fallback = "") {
+  return String(value ?? fallback ?? "").trim();
+}
+
+function edgeV2Runtime(value) {
+  const runtime = edgeV2CleanText(value || "node").toLowerCase();
+  if (["node", "nodejs", "javascript"].includes(runtime)) return "node";
+  return "node";
+}
+
+function edgeV2HashCode(sourceCode = "") {
+  return crypto.createHash("sha256").update(String(sourceCode || "")).digest("hex");
+}
+
+router.get("/edge-functions-v2-page-data", async (req, res) => {
+  try {
+    const functionsResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        type,
+        runtime,
+        trigger_type AS "triggerType",
+        route_path AS "routePath",
+        schedule,
+        description,
+        status,
+        timeout_seconds AS "timeoutSeconds",
+        timeout_ms AS "timeoutMs",
+        memory_mb AS "memoryMb",
+        max_input_bytes AS "maxInputBytes",
+        runtime_version AS "runtimeVersion",
+        runtime_profile AS "runtimeProfile",
+        sandbox_mode AS "sandboxMode",
+        network_access_enabled AS "networkAccessEnabled",
+        secrets_enabled AS "secretsEnabled",
+        public_invocation_enabled AS "publicInvocationEnabled",
+        require_api_key AS "requireApiKey",
+        environment_json AS "environment",
+        permissions_json AS "permissions",
+        limits_json AS "limits",
+        metadata_json AS "metadata",
+        deployment_id AS "deploymentId",
+        current_version_id AS "currentVersionId",
+        version_number AS "versionNumber",
+        code_hash AS "codeHash",
+        deployed_at AS "deployedAt",
+        log_level AS "logLevel",
+        run_count AS "runCount",
+        last_status AS "lastStatus",
+        last_error AS "lastError",
+        last_run_at AS "lastRunAt",
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_edge_functions
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const versionsResult = await dbQuery(`
+      SELECT
+        id,
+        function_id AS "functionId",
+        version_number AS "versionNumber",
+        version_label AS "versionLabel",
+        runtime,
+        runtime_version AS "runtimeVersion",
+        runtime_profile AS "runtimeProfile",
+        sandbox_mode AS "sandboxMode",
+        handler_name AS "handlerName",
+        code_hash AS "codeHash",
+        status,
+        deployment_status AS "deploymentStatus",
+        metadata_json AS "metadata",
+        deployed_at AS "deployedAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_edge_function_versions
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const deploymentsResult = await dbQuery(`
+      SELECT
+        id,
+        function_id AS "functionId",
+        version_id AS "versionId",
+        deployment_number AS "deploymentNumber",
+        status,
+        source,
+        started_at AS "startedAt",
+        completed_at AS "completedAt",
+        duration_ms AS "durationMs",
+        logs_json AS "logs",
+        metadata_json AS "metadata",
+        created_at AS "createdAt"
+      FROM backend_edge_function_deployments
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const secretsResult = await dbQuery(`
+      SELECT
+        id,
+        function_id AS "functionId",
+        secret_key AS "secretKey",
+        secret_prefix AS "secretPrefix",
+        secret_ref AS "secretRef",
+        scope,
+        status,
+        metadata_json AS "metadata",
+        rotated_at AS "rotatedAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_edge_function_secrets
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const runsResult = await dbQuery(`
+      SELECT
+        id,
+        function_id AS "functionId",
+        function_name AS "functionName",
+        trigger_type AS "triggerType",
+        status,
+        error_message AS "errorMessage",
+        duration_ms AS "durationMs",
+        runtime_version AS "runtimeVersion",
+        runtime_profile AS "runtimeProfile",
+        sandbox_mode AS "sandboxMode",
+        timeout_ms AS "timeoutMs",
+        memory_mb AS "memoryMb",
+        memory_used_mb AS "memoryUsedMb",
+        metrics_json AS "metrics",
+        logs_json AS "logs",
+        deployment_id AS "deploymentId",
+        version_id AS "versionId",
+        code_hash AS "codeHash",
+        invocation_source AS "invocationSource",
+        timed_out AS "timedOut",
+        started_at AS "startedAt",
+        completed_at AS "completedAt",
+        created_at AS "createdAt"
+      FROM backend_edge_function_runs
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const functions = functionsResult.rows;
+    const versions = versionsResult.rows;
+    const deployments = deploymentsResult.rows;
+    const secrets = secretsResult.rows;
+    const runs = runsResult.rows;
+
+    return ok(res, {
+      functions,
+      versions,
+      deployments,
+      secrets,
+      runs,
+      counts: {
+        functions: functions.length,
+        versions: versions.length,
+        deployments: deployments.length,
+        secrets: secrets.length,
+        runs: runs.length,
+        active: functions.filter((item) => item.status === "active").length,
+        publicCallable: functions.filter((item) => item.publicInvocationEnabled === true).length,
+        v2Ready: functions.filter((item) => item.currentVersionId && item.deploymentId).length,
+        failedRuns: runs.filter((item) => item.status === "failed").length,
+        timedOutRuns: runs.filter((item) => item.timedOut === true).length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load Edge Functions V2 page data", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/:id/v2/update-safe", async (req, res) => {
+  try {
+    const id = edgeV2CleanText(req.params.id);
+    if (!id) return fail(res, "Function id is required", 400);
+
+    const beforeResult = await dbQuery("SELECT * FROM backend_edge_functions WHERE id = $1 LIMIT 1", [id]);
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Edge function not found", 404);
+
+    const sourceCode = String(req.body?.sourceCode ?? req.body?.source_code ?? before.source_code ?? "");
+    const codeHash = edgeV2HashCode(sourceCode || id);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          source_code = $2,
+          handler_name = $3,
+          runtime = $4,
+          runtime_version = $5,
+          runtime_profile = $6,
+          sandbox_mode = $7,
+          timeout_ms = $8,
+          memory_mb = $9,
+          max_input_bytes = $10,
+          network_access_enabled = $11,
+          secrets_enabled = $12,
+          public_invocation_enabled = $13,
+          require_api_key = $14,
+          environment_json = $15::jsonb,
+          permissions_json = $16::jsonb,
+          limits_json = $17::jsonb,
+          metadata_json = $18::jsonb,
+          code_hash = $19,
+          log_level = $20,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        id,
+        sourceCode,
+        edgeV2CleanText(req.body?.handlerName ?? req.body?.handler_name ?? before.handler_name ?? "handler"),
+        edgeV2Runtime(req.body?.runtime ?? before.runtime ?? "node"),
+        edgeV2CleanText(req.body?.runtimeVersion ?? req.body?.runtime_version ?? before.runtime_version ?? "node-v22"),
+        edgeV2CleanText(req.body?.runtimeProfile ?? req.body?.runtime_profile ?? before.runtime_profile ?? "controlled"),
+        edgeV2CleanText(req.body?.sandboxMode ?? req.body?.sandbox_mode ?? before.sandbox_mode ?? "goodos-controlled"),
+        Math.min(Math.max(Number(req.body?.timeoutMs ?? req.body?.timeout_ms ?? before.timeout_ms ?? 5000), 500), 30000),
+        Math.min(Math.max(Number(req.body?.memoryMb ?? req.body?.memory_mb ?? before.memory_mb ?? 128), 32), 1024),
+        Math.min(Math.max(Number(req.body?.maxInputBytes ?? req.body?.max_input_bytes ?? before.max_input_bytes ?? 262144), 1024), 1048576),
+        edgeV2Bool(req.body?.networkAccessEnabled ?? req.body?.network_access_enabled, before.network_access_enabled === true),
+        edgeV2Bool(req.body?.secretsEnabled ?? req.body?.secrets_enabled, before.secrets_enabled !== false),
+        edgeV2Bool(req.body?.publicInvocationEnabled ?? req.body?.public_invocation_enabled, before.public_invocation_enabled === true),
+        edgeV2Bool(req.body?.requireApiKey ?? req.body?.require_api_key, before.require_api_key !== false),
+        JSON.stringify(edgeV2SafeJson(req.body?.environment ?? req.body?.environment_json, before.environment_json || {})),
+        JSON.stringify(edgeV2SafeJson(req.body?.permissions ?? req.body?.permissions_json, before.permissions_json || {})),
+        JSON.stringify(edgeV2SafeJson(req.body?.limits ?? req.body?.limits_json, before.limits_json || {})),
+        JSON.stringify(edgeV2SafeJson(req.body?.metadata ?? req.body?.metadata_json, before.metadata_json || {})),
+        codeHash,
+        edgeV2CleanText(req.body?.logLevel ?? req.body?.log_level ?? before.log_level ?? "info"),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1,$2,'edge_function.v2.update','edge_function',$3,$4::jsonb,$5::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',$6,$7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { function: result.rows[0], message: "Edge Function V2 settings updated." });
+  } catch (error) {
+    return fail(res, "Failed to update Edge Function V2 settings", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/:id/versions/create-safe", async (req, res) => {
+  try {
+    const functionId = edgeV2CleanText(req.params.id);
+    if (!functionId) return fail(res, "Function id is required", 400);
+
+    const fnResult = await dbQuery("SELECT * FROM backend_edge_functions WHERE id = $1 LIMIT 1", [functionId]);
+    const fn = fnResult.rows[0];
+    if (!fn) return fail(res, "Edge function not found", 404);
+
+    const countResult = await dbQuery("SELECT COALESCE(MAX(version_number), 0)::int AS max_version FROM backend_edge_function_versions WHERE function_id = $1", [functionId]);
+    const versionNumber = Number(countResult.rows[0]?.max_version || 0) + 1;
+    const sourceCode = String(req.body?.sourceCode ?? req.body?.source_code ?? fn.source_code ?? "");
+    const codeHash = edgeV2HashCode(sourceCode || `${functionId}:${versionNumber}`);
+    const versionId = `fnver_${functionId}_v${versionNumber}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_edge_function_versions (
+          id,
+          function_id,
+          version_number,
+          version_label,
+          runtime,
+          runtime_version,
+          runtime_profile,
+          sandbox_mode,
+          handler_name,
+          source_code,
+          code_hash,
+          status,
+          deployment_status,
+          environment_json,
+          permissions_json,
+          limits_json,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id,
+          created_by
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'active','draft',$12::jsonb,$13::jsonb,$14::jsonb,$15::jsonb,$16,$17,$18,(SELECT id FROM users ORDER BY created_at ASC LIMIT 1))
+        RETURNING *
+      `,
+      [
+        versionId,
+        functionId,
+        versionNumber,
+        `v${versionNumber}`,
+        fn.runtime || "node",
+        fn.runtime_version || "node-v22",
+        fn.runtime_profile || "controlled",
+        fn.sandbox_mode || "goodos-controlled",
+        fn.handler_name || "handler",
+        sourceCode,
+        codeHash,
+        JSON.stringify(fn.environment_json || {}),
+        JSON.stringify(fn.permissions_json || {}),
+        JSON.stringify(fn.limits_json || {}),
+        JSON.stringify({ createdFrom: "GoodAppBackEnd Console", phase: "19A" }),
+        fn.organization_id || "org_goodos",
+        fn.project_id || "proj_goodos_platform",
+        fn.environment_id || "env_goodos_production",
+      ]
+    );
+
+    return ok(res, { version: result.rows[0], message: "Edge Function version created." });
+  } catch (error) {
+    return fail(res, "Failed to create Edge Function version", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/:id/deploy-safe", async (req, res) => {
+  try {
+    const functionId = edgeV2CleanText(req.params.id);
+    const versionId = edgeV2CleanText(req.body?.versionId || req.body?.version_id || "");
+
+    if (!functionId) return fail(res, "Function id is required", 400);
+
+    const fnResult = await dbQuery("SELECT * FROM backend_edge_functions WHERE id = $1 LIMIT 1", [functionId]);
+    const fn = fnResult.rows[0];
+    if (!fn) return fail(res, "Edge function not found", 404);
+
+    let version = null;
+
+    if (versionId) {
+      const versionResult = await dbQuery("SELECT * FROM backend_edge_function_versions WHERE id = $1 AND function_id = $2 LIMIT 1", [versionId, functionId]);
+      version = versionResult.rows[0];
+      if (!version) return fail(res, "Version not found for this function", 404);
+    } else {
+      const latestResult = await dbQuery(
+        "SELECT * FROM backend_edge_function_versions WHERE function_id = $1 ORDER BY version_number DESC LIMIT 1",
+        [functionId]
+      );
+      version = latestResult.rows[0];
+      if (!version) return fail(res, "No version exists for this function", 404);
+    }
+
+    const countResult = await dbQuery("SELECT COUNT(*)::int AS count FROM backend_edge_function_deployments WHERE function_id = $1", [functionId]);
+    const deploymentNumber = Number(countResult.rows[0]?.count || 0) + 1;
+    const deploymentId = `fndeploy_${functionId}_${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`;
+    const startedAt = Date.now();
+
+    const deploymentResult = await dbQuery(
+      `
+        INSERT INTO backend_edge_function_deployments (
+          id,
+          function_id,
+          version_id,
+          deployment_number,
+          status,
+          source,
+          completed_at,
+          duration_ms,
+          logs_json,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id,
+          created_by
+        )
+        VALUES ($1,$2,$3,$4,'deployed',$5,NOW(),$6,$7::jsonb,$8::jsonb,$9,$10,$11,(SELECT id FROM users ORDER BY created_at ASC LIMIT 1))
+        RETURNING *
+      `,
+      [
+        deploymentId,
+        functionId,
+        version.id,
+        deploymentNumber,
+        edgeV2CleanText(req.body?.source || "console"),
+        Date.now() - startedAt,
+        JSON.stringify([{ level: "info", message: `Deployed ${version.id}`, time: new Date().toISOString() }]),
+        JSON.stringify({ deployedFrom: "GoodAppBackEnd Console", phase: "19A" }),
+        fn.organization_id || "org_goodos",
+        fn.project_id || "proj_goodos_platform",
+        fn.environment_id || "env_goodos_production",
+      ]
+    );
+
+    const updateResult = await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          source_code = $2,
+          code_hash = $3,
+          current_version_id = $4,
+          version_number = $5,
+          deployment_id = $6,
+          deployed_at = NOW(),
+          deployed_by = (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        functionId,
+        version.source_code || fn.source_code || "",
+        version.code_hash || fn.code_hash || null,
+        version.id,
+        version.version_number || fn.version_number || 1,
+        deploymentId,
+      ]
+    );
+
+    await dbQuery(
+      "UPDATE backend_edge_function_versions SET deployment_status = 'deployed', deployed_at = NOW(), deployed_by = (SELECT id FROM users ORDER BY created_at ASC LIMIT 1), updated_at = NOW() WHERE id = $1",
+      [version.id]
+    );
+
+    return ok(res, {
+      deployment: deploymentResult.rows[0],
+      function: updateResult.rows[0],
+      message: "Edge Function deployed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to deploy Edge Function", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/:id/secrets/create-safe", async (req, res) => {
+  try {
+    const functionId = edgeV2CleanText(req.params.id);
+    if (!functionId) return fail(res, "Function id is required", 400);
+
+    const secretKey = edgeV2CleanText(req.body?.secretKey || req.body?.secret_key || "");
+    const secretValue = String(req.body?.secretValue || req.body?.secret_value || "");
+
+    if (!secretKey) return fail(res, "Secret key is required", 400);
+    if (!/^[A-Z0-9_]{3,80}$/.test(secretKey)) return fail(res, "Secret key must be uppercase letters, numbers, and underscores.", 400);
+    if (!secretValue) return fail(res, "Secret value is required", 400);
+
+    const secretId = `fnsecret_${functionId}_${secretKey.toLowerCase()}_${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
+    const valueHash = crypto.createHash("sha256").update(secretValue).digest("hex");
+    const prefix = secretValue.slice(0, 8);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_edge_function_secrets (
+          id,
+          function_id,
+          secret_key,
+          secret_prefix,
+          value_hash,
+          secret_ref,
+          scope,
+          status,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id,
+          created_by,
+          rotated_at
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,'function','active',$7::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at ASC LIMIT 1),NOW())
+        RETURNING
+          id,
+          function_id AS "functionId",
+          secret_key AS "secretKey",
+          secret_prefix AS "secretPrefix",
+          secret_ref AS "secretRef",
+          scope,
+          status,
+          metadata_json AS "metadata",
+          rotated_at AS "rotatedAt",
+          created_at AS "createdAt"
+      `,
+      [
+        secretId,
+        functionId,
+        secretKey,
+        prefix,
+        valueHash,
+        `internal://edge-functions/${functionId}/${secretKey}`,
+        JSON.stringify({ createdFrom: "GoodAppBackEnd Console", rawValueStored: false }),
+      ]
+    );
+
+    return ok(res, {
+      secret: result.rows[0],
+      warning: "Raw secret value was hashed and is not returned.",
+      message: "Edge Function secret reference created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create Edge Function secret", 500, error.message);
+  }
+});
+
 router.get("/edge-functions-page-data", async (req, res) => {
   try {
     const result = await dbQuery(`

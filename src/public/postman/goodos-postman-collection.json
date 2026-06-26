@@ -143,6 +143,27 @@
         "header": [],
         "url": "https://backend.goodos.app/storage/public/storage-v2-public/v2-public-health.txt"
       }
+    },
+    {
+      "name": "Edge Functions V2 - Health Check",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"source\": \"postman\",\n  \"message\": \"Edge Functions V2\",\n  \"_goodosRuntime\": \"edge-functions-v2\"\n}"
+        },
+        "url": "{{base_url}}/functions/health-check"
+      }
     }
   ]
 }

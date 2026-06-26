@@ -6855,6 +6855,303 @@ window.viewEdgeFunctionRunDetail = async function viewEdgeFunctionRunDetail(id) 
 };
 
 
+
+window.loadEdgeFunctionsV2Center = async function loadEdgeFunctionsV2Center() {
+  try {
+    const response = await fetch("/api/admin/edge-functions-v2-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Edge Functions V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.edgeFunctionsV2Functions = Array.isArray(data.functions) ? data.functions : [];
+    state.edgeFunctionsV2Versions = Array.isArray(data.versions) ? data.versions : [];
+    state.edgeFunctionsV2Deployments = Array.isArray(data.deployments) ? data.deployments : [];
+    state.edgeFunctionsV2Secrets = Array.isArray(data.secrets) ? data.secrets : [];
+    state.edgeFunctionsV2Runs = Array.isArray(data.runs) ? data.runs : [];
+    state.edgeFunctionsV2Counts = data.counts || {};
+    state.edgeFunctionsV2Loaded = true;
+    state.edgeFunctionsV2Loading = false;
+    state.edgeFunctionsV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.edgeFunctionsV2Loaded = true;
+    state.edgeFunctionsV2Loading = false;
+    state.edgeFunctionsV2Error = error.message || "Failed to load Edge Functions V2.";
+    console.error("Edge Functions V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshEdgeFunctionsV2CenterNow = async function refreshEdgeFunctionsV2CenterNow() {
+  state.edgeFunctionsV2Loaded = false;
+  state.edgeFunctionsV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadEdgeFunctionsV2Center();
+};
+
+window.editEdgeFunctionV2 = async function editEdgeFunctionV2(functionId) {
+  const fn = (state.edgeFunctionsV2Functions || []).find(item => item.id === functionId);
+  if (!fn) return alert("Function not found.");
+
+  const current = {
+    sourceCode: fn.sourceCode || fn.source_code || "",
+    handlerName: fn.handlerName || "handler",
+    runtime: fn.runtime || "node",
+    runtimeVersion: fn.runtimeVersion || "node-v22",
+    runtimeProfile: fn.runtimeProfile || "controlled",
+    sandboxMode: fn.sandboxMode || "goodos-controlled",
+    timeoutMs: fn.timeoutMs || 5000,
+    memoryMb: fn.memoryMb || 128,
+    maxInputBytes: fn.maxInputBytes || 262144,
+    networkAccessEnabled: Boolean(fn.networkAccessEnabled),
+    secretsEnabled: fn.secretsEnabled !== false,
+    publicInvocationEnabled: fn.publicInvocationEnabled !== false,
+    requireApiKey: fn.requireApiKey !== false,
+    environment: fn.environment || {},
+    permissions: fn.permissions || {},
+    limits: fn.limits || {},
+    metadata: fn.metadata || {},
+    logLevel: fn.logLevel || "info"
+  };
+
+  const input = prompt("Edit Edge Function V2 JSON:", JSON.stringify(current, null, 2));
+  if (input === null) return;
+
+  let patch;
+  try {
+    patch = JSON.parse(input);
+  } catch (error) {
+    return alert("Invalid JSON.");
+  }
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(functionId) + "/v2/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(patch)
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "V2 update failed with status " + response.status);
+    }
+
+    alert("Edge Function V2 settings updated.");
+    await window.loadEdgeFunctionsV2Center();
+  } catch (error) {
+    alert("V2 update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.createEdgeFunctionVersion = async function createEdgeFunctionVersion(functionId) {
+  const sourceCode = prompt("Source code / controlled runtime notes:", "// controlled runtime update");
+  if (sourceCode === null) return;
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(functionId) + "/versions/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sourceCode })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create version failed with status " + response.status);
+    }
+
+    alert("Version created.");
+    await window.loadEdgeFunctionsV2Center();
+  } catch (error) {
+    alert("Create version failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.deployEdgeFunctionVersion = async function deployEdgeFunctionVersion(functionId) {
+  const versions = (state.edgeFunctionsV2Versions || []).filter(item => item.functionId === functionId);
+  const latest = versions[0]?.id || "";
+  const versionId = prompt("Version ID to deploy:", latest);
+  if (!versionId) return;
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(functionId) + "/deploy-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ versionId, source: "console" })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Deploy failed with status " + response.status);
+    }
+
+    alert("Function deployed.");
+    await window.loadEdgeFunctionsV2Center();
+  } catch (error) {
+    alert("Deploy failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.createEdgeFunctionSecret = async function createEdgeFunctionSecret(functionId) {
+  const secretKey = prompt("Secret key, uppercase:", "GOODOS_TEST_SECRET");
+  if (!secretKey) return;
+  const secretValue = prompt("Secret value. It will be hashed and not shown again:", "");
+  if (!secretValue) return;
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(functionId) + "/secrets/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ secretKey, secretValue })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Secret creation failed with status " + response.status);
+    }
+
+    alert("Secret reference created. Raw value was not returned.");
+    await window.loadEdgeFunctionsV2Center();
+  } catch (error) {
+    alert("Secret creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function edgeFunctionsV2Section() {
+  if (!state.edgeFunctionsV2Loaded && !state.edgeFunctionsV2Loading) {
+    state.edgeFunctionsV2Loading = true;
+    setTimeout(() => window.loadEdgeFunctionsV2Center(), 100);
+  }
+
+  const functions = Array.isArray(state.edgeFunctionsV2Functions) ? state.edgeFunctionsV2Functions : [];
+  const versions = Array.isArray(state.edgeFunctionsV2Versions) ? state.edgeFunctionsV2Versions : [];
+  const deployments = Array.isArray(state.edgeFunctionsV2Deployments) ? state.edgeFunctionsV2Deployments : [];
+  const secrets = Array.isArray(state.edgeFunctionsV2Secrets) ? state.edgeFunctionsV2Secrets : [];
+  const runs = Array.isArray(state.edgeFunctionsV2Runs) ? state.edgeFunctionsV2Runs : [];
+  const counts = state.edgeFunctionsV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Edge Functions V2 / Secure Runtime</h3>
+      <div>
+        <button class="logout" onclick="window.refreshEdgeFunctionsV2CenterNow()">Refresh V2</button>
+      </div>
+    </div>
+
+    ${state.edgeFunctionsV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Edge Functions V2...</p></div>` : ""}
+    ${state.edgeFunctionsV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Edge Functions V2 error: ${safeText(state.edgeFunctionsV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("V2 Ready", counts.v2Ready ?? functions.filter(fn => fn.currentVersionId && fn.deploymentId).length, "Versioned functions")}
+      ${card("Versions", counts.versions ?? versions.length, "Function versions")}
+      ${card("Deployments", counts.deployments ?? deployments.length, "Deployment records")}
+      ${card("Secrets", counts.secrets ?? secrets.length, "Secret refs only")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Runtime Settings</h3><span class="badge">${safeText(String(functions.length))} Functions</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Runtime</th>
+            <th>Limits</th>
+            <th>Version</th>
+            <th>Access</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${functions.map(fn => `
+            <tr>
+              <td><strong>${safeText(fn.name || fn.id)}</strong><div class="muted">${safeText(fn.id || "")}</div></td>
+              <td>${safeText(fn.runtimeVersion || "node-v22")}<div class="muted">${safeText(fn.runtimeProfile || "controlled")} / ${safeText(fn.sandboxMode || "goodos-controlled")}</div></td>
+              <td>${safeText(String(fn.timeoutMs || 5000))}ms<div class="muted">${safeText(String(fn.memoryMb || 128))}MB • max ${safeText(String(fn.maxInputBytes || 262144))} bytes</div></td>
+              <td>${safeText(fn.currentVersionId || "-")}<div class="muted">${safeText(fn.deploymentId || "-")}</div></td>
+              <td><span class="badge">${fn.publicInvocationEnabled ? "Public callable" : "Private"}</span><span class="badge">${fn.requireApiKey !== false ? "API key" : "No key"}</span></td>
+              <td>
+                <button class="logout" onclick="window.editEdgeFunctionV2('${safeText(fn.id)}')">V2 Settings</button>
+                <button class="logout" onclick="window.createEdgeFunctionVersion('${safeText(fn.id)}')">New Version</button>
+                <button class="logout" onclick="window.deployEdgeFunctionVersion('${safeText(fn.id)}')">Deploy</button>
+                <button class="logout" onclick="window.createEdgeFunctionSecret('${safeText(fn.id)}')">Secret</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No functions found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent V2 Runs</h3><span class="badge">${safeText(String(runs.length))} Runs</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Runtime</th>
+            <th>Status</th>
+            <th>Metrics</th>
+            <th>Version</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${runs.slice(0, 80).map(run => `
+            <tr>
+              <td><strong>${safeText(run.functionName || run.functionId || "-")}</strong><div class="muted">${safeText(run.id || "")}</div></td>
+              <td>${safeText(run.runtimeVersion || "-")}<div class="muted">${safeText(run.sandboxMode || "-")}</div></td>
+              <td><span class="badge">${safeText(run.status || "-")}</span>${run.timedOut ? '<span class="badge">Timed Out</span>' : ''}</td>
+              <td>${safeText(String(run.durationMs || 0))}ms<div class="muted">${safeText(String(run.memoryUsedMb || "-"))}MB used</div></td>
+              <td>${safeText(run.versionId || "-")}<div class="muted">${safeText(run.deploymentId || "-")}</div></td>
+              <td>${safeText(formatDate(run.createdAt || run.startedAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No V2 run logs yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function functionsView() {
   if (!state.edgeFunctionsLoaded && !state.edgeFunctionsLoading) {
     state.edgeFunctionsLoading = true;
@@ -6866,6 +7163,8 @@ function functionsView() {
   const counts = state.edgeFunctionCounts || {};
 
   return `
+    ${edgeFunctionsV2Section()}
+
     ${hero("Edge Functions", "Controlled backend functions, manual execution, status control, and run logs.")}
     <div class="section-head">
       <h3>Function Registry</h3>
