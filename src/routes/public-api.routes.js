@@ -1,6 +1,7 @@
 const express = require("express");
 const crypto = require("crypto");
 const database = require("../config/database");
+const realtimeHub = require("../realtime/hub");
 
 const router = express.Router();
 
@@ -938,6 +939,212 @@ async function publicCallableFunctionHandler(req, res) {
     });
   }
 }
+
+
+
+function publicRealtimeLimit(value, fallback = 100) {
+  const number = Number(value || fallback);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(Math.max(number, 1), 500);
+}
+
+function publicRealtimeOffset(value, fallback = 0) {
+  const number = Number(value || fallback);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(number, 0);
+}
+
+function publicRealtimeChannel(value) {
+  return realtimeHub.normalizeChannel(value || "system");
+}
+
+router.get("/realtime/channels", apiKeyRequired, requireScope("read:realtime"), async (req, res) => {
+  try {
+    await enforceGoodOSPolicy({
+      targetType: "realtime",
+      targetId: "*",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/realtime/channels", method: req.method }
+    });
+
+    const result = await dbQuery(`
+      SELECT
+        id,
+        name,
+        display_name AS "displayName",
+        description,
+        visibility,
+        status,
+        allow_public_subscribe AS "allowPublicSubscribe",
+        allow_public_publish AS "allowPublicPublish",
+        max_subscribers AS "maxSubscribers",
+        retention_days AS "retentionDays",
+        message_count AS "messageCount",
+        last_message_at AS "lastMessageAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_realtime_channels
+      WHERE status = 'active'
+      ORDER BY name ASC
+      LIMIT 250
+    `);
+
+    return res.json({
+      success: true,
+      data: {
+        channels: result.rows,
+        clients: realtimeHub.getRealtimeClientStats(),
+      },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to load realtime channels.",
+      detail: error.message,
+    });
+  }
+});
+
+router.get("/realtime/events", apiKeyRequired, requireScope("read:realtime"), async (req, res) => {
+  try {
+    const channel = req.query.channel ? publicRealtimeChannel(req.query.channel) : "";
+    const limit = publicRealtimeLimit(req.query.limit, 100);
+    const offset = publicRealtimeOffset(req.query.offset, 0);
+
+    await enforceGoodOSPolicy({
+      targetType: "realtime",
+      targetId: channel || "*",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/realtime/events", method: req.method, channel }
+    });
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          channel,
+          event_type AS "eventType",
+          source,
+          message,
+          payload_json AS "payload",
+          status,
+          delivered_ws_count AS "deliveredWsCount",
+          delivered_sse_count AS "deliveredSseCount",
+          created_at AS "createdAt"
+        FROM backend_realtime_messages
+        WHERE ($1::text = '' OR channel = $1)
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+      `,
+      [channel, limit, offset]
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        events: result.rows,
+        limit,
+        offset,
+        channel: channel || null,
+      },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to load realtime events.",
+      detail: error.message,
+    });
+  }
+});
+
+router.post("/realtime/events", apiKeyRequired, requireScope("publish:realtime"), async (req, res) => {
+  try {
+    const channel = publicRealtimeChannel(req.body?.channel || "system");
+    const eventType = String(req.body?.eventType || req.body?.event_type || "realtime.public.message").trim().slice(0, 160);
+    const message = String(req.body?.message || "").trim().slice(0, 1000);
+    const payload = req.body?.payload && typeof req.body.payload === "object" ? req.body.payload : {};
+
+    await enforceGoodOSPolicy({
+      targetType: "realtime",
+      targetId: channel,
+      operation: "publish",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/realtime/events", method: req.method, channel, eventType }
+    });
+
+    const published = await realtimeHub.publishRealtimeMessage({
+      channel,
+      eventType,
+      source: "public-api",
+      message,
+      payload,
+      apiKey: req.goodosApiKey,
+      requestId: `req_${crypto.randomUUID().replace(/-/g, "")}`,
+      metadata: {
+        route: "/api/v1/realtime/events",
+        method: req.method,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        event: published,
+      },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to publish realtime event.",
+      detail: error.message,
+    });
+  }
+});
+
+router.get("/realtime/stream", apiKeyRequired, requireScope("subscribe:realtime"), async (req, res) => {
+  try {
+    const channel = publicRealtimeChannel(req.query.channel || "system");
+
+    await enforceGoodOSPolicy({
+      targetType: "realtime",
+      targetId: channel,
+      operation: "subscribe",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/realtime/stream", method: req.method, channel, transport: "sse" }
+    });
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no"
+    });
+
+    realtimeHub.registerSseClient({
+      res,
+      channel,
+      apiKey: req.goodosApiKey,
+      request: req,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to open realtime stream.",
+      detail: error.message,
+    });
+  }
+});
+
 
 router.get("/health", apiKeyRequired, requireScope("read:health"), async (req, res) => {
   return res.json({

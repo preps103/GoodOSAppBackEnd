@@ -164,6 +164,40 @@
         },
         "url": "{{base_url}}/functions/health-check"
       }
+    },
+    {
+      "name": "Realtime V2 - Channels",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "url": "{{base_url}}/realtime/channels"
+      }
+    },
+    {
+      "name": "Realtime V2 - Publish",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"channel\": \"system\",\n  \"eventType\": \"postman.message\",\n  \"message\": \"Hello Realtime V2\",\n  \"payload\": { \"ok\": true }\n}"
+        },
+        "url": "{{base_url}}/realtime/events"
+      }
     }
   ]
 }

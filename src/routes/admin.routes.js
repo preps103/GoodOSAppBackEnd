@@ -4973,6 +4973,240 @@ router.get("/realtime-events/stream-safe", async (req, res) => {
   });
 });
 
+
+function realtimeV2CleanChannel(value) {
+  return String(value || "system")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9:_.*-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 120) || "system";
+}
+
+function realtimeV2Bool(value, fallback = false) {
+  if (value === true || value === "true" || value === 1 || value === "1") return true;
+  if (value === false || value === "false" || value === 0 || value === "0") return false;
+  return fallback;
+}
+
+function realtimeV2SafeJson(value, fallback = {}) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    try { return JSON.parse(value); } catch {}
+  }
+  return fallback;
+}
+
+router.get("/realtime-v2-page-data", async (req, res) => {
+  try {
+    const channelsResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        display_name AS "displayName",
+        description,
+        visibility,
+        status,
+        allow_public_subscribe AS "allowPublicSubscribe",
+        allow_public_publish AS "allowPublicPublish",
+        require_api_key AS "requireApiKey",
+        max_subscribers AS "maxSubscribers",
+        retention_days AS "retentionDays",
+        message_count AS "messageCount",
+        last_message_at AS "lastMessageAt",
+        policy_json AS "policy",
+        metadata_json AS "metadata",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_realtime_channels
+      ORDER BY name ASC
+      LIMIT 300
+    `);
+
+    const messagesResult = await dbQuery(`
+      SELECT
+        id,
+        channel_id AS "channelId",
+        channel,
+        event_type AS "eventType",
+        source,
+        message,
+        payload_json AS "payload",
+        status,
+        delivered_ws_count AS "deliveredWsCount",
+        delivered_sse_count AS "deliveredSseCount",
+        api_key_id AS "apiKeyId",
+        connection_id AS "connectionId",
+        metadata_json AS "metadata",
+        created_at AS "createdAt"
+      FROM backend_realtime_messages
+      ORDER BY created_at DESC
+      LIMIT 300
+    `);
+
+    const connectionsResult = await dbQuery(`
+      SELECT
+        id,
+        transport,
+        channel,
+        status,
+        api_key_id AS "apiKeyId",
+        actor_type AS "actorType",
+        actor_id AS "actorId",
+        ip_address AS "ipAddress",
+        user_agent AS "userAgent",
+        connected_at AS "connectedAt",
+        last_seen_at AS "lastSeenAt",
+        disconnected_at AS "disconnectedAt",
+        close_code AS "closeCode",
+        close_reason AS "closeReason",
+        metadata_json AS "metadata"
+      FROM backend_realtime_connections
+      ORDER BY connected_at DESC
+      LIMIT 300
+    `);
+
+    const subscriptionsResult = await dbQuery(`
+      SELECT
+        id,
+        connection_id AS "connectionId",
+        channel,
+        transport,
+        api_key_id AS "apiKeyId",
+        status,
+        subscribed_at AS "subscribedAt",
+        unsubscribed_at AS "unsubscribedAt",
+        metadata_json AS "metadata"
+      FROM backend_realtime_subscriptions
+      ORDER BY subscribed_at DESC
+      LIMIT 300
+    `);
+
+    const presenceResult = await dbQuery(`
+      SELECT
+        id,
+        channel,
+        connection_id AS "connectionId",
+        api_key_id AS "apiKeyId",
+        actor_type AS "actorType",
+        actor_id AS "actorId",
+        presence_state AS "presenceState",
+        metadata_json AS "metadata",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_realtime_presence
+      ORDER BY updated_at DESC
+      LIMIT 300
+    `);
+
+    const policyResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        target_type AS "targetType",
+        target_id AS "targetId",
+        operation,
+        effect,
+        priority,
+        status,
+        condition_json AS "conditionJson"
+      FROM backend_policy_rules
+      WHERE target_type = 'realtime'
+      ORDER BY priority ASC, id ASC
+    `);
+
+    const channels = channelsResult.rows;
+    const messages = messagesResult.rows;
+    const connections = connectionsResult.rows;
+    const subscriptions = subscriptionsResult.rows;
+    const presence = presenceResult.rows;
+
+    return ok(res, {
+      channels,
+      messages,
+      connections,
+      subscriptions,
+      presence,
+      policies: policyResult.rows,
+      counts: {
+        channels: channels.length,
+        messages: messages.length,
+        connections: connections.length,
+        connected: connections.filter((item) => item.status === "connected").length,
+        subscriptions: subscriptions.filter((item) => item.status === "active").length,
+        presenceOnline: presence.filter((item) => item.presenceState === "online").length,
+        policies: policyResult.rows.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load Realtime V2 page data", 500, error.message);
+  }
+});
+
+router.post("/realtime/channels/create-safe", async (req, res) => {
+  try {
+    const channel = realtimeV2CleanChannel(req.body?.name || req.body?.channel || "system");
+    const id = `rtch_${channel.replace(/[^a-z0-9]/g, "_")}`.slice(0, 120);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_realtime_channels (
+          id,
+          name,
+          display_name,
+          description,
+          visibility,
+          status,
+          allow_public_subscribe,
+          allow_public_publish,
+          require_api_key,
+          max_subscribers,
+          retention_days,
+          policy_json,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id,
+          created_by
+        )
+        VALUES ($1,$2,$3,$4,$5,'active',$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at ASC LIMIT 1))
+        ON CONFLICT (id) DO UPDATE
+        SET
+          display_name = EXCLUDED.display_name,
+          description = EXCLUDED.description,
+          visibility = EXCLUDED.visibility,
+          allow_public_subscribe = EXCLUDED.allow_public_subscribe,
+          allow_public_publish = EXCLUDED.allow_public_publish,
+          require_api_key = EXCLUDED.require_api_key,
+          max_subscribers = EXCLUDED.max_subscribers,
+          retention_days = EXCLUDED.retention_days,
+          policy_json = EXCLUDED.policy_json,
+          metadata_json = EXCLUDED.metadata_json,
+          updated_at = NOW()
+        RETURNING *
+      `,
+      [
+        id,
+        channel,
+        String(req.body?.displayName || req.body?.display_name || channel).trim(),
+        String(req.body?.description || `Realtime channel: ${channel}`).trim(),
+        String(req.body?.visibility || "private").trim(),
+        realtimeV2Bool(req.body?.allowPublicSubscribe ?? req.body?.allow_public_subscribe, true),
+        realtimeV2Bool(req.body?.allowPublicPublish ?? req.body?.allow_public_publish, true),
+        realtimeV2Bool(req.body?.requireApiKey ?? req.body?.require_api_key, true),
+        Math.min(Math.max(Number(req.body?.maxSubscribers || req.body?.max_subscribers || 1000), 1), 100000),
+        Math.min(Math.max(Number(req.body?.retentionDays || req.body?.retention_days || 30), 1), 3650),
+        JSON.stringify(realtimeV2SafeJson(req.body?.policy || req.body?.policy_json, {})),
+        JSON.stringify(realtimeV2SafeJson(req.body?.metadata || req.body?.metadata_json, { createdFrom: "GoodAppBackEnd Console" })),
+      ]
+    );
+
+    return ok(res, { channel: result.rows[0], message: "Realtime channel created or updated." });
+  } catch (error) {
+    return fail(res, "Failed to create realtime channel", 500, error.message);
+  }
+});
+
 router.get("/realtime-page-data", async (req, res) => {
   try {
     const eventsResult = await dbQuery(`

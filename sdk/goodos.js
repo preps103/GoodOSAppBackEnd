@@ -124,6 +124,51 @@
       return this.request(`/storage/files${query ? `?${query}` : ""}`);
     }
 
+    realtimeChannels() {
+      return this.request("/realtime/channels");
+    }
+
+    realtimeEvents(params = {}) {
+      const search = new URLSearchParams();
+      if (params.channel) search.set("channel", params.channel);
+      if (params.limit) search.set("limit", params.limit);
+      if (params.offset) search.set("offset", params.offset);
+      const query = search.toString();
+      return this.request(`/realtime/events${query ? `?${query}` : ""}`);
+    }
+
+    publishRealtimeEvent(channel = "system", event = {}) {
+      return this.request("/realtime/events", {
+        method: "POST",
+        body: {
+          channel,
+          eventType: event.eventType || event.event_type || "realtime.sdk.message",
+          message: event.message || "",
+          payload: event.payload || {},
+        },
+      });
+    }
+
+    realtimeStreamUrl(channel = "system", rootUrl = "https://backend.goodos.app") {
+      return `${String(rootUrl).replace(/\/+$/, "")}/api/v1/realtime/stream?channel=${encodeURIComponent(channel)}`;
+    }
+
+    realtimeWebSocketUrl(channel = "system", options = {}) {
+      const rootUrl = options.rootUrl || "wss://backend.goodos.app";
+      const apiKey = options.apiKey || this.apiKey || "";
+      const search = new URLSearchParams();
+      search.set("channel", channel);
+      if (apiKey) search.set("api_key", apiKey);
+      return `${String(rootUrl).replace(/\/+$/, "")}/api/v1/realtime/ws?${search.toString()}`;
+    }
+
+    connectRealtimeWebSocket(channel = "system", options = {}) {
+      if (typeof WebSocket === "undefined") {
+        throw new Error("WebSocket is not available in this environment.");
+      }
+      return new WebSocket(this.realtimeWebSocketUrl(channel, options));
+    }
+
     callFunction(slug, input = {}, options = {}) {
       const method = String(options.method || "POST").toUpperCase();
 

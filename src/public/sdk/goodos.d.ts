@@ -53,6 +53,12 @@ export class GoodOSClient {
   createDbRow(tableSlug: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   updateDbRow(tableSlug: string, id: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   deleteDbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
+  realtimeChannels(): Promise<GoodOSResponse>;
+  realtimeEvents(params?: { channel?: string; limit?: number; offset?: number }): Promise<GoodOSResponse>;
+  publishRealtimeEvent(channel?: string, event?: { eventType?: string; event_type?: string; message?: string; payload?: Record<string, unknown> }): Promise<GoodOSResponse>;
+  realtimeStreamUrl(channel?: string, rootUrl?: string): string;
+  realtimeWebSocketUrl(channel?: string, options?: { rootUrl?: string; apiKey?: string }): string;
+  connectRealtimeWebSocket(channel?: string, options?: { rootUrl?: string; apiKey?: string }): WebSocket;
   storageBuckets(): Promise<GoodOSResponse>;
   storagePublicUrl(bucketName: string, objectKey: string, rootUrl?: string): string;
   storageFiles(params?: { bucket?: string }): Promise<GoodOSResponse>;

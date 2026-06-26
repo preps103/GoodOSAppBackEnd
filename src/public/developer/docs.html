@@ -142,6 +142,33 @@ console.log(response);</code></pre>
 
 
 
+
+    <h2>Realtime V2</h2>
+    <p>Realtime V2 adds WebSocket channels, SSE subscriptions, REST publishing, message logs, connection records, and presence tracking.</p>
+
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Scope</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /api/v1/realtime/channels</code></td><td><code>read:realtime</code></td><td>List realtime channels.</td></tr>
+        <tr><td><code>GET /api/v1/realtime/events</code></td><td><code>read:realtime</code></td><td>List realtime messages.</td></tr>
+        <tr><td><code>POST /api/v1/realtime/events</code></td><td><code>publish:realtime</code></td><td>Publish a message.</td></tr>
+        <tr><td><code>GET /api/v1/realtime/stream</code></td><td><code>subscribe:realtime</code></td><td>Subscribe over SSE.</td></tr>
+        <tr><td><code>wss://backend.goodos.app/api/v1/realtime/ws</code></td><td><code>subscribe:realtime</code></td><td>Subscribe over WebSocket.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>await goodos.publishRealtimeEvent("system", {
+  eventType: "demo.message",
+  message: "Hello Realtime V2",
+  payload: { ok: true }
+});
+
+const ws = goodos.connectRealtimeWebSocket("system", {
+  apiKey: "YOUR_KEY"
+});</code></pre>
+
     <h2>Edge Functions V2</h2>
     <p>Edge Functions V2 adds versioning, deployment records, runtime limits, secret references, and structured execution metadata. Public calls still use <code>/api/v1/functions/:slug</code> with the <code>execute:functions</code> scope.</p>
 

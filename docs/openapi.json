@@ -624,6 +624,139 @@
           }
         }
       }
+    },
+    "/realtime/channels": {
+      "get": {
+        "summary": "List Realtime V2 channels",
+        "description": "Requires scope: read:realtime",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:realtime",
+        "responses": {
+          "200": {
+            "description": "Realtime channels"
+          }
+        }
+      }
+    },
+    "/realtime/events": {
+      "get": {
+        "summary": "List Realtime V2 messages",
+        "description": "Requires scope: read:realtime",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:realtime",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Realtime messages"
+          }
+        }
+      },
+      "post": {
+        "summary": "Publish a Realtime V2 message",
+        "description": "Requires scope: publish:realtime",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "publish:realtime",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "channel": "system",
+                "eventType": "demo.message",
+                "message": "Hello Realtime V2",
+                "payload": {
+                  "ok": true
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Realtime message published"
+          }
+        }
+      }
+    },
+    "/realtime/stream": {
+      "get": {
+        "summary": "Subscribe to Realtime V2 SSE stream",
+        "description": "Requires scope: subscribe:realtime. Use X-GoodOS-API-Key header.",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "subscribe:realtime",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-Sent Events stream"
+          }
+        }
+      }
+    },
+    "/realtime/ws": {
+      "get": {
+        "summary": "Realtime V2 WebSocket endpoint",
+        "description": "Connect to wss://backend.goodos.app/api/v1/realtime/ws?api_key=YOUR_KEY&channel=system with subscribe:realtime scope. Publish messages with publish:realtime scope.",
+        "x-goodos-scope": "subscribe:realtime",
+        "responses": {
+          "101": {
+            "description": "WebSocket upgrade"
+          }
+        }
+      }
     }
   }
 }

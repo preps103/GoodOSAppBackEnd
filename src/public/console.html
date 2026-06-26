@@ -6540,6 +6540,207 @@ window.cleanupRealtimeEvents = async function cleanupRealtimeEvents() {
   }
 };
 
+
+window.loadRealtimeV2Center = async function loadRealtimeV2Center() {
+  try {
+    const response = await fetch("/api/admin/realtime-v2-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Realtime V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.realtimeV2Channels = Array.isArray(data.channels) ? data.channels : [];
+    state.realtimeV2Messages = Array.isArray(data.messages) ? data.messages : [];
+    state.realtimeV2Connections = Array.isArray(data.connections) ? data.connections : [];
+    state.realtimeV2Subscriptions = Array.isArray(data.subscriptions) ? data.subscriptions : [];
+    state.realtimeV2Presence = Array.isArray(data.presence) ? data.presence : [];
+    state.realtimeV2Policies = Array.isArray(data.policies) ? data.policies : [];
+    state.realtimeV2Counts = data.counts || {};
+    state.realtimeV2Loaded = true;
+    state.realtimeV2Loading = false;
+    state.realtimeV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.realtimeV2Loaded = true;
+    state.realtimeV2Loading = false;
+    state.realtimeV2Error = error.message || "Failed to load Realtime V2.";
+    console.error("Realtime V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshRealtimeV2CenterNow = async function refreshRealtimeV2CenterNow() {
+  state.realtimeV2Loaded = false;
+  state.realtimeV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadRealtimeV2Center();
+};
+
+window.createRealtimeV2Channel = async function createRealtimeV2Channel() {
+  const name = prompt("Channel name:", "system");
+  if (!name) return;
+
+  try {
+    const response = await fetch("/api/admin/realtime/channels/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        displayName: name,
+        description: "Realtime V2 channel created from console.",
+        allowPublicSubscribe: true,
+        allowPublicPublish: true,
+        requireApiKey: true
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create channel failed with status " + response.status);
+    }
+
+    alert("Realtime V2 channel created.");
+    await window.loadRealtimeV2Center();
+  } catch (error) {
+    alert("Create channel failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function realtimeV2Section() {
+  if (!state.realtimeV2Loaded && !state.realtimeV2Loading) {
+    state.realtimeV2Loading = true;
+    setTimeout(() => window.loadRealtimeV2Center(), 100);
+  }
+
+  const channels = Array.isArray(state.realtimeV2Channels) ? state.realtimeV2Channels : [];
+  const messages = Array.isArray(state.realtimeV2Messages) ? state.realtimeV2Messages : [];
+  const connections = Array.isArray(state.realtimeV2Connections) ? state.realtimeV2Connections : [];
+  const subscriptions = Array.isArray(state.realtimeV2Subscriptions) ? state.realtimeV2Subscriptions : [];
+  const presence = Array.isArray(state.realtimeV2Presence) ? state.realtimeV2Presence : [];
+  const counts = state.realtimeV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Realtime V2 / WebSocket Channels</h3>
+      <div>
+        <button class="logout" onclick="window.refreshRealtimeV2CenterNow()">Refresh V2</button>
+        <button class="logout" onclick="window.createRealtimeV2Channel()">Create Channel</button>
+      </div>
+    </div>
+
+    ${state.realtimeV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Realtime V2...</p></div>` : ""}
+    ${state.realtimeV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Realtime V2 error: ${safeText(state.realtimeV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Channels", counts.channels ?? channels.length, "Registered channels")}
+      ${card("Messages", counts.messages ?? messages.length, "Realtime message log")}
+      ${card("Connected", counts.connected ?? connections.filter(c => c.status === "connected").length, "Live clients")}
+      ${card("Presence", counts.presenceOnline ?? presence.filter(p => p.presenceState === "online").length, "Online presence")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Channels</h3><span class="badge">${safeText(String(channels.length))} Channels</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Visibility</th>
+            <th>Access</th>
+            <th>Messages</th>
+            <th>Last Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${channels.map(channel => `
+            <tr>
+              <td><strong>${safeText(channel.displayName || channel.name || channel.id)}</strong><div class="muted">${safeText(channel.name || "")}</div></td>
+              <td>${safeText(channel.visibility || "private")}</td>
+              <td>
+                <span class="badge">${channel.allowPublicSubscribe ? "Subscribe" : "No Subscribe"}</span>
+                <span class="badge">${channel.allowPublicPublish ? "Publish" : "No Publish"}</span>
+              </td>
+              <td>${safeText(String(channel.messageCount || 0))}</td>
+              <td>${safeText(formatDate(channel.lastMessageAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No realtime channels found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent Messages</h3><span class="badge">${safeText(String(messages.length))} Messages</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Message</th>
+            <th>Channel</th>
+            <th>Event</th>
+            <th>Delivered</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${messages.slice(0, 80).map(message => `
+            <tr>
+              <td><strong>${safeText(message.message || message.id)}</strong><div class="muted">${safeText(message.id || "")}</div></td>
+              <td>${safeText(message.channel || "-")}</td>
+              <td>${safeText(message.eventType || "-")}</td>
+              <td>WS ${safeText(String(message.deliveredWsCount || 0))} / SSE ${safeText(String(message.deliveredSseCount || 0))}</td>
+              <td>${safeText(formatDate(message.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No realtime messages found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Connections / Presence</h3><span class="badge">${safeText(String(connections.length))} Connections</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Connection</th>
+            <th>Transport</th>
+            <th>Channel</th>
+            <th>Status</th>
+            <th>Last Seen</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${connections.slice(0, 80).map(connection => `
+            <tr>
+              <td><strong>${safeText(connection.id || "-")}</strong><div class="muted">${safeText(connection.apiKeyId || "-")}</div></td>
+              <td>${safeText(connection.transport || "-")}</td>
+              <td>${safeText(connection.channel || "-")}</td>
+              <td><span class="badge">${safeText(connection.status || "-")}</span></td>
+              <td>${safeText(formatDate(connection.lastSeenAt || connection.connectedAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No realtime clients connected yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function realtimeView() {
   if (!state.realtimeLoaded && !state.realtimeLoading) {
     state.realtimeLoading = true;
@@ -6562,6 +6763,8 @@ function realtimeView() {
 
   return `
     ${hero("Realtime Events", "Live channel streaming, event records, connected clients, and test broadcasts.")}
+
+    ${realtimeV2Section()}
     <div class="section-head">
       <h3>Realtime Channels</h3>
       <div>
