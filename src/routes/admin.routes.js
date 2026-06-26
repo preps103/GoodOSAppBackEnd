@@ -2779,6 +2779,160 @@ router.post("/realtime-events/create-test-safe", async (req, res) => {
 });
 
 
+
+router.get("/realtime-events/:id/detail-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Realtime event id is required", 400);
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          event_type AS "eventType",
+          source,
+          channel,
+          message,
+          payload,
+          status,
+          created_at AS "createdAt"
+        FROM backend_realtime_events
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const event = result.rows[0];
+
+    if (!event) return fail(res, "Realtime event not found", 404);
+
+    return ok(res, { event });
+  } catch (error) {
+    return fail(res, "Failed to load realtime event detail", 500, error.message);
+  }
+});
+
+router.post("/realtime-events/:id/replay-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Realtime event id is required", 400);
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          event_type AS "eventType",
+          source,
+          channel,
+          message,
+          payload,
+          status,
+          created_at AS "createdAt"
+        FROM backend_realtime_events
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const event = result.rows[0];
+
+    if (!event) return fail(res, "Realtime event not found", 404);
+
+    const deliveredClients = broadcastRealtimeEventToClients({
+      ...event,
+      replayed: true,
+      replayedAt: new Date().toISOString(),
+    });
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'realtime.event.replay', 'realtime_event', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ deliveredClients }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      event,
+      deliveredClients,
+      message: "Realtime event replayed to connected clients.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to replay realtime event", 500, error.message);
+  }
+});
+
+router.post("/realtime-events/cleanup-safe", async (req, res) => {
+  try {
+    const keepLast = Math.min(Math.max(Number(req.body?.keepLast || 1000), 100), 10000);
+
+    const deleteResult = await dbQuery(
+      `
+        DELETE FROM backend_realtime_events
+        WHERE id NOT IN (
+          SELECT id
+          FROM backend_realtime_events
+          ORDER BY created_at DESC
+          LIMIT $1
+        )
+        RETURNING id
+      `,
+      [keepLast]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'realtime.events.cleanup', 'realtime_events', 'bulk', $3::jsonb, $4, $5)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        JSON.stringify({ keepLast, deletedCount: deleteResult.rowCount || 0 }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      deletedCount: deleteResult.rowCount || 0,
+      keepLast,
+      message: "Realtime event cleanup complete.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to cleanup realtime events", 500, error.message);
+  }
+});
+
 router.get("/edge-functions-page-data", async (req, res) => {
   try {
     const result = await dbQuery(`

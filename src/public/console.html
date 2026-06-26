@@ -4004,6 +4004,126 @@ window.disconnectRealtimeStream = function disconnectRealtimeStream() {
 };
 
 
+
+if (typeof prettyJsonForAlert !== "function") {
+  function prettyJsonForAlert(value) {
+    try {
+      if (typeof value === "string") {
+        try {
+          return JSON.stringify(JSON.parse(value), null, 2);
+        } catch {
+          return value;
+        }
+      }
+      return JSON.stringify(value || {}, null, 2);
+    } catch {
+      return String(value || "");
+    }
+  }
+}
+
+window.setRealtimeSearch = function setRealtimeSearch(value) {
+  state.realtimeSearch = value || "";
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+};
+
+window.filterRealtimeChannel = function filterRealtimeChannel(channel) {
+  state.realtimeFilterChannel = channel || "";
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+};
+
+window.viewRealtimeEventDetail = async function viewRealtimeEventDetail(id) {
+  if (!id) return alert("Missing realtime event id.");
+
+  try {
+    const response = await fetch("/api/admin/realtime-events/" + encodeURIComponent(id) + "/detail-safe?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Realtime detail failed with status " + response.status);
+    }
+
+    const event = (payload.data || payload).event || {};
+    alert("Realtime Event Detail:\\n\\n" + prettyJsonForAlert(event));
+  } catch (error) {
+    alert("Realtime detail failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.replayRealtimeEvent = async function replayRealtimeEvent(id) {
+  if (!id) return alert("Missing realtime event id.");
+  if (!confirm("Replay this realtime event to currently connected clients?")) return;
+
+  try {
+    const response = await fetch("/api/admin/realtime-events/" + encodeURIComponent(id) + "/replay-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Replay failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Realtime replay complete. Clients reached: " + String(data.deliveredClients || 0));
+    await window.loadRealtimePageData();
+  } catch (error) {
+    alert("Realtime replay failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.cleanupRealtimeEvents = async function cleanupRealtimeEvents() {
+  const keepLastText = prompt("Keep newest how many realtime events?", "1000");
+  if (keepLastText === null) return;
+
+  const keepLast = Number(keepLastText || 1000);
+  if (!confirm("Cleanup realtime events and keep newest " + keepLast + "?")) return;
+
+  try {
+    const response = await fetch("/api/admin/realtime-events/cleanup-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ keepLast })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Cleanup failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Cleanup complete. Deleted: " + String(data.deletedCount || 0));
+    await window.loadRealtimePageData();
+  } catch (error) {
+    alert("Realtime cleanup failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function realtimeView() {
   if (!state.realtimeLoaded && !state.realtimeLoading) {
     state.realtimeLoading = true;
@@ -4015,6 +4135,14 @@ function realtimeView() {
   const clients = Array.isArray(state.realtimeClients) ? state.realtimeClients : [];
   const counts = state.realtimeCounts || {};
   const liveStatus = state.realtimeLiveStatus || "disconnected";
+  const realtimeSearch = String(state.realtimeSearch || "").toLowerCase().trim();
+  const filterChannel = state.realtimeFilterChannel || "";
+  const filteredEvents = events.filter(event => {
+    const channelMatch = !filterChannel || event.channel === filterChannel;
+    const searchable = `${event.id || ""} ${event.eventType || event.event_type || ""} ${event.source || ""} ${event.channel || ""} ${event.message || ""}`.toLowerCase();
+    const searchMatch = !realtimeSearch || searchable.includes(realtimeSearch);
+    return channelMatch && searchMatch;
+  });
 
   return `
     ${hero("Realtime Events", "Live channel streaming, event records, connected clients, and test broadcasts.")}
@@ -4025,6 +4153,7 @@ function realtimeView() {
         <button class="logout" onclick="window.connectRealtimeStream()">Connect Stream</button>
         <button class="logout" onclick="window.disconnectRealtimeStream()">Disconnect</button>
         <button class="logout" onclick="window.sendRealtimeTestEvent()">Send Test Event</button>
+        <button class="logout" onclick="window.cleanupRealtimeEvents()">Cleanup</button>
       </div>
     </div>
 
@@ -4084,6 +4213,16 @@ function realtimeView() {
 
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Realtime Event Log</h3><span class="badge">Newest First</span></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <input
+          value="${safeText(state.realtimeSearch || "")}"
+          oninput="window.setRealtimeSearch(this.value)"
+          placeholder="Search realtime events..."
+          style="flex:1; min-width:240px; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff;"
+        />
+        <button class="logout" onclick="window.filterRealtimeChannel('')">All Channels</button>
+        ${channels.map(channel => `<button class="logout" onclick="window.filterRealtimeChannel('${safeText(channel.channel || "")}')">${safeText(channel.channel || "-")}</button>`).join("")}
+      </div>
       <table>
         <thead>
           <tr>
@@ -4092,18 +4231,23 @@ function realtimeView() {
             <th>Source</th>
             <th>Status</th>
             <th>Created</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          ${events.map(event => `
+          ${filteredEvents.map(event => `
             <tr>
               <td><strong>${safeText(event.eventType || event.event_type || "-")}</strong><div class="muted">${safeText(event.message || "")}</div><div class="muted">${safeText(event.id || "")}</div></td>
               <td>${safeText(event.channel || "-")}</td>
               <td>${safeText(event.source || "-")}</td>
               <td><span class="badge">${safeText(event.status || "recorded")}</span></td>
               <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : "-"}</td>
+              <td>
+                <button class="logout" onclick="window.viewRealtimeEventDetail('${safeText(event.id)}')">Details</button>
+                <button class="logout" onclick="window.replayRealtimeEvent('${safeText(event.id)}')">Replay</button>
+              </td>
             </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No realtime events found.</td></tr>'}
+          `).join("") || '<tr><td colspan="6" class="muted">No realtime events found.</td></tr>'}
         </tbody>
       </table>
     </div>
