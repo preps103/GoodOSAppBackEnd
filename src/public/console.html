@@ -3636,6 +3636,93 @@ window.sendWebhookSystemTestEvent = async function sendWebhookSystemTestEvent() 
   }
 };
 
+
+function prettyJsonForAlert(value) {
+  try {
+    if (typeof value === "string") {
+      try {
+        return JSON.stringify(JSON.parse(value), null, 2);
+      } catch {
+        return value;
+      }
+    }
+
+    return JSON.stringify(value || {}, null, 2);
+  } catch {
+    return String(value || "");
+  }
+}
+
+window.viewWebhookDeliveryDetail = async function viewWebhookDeliveryDetail(id) {
+  if (!id) return alert("Missing delivery id.");
+
+  try {
+    const response = await fetch("/api/admin/webhook-deliveries/" + encodeURIComponent(id) + "/detail-safe?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Delivery detail failed with status " + response.status);
+    }
+
+    const delivery = (payload.data || payload).delivery || {};
+    const detail = {
+      id: delivery.id,
+      webhook: delivery.webhookName || delivery.webhookId,
+      eventType: delivery.eventType,
+      status: delivery.status,
+      responseStatus: delivery.responseStatus,
+      attemptCount: delivery.attemptCount,
+      errorMessage: delivery.errorMessage,
+      nextRetryAt: delivery.nextRetryAt,
+      deliveredAt: delivery.deliveredAt,
+      url: delivery.url,
+      requestHeaders: delivery.requestHeaders,
+      requestBody: delivery.requestBody,
+      responseHeaders: delivery.responseHeaders,
+      responseBody: delivery.responseBody,
+      replayedFromDeliveryId: delivery.replayedFromDeliveryId,
+      replayedAt: delivery.replayedAt,
+      replayedBy: delivery.replayedBy
+    };
+
+    alert("Webhook Delivery Detail:\\n\\n" + prettyJsonForAlert(detail));
+  } catch (error) {
+    alert("Delivery detail failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewWebhookReceiptDetail = async function viewWebhookReceiptDetail(id) {
+  if (!id) return alert("Missing receipt id.");
+
+  try {
+    const response = await fetch("/api/admin/webhook-test-receipts/" + encodeURIComponent(id) + "/detail-safe?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Receipt detail failed with status " + response.status);
+    }
+
+    const receipt = (payload.data || payload).receipt || {};
+    alert("Webhook Receiver Receipt Detail:\\n\\n" + prettyJsonForAlert(receipt));
+  } catch (error) {
+    alert("Receipt detail failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function webhooksView() {
   if (!state.webhooksLoaded && !state.webhooksLoading) {
     state.webhooksLoading = true;
@@ -3729,6 +3816,7 @@ function webhooksView() {
               <td>${safeText(String(delivery.responseStatus || "-"))}</td>
               <td>${safeText(String(delivery.attemptCount || 0))}</td>
               <td>
+                <button class="logout" onclick="window.viewWebhookDeliveryDetail('${safeText(delivery.id)}')">Details</button>
                 <button class="logout" onclick="window.retryWebhookDelivery('${safeText(delivery.id)}')">Retry</button>
                 <button class="logout" onclick="window.replayWebhookDelivery('${safeText(delivery.id)}')">Replay</button>
               </td>
@@ -3748,6 +3836,7 @@ function webhooksView() {
             <th>Path</th>
             <th>IP</th>
             <th>Received</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -3758,8 +3847,9 @@ function webhooksView() {
               <td>${safeText(receipt.path || "-")}</td>
               <td>${safeText(receipt.ip || "-")}</td>
               <td>${receipt.createdAt ? new Date(receipt.createdAt).toLocaleString() : "-"}</td>
+              <td><button class="logout" onclick="window.viewWebhookReceiptDetail('${safeText(receipt.id)}')">Details</button></td>
             </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No built-in receiver receipts yet.</td></tr>'}
+          `).join("") || '<tr><td colspan="6" class="muted">No built-in receiver receipts yet.</td></tr>'}
         </tbody>
       </table>
     </div>

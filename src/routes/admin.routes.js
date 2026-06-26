@@ -1921,6 +1921,89 @@ router.get("/webhook-deliveries-live", async (req, res) => {
 
 
 
+
+router.get("/webhook-deliveries/:id/detail-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Delivery id is required", 400);
+
+    const result = await dbQuery(
+      `
+        SELECT
+          d.id,
+          d.webhook_id AS "webhookId",
+          COALESCE(w.name, d.webhook_id) AS "webhookName",
+          d.event_id AS "eventId",
+          d.event_type AS "eventType",
+          d.url,
+          d.request_headers AS "requestHeaders",
+          d.request_body AS "requestBody",
+          d.response_status AS "responseStatus",
+          d.response_headers AS "responseHeaders",
+          d.response_body AS "responseBody",
+          d.status,
+          d.attempt_count AS "attemptCount",
+          d.error_message AS "errorMessage",
+          d.next_retry_at AS "nextRetryAt",
+          d.delivered_at AS "deliveredAt",
+          d.replayed_from_delivery_id AS "replayedFromDeliveryId",
+          d.replayed_at AS "replayedAt",
+          d.replayed_by AS "replayedBy",
+          d.created_at AS "createdAt",
+          d.updated_at AS "updatedAt"
+        FROM backend_webhook_deliveries d
+        LEFT JOIN backend_webhooks w ON w.id = d.webhook_id
+        WHERE d.id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const delivery = result.rows[0];
+
+    if (!delivery) return fail(res, "Webhook delivery not found", 404);
+
+    return ok(res, { delivery });
+  } catch (error) {
+    return fail(res, "Failed to load webhook delivery detail", 500, error.message);
+  }
+});
+
+router.get("/webhook-test-receipts/:id/detail-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Receipt id is required", 400);
+
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          method,
+          path,
+          headers,
+          body,
+          query,
+          ip,
+          created_at AS "createdAt"
+        FROM backend_webhook_test_receipts
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const receipt = result.rows[0];
+
+    if (!receipt) return fail(res, "Webhook receiver receipt not found", 404);
+
+    return ok(res, { receipt });
+  } catch (error) {
+    return fail(res, "Failed to load webhook receiver receipt detail", 500, error.message);
+  }
+});
+
 router.get("/webhook-test-receipts-page-data", async (req, res) => {
   try {
     const result = await dbQuery(
