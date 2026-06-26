@@ -4768,4 +4768,227 @@ router.post("/storage/files/:fileId/delete-safe", async (req, res) => {
   }
 });
 
+
+function normalizeStorageFileManagerRow(row = {}) {
+  const normalized = {};
+
+  for (const [key, value] of Object.entries(row)) {
+    normalized[key] = value;
+    normalized[key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())] = value;
+  }
+
+  return normalized;
+}
+
+function getStorageFileManagerPath(file = {}) {
+  return (
+    file.file_path ||
+    file.filePath ||
+    file.storage_path ||
+    file.storagePath ||
+    file.full_path ||
+    file.fullPath ||
+    file.path ||
+    null
+  );
+}
+
+function getStorageFileManagerName(file = {}) {
+  return (
+    file.original_name ||
+    file.originalName ||
+    file.filename ||
+    file.file_name ||
+    file.fileName ||
+    file.name ||
+    file.id ||
+    "download"
+  );
+}
+
+function getStorageFileManagerMime(file = {}) {
+  return (
+    file.mime_type ||
+    file.mimeType ||
+    file.content_type ||
+    file.contentType ||
+    file.type ||
+    "application/octet-stream"
+  );
+}
+
+
+router.get("/storage/files/:fileId/preview-safe", async (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+
+    const fileId = String(req.params.fileId || "").trim();
+
+    if (!fileId) return fail(res, "File id is required", 400);
+
+    const result = await dbQuery(
+      `
+        SELECT *
+        FROM backend_storage_files
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [fileId]
+    );
+
+    const file = normalizeStorageFileManagerRow(result.rows[0] || {});
+
+    if (!file.id) return fail(res, "File not found", 404);
+
+    if (file.deletedAt || file.deleted_at || file.fileDeleted || file.file_deleted) {
+      return fail(res, "File was deleted", 410);
+    }
+
+    const filePath = getStorageFileManagerPath(file);
+
+    if (!filePath || !fs.existsSync(filePath)) {
+      return fail(res, "File does not exist on disk", 404);
+    }
+
+    const safeName = path.basename(getStorageFileManagerName(file));
+    const mimeType = getStorageFileManagerMime(file);
+
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("Content-Disposition", `inline; filename="${safeName}"`);
+    return res.sendFile(filePath);
+  } catch (error) {
+    return fail(res, "Failed to preview storage file", 500, error.message);
+  }
+});
+
+router.get("/storage/files/:fileId/download", async (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+
+    const fileId = String(req.params.fileId || "").trim();
+
+    if (!fileId) return fail(res, "File id is required", 400);
+
+    const result = await dbQuery(
+      `
+        SELECT *
+        FROM backend_storage_files
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [fileId]
+    );
+
+    const file = normalizeStorageFileManagerRow(result.rows[0] || {});
+
+    if (!file.id) return fail(res, "File not found", 404);
+
+    if (file.deletedAt || file.deleted_at || file.fileDeleted || file.file_deleted) {
+      return fail(res, "File was deleted", 410);
+    }
+
+    const filePath = getStorageFileManagerPath(file);
+
+    if (!filePath || !fs.existsSync(filePath)) {
+      return fail(res, "File does not exist on disk", 404);
+    }
+
+    const safeName = path.basename(getStorageFileManagerName(file));
+
+    return res.download(filePath, safeName);
+  } catch (error) {
+    return fail(res, "Failed to download storage file", 500, error.message);
+  }
+});
+
+router.post("/storage/files/:fileId/delete-safe", async (req, res) => {
+  try {
+    const fs = require("fs");
+
+    const fileId = String(req.params.fileId || "").trim();
+    const reason = String(req.body?.reason || "Manual delete from Storage File Manager.").trim();
+
+    if (!fileId) return fail(res, "File id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_storage_files
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [fileId]
+    );
+
+    const before = beforeResult.rows[0];
+
+    if (!before) return fail(res, "File not found", 404);
+
+    const normalizedBefore = normalizeStorageFileManagerRow(before);
+    const filePath = getStorageFileManagerPath(normalizedBefore);
+
+    let diskDeleted = false;
+
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      diskDeleted = true;
+    }
+
+    const updateResult = await dbQuery(
+      `
+        UPDATE backend_storage_files
+        SET
+          status = CASE WHEN status = 'active' THEN 'deleted' ELSE status END,
+          deleted_at = NOW(),
+          deleted_by = $2,
+          deleted_reason = $3,
+          file_deleted = true
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        fileId,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        reason,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'storage.file.delete', 'storage_file', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        fileId,
+        JSON.stringify(normalizedBefore),
+        JSON.stringify({ diskDeleted, reason }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      file: normalizeStorageFileManagerRow(updateResult.rows[0]),
+      diskDeleted,
+      message: diskDeleted ? "File deleted from disk and record marked." : "File record marked deleted. Disk file was not found.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to delete storage file", 500, error.message);
+  }
+});
+
 module.exports = router;

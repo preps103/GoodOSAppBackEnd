@@ -2893,6 +2893,47 @@ window.createStorageBucketSafe = async function createStorageBucketSafe() {
   }
 };
 
+
+window.previewStorageFile = function previewStorageFile(fileId) {
+  if (!fileId) return alert("Missing file id.");
+  window.open("/api/admin/storage/files/" + encodeURIComponent(fileId) + "/preview-safe", "_blank");
+};
+
+window.deleteStorageFile = async function deleteStorageFile(fileId) {
+  if (!fileId) return alert("Missing file id.");
+
+  const reason = prompt("Delete reason:", "Manual delete from Storage File Manager.");
+  if (reason === null) return;
+
+  const confirmed = confirm("Delete this file from storage? The disk file will be removed and the database record will be marked deleted.");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/storage/files/" + encodeURIComponent(fileId) + "/delete-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ reason })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Delete failed with status " + response.status);
+    }
+
+    alert("File deleted.");
+    await window.loadStorageManager();
+  } catch (error) {
+    alert("Delete failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function storageView() {
   if (!state.storageManagerLoaded && !state.storageManagerLoading) {
     state.storageManagerLoading = true;
@@ -2961,8 +3002,10 @@ function storageView() {
                         <td><span class="badge">${safeText(file.status || "active")}</span></td>
                         <td>${created ? new Date(created).toLocaleString() : "-"}</td>
                         <td>
+                          <button class="logout" onclick="window.previewStorageFile('${safeText(file.id)}')">Preview</button>
                           <button class="logout" onclick="window.downloadStorageFile('${safeText(file.id)}')">Download</button>
                           <button class="logout" onclick="window.createStorageSignedUrl('${safeText(file.id)}')">Signed URL</button>
+                          <button class="logout" onclick="window.deleteStorageFile('${safeText(file.id)}')">Delete</button>
                         </td>
                       </tr>
                     `;
