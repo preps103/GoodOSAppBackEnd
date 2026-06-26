@@ -132,6 +132,352 @@ function requireScope(scope) {
   };
 }
 
+
+function functionSlugFromPath(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/^api\/v1\/functions\//, "")
+    .replace(/^api\/functions\//, "")
+    .replace(/^functions\//, "")
+    .replace(/[^a-zA-Z0-9:_-]/g, "-")
+    .slice(0, 120);
+}
+
+function normalizePublicFunctionInput(req) {
+  if (req.method === "GET") {
+    return {
+      query: req.query || {},
+      method: "GET",
+      calledAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    ...(req.body && typeof req.body === "object" ? req.body : {}),
+    method: req.method,
+    calledAt: new Date().toISOString(),
+  };
+}
+
+async function executePublicControlledFunction(fn, input = {}, apiKey = {}) {
+  const startedAt = Date.now();
+  const id = String(fn.id || "");
+  const routePath = String(fn.route_path || fn.routePath || "");
+  const triggerType = String(fn.trigger_type || fn.triggerType || "manual");
+  const type = String(fn.type || "http");
+
+  if (id === "fn_http_health_check" || routePath === "/api/functions/health-check") {
+    const dbTime = await dbQuery("SELECT NOW() AS now");
+
+    return {
+      status: "success",
+      output: {
+        ok: true,
+        functionId: id,
+        name: fn.name,
+        routePath,
+        type,
+        triggerType,
+        service: "GoodAppBackEnd Public Callable Function",
+        runtime: process.version,
+        databaseTime: dbTime.rows[0]?.now || null,
+        uptimeSeconds: Math.floor(process.uptime()),
+        apiKey: {
+          id: apiKey.id,
+          name: apiKey.name,
+          type: apiKey.type,
+          scopes: apiKey.scopes || [],
+          allowedAppIds: apiKey.allowedAppIds || [],
+        },
+        input,
+      },
+      durationMs: Date.now() - startedAt,
+    };
+  }
+
+  if (id === "fn_event_webhook_dispatcher" || triggerType === "webhook.event") {
+    const eventPayload = {
+      id: `evt_${crypto.randomUUID().replace(/-/g, "")}`,
+      eventType: String(input.eventType || "public.function.event"),
+      source: "public-callable-function",
+      message: String(input.message || "Public callable function event created."),
+      payload: {
+        functionId: id,
+        functionName: fn.name,
+        input,
+      },
+    };
+
+    await dbQuery(
+      `
+        INSERT INTO backend_events (id, event_type, source, message, payload)
+        VALUES ($1, $2, $3, $4, $5::jsonb)
+      `,
+      [
+        eventPayload.id,
+        eventPayload.eventType,
+        eventPayload.source,
+        eventPayload.message,
+        JSON.stringify(eventPayload.payload),
+      ]
+    );
+
+    return {
+      status: "success",
+      output: {
+        ok: true,
+        functionId: id,
+        name: fn.name,
+        createdEvent: eventPayload,
+      },
+      durationMs: Date.now() - startedAt,
+    };
+  }
+
+  return {
+    status: "success",
+    output: {
+      ok: true,
+      functionId: id,
+      name: fn.name,
+      type,
+      triggerType,
+      note: "Public controlled function executed.",
+      input,
+    },
+    durationMs: Date.now() - startedAt,
+  };
+}
+
+async function runPublicEdgeFunction(fn, input = {}, apiKey = {}) {
+  const runId = `fnrun_${crypto.randomUUID().replace(/-/g, "")}`;
+  const startedAt = Date.now();
+
+  await dbQuery(
+    `
+      INSERT INTO backend_edge_function_runs (
+        id,
+        function_id,
+        function_name,
+        trigger_type,
+        status,
+        input_json,
+        created_by
+      )
+      VALUES ($1, $2, $3, 'public_api', 'started', $4::jsonb, $5)
+    `,
+    [
+      runId,
+      fn.id,
+      fn.name,
+      JSON.stringify(input || {}),
+      apiKey.id || "public-api-key",
+    ]
+  );
+
+  try {
+    const execution = await executePublicControlledFunction(fn, input, apiKey);
+    const durationMs = Number(execution.durationMs || (Date.now() - startedAt));
+
+    const runResult = await dbQuery(
+      `
+        UPDATE backend_edge_function_runs
+        SET
+          status = $2,
+          output_json = $3::jsonb,
+          error_message = NULL,
+          duration_ms = $4,
+          completed_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          function_id AS "functionId",
+          function_name AS "functionName",
+          trigger_type AS "triggerType",
+          status,
+          input_json AS "input",
+          output_json AS "output",
+          error_message AS "errorMessage",
+          duration_ms AS "durationMs",
+          started_at AS "startedAt",
+          completed_at AS "completedAt",
+          created_by AS "createdBy"
+      `,
+      [
+        runId,
+        execution.status || "success",
+        JSON.stringify(execution.output || {}),
+        durationMs,
+      ]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          last_run_at = NOW(),
+          last_status = $2,
+          last_error = NULL,
+          run_count = run_count + 1,
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [fn.id, execution.status || "success"]
+    );
+
+    return runResult.rows[0];
+  } catch (error) {
+    const durationMs = Date.now() - startedAt;
+
+    const runResult = await dbQuery(
+      `
+        UPDATE backend_edge_function_runs
+        SET
+          status = 'failed',
+          error_message = $2,
+          duration_ms = $3,
+          completed_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          function_id AS "functionId",
+          function_name AS "functionName",
+          trigger_type AS "triggerType",
+          status,
+          input_json AS "input",
+          output_json AS "output",
+          error_message AS "errorMessage",
+          duration_ms AS "durationMs",
+          started_at AS "startedAt",
+          completed_at AS "completedAt",
+          created_by AS "createdBy"
+      `,
+      [runId, error.message, durationMs]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          last_run_at = NOW(),
+          last_status = 'failed',
+          last_error = $2,
+          run_count = run_count + 1,
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [fn.id, error.message]
+    );
+
+    return runResult.rows[0];
+  }
+}
+
+async function publicCallableFunctionHandler(req, res) {
+  try {
+    const slug = functionSlugFromPath(req.params.slug || req.params[0] || "");
+
+    if (!slug) {
+      return res.status(400).json({
+        success: false,
+        message: "Function slug is required.",
+      });
+    }
+
+    const routePath = `/api/functions/${slug}`;
+
+    const functionResult = await dbQuery(
+      `
+        SELECT
+          id,
+          name,
+          type,
+          runtime,
+          trigger_type,
+          route_path,
+          schedule,
+          description,
+          status,
+          timeout_seconds,
+          run_count,
+          last_status,
+          last_error,
+          last_run_at,
+          created_at,
+          updated_at
+        FROM backend_edge_functions
+        WHERE
+          id = $1
+          OR route_path = $2
+          OR route_path = $3
+        LIMIT 1
+      `,
+      [
+        slug,
+        routePath,
+        `/api/v1/functions/${slug}`,
+      ]
+    );
+
+    const fn = functionResult.rows[0];
+
+    if (!fn) {
+      return res.status(404).json({
+        success: false,
+        message: `Callable function not found: ${slug}`,
+      });
+    }
+
+    if (fn.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Callable function is not active.",
+        functionId: fn.id,
+        status: fn.status,
+      });
+    }
+
+    if (fn.type !== "http") {
+      return res.status(400).json({
+        success: false,
+        message: "Only HTTP Edge Functions can be called through the public function endpoint.",
+        functionId: fn.id,
+        type: fn.type,
+      });
+    }
+
+    const input = normalizePublicFunctionInput(req);
+    const run = await runPublicEdgeFunction(fn, input, req.goodosApiKey);
+
+    return res.json({
+      success: run.status !== "failed",
+      data: {
+        function: {
+          id: fn.id,
+          name: fn.name,
+          routePath: fn.route_path,
+          status: fn.status,
+        },
+        run: {
+          id: run.id,
+          status: run.status,
+          durationMs: run.durationMs,
+          startedAt: run.startedAt,
+          completedAt: run.completedAt,
+        },
+        output: run.output,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Callable function execution failed.",
+      detail: error.message,
+    });
+  }
+}
+
 router.get("/health", apiKeyRequired, requireScope("read:health"), async (req, res) => {
   return res.json({
     success: true,
@@ -254,5 +600,9 @@ router.get("/storage/files", apiKeyRequired, requireScope("read:storage"), async
     });
   }
 });
+
+
+router.get("/functions/:slug", apiKeyRequired, requireScope("execute:functions"), publicCallableFunctionHandler);
+router.post("/functions/:slug", apiKeyRequired, requireScope("execute:functions"), publicCallableFunctionHandler);
 
 module.exports = router;
