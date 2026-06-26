@@ -3286,4 +3286,106 @@ router.post("/backups/retention-cleanup-safe", async (req, res) => {
   }
 });
 
+
+function quoteDbIdentifierSafe(value) {
+  return '"' + String(value).replace(/"/g, '""') + '"';
+}
+
+async function assertPublicTableExists(tableName) {
+  const result = await dbQuery(
+    `
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_type = 'BASE TABLE'
+        AND table_name = $1
+      LIMIT 1
+    `,
+    [tableName]
+  );
+
+  return Boolean(result.rows[0]);
+}
+
+router.get("/database/tables/:tableName/rows", async (req, res) => {
+  try {
+    const tableName = String(req.params.tableName || "").trim();
+
+    if (!tableName) return fail(res, "Table name is required", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found or not allowed", 404);
+
+    const limit = Math.min(Math.max(Number(req.query.limit || 25), 1), 100);
+    const offset = Math.max(Number(req.query.offset || 0), 0);
+    const search = String(req.query.search || "").trim();
+
+    const columnsResult = await dbQuery(
+      `
+        SELECT
+          column_name AS "columnName",
+          data_type AS "dataType",
+          ordinal_position AS "position"
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = $1
+        ORDER BY ordinal_position ASC
+      `,
+      [tableName]
+    );
+
+    const columns = columnsResult.rows;
+    const quotedTable = quoteDbIdentifierSafe(tableName);
+
+    let whereSql = "";
+    let countParams = [];
+    let rowsParams = [limit, offset];
+
+    if (search) {
+      const searchableColumns = columns.map((column) => {
+        return `COALESCE(${quoteDbIdentifierSafe(column.columnName)}::text, '')`;
+      });
+
+      if (searchableColumns.length) {
+        whereSql = `WHERE (${searchableColumns.join(" || ' ' || ")}) ILIKE $1`;
+        countParams = [`%${search}%`];
+        rowsParams = [`%${search}%`, limit, offset];
+      }
+    }
+
+    const countSql = `
+      SELECT COUNT(*)::int AS count
+      FROM ${quotedTable}
+      ${whereSql}
+    `;
+
+    const rowsSql = `
+      SELECT *
+      FROM ${quotedTable}
+      ${whereSql}
+      LIMIT $${search ? 2 : 1}
+      OFFSET $${search ? 3 : 2}
+    `;
+
+    const countResult = await dbQuery(countSql, countParams);
+    const rowsResult = await dbQuery(rowsSql, rowsParams);
+
+    return ok(res, {
+      tableName,
+      columns,
+      rows: rowsResult.rows,
+      pagination: {
+        limit,
+        offset,
+        total: Number(countResult.rows[0]?.count || 0),
+        nextOffset: offset + rowsResult.rows.length,
+        hasMore: offset + rowsResult.rows.length < Number(countResult.rows[0]?.count || 0),
+      },
+      search,
+    });
+  } catch (error) {
+    return fail(res, "Failed to load table rows", 500, error.message);
+  }
+});
+
 module.exports = router;

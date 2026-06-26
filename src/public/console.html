@@ -976,6 +976,71 @@ window.refreshDatabaseNow = async function refreshDatabaseNow() {
   return window.loadLiveDatabase();
 };
 
+
+window.loadDatabaseTableRows = async function loadDatabaseTableRows(tableName, offset = 0) {
+  if (!tableName) return alert("Missing table name.");
+
+  const searchInput = document.getElementById("database-row-search");
+  const search = searchInput ? searchInput.value.trim() : (state.databaseRowSearch || "");
+
+  state.selectedDbTable = tableName;
+  state.databaseRowSearch = search;
+  state.databaseRowsLoading = true;
+  state.databaseRowsError = "";
+  goodosRenderNow();
+
+  try {
+    const response = await fetch(
+      "/api/admin/database/tables/" + encodeURIComponent(tableName) + "/rows?limit=25&offset=" + encodeURIComponent(offset) + "&search=" + encodeURIComponent(search),
+      {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      }
+    );
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Table row load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.selectedDbTable = data.tableName || tableName;
+    state.selectedDbColumns = Array.isArray(data.columns) ? data.columns : [];
+    state.selectedDbRows = Array.isArray(data.rows) ? data.rows : [];
+    state.selectedDbPagination = data.pagination || {};
+    state.databaseRowsLoading = false;
+    state.databaseRowsError = "";
+    goodosRenderNow();
+  } catch (error) {
+    state.databaseRowsLoading = false;
+    state.databaseRowsError = error.message || "Failed to load table rows.";
+    alert("Database row load failed: " + state.databaseRowsError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.searchDatabaseRows = async function searchDatabaseRows() {
+  if (!state.selectedDbTable) return alert("Select a table first.");
+  return window.loadDatabaseTableRows(state.selectedDbTable, 0);
+};
+
+window.nextDatabaseRows = async function nextDatabaseRows() {
+  if (!state.selectedDbTable) return alert("Select a table first.");
+  const nextOffset = state.selectedDbPagination?.nextOffset || 0;
+  return window.loadDatabaseTableRows(state.selectedDbTable, nextOffset);
+};
+
+window.prevDatabaseRows = async function prevDatabaseRows() {
+  if (!state.selectedDbTable) return alert("Select a table first.");
+  const currentOffset = Number(state.selectedDbPagination?.offset || 0);
+  const prevOffset = Math.max(currentOffset - Number(state.selectedDbPagination?.limit || 25), 0);
+  return window.loadDatabaseTableRows(state.selectedDbTable, prevOffset);
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1013,6 +1078,7 @@ function databaseView() {
             <th>Rows</th>
             <th>Columns</th>
             <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -1022,10 +1088,61 @@ function databaseView() {
               <td>${safeText(String(table.rowCount ?? table.rows ?? 0))}</td>
               <td>${safeText(String((table.columns || []).length))}</td>
               <td><span class="badge">${safeText(table.status || "live")}</span></td>
+              <td><button class="logout" onclick="window.loadDatabaseTableRows('${safeText(table.tableName || table.name || "-")}', 0)">View Rows</button></td>
             </tr>
-          `).join("") || '<tr><td colspan="4" class="muted">No database tables loaded yet.</td></tr>'}
+          `).join("") || '<tr><td colspan="5" class="muted">No database tables loaded yet.</td></tr>'}
         </tbody>
       </table>
+    </div>
+
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head">
+        <h3>Table Row Viewer</h3>
+        <span class="badge">${safeText(state.selectedDbTable || "Select Table")}</span>
+      </div>
+
+      ${state.databaseRowsLoading ? `<p class="muted">Loading rows...</p>` : ""}
+      ${state.databaseRowsError ? `<p class="muted">Row viewer error: ${safeText(state.databaseRowsError)}</p>` : ""}
+
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px;">
+        <input
+          id="database-row-search"
+          value="${safeText(state.databaseRowSearch || "")}"
+          placeholder="Search selected table rows..."
+          style="flex:1; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff;"
+        />
+        <button class="logout" onclick="window.searchDatabaseRows()">Search</button>
+        <button class="logout" onclick="window.prevDatabaseRows()">Prev</button>
+        <button class="logout" onclick="window.nextDatabaseRows()">Next</button>
+      </div>
+
+      <p class="muted">
+        ${state.selectedDbTable ? `Showing ${safeText(String((state.selectedDbRows || []).length))} of ${safeText(String(state.selectedDbPagination?.total || 0))} rows from ${safeText(state.selectedDbTable)}.` : "Click View Rows beside a table to inspect data."}
+      </p>
+
+      <div style="overflow:auto; max-height:520px;">
+        <table>
+          <thead>
+            <tr>
+              ${(state.selectedDbColumns || []).map(column => `<th>${safeText(column.columnName || "-")}</th>`).join("") || "<th>No table selected</th>"}
+            </tr>
+          </thead>
+          <tbody>
+            ${(state.selectedDbRows || []).map(row => `
+              <tr>
+                ${(state.selectedDbColumns || []).map(column => {
+                  const value = row[column.columnName];
+                  let display = value;
+                  if (typeof value === "object" && value !== null) display = JSON.stringify(value);
+                  if (display === null || display === undefined) display = "";
+                  return `<td>${safeText(String(display)).slice(0, 240)}</td>`;
+                }).join("")}
+              </tr>
+            `).join("") || `<tr><td class="muted" colspan="${Math.max((state.selectedDbColumns || []).length, 1)}">No rows loaded yet.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="card" style="margin-top:18px;">
