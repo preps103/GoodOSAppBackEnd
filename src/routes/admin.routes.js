@@ -2694,4 +2694,159 @@ router.get("/settings-audit-page-data", async (req, res) => {
   }
 });
 
+
+router.get("/usage-page-data", async (req, res) => {
+  try {
+    const usageResult = await dbQuery(`
+      SELECT
+        (SELECT COUNT(*)::bigint FROM backend_api_key_usage_logs WHERE created_at >= date_trunc('month', NOW())) AS "api.calls.monthly",
+        (SELECT COUNT(*)::bigint FROM backend_api_keys WHERE status = 'active') AS "api.keys.active",
+        (SELECT COUNT(*)::bigint FROM backend_storage_buckets WHERE status = 'active') AS "storage.buckets",
+        (SELECT COUNT(*)::bigint FROM backend_storage_files) AS "storage.files",
+        COALESCE((SELECT SUM(size_bytes)::bigint FROM backend_storage_files), 0) AS "storage.bytes",
+        (SELECT COUNT(*)::bigint FROM backend_webhooks WHERE status = 'active') AS "webhooks.active",
+        (SELECT COUNT(*)::bigint FROM backend_webhook_deliveries WHERE created_at >= date_trunc('month', NOW())) AS "webhooks.deliveries.monthly",
+        (SELECT COUNT(*)::bigint FROM backend_realtime_events WHERE created_at >= date_trunc('month', NOW())) AS "realtime.events.monthly",
+        (SELECT COUNT(*)::bigint FROM backend_edge_functions) AS "functions.registered",
+        (SELECT COUNT(*)::bigint FROM backend_backups) AS "backups.records",
+        (SELECT COUNT(*)::bigint FROM sessions WHERE revoked_at IS NULL AND expires_at > NOW()) AS "sessions.active",
+        (SELECT COUNT(*)::bigint FROM apps WHERE status = 'active') AS "apps.active"
+    `);
+
+    const quotaResult = await dbQuery(`
+      SELECT
+        id,
+        metric_key AS "metricKey",
+        label,
+        category,
+        quota_limit AS "quotaLimit",
+        quota_unit AS "quotaUnit",
+        warning_percent AS "warningPercent",
+        is_enforced AS "isEnforced",
+        description,
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_usage_quotas
+      WHERE status = 'active'
+      ORDER BY category ASC, label ASC
+    `);
+
+    const rawUsage = usageResult.rows[0] || {};
+    const quotas = quotaResult.rows;
+
+    const usage = quotas.map((quota) => {
+      const current = Number(rawUsage[quota.metricKey] || 0);
+      const limit = Number(quota.quotaLimit || 0);
+      const percent = limit > 0 ? Math.round((current / limit) * 100) : 0;
+
+      let state = "ok";
+      if (limit > 0 && current >= limit) state = "over_limit";
+      else if (limit > 0 && percent >= Number(quota.warningPercent || 80)) state = "warning";
+
+      return {
+        ...quota,
+        current,
+        percent,
+        state,
+      };
+    });
+
+    return ok(res, {
+      usage,
+      rawUsage,
+      counts: {
+        metrics: usage.length,
+        ok: usage.filter((item) => item.state === "ok").length,
+        warning: usage.filter((item) => item.state === "warning").length,
+        overLimit: usage.filter((item) => item.state === "over_limit").length,
+        enforced: usage.filter((item) => item.isEnforced).length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load usage page data", 500, error.message);
+  }
+});
+
+router.post("/usage-quotas/update-safe", async (req, res) => {
+  try {
+    const metricKey = String(req.body?.metricKey || "").trim();
+    const quotaLimit = Number(req.body?.quotaLimit);
+
+    if (!metricKey) return fail(res, "Metric key is required", 400);
+    if (!Number.isFinite(quotaLimit) || quotaLimit < 0) {
+      return fail(res, "Quota limit must be a valid positive number", 400);
+    }
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_usage_quotas
+        WHERE metric_key = $1
+      `,
+      [metricKey]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Quota not found", 404);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_usage_quotas
+        SET
+          quota_limit = $2,
+          updated_at = NOW()
+        WHERE metric_key = $1
+        RETURNING
+          id,
+          metric_key AS "metricKey",
+          label,
+          category,
+          quota_limit AS "quotaLimit",
+          quota_unit AS "quotaUnit",
+          warning_percent AS "warningPercent",
+          is_enforced AS "isEnforced",
+          description,
+          status,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [metricKey, quotaLimit]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'usage.quota.update', 'usage_quota', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        metricKey,
+        JSON.stringify(before),
+        JSON.stringify({ quotaLimit }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      quota: result.rows[0],
+      message: "Usage quota updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update usage quota", 500, error.message);
+  }
+});
+
 module.exports = router;

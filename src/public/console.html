@@ -1415,6 +1415,23 @@ window.loadLiveSettings = async function loadLiveSettings() {
       state.settingsAuditLogs = Array.isArray(state.settingsAuditLogs) ? state.settingsAuditLogs : [];
     }
 
+    try {
+      const usageResponse = await fetch("/api/admin/usage-page-data?t=" + Date.now(), {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+      const usagePayload = await usageResponse.json().catch(() => ({}));
+      const usageData = usagePayload.data || usagePayload;
+      state.usageMetrics = Array.isArray(usageData.usage) ? usageData.usage : [];
+      state.usageCounts = usageData.counts || {};
+    } catch (usageError) {
+      console.warn("Usage refresh failed:", usageError.message);
+      state.usageMetrics = Array.isArray(state.usageMetrics) ? state.usageMetrics : [];
+      state.usageCounts = state.usageCounts || {};
+    }
+
     state.settingsLiveLoaded = true;
     state.settingsLiveLoading = false;
     state.settingsLiveError = "";
@@ -1478,6 +1495,48 @@ window.editPlatformSetting = async function editPlatformSetting(settingKey, curr
     await window.loadLiveSettings();
   } catch (error) {
     alert("Setting update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+
+window.editUsageQuota = async function editUsageQuota(metricKey, currentLimit) {
+  if (!metricKey) return alert("Missing metric key.");
+
+  const nextLimit = prompt("New quota limit for " + metricKey + ":", currentLimit ?? "0");
+  if (nextLimit === null) return;
+
+  const quotaLimit = Number(nextLimit);
+  if (!Number.isFinite(quotaLimit) || quotaLimit < 0) {
+    alert("Quota limit must be a valid positive number.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/admin/usage-quotas/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        metricKey,
+        quotaLimit
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Quota update failed with status " + response.status);
+    }
+
+    alert("Usage quota updated.");
+    await window.loadLiveSettings();
+  } catch (error) {
+    alert("Quota update failed: " + (error.message || "Unknown error"));
     console.error(error);
   }
 };
@@ -1593,6 +1652,45 @@ function settingsView() {
               <td>${safeText(log.ipAddress || "-")}</td>
             </tr>
           `).join("") || '<tr><td colspan="5" class="muted">No audit records loaded yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Usage Metering + Quotas</h3><span class="badge">${safeText(String(usageCounts.metrics || usageMetrics.length || 0))} Metrics</span></div>
+      <div class="grid cards" style="margin-bottom:18px;">
+        ${card("OK", usageCounts.ok || 0, "Healthy usage")}
+        ${card("Warning", usageCounts.warning || 0, "Near limit")}
+        ${card("Over Limit", usageCounts.overLimit || 0, "Needs action")}
+        ${card("Enforced", usageCounts.enforced || 0, "Hard limits")}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Category</th>
+            <th>Usage</th>
+            <th>Limit</th>
+            <th>Percent</th>
+            <th>Status</th>
+            <th>Enforced</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${usageMetrics.map(metric => `
+            <tr>
+              <td><strong>${safeText(metric.label || "-")}</strong><div class="muted">${safeText(metric.metricKey || "-")}</div></td>
+              <td>${safeText(metric.category || "-")}</td>
+              <td>${safeText(String(metric.current ?? 0))} ${safeText(metric.quotaUnit || "")}</td>
+              <td>${safeText(String(metric.quotaLimit ?? 0))} ${safeText(metric.quotaUnit || "")}</td>
+              <td>${safeText(String(metric.percent ?? 0))}%</td>
+              <td><span class="badge">${safeText(metric.state || "-")}</span></td>
+              <td>${metric.isEnforced ? "Yes" : "Soft"}</td>
+              <td><button class="logout" onclick="window.editUsageQuota('${safeText(metric.metricKey)}', '${safeText(String(metric.quotaLimit ?? 0))}')">Edit Limit</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="8" class="muted">No usage metrics loaded yet.</td></tr>'}
         </tbody>
       </table>
     </div>
