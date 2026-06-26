@@ -143,6 +143,23 @@
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
+
+    <div class="card">
+      <h2><span class="badge">GET</span> /notifications — Notifications V2</h2>
+      <p>Scope: <code>read:notifications</code></p>
+      <pre><code>curl https://backend.goodos.app/api/v1/notifications \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="badge">POST</span> /notifications</h2>
+      <p>Scope: <code>write:notifications</code></p>
+      <pre><code>curl -X POST https://backend.goodos.app/api/v1/notifications \
+  -H "Content-Type: application/json" \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
+  --data '{"title":"System notice","message":"Hello from Notifications V2"}'</code></pre>
+    </div>
+
   </main>
 </body>
 </html>

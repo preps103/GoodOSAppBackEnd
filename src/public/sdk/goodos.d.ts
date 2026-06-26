@@ -53,6 +53,8 @@ export class GoodOSClient {
   createDbRow(tableSlug: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   updateDbRow(tableSlug: string, id: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   deleteDbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
+  notifications(): Promise<GoodOSResponse>;
+  createNotification(input?: Record<string, unknown>): Promise<GoodOSResponse>;
   billingPlans(): Promise<GoodOSResponse>;
   usage(): Promise<GoodOSResponse>;
   authSession(): Promise<GoodOSResponse>;

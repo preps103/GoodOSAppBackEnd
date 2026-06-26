@@ -5036,6 +5036,256 @@ function billingV2Section() {
   `;
 }
 
+
+window.loadNotificationsV2Center = async function loadNotificationsV2Center() {
+  try {
+    const response = await fetch("/api/admin/notifications-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Notifications V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.notificationsV2Templates = Array.isArray(data.templates) ? data.templates : [];
+    state.notificationsV2Channels = Array.isArray(data.channels) ? data.channels : [];
+    state.notificationsV2Notifications = Array.isArray(data.notifications) ? data.notifications : [];
+    state.notificationsV2EmailQueue = Array.isArray(data.emailQueue) ? data.emailQueue : [];
+    state.notificationsV2AlertRules = Array.isArray(data.alertRules) ? data.alertRules : [];
+    state.notificationsV2AlertEvents = Array.isArray(data.alertEvents) ? data.alertEvents : [];
+    state.notificationsV2Messages = Array.isArray(data.messageCenter) ? data.messageCenter : [];
+    state.notificationsV2Preferences = Array.isArray(data.preferences) ? data.preferences : [];
+    state.notificationsV2Counts = data.counts || {};
+    state.notificationsV2Loaded = true;
+    state.notificationsV2Loading = false;
+    state.notificationsV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.notificationsV2Loaded = true;
+    state.notificationsV2Loading = false;
+    state.notificationsV2Error = error.message || "Failed to load Notifications V2.";
+    console.error("Notifications V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshNotificationsV2CenterNow = async function refreshNotificationsV2CenterNow() {
+  state.notificationsV2Loaded = false;
+  state.notificationsV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadNotificationsV2Center();
+};
+
+window.createNotificationsV2Test = async function createNotificationsV2Test(queueEmail) {
+  try {
+    const title = prompt("Notification title:", "GoodOS test notification") || "GoodOS test notification";
+    const message = prompt("Notification message:", "This is a Notifications V2 test message.") || "This is a Notifications V2 test message.";
+
+    const response = await fetch("/api/admin/notifications/test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title,
+        message,
+        severity: "info",
+        category: "system",
+        channel: queueEmail ? "email" : "in_app",
+        queueEmail: Boolean(queueEmail)
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Notification test failed with status " + response.status);
+    }
+
+    alert("Notification test created.");
+    await window.loadNotificationsV2Center();
+  } catch (error) {
+    alert("Notification test failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.processNotificationsV2EmailQueue = async function processNotificationsV2EmailQueue() {
+  try {
+    const response = await fetch("/api/admin/notifications/email-queue/process-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ limit: 10 })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    const data = payload.data || payload;
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Email queue process failed with status " + response.status);
+    }
+
+    alert("Email queue processed: " + String(data.processedCount || 0));
+    await window.loadNotificationsV2Center();
+  } catch (error) {
+    alert("Email queue failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.evaluateNotificationsV2Alerts = async function evaluateNotificationsV2Alerts() {
+  try {
+    const response = await fetch("/api/admin/notifications/alerts/evaluate-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    const data = payload.data || payload;
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Alert evaluation failed with status " + response.status);
+    }
+
+    alert("Alert rules evaluated. Created: " + String(data.createdCount || 0));
+    await window.loadNotificationsV2Center();
+  } catch (error) {
+    alert("Alert evaluation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function notificationsV2Section() {
+  if (!state.notificationsV2Loaded && !state.notificationsV2Loading) {
+    state.notificationsV2Loading = true;
+    setTimeout(() => window.loadNotificationsV2Center(), 100);
+  }
+
+  const templates = Array.isArray(state.notificationsV2Templates) ? state.notificationsV2Templates : [];
+  const channels = Array.isArray(state.notificationsV2Channels) ? state.notificationsV2Channels : [];
+  const notifications = Array.isArray(state.notificationsV2Notifications) ? state.notificationsV2Notifications : [];
+  const emailQueue = Array.isArray(state.notificationsV2EmailQueue) ? state.notificationsV2EmailQueue : [];
+  const alertRules = Array.isArray(state.notificationsV2AlertRules) ? state.notificationsV2AlertRules : [];
+  const alertEvents = Array.isArray(state.notificationsV2AlertEvents) ? state.notificationsV2AlertEvents : [];
+  const messages = Array.isArray(state.notificationsV2Messages) ? state.notificationsV2Messages : [];
+  const counts = state.notificationsV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Notifications V2 / Email Queue / Alerts</h3>
+      <div>
+        <button class="logout" onclick="window.refreshNotificationsV2CenterNow()">Refresh Notifications</button>
+        <button class="logout" onclick="window.createNotificationsV2Test(false)">Test In-App</button>
+        <button class="logout" onclick="window.createNotificationsV2Test(true)">Test Email Queue</button>
+        <button class="logout" onclick="window.processNotificationsV2EmailQueue()">Process Email Queue</button>
+        <button class="logout" onclick="window.evaluateNotificationsV2Alerts()">Evaluate Alerts</button>
+      </div>
+    </div>
+
+    ${state.notificationsV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Notifications V2...</p></div>` : ""}
+    ${state.notificationsV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Notifications V2 error: ${safeText(state.notificationsV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Notifications", counts.notifications ?? notifications.length, "Message records")}
+      ${card("Unread", counts.unread ?? notifications.filter(item => item.status === "unread").length, "Unread notices")}
+      ${card("Email Queue", counts.pendingEmail ?? emailQueue.filter(item => item.status === "pending").length, "Pending emails")}
+      ${card("Open Alerts", counts.openAlerts ?? alertEvents.filter(item => item.status === "open").length, "Needs attention")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent Notifications</h3><span class="badge">${safeText(String(notifications.length))} Records</span></div>
+      <table>
+        <thead><tr><th>Notification</th><th>Category</th><th>Severity</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody>
+          ${notifications.slice(0, 80).map(item => `
+            <tr>
+              <td><strong>${safeText(item.title || item.id)}</strong><div class="muted">${safeText(item.message || "")}</div></td>
+              <td>${safeText(item.category || "-")}</td>
+              <td><span class="badge">${safeText(item.severity || "-")}</span></td>
+              <td><span class="badge">${safeText(item.status || "-")}</span></td>
+              <td>${safeText(formatDate(item.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No notifications yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Email Queue</h3><span class="badge">${safeText(String(emailQueue.length))} Emails</span></div>
+      <table>
+        <thead><tr><th>Email</th><th>Subject</th><th>Provider</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody>
+          ${emailQueue.slice(0, 80).map(item => `
+            <tr>
+              <td><strong>${safeText(item.toEmail || "-")}</strong><div class="muted">${safeText(item.id || "")}</div></td>
+              <td>${safeText(item.subject || "-")}</td>
+              <td>${safeText(item.provider || "-")}</td>
+              <td><span class="badge">${safeText(item.status || "-")}</span></td>
+              <td>${safeText(formatDate(item.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No queued email yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Alert Rules</h3><span class="badge">${safeText(String(alertRules.length))} Rules</span></div>
+      <table>
+        <thead><tr><th>Rule</th><th>Category</th><th>Severity</th><th>Channels</th><th>Status</th></tr></thead>
+        <tbody>
+          ${alertRules.map(rule => `
+            <tr>
+              <td><strong>${safeText(rule.name || rule.ruleKey)}</strong><div class="muted">${safeText(rule.ruleKey || "")}</div></td>
+              <td>${safeText(rule.category || "-")}</td>
+              <td><span class="badge">${safeText(rule.severity || "-")}</span></td>
+              <td>${safeText(Array.isArray(rule.channelNames) ? rule.channelNames.join(", ") : String(rule.channelNames || "-"))}</td>
+              <td><span class="badge">${safeText(rule.status || "-")}</span></td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No alert rules found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Templates / Channels</h3><span class="badge">${safeText(String(templates.length))} Templates</span></div>
+      <table>
+        <thead><tr><th>Template</th><th>Category</th><th>Channel</th><th>Status</th></tr></thead>
+        <tbody>
+          ${templates.map(template => `
+            <tr>
+              <td><strong>${safeText(template.name || template.templateKey)}</strong><div class="muted">${safeText(template.templateKey || "")}</div></td>
+              <td>${safeText(template.category || "-")}</td>
+              <td>${safeText(template.channelType || "-")}</td>
+              <td><span class="badge">${safeText(template.status || "-")}</span></td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No notification templates found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function settingsView() {
   if (!state.settingsLiveLoaded && !state.settingsLiveLoading) {
     state.settingsLiveLoading = true;
@@ -5073,6 +5323,8 @@ function settingsView() {
   const usageCounts = state.usageCounts || {};
   return `
     ${hero("Settings", "Complete backend platform configuration for auth, apps, API keys, storage, webhooks, realtime, functions, logs, backups, security, notifications, billing, usage, and developer operations.")}
+
+    ${notificationsV2Section()}
 
     ${billingV2Section()}
     <div class="section-head">

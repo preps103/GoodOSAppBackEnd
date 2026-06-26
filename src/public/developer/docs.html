@@ -145,6 +145,26 @@ console.log(response);</code></pre>
 
 
 
+
+    <h2>Notifications V2</h2>
+    <p>Notifications V2 adds notification templates, in-app message center, email queue, notification preferences, alert rules, and alert events.</p>
+
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Scope</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /api/v1/notifications</code></td><td><code>read:notifications</code></td><td>List notifications and message center records.</td></tr>
+        <tr><td><code>POST /api/v1/notifications</code></td><td><code>write:notifications</code></td><td>Create an in-app or queued email notification.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>await goodos.notifications();
+await goodos.createNotification({
+  title: "System notice",
+  message: "Hello from Notifications V2"
+});</code></pre>
+
     <h2>Usage V2 / Billing Meter</h2>
     <p>Usage V2 adds billing plans, customer/subscription records, usage event logging, meter events, API key usage logs, daily rollups, and quota counters.</p>
 

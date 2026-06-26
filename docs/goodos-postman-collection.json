@@ -244,6 +244,40 @@
         ],
         "url": "{{base_url}}/usage"
       }
+    },
+    {
+      "name": "Notifications V2 - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "url": "{{base_url}}/notifications"
+      }
+    },
+    {
+      "name": "Notifications V2 - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"System notice\",\n  \"message\": \"Hello from Notifications V2\",\n  \"severity\": \"info\",\n  \"category\": \"system\",\n  \"channel\": \"in_app\"\n}"
+        },
+        "url": "{{base_url}}/notifications"
+      }
     }
   ]
 }

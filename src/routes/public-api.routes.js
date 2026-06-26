@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const database = require("../config/database");
 const realtimeHub = require("../realtime/hub");
 const usageService = require("../services/usage.service");
+const notificationService = require("../services/notification.service");
 
 const router = express.Router();
 
@@ -1168,6 +1169,85 @@ router.get("/realtime/stream", apiKeyRequired, requireScope("subscribe:realtime"
   }
 });
 
+
+
+
+router.get("/notifications", apiKeyRequired, requireScope("read:notifications"), async (req, res) => {
+  try {
+    await enforceGoodOSPolicy({
+      targetType: "notification",
+      targetId: "*",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/notifications", method: req.method }
+    }).catch(() => null);
+
+    const snapshot = await notificationService.getNotificationSnapshot();
+
+    return res.json({
+      success: true,
+      data: {
+        notifications: snapshot.notifications,
+        messageCenter: snapshot.messageCenter,
+        counts: snapshot.counts,
+      },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to load notifications.",
+      detail: error.message,
+    });
+  }
+});
+
+router.post("/notifications", apiKeyRequired, requireScope("write:notifications"), async (req, res) => {
+  try {
+    await enforceGoodOSPolicy({
+      targetType: "notification",
+      targetId: "*",
+      operation: "write",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/notifications", method: req.method }
+    }).catch(() => null);
+
+    const notification = await notificationService.createNotification({
+      title: req.body?.title || "GoodOS API Notification",
+      message: req.body?.message || "",
+      severity: req.body?.severity || "info",
+      category: req.body?.category || "api",
+      channel: req.body?.channel || "in_app",
+      recipientEmail: req.body?.recipientEmail || req.body?.email || null,
+      recipientUserId: req.body?.recipientUserId || null,
+      source: "public-api",
+      sourceId: req.goodosApiKey.id,
+      templateKey: req.body?.templateKey || null,
+      variables: req.body?.variables || {},
+      payload: req.body?.payload || {},
+      queueEmail: req.body?.queueEmail === true,
+      organizationId: req.goodosApiKey.organizationId || "org_goodos",
+      projectId: req.goodosApiKey.projectId || "proj_goodos_platform",
+      environmentId: req.goodosApiKey.environmentId || "env_goodos_production",
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        notification,
+      },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to create notification.",
+      detail: error.message,
+    });
+  }
+});
 
 
 router.get("/billing/plans", async (req, res) => {

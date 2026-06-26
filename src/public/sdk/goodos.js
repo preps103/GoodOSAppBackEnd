@@ -124,6 +124,17 @@
       return this.request(`/storage/files${query ? `?${query}` : ""}`);
     }
 
+    notifications() {
+      return this.request("/notifications");
+    }
+
+    createNotification(input = {}) {
+      return this.request("/notifications", {
+        method: "POST",
+        body: input,
+      });
+    }
+
     billingPlans() {
       return this.request("/billing/plans");
     }

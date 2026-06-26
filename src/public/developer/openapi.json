@@ -860,6 +860,58 @@
           }
         }
       }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "List notifications",
+        "description": "Requires scope: read:notifications.",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:notifications",
+        "responses": {
+          "200": {
+            "description": "Notifications and message center records"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create notification",
+        "description": "Requires scope: write:notifications.",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "write:notifications",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "title": "System notice",
+                "message": "Hello from GoodOS Notifications V2",
+                "severity": "info",
+                "category": "system",
+                "channel": "in_app"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notification created"
+          }
+        }
+      }
     }
   }
 }

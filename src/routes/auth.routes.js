@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
+const notificationService = require("../services/notification.service");
 
 
 const env = require("../config/env");
@@ -599,6 +600,29 @@ router.post("/password-reset/request", passwordResetLimiter, async (req, res) =>
           JSON.stringify({ route: "/api/auth/password-reset/request", rawTokenShown: false }),
         ]
       );
+
+      await notificationService.createNotification({
+        templateKey: "auth.password_reset",
+        title: "Reset your GoodOS password",
+        message: "A password reset was requested for your GoodOS account.",
+        category: "auth",
+        severity: "info",
+        channel: "email",
+        recipientUserId: user.id,
+        recipientEmail: user.email,
+        source: "auth.password-reset",
+        sourceId: tokenId,
+        queueEmail: true,
+        variables: {
+          email: user.email,
+          resetUrl: `https://backend.goodos.app/password-reset/${rawToken}`
+        },
+        payload: {
+          resetTokenId: tokenId
+        }
+      }).catch((notificationError) => {
+        console.warn("Password reset notification queue failed:", notificationError.message);
+      });
     }
 
     return success(res, {

@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const multer = require("multer");
 const authRequired = require("../middleware/authRequired");
 const database = require("../config/database");
+const notificationService = require("../services/notification.service");
 
 const router = express.Router();
 
@@ -7939,6 +7940,144 @@ router.get("/settings-audit-page-data", async (req, res) => {
 });
 
 
+
+
+router.get("/notifications-page-data", async (req, res) => {
+  try {
+    const snapshot = await notificationService.getNotificationSnapshot();
+    return ok(res, snapshot);
+  } catch (error) {
+    return fail(res, "Failed to load notifications page data", 500, error.message);
+  }
+});
+
+router.post("/notifications/test-safe", async (req, res) => {
+  try {
+    const notification = await notificationService.createNotification({
+      title: req.body?.title || "GoodOS test notification",
+      message: req.body?.message || "This is a Notifications V2 test message.",
+      severity: req.body?.severity || "info",
+      category: req.body?.category || "system",
+      channel: req.body?.channel || "in_app",
+      recipientEmail: req.body?.recipientEmail || req.body?.email || null,
+      queueEmail: req.body?.queueEmail === true,
+      templateKey: req.body?.templateKey || "system.notice",
+      variables: {
+        title: req.body?.title || "GoodOS test notification",
+        message: req.body?.message || "This is a Notifications V2 test message."
+      },
+      source: "admin-console",
+      sourceId: "notifications-test-safe",
+      payload: {
+        createdFrom: "GoodAppBackEnd Console",
+        time: new Date().toISOString()
+      }
+    });
+
+    return ok(res, {
+      notification,
+      message: "Notification test created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create test notification", 500, error.message);
+  }
+});
+
+router.post("/notifications/email-queue/process-safe", async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.body?.limit || 10), 1), 50);
+    const result = await notificationService.processEmailQueue(limit);
+
+    return ok(res, {
+      ...result,
+      message: "Email queue processed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to process email queue", 500, error.message);
+  }
+});
+
+router.post("/notifications/alerts/evaluate-safe", async (req, res) => {
+  try {
+    const result = await notificationService.evaluateAlertRules();
+
+    return ok(res, {
+      ...result,
+      message: "Alert rules evaluated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to evaluate alert rules", 500, error.message);
+  }
+});
+
+router.post("/notifications/:id/read-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_notifications
+        SET status = 'read',
+            read_at = NOW(),
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, title, status, read_at AS "readAt"
+      `,
+      [id]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_message_center
+        SET status = 'read',
+            read_at = NOW(),
+            updated_at = NOW()
+        WHERE notification_id = $1
+      `,
+      [id]
+    ).catch(() => null);
+
+    if (!result.rows[0]) return fail(res, "Notification not found", 404);
+
+    return ok(res, {
+      notification: result.rows[0],
+      message: "Notification marked read.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to mark notification read", 500, error.message);
+  }
+});
+
+router.post("/notifications/alert-rules/:id/status-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!["active", "disabled", "planned", "archived"].includes(status)) {
+      return fail(res, "Status must be active, disabled, planned, or archived.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_alert_rules
+        SET status = $2,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, rule_key AS "ruleKey", name, status, updated_at AS "updatedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "Alert rule not found", 404);
+
+    return ok(res, {
+      alertRule: result.rows[0],
+      message: "Alert rule status updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update alert rule", 500, error.message);
+  }
+});
 
 router.get("/billing-page-data", async (req, res) => {
   try {
