@@ -1096,6 +1096,87 @@ function apiKeysView() {
   `;
 }
 
+
+window.loadLiveWebhooks = async function loadLiveWebhooks() {
+  try {
+    const response = await fetch("/api/admin/webhooks-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Webhook refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : [];
+    state.webhookDeliveries = Array.isArray(data.webhookDeliveries) ? data.webhookDeliveries : [];
+    state.webhooksLiveLoaded = true;
+    state.webhooksLiveLoading = false;
+    state.webhooksLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.webhooksLiveError = error.message || "Failed to load webhook page data.";
+    state.webhooksLiveLoading = false;
+    alert("Webhook refresh failed: " + state.webhooksLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.createWebhook = async function createWebhook() {
+  const name = prompt("Webhook name:", "GoodOS Webhook");
+  if (!name) return;
+
+  const url = prompt("Webhook URL:", "https://backend.goodos.app/webhook-test-receiver");
+  if (!url) return;
+
+  const eventsRaw = prompt("Events, comma separated. Use * for all events:", "*");
+  if (!eventsRaw) return;
+
+  const events = eventsRaw.split(",").map(item => item.trim()).filter(Boolean);
+
+  try {
+    const response = await fetch("/api/admin/webhooks/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, url, events })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Webhook creation failed with status " + response.status);
+    }
+
+    const secret = payload.data?.secret || payload.secret || "";
+    if (secret) {
+      prompt("Webhook created. Copy this secret now. It will not be shown again:", secret);
+    } else {
+      alert("Webhook created.");
+    }
+
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Webhook creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.refreshWebhooksNow = async function refreshWebhooksNow() {
+  return window.loadLiveWebhooks();
+};
+
 function webhooksView() {
   if (!state.webhookLiveLoaded && !state.webhookLiveLoading) {
     state.webhookLiveLoading = true;
