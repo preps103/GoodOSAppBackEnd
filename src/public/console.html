@@ -1053,6 +1053,25 @@ window.closeDatabaseRows = function closeDatabaseRows() {
   goodosRenderNow();
 };
 
+
+window.exportDatabaseTableRows = function exportDatabaseTableRows(format) {
+  if (!state.selectedDbTable) {
+    alert("Select a table first.");
+    return;
+  }
+
+  const searchInput = document.getElementById("database-row-search");
+  const search = searchInput ? searchInput.value.trim() : (state.databaseRowSearch || "");
+
+  const safeFormat = format === "json" ? "json" : "csv";
+  const url = "/api/admin/database/tables/" + encodeURIComponent(state.selectedDbTable)
+    + "/export?format=" + encodeURIComponent(safeFormat)
+    + "&limit=5000"
+    + "&search=" + encodeURIComponent(search);
+
+  window.open(url, "_blank");
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1094,6 +1113,8 @@ function databaseView() {
               <button class="logout" onclick="window.searchDatabaseRows()">Search</button>
               <button class="logout" onclick="window.prevDatabaseRows()">Prev</button>
               <button class="logout" onclick="window.nextDatabaseRows()">Next</button>
+              <button class="logout" onclick="window.exportDatabaseTableRows('csv')">Export CSV</button>
+              <button class="logout" onclick="window.exportDatabaseTableRows('json')">Export JSON</button>
             </div>
 
             <p class="muted" style="margin-bottom:12px;">

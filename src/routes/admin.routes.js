@@ -3388,4 +3388,102 @@ router.get("/database/tables/:tableName/rows", async (req, res) => {
   }
 });
 
+
+function csvEscape(value) {
+  if (value === null || value === undefined) return "";
+  let output = typeof value === "object" ? JSON.stringify(value) : String(value);
+  output = output.replace(/"/g, '""');
+  return `"${output}"`;
+}
+
+router.get("/database/tables/:tableName/export", async (req, res) => {
+  try {
+    const tableName = String(req.params.tableName || "").trim();
+
+    if (!tableName) return fail(res, "Table name is required", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found or not allowed", 404);
+
+    const format = String(req.query.format || "csv").toLowerCase();
+    const limit = Math.min(Math.max(Number(req.query.limit || 5000), 1), 5000);
+    const search = String(req.query.search || "").trim();
+
+    const columnsResult = await dbQuery(
+      `
+        SELECT
+          column_name AS "columnName",
+          data_type AS "dataType",
+          ordinal_position AS "position"
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = $1
+        ORDER BY ordinal_position ASC
+      `,
+      [tableName]
+    );
+
+    const columns = columnsResult.rows;
+    const quotedTable = quoteDbIdentifierSafe(tableName);
+
+    let whereSql = "";
+    let rowsParams = [limit];
+
+    if (search) {
+      const searchableColumns = columns.map((column) => {
+        return `COALESCE(${quoteDbIdentifierSafe(column.columnName)}::text, '')`;
+      });
+
+      if (searchableColumns.length) {
+        whereSql = `WHERE (${searchableColumns.join(" || ' ' || ")}) ILIKE $1`;
+        rowsParams = [`%${search}%`, limit];
+      }
+    }
+
+    const rowsSql = `
+      SELECT *
+      FROM ${quotedTable}
+      ${whereSql}
+      LIMIT $${search ? 2 : 1}
+    `;
+
+    const rowsResult = await dbQuery(rowsSql, rowsParams);
+    const rows = rowsResult.rows;
+
+    const safeFileTableName = tableName.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    if (format === "json") {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${safeFileTableName}_${timestamp}.json"`);
+      return res.send(JSON.stringify({
+        tableName,
+        exportedAt: new Date().toISOString(),
+        search,
+        limit,
+        rowCount: rows.length,
+        columns,
+        rows,
+      }, null, 2));
+    }
+
+    if (format !== "csv") {
+      return fail(res, "Unsupported export format. Use csv or json.", 400);
+    }
+
+    const header = columns.map((column) => csvEscape(column.columnName)).join(",");
+    const body = rows.map((row) => {
+      return columns.map((column) => csvEscape(row[column.columnName])).join(",");
+    }).join("\n");
+
+    const csv = `${header}\n${body}\n`;
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${safeFileTableName}_${timestamp}.csv"`);
+    return res.send(csv);
+  } catch (error) {
+    return fail(res, "Failed to export table rows", 500, error.message);
+  }
+});
+
 module.exports = router;
