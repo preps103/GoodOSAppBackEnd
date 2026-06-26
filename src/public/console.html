@@ -711,6 +711,272 @@ function appsTable() {
 }
 
 
+
+window.loadProjectControlCenter = async function loadProjectControlCenter() {
+  try {
+    const response = await fetch("/api/admin/projects-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Project Control Center failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.projectCenter = data || {};
+    state.organizations = Array.isArray(data.organizations) ? data.organizations : [];
+    state.projects = Array.isArray(data.projects) ? data.projects : [];
+    state.projectEnvironments = Array.isArray(data.environments) ? data.environments : [];
+    state.projectModuleMappings = Array.isArray(data.moduleMappings) ? data.moduleMappings : [];
+    state.projectCenterCounts = data.counts || {};
+    state.projectCenterLoaded = true;
+    state.projectCenterLoading = false;
+    state.projectCenterError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.projectCenterLoaded = true;
+    state.projectCenterLoading = false;
+    state.projectCenterError = error.message || "Failed to load Project Control Center.";
+    console.error("Project Control Center failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshProjectControlCenterNow = async function refreshProjectControlCenterNow() {
+  state.projectCenterLoaded = false;
+  state.projectCenterLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadProjectControlCenter();
+};
+
+window.createProjectControlProject = async function createProjectControlProject() {
+  const name = prompt("Project name:", "New GoodOS Project");
+  if (!name) return;
+
+  const slug = prompt("Project slug:", name.toLowerCase().replace(/[^a-z0-9_-]/g, "-")) || "";
+  const description = prompt("Description:", "GoodOS project.") || "";
+
+  try {
+    const response = await fetch("/api/admin/projects/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        organizationId: "org_goodos",
+        name,
+        slug,
+        description,
+        status: "active"
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Project creation failed with status " + response.status);
+    }
+
+    alert("Project created with default Production environment.");
+    await window.loadProjectControlCenter();
+    await window.loadActivityCenter();
+  } catch (error) {
+    alert("Project creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.createProjectEnvironment = async function createProjectEnvironment(projectId) {
+  const name = prompt("Environment name:", "Staging");
+  if (!name) return;
+
+  const type = prompt("Type: development, staging, production, preview, test", name.toLowerCase()) || "staging";
+  const slug = prompt("Slug:", type.toLowerCase().replace(/[^a-z0-9_-]/g, "-")) || type;
+
+  try {
+    const response = await fetch("/api/admin/projects/" + encodeURIComponent(projectId) + "/environments/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        type,
+        slug,
+        status: "active",
+        apiBaseUrl: "https://backend.goodos.app"
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Environment creation failed with status " + response.status);
+    }
+
+    alert("Environment created.");
+    await window.loadProjectControlCenter();
+  } catch (error) {
+    alert("Environment creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.viewProjectDetail = async function viewProjectDetail(id) {
+  try {
+    const response = await fetch("/api/admin/projects/" + encodeURIComponent(id) + "/detail-safe?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Project detail failed with status " + response.status);
+    }
+
+    alert("Project Detail:\\n\\n" + prettyJsonForAlert(payload.data || payload));
+  } catch (error) {
+    alert("Project detail failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function projectControlCenterSection() {
+  if (!state.projectCenterLoaded && !state.projectCenterLoading) {
+    state.projectCenterLoading = true;
+    setTimeout(() => window.loadProjectControlCenter(), 100);
+  }
+
+  const organizations = Array.isArray(state.organizations) ? state.organizations : [];
+  const projects = Array.isArray(state.projects) ? state.projects : [];
+  const environments = Array.isArray(state.projectEnvironments) ? state.projectEnvironments : [];
+  const mappings = Array.isArray(state.projectModuleMappings) ? state.projectModuleMappings : [];
+  const counts = state.projectCenterCounts || {};
+  const scopedPercent = counts.totalModules ? Math.round((Number(counts.scopedModules || 0) / Number(counts.totalModules || 1)) * 100) : 0;
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Project Control Center</h3>
+      <div>
+        <button class="logout" onclick="window.refreshProjectControlCenterNow()">Refresh Projects</button>
+        <button class="logout" onclick="window.createProjectControlProject()">Create Project</button>
+      </div>
+    </div>
+
+    ${state.projectCenterLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Project Control Center...</p></div>` : ""}
+    ${state.projectCenterError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Project Control Center error: ${safeText(state.projectCenterError)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Organizations", counts.organizations ?? organizations.length, "Enterprise tenants")}
+      ${card("Projects", counts.projects ?? projects.length, "Project workspaces")}
+      ${card("Environments", counts.environments ?? environments.length, "Dev / staging / production")}
+      ${card("Module Scope", `${safeText(String(scopedPercent))}%`, "Records mapped to environments")}
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+      <div class="card">
+        <div class="section-head"><h3>Projects</h3><span class="badge">${safeText(String(projects.length))} Projects</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Organization</th>
+              <th>Status</th>
+              <th>Envs</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${projects.map(project => `
+              <tr>
+                <td><strong>${safeText(project.name || project.id)}</strong><div class="muted">${safeText(project.id || "")}</div><div class="muted">${safeText(project.description || "")}</div></td>
+                <td>${safeText(project.organizationName || project.organizationId || "-")}</td>
+                <td><span class="badge">${safeText(project.status || "-")}</span></td>
+                <td>${safeText(String(project.environmentCount ?? 0))}</td>
+                <td>
+                  <button class="logout" onclick="window.viewProjectDetail('${safeText(project.id)}')">Details</button>
+                  <button class="logout" onclick="window.createProjectEnvironment('${safeText(project.id)}')">Add Env</button>
+                </td>
+              </tr>
+            `).join("") || '<tr><td colspan="5" class="muted">No projects found.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><h3>Environments</h3><span class="badge">${safeText(String(environments.length))} Environments</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Environment</th>
+              <th>Project</th>
+              <th>Type</th>
+              <th>Modules</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${environments.map(env => `
+              <tr>
+                <td><strong>${safeText(env.name || env.id)}</strong><div class="muted">${safeText(env.id || "")}</div></td>
+                <td>${safeText(env.projectName || env.projectId || "-")}</td>
+                <td><span class="badge">${safeText(env.type || "-")}</span></td>
+                <td>${safeText(String(env.apps || 0))} apps / ${safeText(String(env.apiKeys || 0))} keys / ${safeText(String(env.webhooks || 0))} hooks</td>
+              </tr>
+            `).join("") || '<tr><td colspan="4" class="muted">No environments found.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Module Environment Mapping</h3><span class="badge">${safeText(String(scopedPercent))}% Scoped</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Total Records</th>
+            <th>Environment Scoped</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${mappings.map(item => {
+            const total = Number(item.count || 0);
+            const scoped = Number(item.scopedCount || 0);
+            return `
+              <tr>
+                <td><strong>${safeText(item.module || "-")}</strong></td>
+                <td>${safeText(String(total))}</td>
+                <td>${safeText(String(scoped))}</td>
+                <td><span class="badge">${total === scoped ? "Scoped" : "Partial"}</span></td>
+              </tr>
+            `;
+          }).join("") || '<tr><td colspan="4" class="muted">No module mapping data loaded.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 window.loadActivityCenter = async function loadActivityCenter() {
   try {
     const response = await fetch("/api/admin/activity-center-page-data?t=" + Date.now(), {
@@ -849,6 +1115,8 @@ function dashboard() {
 
     ${state.activityLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Activity Center...</p></div>` : ""}
     ${state.activityError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Activity Center error: ${safeText(state.activityError)}</p></div>` : ""}
+
+    ${projectControlCenterSection()}
 
     <div class="grid cards">
       ${card("Users", counts.activeUsers ?? stats.users ?? state.users.length, "Active GoodOS users")}

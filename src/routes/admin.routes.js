@@ -2468,6 +2468,469 @@ async function activityCenterCounts() {
 }
 
 
+
+function normalizeProjectSlug(value, fallback = "project") {
+  return String(value || fallback)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 90) || fallback;
+}
+
+function normalizeProjectStatus(value, fallback = "active") {
+  const status = String(value || fallback).trim().toLowerCase();
+  if (["active", "planned", "disabled", "archived"].includes(status)) return status;
+  return fallback;
+}
+
+function normalizeEnvironmentType(value, fallback = "production") {
+  const type = String(value || fallback).trim().toLowerCase();
+  if (["development", "staging", "production", "preview", "test"].includes(type)) return type;
+  return fallback;
+}
+
+router.get("/projects-page-data", async (req, res) => {
+  try {
+    const organizationsResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        slug,
+        plan,
+        status,
+        owner_user_id::text AS "ownerUserId",
+        metadata_json AS "metadata",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_organizations
+      ORDER BY created_at ASC
+      LIMIT 100
+    `);
+
+    const projectsResult = await dbQuery(`
+      SELECT
+        p.id,
+        p.organization_id AS "organizationId",
+        o.name AS "organizationName",
+        p.name,
+        p.slug,
+        p.status,
+        p.description,
+        p.metadata_json AS "metadata",
+        p.created_at AS "createdAt",
+        p.updated_at AS "updatedAt",
+        COUNT(pe.id)::int AS "environmentCount"
+      FROM backend_projects p
+      LEFT JOIN backend_organizations o ON o.id = p.organization_id
+      LEFT JOIN backend_project_environments pe ON pe.project_id = p.id
+      GROUP BY p.id, o.name
+      ORDER BY p.created_at ASC
+      LIMIT 100
+    `);
+
+    const environmentsResult = await dbQuery(`
+      SELECT
+        pe.id,
+        pe.project_id AS "projectId",
+        p.name AS "projectName",
+        p.organization_id AS "organizationId",
+        o.name AS "organizationName",
+        pe.name,
+        pe.slug,
+        pe.type,
+        pe.status,
+        pe.api_base_url AS "apiBaseUrl",
+        pe.metadata_json AS "metadata",
+        pe.created_at AS "createdAt",
+        pe.updated_at AS "updatedAt",
+        (SELECT COUNT(*)::int FROM apps WHERE environment_id = pe.id) AS apps,
+        (SELECT COUNT(*)::int FROM backend_api_keys WHERE environment_id = pe.id) AS "apiKeys",
+        (SELECT COUNT(*)::int FROM backend_storage_buckets WHERE environment_id = pe.id) AS buckets,
+        (SELECT COUNT(*)::int FROM backend_webhooks WHERE environment_id = pe.id) AS webhooks,
+        (SELECT COUNT(*)::int FROM backend_edge_functions WHERE environment_id = pe.id) AS functions,
+        (SELECT COUNT(*)::int FROM backend_events WHERE environment_id = pe.id) AS events
+      FROM backend_project_environments pe
+      JOIN backend_projects p ON p.id = pe.project_id
+      JOIN backend_organizations o ON o.id = p.organization_id
+      ORDER BY
+        CASE pe.type
+          WHEN 'production' THEN 0
+          WHEN 'staging' THEN 1
+          WHEN 'development' THEN 2
+          ELSE 3
+        END,
+        pe.created_at ASC
+      LIMIT 150
+    `);
+
+    const orgMembershipsResult = await dbQuery(`
+      SELECT
+        om.id,
+        om.organization_id AS "organizationId",
+        o.name AS "organizationName",
+        om.user_id::text AS "userId",
+        u.email,
+        COALESCE(u.display_name, u.email) AS "displayName",
+        om.role,
+        om.status,
+        om.created_at AS "createdAt",
+        om.updated_at AS "updatedAt"
+      FROM backend_organization_memberships om
+      LEFT JOIN backend_organizations o ON o.id = om.organization_id
+      LEFT JOIN users u ON u.id = om.user_id
+      ORDER BY om.created_at DESC
+      LIMIT 150
+    `);
+
+    const projectMembershipsResult = await dbQuery(`
+      SELECT
+        pm.id,
+        pm.project_id AS "projectId",
+        p.name AS "projectName",
+        pm.user_id::text AS "userId",
+        u.email,
+        COALESCE(u.display_name, u.email) AS "displayName",
+        pm.role,
+        pm.status,
+        pm.created_at AS "createdAt",
+        pm.updated_at AS "updatedAt"
+      FROM backend_project_memberships pm
+      LEFT JOIN backend_projects p ON p.id = pm.project_id
+      LEFT JOIN users u ON u.id = pm.user_id
+      ORDER BY pm.created_at DESC
+      LIMIT 150
+    `);
+
+    const mappingsResult = await dbQuery(`
+      SELECT
+        'apps' AS module,
+        COUNT(*)::int AS count,
+        COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int AS "scopedCount"
+      FROM apps
+      UNION ALL
+      SELECT 'api_keys', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_api_keys
+      UNION ALL
+      SELECT 'storage_buckets', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_storage_buckets
+      UNION ALL
+      SELECT 'storage_files', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_storage_files
+      UNION ALL
+      SELECT 'webhooks', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_webhooks
+      UNION ALL
+      SELECT 'webhook_deliveries', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_webhook_deliveries
+      UNION ALL
+      SELECT 'realtime_events', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_realtime_events
+      UNION ALL
+      SELECT 'edge_functions', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_edge_functions
+      UNION ALL
+      SELECT 'function_runs', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_edge_function_runs
+      UNION ALL
+      SELECT 'backups', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_database_backups
+      UNION ALL
+      SELECT 'settings', COUNT(*)::int, COUNT(*) FILTER (WHERE environment_id IS NOT NULL)::int FROM backend_platform_settings
+    `);
+
+    const organizations = organizationsResult.rows;
+    const projects = projectsResult.rows;
+    const environments = environmentsResult.rows;
+    const moduleMappings = mappingsResult.rows;
+
+    return ok(res, {
+      organizations,
+      projects,
+      environments,
+      orgMemberships: orgMembershipsResult.rows,
+      projectMemberships: projectMembershipsResult.rows,
+      moduleMappings,
+      counts: {
+        organizations: organizations.length,
+        activeOrganizations: organizations.filter((item) => item.status === "active").length,
+        projects: projects.length,
+        activeProjects: projects.filter((item) => item.status === "active").length,
+        environments: environments.length,
+        productionEnvironments: environments.filter((item) => item.type === "production").length,
+        scopedModules: moduleMappings.filter((item) => Number(item.count || 0) === Number(item.scopedCount || 0)).length,
+        totalModules: moduleMappings.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load project control center", 500, error.message);
+  }
+});
+
+router.get("/projects/:id/detail-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const projectResult = await dbQuery(
+      `
+        SELECT
+          p.id,
+          p.organization_id AS "organizationId",
+          o.name AS "organizationName",
+          p.name,
+          p.slug,
+          p.status,
+          p.description,
+          p.metadata_json AS "metadata",
+          p.created_at AS "createdAt",
+          p.updated_at AS "updatedAt"
+        FROM backend_projects p
+        LEFT JOIN backend_organizations o ON o.id = p.organization_id
+        WHERE p.id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const project = projectResult.rows[0];
+    if (!project) return fail(res, "Project not found", 404);
+
+    const environments = await dbQuery(
+      `
+        SELECT
+          id,
+          name,
+          slug,
+          type,
+          status,
+          api_base_url AS "apiBaseUrl",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+        FROM backend_project_environments
+        WHERE project_id = $1
+        ORDER BY created_at ASC
+      `,
+      [id]
+    );
+
+    const apps = await dbQuery(
+      `
+        SELECT id, name, domain, status
+        FROM apps
+        WHERE project_id = $1
+        ORDER BY name ASC
+      `,
+      [id]
+    );
+
+    return ok(res, {
+      project,
+      environments: environments.rows,
+      apps: apps.rows,
+    });
+  } catch (error) {
+    return fail(res, "Failed to load project detail", 500, error.message);
+  }
+});
+
+router.post("/projects/create-safe", async (req, res) => {
+  try {
+    const organizationId = String(req.body?.organizationId || "org_goodos").trim();
+    const name = String(req.body?.name || "").trim();
+    const slug = normalizeProjectSlug(req.body?.slug || name);
+    const id = normalizeProjectSlug(req.body?.id || `proj_${slug}`);
+    const status = normalizeProjectStatus(req.body?.status || "active");
+    const description = String(req.body?.description || "").trim();
+
+    if (!name) return fail(res, "Project name is required", 400);
+
+    const orgCheck = await dbQuery("SELECT id FROM backend_organizations WHERE id = $1 LIMIT 1", [organizationId]);
+    if (!orgCheck.rows[0]) return fail(res, "Organization not found", 404);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_projects (
+          id,
+          organization_id,
+          name,
+          slug,
+          status,
+          description,
+          metadata_json
+        )
+        VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7::jsonb)
+        RETURNING
+          id,
+          organization_id AS "organizationId",
+          name,
+          slug,
+          status,
+          description,
+          metadata_json AS "metadata",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [
+        id,
+        organizationId,
+        name,
+        slug,
+        status,
+        description,
+        JSON.stringify({ createdFrom: "GoodAppBackEnd Console" }),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_project_environments (
+          id,
+          project_id,
+          name,
+          slug,
+          type,
+          status,
+          api_base_url,
+          metadata_json
+        )
+        VALUES ($1, $2, 'Production', 'production', 'production', 'active', 'https://backend.goodos.app', $3::jsonb)
+        ON CONFLICT (id) DO NOTHING
+      `,
+      [
+        `env_${id}_production`.slice(0, 120),
+        id,
+        JSON.stringify({ createdFrom: "Project creation", default: true }),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'project.create', 'project', $3, $4::jsonb, $5, $3, NULL, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        organizationId,
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      project: result.rows[0],
+      message: "Project created with a default Production environment.",
+    });
+  } catch (error) {
+    if (String(error.message || "").includes("duplicate key")) {
+      return fail(res, "Project already exists", 409, error.message);
+    }
+
+    return fail(res, "Failed to create project", 500, error.message);
+  }
+});
+
+router.post("/projects/:id/environments/create-safe", async (req, res) => {
+  try {
+    const projectId = String(req.params.id || "").trim();
+    const name = String(req.body?.name || "").trim();
+    const type = normalizeEnvironmentType(req.body?.type || name || "production");
+    const slug = normalizeProjectSlug(req.body?.slug || type);
+    const id = normalizeProjectSlug(req.body?.id || `env_${projectId}_${slug}`);
+    const status = normalizeProjectStatus(req.body?.status || "active");
+    const apiBaseUrl = String(req.body?.apiBaseUrl || "https://backend.goodos.app").trim();
+
+    if (!name) return fail(res, "Environment name is required", 400);
+
+    const projectCheck = await dbQuery("SELECT id, organization_id FROM backend_projects WHERE id = $1 LIMIT 1", [projectId]);
+    const project = projectCheck.rows[0];
+    if (!project) return fail(res, "Project not found", 404);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_project_environments (
+          id,
+          project_id,
+          name,
+          slug,
+          type,
+          status,
+          api_base_url,
+          metadata_json
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, ''), $8::jsonb)
+        RETURNING
+          id,
+          project_id AS "projectId",
+          name,
+          slug,
+          type,
+          status,
+          api_base_url AS "apiBaseUrl",
+          metadata_json AS "metadata",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [
+        id,
+        projectId,
+        name,
+        slug,
+        type,
+        status,
+        apiBaseUrl,
+        JSON.stringify({ createdFrom: "GoodAppBackEnd Console" }),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'project.environment.create', 'project_environment', $3, $4::jsonb, $5, $6, $3, $7, $8)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        project.organization_id,
+        projectId,
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      environment: result.rows[0],
+      message: "Project environment created.",
+    });
+  } catch (error) {
+    if (String(error.message || "").includes("duplicate key")) {
+      return fail(res, "Environment already exists for this project", 409, error.message);
+    }
+
+    return fail(res, "Failed to create project environment", 500, error.message);
+  }
+});
+
 router.get("/activity-center-page-data", async (req, res) => {
   try {
     const counts = await activityCenterCounts();
