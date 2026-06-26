@@ -2465,4 +2465,122 @@ router.post("/backups/create-safe", async (req, res) => {
   }
 });
 
+
+router.get("/settings-page-data", async (req, res) => {
+  try {
+    const settingsResult = await dbQuery(`
+      SELECT
+        id,
+        category,
+        setting_key AS "settingKey",
+        label,
+        CASE
+          WHEN is_secret = true THEN '{"value":"********"}'::jsonb
+          ELSE value_json
+        END AS "valueJson",
+        value_type AS "valueType",
+        is_secret AS "isSecret",
+        is_editable AS "isEditable",
+        description,
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_platform_settings
+      ORDER BY category ASC, label ASC
+      LIMIT 500
+    `);
+
+    const categoriesResult = await dbQuery(`
+      SELECT
+        category,
+        COUNT(*)::int AS count,
+        COUNT(*) FILTER (WHERE status = 'active')::int AS active,
+        COUNT(*) FILTER (WHERE status = 'planned')::int AS planned
+      FROM backend_platform_settings
+      GROUP BY category
+      ORDER BY category ASC
+    `);
+
+    const memory = process.memoryUsage();
+
+    return ok(res, {
+      settings: settingsResult.rows,
+      categories: categoriesResult.rows,
+      runtime: {
+        environment: process.env.NODE_ENV || "production",
+        service: "GoodAppBackEnd",
+        node: process.version,
+        pid: process.pid,
+        uptimeSeconds: Math.floor(process.uptime()),
+        uptime: `${Math.floor(process.uptime() / 60)} min`,
+        memoryHeapMb: Math.round(memory.heapUsed / 1024 / 1024),
+        database: "connected",
+      },
+      counts: {
+        settings: settingsResult.rows.length,
+        categories: categoriesResult.rows.length,
+        active: settingsResult.rows.filter((item) => item.status === "active").length,
+        planned: settingsResult.rows.filter((item) => item.status === "planned").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load settings page data", 500, error.message);
+  }
+});
+
+router.post("/settings/update-safe", async (req, res) => {
+  try {
+    const settingKey = String(req.body?.settingKey || "").trim();
+    const value = req.body?.value;
+
+    if (!settingKey) return fail(res, "Setting key is required", 400);
+
+    const existingResult = await dbQuery(
+      `
+        SELECT setting_key, is_editable, is_secret
+        FROM backend_platform_settings
+        WHERE setting_key = $1
+      `,
+      [settingKey]
+    );
+
+    const existing = existingResult.rows[0];
+
+    if (!existing) return fail(res, "Setting not found", 404);
+    if (!existing.is_editable) return fail(res, "This setting is read only", 403);
+    if (existing.is_secret) return fail(res, "Secret settings cannot be edited from this console yet", 403);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_platform_settings
+        SET
+          value_json = $2::jsonb,
+          updated_at = NOW()
+        WHERE setting_key = $1
+        RETURNING
+          id,
+          category,
+          setting_key AS "settingKey",
+          label,
+          value_json AS "valueJson",
+          value_type AS "valueType",
+          is_secret AS "isSecret",
+          is_editable AS "isEditable",
+          description,
+          status,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [settingKey, JSON.stringify({ value })]
+    );
+
+    return ok(res, {
+      setting: result.rows[0],
+      message: "Setting updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update setting", 500, error.message);
+  }
+});
+
 module.exports = router;

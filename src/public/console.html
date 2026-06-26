@@ -1363,41 +1363,204 @@ function backupsView() {
 }
 
 
+
+window.loadLiveSettings = async function loadLiveSettings() {
+  try {
+    const response = await fetch("/api/admin/settings-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Settings refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.platformSettings = Array.isArray(data.settings) ? data.settings : [];
+    state.platformSettingCategories = Array.isArray(data.categories) ? data.categories : [];
+    state.settingsRuntime = data.runtime || {};
+    state.settingsCounts = data.counts || {};
+    state.settingsLiveLoaded = true;
+    state.settingsLiveLoading = false;
+    state.settingsLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.settingsLiveError = error.message || "Failed to load settings page data.";
+    state.settingsLiveLoading = false;
+    alert("Settings refresh failed: " + state.settingsLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshSettingsNow = async function refreshSettingsNow() {
+  return window.loadLiveSettings();
+};
+
+window.editPlatformSetting = async function editPlatformSetting(settingKey, currentValue) {
+  if (!settingKey) return alert("Missing setting key.");
+
+  const nextValue = prompt("New value for " + settingKey + ":", currentValue ?? "");
+  if (nextValue === null) return;
+
+  let parsedValue = nextValue;
+
+  if (nextValue === "true") parsedValue = true;
+  else if (nextValue === "false") parsedValue = false;
+  else if (!Number.isNaN(Number(nextValue)) && nextValue.trim() !== "") parsedValue = Number(nextValue);
+  else if (nextValue.trim().startsWith("[") || nextValue.trim().startsWith("{")) {
+    try {
+      parsedValue = JSON.parse(nextValue);
+    } catch (error) {
+      alert("Invalid JSON value.");
+      return;
+    }
+  }
+
+  try {
+    const response = await fetch("/api/admin/settings/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        settingKey,
+        value: parsedValue
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Setting update failed with status " + response.status);
+    }
+
+    alert("Setting updated.");
+    await window.loadLiveSettings();
+  } catch (error) {
+    alert("Setting update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function settingsView() {
-  const overview = state.overview || {};
-  const security = state.security || {};
+  if (!state.settingsLiveLoaded && !state.settingsLiveLoading) {
+    state.settingsLiveLoading = true;
+    setTimeout(() => window.loadLiveSettings(), 100);
+  }
+
+  const settings = Array.isArray(state.platformSettings) ? state.platformSettings : [];
+  const categories = Array.isArray(state.platformSettingCategories) ? state.platformSettingCategories : [];
+  const runtime = state.settingsRuntime || {};
+  const counts = state.settingsCounts || {};
+
+  const byCategory = {};
+  settings.forEach(setting => {
+    const category = setting.category || "Other";
+    if (!byCategory[category]) byCategory[category] = [];
+    byCategory[category].push(setting);
+  });
+
+  const displayValue = (setting) => {
+    const valueJson = setting.valueJson || setting.value_json || {};
+    const value = valueJson.value;
+    if (Array.isArray(value)) return value.join(", ");
+    if (typeof value === "object" && value !== null) return JSON.stringify(value);
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (value === undefined || value === null) return "-";
+    return String(value);
+  };
 
   return `
-    ${hero("Settings", "Backend environment, domains, CORS, and runtime settings.")}
-    <div class="grid cards">
-      ${card("Environment", overview.environment || "production", "Runtime mode")}
-      ${card("Service", overview.service || "GoodAppBackEnd", "Backend service")}
-      ${card("Node", overview.runtime?.node || "-", "Node runtime")}
-      ${card("PID", overview.runtime?.pid || "-", "Process ID")}
+    ${hero("Settings", "Complete backend platform configuration for auth, apps, API keys, storage, webhooks, realtime, functions, logs, backups, security, notifications, billing, usage, and developer operations.")}
+    <div class="section-head">
+      <h3>Platform Control Center</h3>
+      <div>
+        <button class="logout" onclick="window.refreshSettingsNow()">Refresh Data</button>
+      </div>
     </div>
+
+    ${state.settingsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live settings data...</p></div>` : ""}
+    ${state.settingsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Settings load error: ${safeText(state.settingsLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Environment", runtime.environment || "production", "Runtime mode")}
+      ${card("Service", runtime.service || "GoodAppBackEnd", "Backend service")}
+      ${card("Node", runtime.node || "-", "Node runtime")}
+      ${card("PID", runtime.pid || "-", "Process ID")}
+    </div>
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Settings", counts.settings ?? settings.length, "Registered controls")}
+      ${card("Categories", counts.categories ?? categories.length, "Platform sections")}
+      ${card("Active", counts.active ?? settings.filter(item => item.status === "active").length, "Production-ready settings")}
+      ${card("Planned", counts.planned ?? settings.filter(item => item.status === "planned").length, "Roadmap controls")}
+    </div>
+
     <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Runtime Configuration</h3><span class="badge">Read Only</span></div>
+      <div class="section-head"><h3>Runtime Configuration</h3><span class="badge">Live</span></div>
       <table>
-        <tr><td>Backend Domain</td><td>backend.goodos.app</td></tr>
-        <tr><td>SSO Domain</td><td>${safeText(security.cors?.allowedDomain || ".goodos.app")}</td></tr>
-        <tr><td>Cookie Name</td><td>${safeText(security.auth?.cookieName || "goodos_session")}</td></tr>
-        <tr><td>Session Length</td><td>${safeText(security.auth?.sessionDays || "7")} days</td></tr>
-        <tr><td>Database</td><td><span class="badge">Connected</span></td></tr>
+        <tbody>
+          <tr><td>Backend Domain</td><td>backend.goodos.app</td></tr>
+          <tr><td>SSO Domain</td><td>.goodos.app</td></tr>
+          <tr><td>Cookie Name</td><td>goodos_session</td></tr>
+          <tr><td>Session Length</td><td>7 days</td></tr>
+          <tr><td>Database</td><td><span class="badge">${safeText(runtime.database || "connected")}</span></td></tr>
+          <tr><td>Memory</td><td>${safeText(String(runtime.memoryHeapMb || "-"))} MB heap</td></tr>
+          <tr><td>Uptime</td><td>${safeText(runtime.uptime || "-")}</td></tr>
+        </tbody>
       </table>
     </div>
+
+    <div class="grid module-grid" style="margin-top:18px;">
+      ${categories.map(category => moduleCard(category.category, `${category.count} settings • ${category.active} active • ${category.planned} planned`, category.planned ? "Mixed" : "Active")).join("")}
+    </div>
+
+    ${Object.keys(byCategory).map(category => `
+      <div class="card" style="margin-top:18px;">
+        <div class="section-head"><h3>${safeText(category)}</h3><span class="badge">${safeText(String(byCategory[category].length))} Settings</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Setting</th>
+              <th>Key</th>
+              <th>Value</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Editable</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${byCategory[category].map(setting => {
+              const value = displayValue(setting);
+              return `
+                <tr>
+                  <td><strong>${safeText(setting.label || "-")}</strong><div class="muted">${safeText(setting.description || "")}</div></td>
+                  <td>${safeText(setting.settingKey || setting.setting_key || "-")}</td>
+                  <td>${safeText(value)}</td>
+                  <td>${safeText(setting.valueType || setting.value_type || "-")}</td>
+                  <td><span class="badge">${safeText(setting.status || "-")}</span></td>
+                  <td>${setting.isEditable || setting.is_editable ? "Yes" : "Read Only"}</td>
+                  <td>${setting.isEditable || setting.is_editable ? `<button class="logout" onclick="window.editPlatformSetting('${safeText(setting.settingKey || setting.setting_key)}', '${safeText(value).replace(/'/g, "\\'")}')">Edit</button>` : "-"}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `).join("") || '<div class="card" style="margin-top:18px;"><p class="muted">No settings loaded yet.</p></div>'}
   `;
 }
 
-function placeholder(title, body) {
-  return `
-    ${hero(title, body)}
-    <div class="grid module-grid">
-      ${moduleCard("Phase 1", "Console shell and live backend data are active.", "Complete")}
-      ${moduleCard("Phase 2", "CRUD endpoints and secured write actions come next.", "Next")}
-      ${moduleCard("Phase 3", "Usage analytics, realtime events, and automation hooks.", "Planned")}
-    </div>
-  `;
-}
 
 function render() {
   const view = document.getElementById("view");
