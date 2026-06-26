@@ -1930,6 +1930,60 @@ function databaseView() {
 
 
 
+
+window.loadLiveLogs = async function loadLiveLogs() {
+  try {
+    const params = new URLSearchParams();
+    params.set("t", Date.now());
+    params.set("level", state.logLevelFilter || "all");
+    params.set("search", state.logSearch || "");
+    params.set("limit", state.logLimit || "250");
+
+    const response = await fetch("/api/admin/logs-page-data?" + params.toString(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Logs refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+
+    state.logs = Array.isArray(data.logs) ? data.logs : [];
+    state.logCounts = data.counts || {};
+    state.logFiles = data.files || {};
+    state.logFilters = data.filters || {};
+    state.logsLiveLoaded = true;
+    state.logsLiveLoading = false;
+    state.logsLiveError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.logsLiveLoaded = true;
+    state.logsLiveLoading = false;
+    state.logsLiveError = error.message || "Failed to load logs.";
+
+    console.error("Logs refresh failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshLogsNow = async function refreshLogsNow() {
+  state.logsLiveLoaded = false;
+  state.logsLiveLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadLiveLogs();
+};
+
 function logsView() {
   if (!state.logsLiveLoaded && !state.logsLiveLoading) {
     state.logsLiveLoading = true;
