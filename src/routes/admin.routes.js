@@ -2125,4 +2125,131 @@ router.post("/realtime-events/create-test-safe", async (req, res) => {
   }
 });
 
+
+router.get("/edge-functions-page-data", async (req, res) => {
+  try {
+    const result = await dbQuery(`
+      SELECT
+        id,
+        name,
+        type,
+        runtime,
+        trigger_type AS "triggerType",
+        route_path AS "routePath",
+        schedule,
+        description,
+        status,
+        last_run_at AS "lastRunAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_edge_functions
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const functions = result.rows;
+
+    return ok(res, {
+      functions,
+      counts: {
+        functions: functions.length,
+        http: functions.filter((item) => item.type === "http").length,
+        event: functions.filter((item) => item.type === "event").length,
+        scheduled: functions.filter((item) => item.type === "scheduled").length,
+        active: functions.filter((item) => item.status === "active").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load edge functions page data", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/create-test-safe", async (req, res) => {
+  try {
+    const id = `fn_${crypto.randomUUID().replace(/-/g, "")}`;
+    const name = String(req.body?.name || "Console Test Function").trim();
+    const type = String(req.body?.type || "http").trim();
+    const runtime = String(req.body?.runtime || "node").trim();
+    const triggerType = String(req.body?.triggerType || "manual").trim();
+    const routePath = String(req.body?.routePath || `/api/functions/${id}`).trim();
+    const description = String(req.body?.description || "Test function created from GoodAppBackEnd console.").trim();
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_edge_functions (
+          id,
+          name,
+          type,
+          runtime,
+          trigger_type,
+          route_path,
+          description,
+          status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'active')
+        RETURNING
+          id,
+          name,
+          type,
+          runtime,
+          trigger_type AS "triggerType",
+          route_path AS "routePath",
+          schedule,
+          description,
+          status,
+          last_run_at AS "lastRunAt",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id, name, type, runtime, triggerType, routePath, description]
+    );
+
+    return ok(res, {
+      function: result.rows[0],
+      message: "Edge function registry record created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create edge function", 500, error.message);
+  }
+});
+
+router.post("/edge-functions/:id/run-test-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_edge_functions
+        SET
+          last_run_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          type,
+          runtime,
+          trigger_type AS "triggerType",
+          route_path AS "routePath",
+          schedule,
+          description,
+          status,
+          last_run_at AS "lastRunAt",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt"
+      `,
+      [id]
+    );
+
+    if (!result.rows[0]) return fail(res, "Edge function not found", 404);
+
+    return ok(res, {
+      function: result.rows[0],
+      message: "Function test run recorded.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to run edge function test", 500, error.message);
+  }
+});
+
 module.exports = router;

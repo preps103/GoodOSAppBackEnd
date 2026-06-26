@@ -1877,22 +1877,187 @@ function realtimeView() {
 }
 
 
+
+window.loadLiveFunctions = async function loadLiveFunctions() {
+  try {
+    const response = await fetch("/api/admin/edge-functions-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Edge functions refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.edgeFunctions = Array.isArray(data.functions) ? data.functions : [];
+    state.functionsLiveLoaded = true;
+    state.functionsLiveLoading = false;
+    state.functionsLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.functionsLiveError = error.message || "Failed to load edge functions page data.";
+    state.functionsLiveLoading = false;
+    alert("Edge functions refresh failed: " + state.functionsLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshFunctionsNow = async function refreshFunctionsNow() {
+  return window.loadLiveFunctions();
+};
+
+window.createTestEdgeFunction = async function createTestEdgeFunction() {
+  const name = prompt("Function name:", "Console Test Function");
+  if (!name) return;
+
+  const type = prompt("Function type: http, event, or scheduled", "http");
+  if (!type) return;
+
+  const routePath = prompt("Route path:", "/api/functions/console-test");
+  if (!routePath) return;
+
+  const description = prompt("Description:", "Test function created from GoodAppBackEnd console.") || "";
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/create-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        type,
+        runtime: "node",
+        triggerType: type === "event" ? "backend.event" : type === "scheduled" ? "schedule" : "manual",
+        routePath,
+        description
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Function creation failed with status " + response.status);
+    }
+
+    alert("Edge function record created.");
+    await window.loadLiveFunctions();
+  } catch (error) {
+    alert("Function creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.runTestEdgeFunction = async function runTestEdgeFunction(id) {
+  if (!id) return alert("Missing function id.");
+
+  try {
+    const response = await fetch("/api/admin/edge-functions/" + encodeURIComponent(id) + "/run-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Function test run failed with status " + response.status);
+    }
+
+    alert("Function test run recorded.");
+    await window.loadLiveFunctions();
+  } catch (error) {
+    alert("Function test run failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function functionsView() {
+  if (!state.functionsLiveLoaded && !state.functionsLiveLoading) {
+    state.functionsLiveLoading = true;
+    setTimeout(() => window.loadLiveFunctions(), 100);
+  }
+
+  const functions = Array.isArray(state.edgeFunctions) ? state.edgeFunctions : [];
+  const httpFunctions = functions.filter(item => item.type === "http");
+  const eventFunctions = functions.filter(item => item.type === "event");
+  const scheduledFunctions = functions.filter(item => item.type === "scheduled");
+
   return `
-    ${hero("Edge Functions", "Deploy backend automations and serverless functions.")}
-    <div class="grid cards">
-      ${card("Functions", "0", "No functions deployed")}
-      ${card("Runtime", "Node", "JavaScript automation")}
-      ${card("Triggers", "Next", "HTTP and event triggers")}
-      ${card("Deploy", "Next", "Function deployment")}
+    ${hero("Edge Functions", "Deploy backend automations, callable HTTP routes, event functions, and scheduled server jobs.")}
+    <div class="section-head">
+      <h3>Function Registry</h3>
+      <div>
+        <button class="logout" onclick="window.refreshFunctionsNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createTestEdgeFunction()">Create Test Function</button>
+      </div>
     </div>
+
+    ${state.functionsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live edge function data...</p></div>` : ""}
+    ${state.functionsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Edge function load error: ${safeText(state.functionsLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Functions", functions.length, "Registered backend functions")}
+      ${card("HTTP", httpFunctions.length, "Callable API routes")}
+      ${card("Event", eventFunctions.length, "Backend event triggers")}
+      ${card("Scheduled", scheduledFunctions.length, "Recurring automation jobs")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Registered Functions</h3><span class="badge">Live</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Type</th>
+            <th>Runtime</th>
+            <th>Trigger</th>
+            <th>Route / Schedule</th>
+            <th>Status</th>
+            <th>Last Run</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${functions.map(fn => `
+            <tr>
+              <td><strong>${safeText(fn.name || "-")}</strong><div class="muted">${safeText(fn.id || "")}</div></td>
+              <td>${safeText(fn.type || "-")}</td>
+              <td>${safeText(fn.runtime || "-")}</td>
+              <td>${safeText(fn.triggerType || fn.trigger_type || "-")}</td>
+              <td>${safeText(fn.routePath || fn.route_path || fn.schedule || "-")}</td>
+              <td><span class="badge">${safeText(fn.status || "-")}</span></td>
+              <td>${fn.lastRunAt ? new Date(fn.lastRunAt).toLocaleString() : fn.last_run_at ? new Date(fn.last_run_at).toLocaleString() : "-"}</td>
+              <td><button class="logout" onclick="window.runTestEdgeFunction('${safeText(fn.id)}')">Run Test</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="8" class="muted">No edge functions registered yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
     <div class="grid module-grid" style="margin-top:18px;">
-      ${moduleCard("HTTP Functions", "Deploy callable API routes for automation workflows.", "Next")}
-      ${moduleCard("Event Functions", "Run backend actions when auth, storage, app, or webhook events happen.", "Next")}
-      ${moduleCard("Scheduled Jobs", "Run recurring tasks like backups, syncs, and cleanup jobs.", "Next")}
+      ${moduleCard("HTTP Functions", "Deploy callable API routes for automation workflows.", httpFunctions.length ? "Live" : "Next")}
+      ${moduleCard("Event Functions", "Run backend actions when auth, storage, app, or webhook events happen.", eventFunctions.length ? "Live" : "Next")}
+      ${moduleCard("Scheduled Jobs", "Run recurring tasks like backups, syncs, cleanup jobs, and reports.", scheduledFunctions.length ? "Live" : "Next")}
     </div>
   `;
 }
+
 
 function settingsView() {
   const overview = state.overview || {};
