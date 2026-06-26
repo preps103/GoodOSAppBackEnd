@@ -575,46 +575,10 @@ async function checkSession() {
 
 async function loadData() {
   try {
-    const payload = await request("/api/admin/console-data");
-    const data = payload.data || payload;
-
-    state.overview = data.overview || {};
-    state.apps = data.apps || [];
-    state.users = data.users || [];
-    state.tables = data.tables || [];
-    state.memberships = data.memberships || [];
-    state.logs = Array.isArray(data.logs) ? data.logs : (data.logs?.logs || []);
-    state.backups = Array.isArray(data.backups) ? data.backups : (data.backups?.backups || []);
-    state.security = data.security || {};
-    state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : (data.apiKeys?.apiKeys || []);
-    state.webhooks = Array.isArray(data.webhooks)
-      ? data.webhooks
-      : (Array.isArray(data.webhooks?.webhooks) ? data.webhooks.webhooks : []);
-
-    state.webhookDeliveries = Array.isArray(data.webhookDeliveries)
-      ? data.webhookDeliveries
-      : (
-          Array.isArray(data.webhookDeliveries?.deliveries)
-            ? data.webhookDeliveries.deliveries
-            : (Array.isArray(data.deliveries) ? data.deliveries : [])
-        );
-
-    state.buckets = Array.isArray(data.buckets) ? data.buckets : (data.buckets?.buckets || []);
-    state.events = Array.isArray(data.events) ? data.events : (data.events?.events || []);
-    return;
-  } catch (consoleDataError) {
-    console.warn("Primary console-data load failed. Falling back to live page routes:", consoleDataError.message);
-  }
-
-  try {
-    const dashboardPayload = await request("/api/admin/dashboard-page-data");
+    const dashboardPayload = await request("/api/admin/dashboard-real-page-data");
     const dashboardData = dashboardPayload.data || dashboardPayload;
     const counts = dashboardData.counts || {};
     const runtime = dashboardData.runtime || {};
-
-    state.dashboardCounts = counts;
-    state.dashboardApps = Array.isArray(dashboardData.apps) ? dashboardData.apps : [];
-    state.dashboardRuntime = runtime;
 
     state.overview = {
       status: "operational",
@@ -630,8 +594,8 @@ async function loadData() {
       },
       stats: {
         users: counts.users || 0,
-        activeApps: counts.apps || 0,
-        activeMemberships: counts.memberships || 0,
+        activeApps: counts.activeApps || 0,
+        activeMemberships: counts.activeMemberships || 0,
         sessions: counts.sessions || 0,
         apiKeys: counts.apiKeys || 0,
         webhooks: counts.webhooks || 0,
@@ -640,10 +604,11 @@ async function loadData() {
       }
     };
 
-    state.apps = state.dashboardApps;
-    state.users = Array.isArray(state.users) ? state.users : [];
+    state.apps = Array.isArray(dashboardData.apps) ? dashboardData.apps : [];
+    state.users = Array.isArray(dashboardData.users) ? dashboardData.users : [];
+    state.memberships = Array.isArray(dashboardData.memberships) ? dashboardData.memberships : [];
+    state.sessions = Array.isArray(dashboardData.sessions) ? dashboardData.sessions : [];
     state.tables = Array.isArray(state.tables) ? state.tables : [];
-    state.memberships = Array.isArray(state.memberships) ? state.memberships : [];
     state.logs = Array.isArray(state.logs) ? state.logs : [];
     state.backups = Array.isArray(state.backups) ? state.backups : [];
     state.security = state.security || {};
@@ -666,6 +631,8 @@ async function loadData() {
       state.storageSignedUrls = Array.isArray(storageData.signedUrls) ? storageData.signedUrls : [];
     } catch (error) {
       state.buckets = Array.isArray(state.buckets) ? state.buckets : [];
+      state.storageFiles = Array.isArray(state.storageFiles) ? state.storageFiles : [];
+      state.storageSignedUrls = Array.isArray(state.storageSignedUrls) ? state.storageSignedUrls : [];
     }
 
     try {
@@ -677,15 +644,15 @@ async function loadData() {
       state.webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
       state.webhookDeliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
     }
-  } catch (fallbackError) {
-    console.error("Fallback dashboard load failed:", fallbackError);
+  } catch (error) {
+    console.error("Real dashboard data load failed:", error);
     state.overview = {
       status: "data-error",
       environment: "production",
       version: "1.0.0",
       stats: {},
       runtime: {},
-      error: fallbackError.message || "Dashboard data failed to load."
+      error: error.message || "Real dashboard data failed to load."
     };
   }
 }

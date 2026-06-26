@@ -1857,4 +1857,117 @@ router.get("/dashboard-page-data", async (req, res) => {
   }
 });
 
+
+router.get("/dashboard-real-page-data", async (req, res) => {
+  try {
+    const countsResult = await dbQuery(`
+      SELECT
+        (SELECT COUNT(*)::int FROM users WHERE status = 'active') AS users,
+        (SELECT COUNT(*)::int FROM apps WHERE status = 'active') AS "activeApps",
+        (SELECT COUNT(*)::int FROM app_memberships WHERE status = 'active') AS "activeMemberships",
+        (SELECT COUNT(*)::int FROM sessions WHERE revoked_at IS NULL AND expires_at > NOW()) AS sessions,
+        (SELECT COUNT(*)::int FROM backend_api_keys) AS "apiKeys",
+        (SELECT COUNT(*)::int FROM backend_webhooks) AS webhooks,
+        (SELECT COUNT(*)::int FROM backend_storage_buckets) AS "storageBuckets",
+        (SELECT COUNT(*)::int FROM backend_storage_files) AS "storageFiles"
+    `);
+
+    const appsResult = await dbQuery(`
+      SELECT
+        a.id,
+        a.name,
+        a.domain,
+        a.status,
+        a.description,
+        COUNT(am.id)::int AS "memberCount",
+        a.created_at AS "createdAt",
+        a.updated_at AS "updatedAt"
+      FROM apps a
+      LEFT JOIN app_memberships am
+        ON am.app_id = a.id
+       AND am.status = 'active'
+      GROUP BY a.id, a.name, a.domain, a.status, a.description, a.created_at, a.updated_at
+      ORDER BY a.name ASC
+      LIMIT 250
+    `);
+
+    const usersResult = await dbQuery(`
+      SELECT
+        id,
+        email,
+        first_name AS "firstName",
+        last_name AS "lastName",
+        display_name AS "displayName",
+        platform_role AS "platformRole",
+        status,
+        email_verified AS "emailVerified",
+        last_login_at AS "lastLoginAt",
+        created_at AS "createdAt"
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const membershipsResult = await dbQuery(`
+      SELECT
+        am.id,
+        u.email,
+        u.display_name AS "displayName",
+        a.id AS "appId",
+        a.name AS "appName",
+        a.domain,
+        am.role,
+        am.status,
+        am.created_at AS "createdAt"
+      FROM app_memberships am
+      JOIN users u ON u.id = am.user_id
+      JOIN apps a ON a.id = am.app_id
+      ORDER BY a.name ASC, u.email ASC
+      LIMIT 500
+    `);
+
+    const sessionsResult = await dbQuery(`
+      SELECT
+        s.id,
+        u.email,
+        s.ip_address::text AS "ipAddress",
+        s.user_agent AS "userAgent",
+        s.expires_at AS "expiresAt",
+        s.revoked_at AS "revokedAt",
+        s.created_at AS "createdAt",
+        CASE
+          WHEN s.revoked_at IS NOT NULL THEN 'revoked'
+          WHEN s.expires_at <= NOW() THEN 'expired'
+          ELSE 'active'
+        END AS status
+      FROM sessions s
+      JOIN users u ON u.id = s.user_id
+      ORDER BY s.created_at DESC
+      LIMIT 100
+    `);
+
+    const memory = process.memoryUsage();
+    const counts = countsResult.rows[0] || {};
+
+    return ok(res, {
+      counts,
+      apps: appsResult.rows,
+      users: usersResult.rows,
+      memberships: membershipsResult.rows,
+      sessions: sessionsResult.rows,
+      runtime: {
+        environment: process.env.NODE_ENV || "production",
+        version: process.env.APP_VERSION || "1.0.0",
+        node: process.version,
+        uptimeSeconds: Math.floor(process.uptime()),
+        uptime: `${Math.floor(process.uptime() / 60)} min`,
+        memoryHeapMb: Math.round(memory.heapUsed / 1024 / 1024),
+        database: "connected",
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load real dashboard data", 500, error.message);
+  }
+});
+
 module.exports = router;
