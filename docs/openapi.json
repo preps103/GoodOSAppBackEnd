@@ -912,6 +912,58 @@
           }
         }
       }
+    },
+    "/admin/jobs-page-data": {
+      "get": {
+        "summary": "Admin Jobs V2 page data",
+        "description": "Admin-only route for jobs, schedules, runs, locks, worker heartbeats, and queue items.",
+        "responses": {
+          "200": {
+            "description": "Jobs V2 snapshot"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/admin/jobs/{id}/run-safe": {
+      "post": {
+        "summary": "Run one job",
+        "description": "Admin-only manual job execution.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job run result"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/admin/jobs/run-due-safe": {
+      "post": {
+        "summary": "Run due jobs",
+        "description": "Admin-only route to process currently due jobs.",
+        "responses": {
+          "200": {
+            "description": "Due jobs processed"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
     }
   }
 }

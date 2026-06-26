@@ -6,6 +6,7 @@ const multer = require("multer");
 const authRequired = require("../middleware/authRequired");
 const database = require("../config/database");
 const notificationService = require("../services/notification.service");
+const jobService = require("../services/job.service");
 
 const router = express.Router();
 
@@ -7941,6 +7942,137 @@ router.get("/settings-audit-page-data", async (req, res) => {
 
 
 
+
+
+router.get("/jobs-page-data", async (req, res) => {
+  try {
+    const snapshot = await jobService.getJobsSnapshot();
+    return ok(res, snapshot);
+  } catch (error) {
+    return fail(res, "Failed to load jobs page data", 500, error.message);
+  }
+});
+
+router.post("/jobs/run-due-safe", async (req, res) => {
+  try {
+    const result = await jobService.runDueJobs({
+      workerId: `admin-manual-${process.pid}`,
+      limit: Math.min(Math.max(Number(req.body?.limit || 10), 1), 50),
+      source: "admin-console",
+    });
+
+    return ok(res, {
+      ...result,
+      message: "Due jobs processed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to run due jobs", 500, error.message);
+  }
+});
+
+router.post("/jobs/:id/run-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const result = await jobService.runJobById(id, {
+      workerId: `admin-manual-${process.pid}`,
+      source: "admin-console",
+    });
+
+    return ok(res, {
+      ...result,
+      message: "Job run completed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to run job", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/jobs/:id/status-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!["active", "disabled", "paused", "archived"].includes(status)) {
+      return fail(res, "Status must be active, disabled, paused, or archived.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_jobs
+        SET status = $2,
+            updated_at = NOW()
+        WHERE id = $1 OR name = $1
+        RETURNING id, name, display_name AS "displayName", status, updated_at AS "updatedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "Job not found", 404);
+
+    await dbQuery(
+      `
+        UPDATE backend_job_schedules
+        SET enabled = $2,
+            updated_at = NOW()
+        WHERE job_id = $1
+      `,
+      [result.rows[0].id, status === "active"]
+    ).catch(() => null);
+
+    return ok(res, {
+      job: result.rows[0],
+      message: "Job status updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update job status", 500, error.message);
+  }
+});
+
+router.post("/jobs/queue-items/create-safe", async (req, res) => {
+  try {
+    const queueName = String(req.body?.queueName || req.body?.queue_name || "default").trim() || "default";
+    const handlerKey = String(req.body?.handlerKey || req.body?.handler_key || "queue.items.process").trim() || "queue.items.process";
+    const payload = req.body?.payload || { createdFrom: "admin-console" };
+    const id = `queue_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_queue_items (
+          id,
+          queue_name,
+          item_type,
+          status,
+          priority,
+          handler_key,
+          payload_json,
+          scheduled_at,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id
+        )
+        VALUES ($1,$2,'job','pending',$3,$4,$5::jsonb,NOW(),$6::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+        RETURNING id, queue_name AS "queueName", status, handler_key AS "handlerKey", created_at AS "createdAt"
+      `,
+      [
+        id,
+        queueName,
+        Number(req.body?.priority || 100),
+        handlerKey,
+        JSON.stringify(payload),
+        JSON.stringify({ createdFrom: "Jobs V2 Console" }),
+      ]
+    );
+
+    return ok(res, {
+      queueItem: result.rows[0],
+      message: "Queue item created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create queue item", 500, error.message);
+  }
+});
 
 router.get("/notifications-page-data", async (req, res) => {
   try {

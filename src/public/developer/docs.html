@@ -146,6 +146,24 @@ console.log(response);</code></pre>
 
 
 
+
+    <h2>Background Jobs V2</h2>
+    <p>Background Jobs V2 adds job definitions, interval schedules, job run logs, worker locks, PM2 worker heartbeats, and controlled queue processing.</p>
+
+    <table>
+      <thead>
+        <tr><th>Admin Route</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /api/admin/jobs-page-data</code></td><td>View jobs, schedules, runs, worker locks, heartbeats, and queue items.</td></tr>
+        <tr><td><code>POST /api/admin/jobs/run-due-safe</code></td><td>Manually run jobs that are currently due.</td></tr>
+        <tr><td><code>POST /api/admin/jobs/:id/run-safe</code></td><td>Manually run one job.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>pm2 status goodapp-worker
+npm run jobs:run-once -- job_email_queue_process</code></pre>
+
     <h2>Notifications V2</h2>
     <p>Notifications V2 adds notification templates, in-app message center, email queue, notification preferences, alert rules, and alert events.</p>
 

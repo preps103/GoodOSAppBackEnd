@@ -278,6 +278,31 @@
         },
         "url": "{{base_url}}/notifications"
       }
+    },
+    {
+      "name": "Jobs V2 - Page Data",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "https://backend.goodos.app/api/admin/jobs-page-data"
+      }
+    },
+    {
+      "name": "Jobs V2 - Run Due Jobs",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"limit\": 10\n}"
+        },
+        "url": "https://backend.goodos.app/api/admin/jobs/run-due-safe"
+      }
     }
   ]
 }

@@ -5286,6 +5286,237 @@ function notificationsV2Section() {
   `;
 }
 
+
+window.loadJobsV2Center = async function loadJobsV2Center() {
+  try {
+    const response = await fetch("/api/admin/jobs-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Jobs V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.jobsV2Jobs = Array.isArray(data.jobs) ? data.jobs : [];
+    state.jobsV2Schedules = Array.isArray(data.schedules) ? data.schedules : [];
+    state.jobsV2Runs = Array.isArray(data.runs) ? data.runs : [];
+    state.jobsV2Locks = Array.isArray(data.locks) ? data.locks : [];
+    state.jobsV2Heartbeats = Array.isArray(data.heartbeats) ? data.heartbeats : [];
+    state.jobsV2QueueItems = Array.isArray(data.queueItems) ? data.queueItems : [];
+    state.jobsV2Counts = data.counts || {};
+    state.jobsV2Loaded = true;
+    state.jobsV2Loading = false;
+    state.jobsV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.jobsV2Loaded = true;
+    state.jobsV2Loading = false;
+    state.jobsV2Error = error.message || "Failed to load Jobs V2.";
+    console.error("Jobs V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshJobsV2CenterNow = async function refreshJobsV2CenterNow() {
+  state.jobsV2Loaded = false;
+  state.jobsV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadJobsV2Center();
+};
+
+window.runJobsV2DueNow = async function runJobsV2DueNow() {
+  try {
+    const response = await fetch("/api/admin/jobs/run-due-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ limit: 10 })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    const data = payload.data || payload;
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Run due jobs failed with status " + response.status);
+    }
+
+    alert("Due jobs processed: " + String(data.dueCount || 0));
+    await window.loadJobsV2Center();
+  } catch (error) {
+    alert("Run due jobs failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.runJobsV2One = async function runJobsV2One(id) {
+  try {
+    const response = await fetch("/api/admin/jobs/" + encodeURIComponent(id) + "/run-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Run job failed with status " + response.status);
+    }
+
+    alert("Job run completed.");
+    await window.loadJobsV2Center();
+  } catch (error) {
+    alert("Run job failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.toggleJobsV2Status = async function toggleJobsV2Status(id, currentStatus) {
+  const status = currentStatus === "active" ? "disabled" : "active";
+
+  try {
+    const response = await fetch("/api/admin/jobs/" + encodeURIComponent(id) + "/status-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Status update failed with status " + response.status);
+    }
+
+    alert("Job status updated.");
+    await window.loadJobsV2Center();
+  } catch (error) {
+    alert("Job status update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function jobsV2Section() {
+  if (!state.jobsV2Loaded && !state.jobsV2Loading) {
+    state.jobsV2Loading = true;
+    setTimeout(() => window.loadJobsV2Center(), 100);
+  }
+
+  const jobs = Array.isArray(state.jobsV2Jobs) ? state.jobsV2Jobs : [];
+  const runs = Array.isArray(state.jobsV2Runs) ? state.jobsV2Runs : [];
+  const heartbeats = Array.isArray(state.jobsV2Heartbeats) ? state.jobsV2Heartbeats : [];
+  const queueItems = Array.isArray(state.jobsV2QueueItems) ? state.jobsV2QueueItems : [];
+  const counts = state.jobsV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Background Jobs V2 / Scheduler / Worker</h3>
+      <div>
+        <button class="logout" onclick="window.refreshJobsV2CenterNow()">Refresh Jobs</button>
+        <button class="logout" onclick="window.runJobsV2DueNow()">Run Due Jobs</button>
+      </div>
+    </div>
+
+    ${state.jobsV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Jobs V2...</p></div>` : ""}
+    ${state.jobsV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Jobs V2 error: ${safeText(state.jobsV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Jobs", counts.jobs ?? jobs.length, "Scheduled handlers")}
+      ${card("Active Jobs", counts.activeJobs ?? jobs.filter(item => item.status === "active").length, "Enabled schedules")}
+      ${card("Online Workers", counts.onlineWorkers ?? heartbeats.filter(item => item.status === "online").length, "PM2 worker heartbeat")}
+      ${card("Failed Runs", counts.failedRuns ?? runs.filter(item => item.status === "failed").length, "Needs review")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Jobs</h3><span class="badge">${safeText(String(jobs.length))} Jobs</span></div>
+      <table>
+        <thead><tr><th>Job</th><th>Handler</th><th>Schedule</th><th>Status</th><th>Last Run</th><th>Next Run</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${jobs.map(job => `
+            <tr>
+              <td><strong>${safeText(job.displayName || job.name)}</strong><div class="muted">${safeText(job.id || "")}</div></td>
+              <td>${safeText(job.handlerKey || "-")}</td>
+              <td>${safeText(String(job.scheduleSeconds || "-"))} sec</td>
+              <td><span class="badge">${safeText(job.status || "-")}</span></td>
+              <td>${safeText(formatDate(job.lastRunAt))}<div class="muted">${safeText(job.lastStatus || "")}</div></td>
+              <td>${safeText(formatDate(job.nextRunAt))}</td>
+              <td>
+                <button class="logout" onclick="window.runJobsV2One('${safeText(job.id)}')">Run</button>
+                <button class="logout" onclick="window.toggleJobsV2Status('${safeText(job.id)}','${safeText(job.status || "")}')">${job.status === "active" ? "Disable" : "Enable"}</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="7" class="muted">No jobs found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent Job Runs</h3><span class="badge">${safeText(String(runs.length))} Runs</span></div>
+      <table>
+        <thead><tr><th>Run</th><th>Job</th><th>Status</th><th>Duration</th><th>Worker</th><th>Started</th></tr></thead>
+        <tbody>
+          ${runs.slice(0, 80).map(run => `
+            <tr>
+              <td><strong>${safeText(String(run.id || "").slice(0, 20))}</strong></td>
+              <td>${safeText(run.jobName || "-")}<div class="muted">${safeText(run.handlerKey || "")}</div></td>
+              <td><span class="badge">${safeText(run.status || "-")}</span><div class="muted">${safeText(run.errorMessage || "")}</div></td>
+              <td>${safeText(String(run.durationMs || 0))} ms</td>
+              <td>${safeText(run.workerId || "-")}</td>
+              <td>${safeText(formatDate(run.startedAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No job runs yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Worker Heartbeats / Queue Items</h3><span class="badge">${safeText(String(heartbeats.length))} Workers</span></div>
+      <table>
+        <thead><tr><th>Worker</th><th>Status</th><th>Host</th><th>PID</th><th>Last Seen</th></tr></thead>
+        <tbody>
+          ${heartbeats.map(worker => `
+            <tr>
+              <td><strong>${safeText(worker.workerName || worker.workerId)}</strong><div class="muted">${safeText(worker.workerId || "")}</div></td>
+              <td><span class="badge">${safeText(worker.status || "-")}</span></td>
+              <td>${safeText(worker.hostname || "-")}</td>
+              <td>${safeText(String(worker.pid || "-"))}</td>
+              <td>${safeText(formatDate(worker.lastSeenAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No worker heartbeat yet.</td></tr>'}
+        </tbody>
+      </table>
+      <div style="height:18px;"></div>
+      <table>
+        <thead><tr><th>Queue Item</th><th>Queue</th><th>Handler</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody>
+          ${queueItems.slice(0, 60).map(item => `
+            <tr>
+              <td><strong>${safeText(String(item.id || "").slice(0, 24))}</strong></td>
+              <td>${safeText(item.queueName || "-")}</td>
+              <td>${safeText(item.handlerKey || "-")}</td>
+              <td><span class="badge">${safeText(item.status || "-")}</span></td>
+              <td>${safeText(formatDate(item.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No queue items.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function settingsView() {
   if (!state.settingsLiveLoaded && !state.settingsLiveLoading) {
     state.settingsLiveLoading = true;
@@ -5323,6 +5554,8 @@ function settingsView() {
   const usageCounts = state.usageCounts || {};
   return `
     ${hero("Settings", "Complete backend platform configuration for auth, apps, API keys, storage, webhooks, realtime, functions, logs, backups, security, notifications, billing, usage, and developer operations.")}
+
+    ${jobsV2Section()}
 
     ${notificationsV2Section()}
 
