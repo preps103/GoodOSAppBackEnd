@@ -140,6 +140,29 @@ console.log(response);</code></pre>
     </div>
 
 
+
+    <h2>Storage V2 / CDN</h2>
+    <p>Storage V2 adds provider metadata, local/S3-compatible planning fields, object keys, checksums, version records, public object URLs, and CDN URL mapping.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Route</th>
+          <th>Scope</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /api/v1/storage/buckets</code></td><td><code>read:storage</code></td><td>List buckets with provider/CDN metadata.</td></tr>
+        <tr><td><code>GET /api/v1/storage/files</code></td><td><code>read:storage</code></td><td>List files with object keys, checksums, and public/CDN URLs.</td></tr>
+        <tr><td><code>GET /storage/public/:bucketName/:objectKey</code></td><td>Public bucket only</td><td>Serve a public object through the GoodOS storage gateway.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>const buckets = await goodos.storageBuckets();
+const files = await goodos.storageFiles();
+const url = goodos.storagePublicUrl("storage-v2-public", "v2-public-health.txt");</code></pre>
+
     <h2>Generated Database API</h2>
     <p>GoodOS can publish selected Postgres tables as scoped REST endpoints. Use <code>read:db</code> for reads and <code>write:db</code> for write-enabled tables.</p>
 

@@ -111,6 +111,12 @@
       return this.request("/storage/buckets");
     }
 
+    storagePublicUrl(bucketName, objectKey, rootUrl = "https://backend.goodos.app") {
+      const bucket = encodeURIComponent(bucketName);
+      const key = String(objectKey || "").split("/").map(encodeURIComponent).join("/");
+      return `${String(rootUrl).replace(/\/+$/, "")}/storage/public/${bucket}/${key}`;
+    }
+
     storageFiles(params = {}) {
       const search = new URLSearchParams();
       if (params.bucket) search.set("bucket", params.bucket);

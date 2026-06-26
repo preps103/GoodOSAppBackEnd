@@ -135,6 +135,14 @@
         },
         "url": "{{base_url}}/db/demo-items/rows"
       }
+    },
+    {
+      "name": "Storage V2 - Public Object",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "https://backend.goodos.app/storage/public/storage-v2-public/v2-public-health.txt"
+      }
     }
   ]
 }

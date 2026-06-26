@@ -54,6 +54,7 @@ export class GoodOSClient {
   updateDbRow(tableSlug: string, id: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   deleteDbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
   storageBuckets(): Promise<GoodOSResponse>;
+  storagePublicUrl(bucketName: string, objectKey: string, rootUrl?: string): string;
   storageFiles(params?: { bucket?: string }): Promise<GoodOSResponse>;
   callFunction<TInput = Record<string, unknown>, TOutput = unknown>(
     slug: string,

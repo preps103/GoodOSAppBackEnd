@@ -95,4 +95,102 @@ router.get("/signed/:token", async (req, res) => {
   }
 });
 
+
+
+router.get("/public/:bucketName/*", async (req, res) => {
+  try {
+    const bucketName = String(req.params.bucketName || "").trim();
+    const objectKey = decodeURIComponent(String(req.params[0] || "")).replace(/^\/+/, "");
+
+    if (!bucketName || !objectKey) {
+      return res.status(400).json({
+        success: false,
+        message: "Bucket name and object key are required.",
+      });
+    }
+
+    if (objectKey.includes("..")) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid object key.",
+      });
+    }
+
+    const result = await dbQuery(
+      `
+        SELECT
+          f.id,
+          f.filename,
+          f.original_filename AS "originalFilename",
+          f.mime_type AS "mimeType",
+          f.size_bytes AS "sizeBytes",
+          f.storage_path AS "storagePath",
+          f.object_key AS "objectKey",
+          f.checksum_sha256 AS "checksumSha256",
+          f.cache_control AS "cacheControl",
+          f.content_disposition AS "contentDisposition",
+          b.name AS "bucketName",
+          b.visibility,
+          b.public_read_enabled AS "publicReadEnabled",
+          b.cache_control AS "bucketCacheControl"
+        FROM backend_storage_files f
+        JOIN backend_storage_buckets b ON b.id = f.bucket_id
+        WHERE b.name = $1
+          AND f.status = 'active'
+          AND COALESCE(f.file_deleted, false) = false
+          AND (
+            f.object_key = $2
+            OR f.filename = $2
+            OR f.storage_path LIKE $3
+          )
+          AND (b.public_read_enabled = true OR b.visibility = 'public')
+        LIMIT 1
+      `,
+      [bucketName, objectKey, `%/${objectKey}`]
+    );
+
+    const record = result.rows[0];
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: "Public object not found.",
+      });
+    }
+
+    const storageRoot = path.resolve(process.cwd(), "storage");
+    const fullPath = path.resolve(record.storagePath || "");
+
+    if (!fullPath.startsWith(storageRoot)) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid storage path.",
+      });
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Object file is missing from disk.",
+      });
+    }
+
+    res.setHeader("Content-Type", record.mimeType || "application/octet-stream");
+    res.setHeader("Cache-Control", record.cacheControl || record.bucketCacheControl || "public, max-age=3600");
+    res.setHeader("ETag", `"${record.checksumSha256 || record.id}"`);
+
+    if (record.contentDisposition) {
+      res.setHeader("Content-Disposition", record.contentDisposition);
+    }
+
+    return res.sendFile(fullPath);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Public storage object failed.",
+      detail: error.message,
+    });
+  }
+});
+
 module.exports = router;

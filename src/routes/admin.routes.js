@@ -9015,6 +9015,448 @@ function getStorageFileName(file = {}) {
   );
 }
 
+
+function storageV2SafeJson(value, fallback = {}) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    try { return JSON.parse(value); } catch {}
+  }
+  return fallback;
+}
+
+function storageV2Bool(value, fallback = false) {
+  if (value === true || value === "true" || value === 1 || value === "1") return true;
+  if (value === false || value === "false" || value === 0 || value === "0") return false;
+  return fallback;
+}
+
+function storageV2Provider(value) {
+  const provider = String(value || "local").trim().toLowerCase();
+  if (["local", "s3", "r2", "minio", "spaces", "wasabi"].includes(provider)) return provider;
+  return "local";
+}
+
+function storageV2CleanText(value, fallback = "") {
+  const text = String(value ?? fallback ?? "").trim();
+  return text;
+}
+
+function storageV2Sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function storageV2Md5File(filePath) {
+  return crypto.createHash("md5").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+router.get("/storage-v2-page-data", async (req, res) => {
+  try {
+    const providersResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        provider,
+        status,
+        endpoint_url AS "endpointUrl",
+        region,
+        bucket_name AS "bucketName",
+        access_key_prefix AS "accessKeyPrefix",
+        secret_ref AS "secretRef",
+        cdn_base_url AS "cdnBaseUrl",
+        path_style AS "pathStyle",
+        force_ssl AS "forceSsl",
+        metadata_json AS "metadata",
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_storage_provider_configs
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    const bucketsResult = await dbQuery(`
+      SELECT
+        b.*,
+        COALESCE(file_stats.file_count, 0)::int AS "fileCount",
+        COALESCE(file_stats.total_bytes, 0)::bigint AS "totalBytes"
+      FROM backend_storage_buckets b
+      LEFT JOIN (
+        SELECT bucket_id, COUNT(*)::int AS file_count, COALESCE(SUM(size_bytes), 0)::bigint AS total_bytes
+        FROM backend_storage_files
+        WHERE status = 'active'
+          AND COALESCE(file_deleted, false) = false
+        GROUP BY bucket_id
+      ) file_stats ON file_stats.bucket_id = b.id
+      ORDER BY b.created_at DESC
+      LIMIT 250
+    `);
+
+    const filesResult = await dbQuery(`
+      SELECT
+        f.*,
+        b.name AS bucket_name,
+        b.provider AS bucket_provider,
+        b.cdn_enabled AS bucket_cdn_enabled,
+        b.cdn_base_url AS bucket_cdn_base_url
+      FROM backend_storage_files f
+      LEFT JOIN backend_storage_buckets b ON b.id = f.bucket_id
+      ORDER BY f.created_at DESC
+      LIMIT 300
+    `);
+
+    const versionsResult = await dbQuery(`
+      SELECT *
+      FROM backend_storage_object_versions
+      ORDER BY created_at DESC
+      LIMIT 200
+    `);
+
+    const signedUrlsResult = await dbQuery(`
+      SELECT *
+      FROM backend_storage_signed_urls
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    return ok(res, {
+      providers: providersResult.rows,
+      buckets: bucketsResult.rows,
+      files: filesResult.rows,
+      versions: versionsResult.rows,
+      signedUrls: signedUrlsResult.rows,
+      counts: {
+        providers: providersResult.rows.length,
+        buckets: bucketsResult.rows.length,
+        files: filesResult.rows.length,
+        versions: versionsResult.rows.length,
+        signedUrls: signedUrlsResult.rows.length,
+        cdnEnabledBuckets: bucketsResult.rows.filter((bucket) => bucket.cdn_enabled === true).length,
+        publicBuckets: bucketsResult.rows.filter((bucket) => bucket.public_read_enabled === true || bucket.visibility === "public").length,
+        localFiles: filesResult.rows.filter((file) => file.provider === "local").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load Storage V2 page data", 500, error.message);
+  }
+});
+
+router.post("/storage/providers/create-safe", async (req, res) => {
+  try {
+    const provider = storageV2Provider(req.body?.provider || "local");
+    const name = storageV2CleanText(req.body?.name || `${provider.toUpperCase()} Provider`);
+    const id = `storage_provider_${provider}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_storage_provider_configs (
+          id,
+          name,
+          provider,
+          status,
+          endpoint_url,
+          region,
+          bucket_name,
+          access_key_prefix,
+          secret_ref,
+          cdn_base_url,
+          path_style,
+          force_ssl,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id,
+          created_by
+        )
+        VALUES ($1,$2,$3,$4,NULLIF($5,''),NULLIF($6,''),NULLIF($7,''),NULLIF($8,''),NULLIF($9,''),NULLIF($10,''),$11,$12,$13::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at ASC LIMIT 1))
+        RETURNING *
+      `,
+      [
+        id,
+        name,
+        provider,
+        storageV2CleanText(req.body?.status || "active"),
+        storageV2CleanText(req.body?.endpointUrl || req.body?.endpoint_url || ""),
+        storageV2CleanText(req.body?.region || ""),
+        storageV2CleanText(req.body?.bucketName || req.body?.bucket_name || ""),
+        storageV2CleanText(req.body?.accessKeyPrefix || req.body?.access_key_prefix || ""),
+        storageV2CleanText(req.body?.secretRef || req.body?.secret_ref || ""),
+        storageV2CleanText(req.body?.cdnBaseUrl || req.body?.cdn_base_url || ""),
+        storageV2Bool(req.body?.pathStyle ?? req.body?.path_style, true),
+        storageV2Bool(req.body?.forceSsl ?? req.body?.force_ssl, true),
+        JSON.stringify(storageV2SafeJson(req.body?.metadata || req.body?.metadata_json, { createdFrom: "GoodAppBackEnd Console" })),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1,$2,'storage.provider.create','storage_provider',$3,$4::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',$5,$6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { provider: result.rows[0], message: "Storage provider created." });
+  } catch (error) {
+    return fail(res, "Failed to create storage provider", 500, error.message);
+  }
+});
+
+router.post("/storage/buckets/:bucketId/v2/update-safe", async (req, res) => {
+  try {
+    const bucketId = String(req.params.bucketId || "").trim();
+    if (!bucketId) return fail(res, "Bucket id is required", 400);
+
+    const beforeResult = await dbQuery("SELECT * FROM backend_storage_buckets WHERE id = $1 LIMIT 1", [bucketId]);
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Bucket not found", 404);
+
+    const provider = storageV2Provider(req.body?.provider ?? before.provider ?? "local");
+    const cdnEnabled = storageV2Bool(req.body?.cdnEnabled ?? req.body?.cdn_enabled, before.cdn_enabled === true);
+    const publicReadEnabled = storageV2Bool(req.body?.publicReadEnabled ?? req.body?.public_read_enabled, before.public_read_enabled === true);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_storage_buckets
+        SET
+          provider = $2,
+          provider_config_id = NULLIF($3, ''),
+          provider_bucket_name = NULLIF($4, ''),
+          provider_region = NULLIF($5, ''),
+          provider_endpoint = NULLIF($6, ''),
+          provider_prefix = $7,
+          cdn_enabled = $8,
+          cdn_base_url = NULLIF($9, ''),
+          public_read_enabled = $10,
+          cache_control = $11,
+          object_lock_enabled = $12,
+          lifecycle_json = $13::jsonb,
+          cors_json = $14::jsonb,
+          storage_class = $15,
+          checksum_algorithm = $16,
+          metadata_json = $17::jsonb,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        bucketId,
+        provider,
+        storageV2CleanText(req.body?.providerConfigId ?? req.body?.provider_config_id ?? before.provider_config_id ?? ""),
+        storageV2CleanText(req.body?.providerBucketName ?? req.body?.provider_bucket_name ?? before.provider_bucket_name ?? before.name),
+        storageV2CleanText(req.body?.providerRegion ?? req.body?.provider_region ?? before.provider_region ?? "local"),
+        storageV2CleanText(req.body?.providerEndpoint ?? req.body?.provider_endpoint ?? before.provider_endpoint ?? ""),
+        storageV2CleanText(req.body?.providerPrefix ?? req.body?.provider_prefix ?? before.provider_prefix ?? ""),
+        cdnEnabled,
+        storageV2CleanText(req.body?.cdnBaseUrl ?? req.body?.cdn_base_url ?? before.cdn_base_url ?? ""),
+        publicReadEnabled,
+        storageV2CleanText(req.body?.cacheControl ?? req.body?.cache_control ?? before.cache_control ?? (publicReadEnabled ? "public, max-age=3600" : "private, max-age=0")),
+        storageV2Bool(req.body?.objectLockEnabled ?? req.body?.object_lock_enabled, before.object_lock_enabled === true),
+        JSON.stringify(storageV2SafeJson(req.body?.lifecycleJson ?? req.body?.lifecycle_json, before.lifecycle_json || {})),
+        JSON.stringify(storageV2SafeJson(req.body?.corsJson ?? req.body?.cors_json, before.cors_json || {})),
+        storageV2CleanText(req.body?.storageClass ?? req.body?.storage_class ?? before.storage_class ?? "standard"),
+        storageV2CleanText(req.body?.checksumAlgorithm ?? req.body?.checksum_algorithm ?? before.checksum_algorithm ?? "sha256"),
+        JSON.stringify(storageV2SafeJson(req.body?.metadataJson ?? req.body?.metadata_json, before.metadata_json || {})),
+      ]
+    );
+
+    await dbQuery(
+      `
+        UPDATE backend_storage_files f
+        SET
+          provider = $2,
+          provider_bucket_name = $3,
+          provider_region = $4,
+          provider_endpoint = $5,
+          cache_control = $6,
+          public_url = CASE
+            WHEN $7::boolean = true THEN 'https://backend.goodos.app/storage/public/' || $8 || '/' || COALESCE(NULLIF(f.object_key, ''), f.filename)
+            ELSE f.public_url
+          END,
+          cdn_url = CASE
+            WHEN $9::boolean = true AND NULLIF($10, '') IS NOT NULL THEN rtrim($10, '/') || '/' || COALESCE(NULLIF(f.object_key, ''), f.filename)
+            ELSE f.cdn_url
+          END,
+          updated_at = NOW()
+        WHERE f.bucket_id = $1
+      `,
+      [
+        bucketId,
+        provider,
+        result.rows[0].provider_bucket_name || result.rows[0].name,
+        result.rows[0].provider_region || "local",
+        result.rows[0].provider_endpoint || "",
+        result.rows[0].cache_control || "private, max-age=0",
+        result.rows[0].public_read_enabled === true || result.rows[0].visibility === "public",
+        result.rows[0].name,
+        result.rows[0].cdn_enabled === true,
+        result.rows[0].cdn_base_url || "",
+      ]
+    );
+
+    return ok(res, { bucket: result.rows[0], message: "Storage V2 bucket settings updated." });
+  } catch (error) {
+    return fail(res, "Failed to update Storage V2 bucket settings", 500, error.message);
+  }
+});
+
+router.post("/storage/files/:fileId/metadata-refresh-safe", async (req, res) => {
+  try {
+    const fileId = String(req.params.fileId || "").trim();
+    if (!fileId) return fail(res, "File id is required", 400);
+
+    const fileResult = await dbQuery(
+      `
+        SELECT
+          f.*,
+          b.name AS bucket_name,
+          b.public_read_enabled,
+          b.visibility,
+          b.cdn_enabled,
+          b.cdn_base_url,
+          b.cache_control AS bucket_cache_control
+        FROM backend_storage_files f
+        LEFT JOIN backend_storage_buckets b ON b.id = f.bucket_id
+        WHERE f.id = $1
+        LIMIT 1
+      `,
+      [fileId]
+    );
+
+    const file = fileResult.rows[0];
+    if (!file) return fail(res, "Storage file not found", 404);
+
+    const storagePath = file.storage_path || file.storagePath;
+    if (!storagePath || !fs.existsSync(storagePath)) {
+      return fail(res, "File path is missing from disk", 404);
+    }
+
+    const stats = fs.statSync(storagePath);
+    const checksumSha256 = storageV2Sha256File(storagePath);
+    const checksumMd5 = storageV2Md5File(storagePath);
+    const objectKey = storageV2CleanText(file.object_key || file.filename || path.basename(storagePath));
+    const publicEnabled = file.public_read_enabled === true || file.visibility === "public";
+    const publicUrl = publicEnabled ? `https://backend.goodos.app/storage/public/${file.bucket_name}/${objectKey}` : file.public_url;
+    const cdnUrl = file.cdn_enabled === true && file.cdn_base_url ? `${String(file.cdn_base_url).replace(/\/+$/, "")}/${objectKey}` : file.cdn_url;
+
+    const updateResult = await dbQuery(
+      `
+        UPDATE backend_storage_files
+        SET
+          size_bytes = $2,
+          checksum_sha256 = $3,
+          checksum_md5 = $4,
+          checksum_algorithm = 'sha256',
+          object_key = $5,
+          provider_etag = $3,
+          version_id = COALESCE(version_id, 'v1'),
+          version_number = COALESCE(version_number, 1),
+          is_latest_version = true,
+          public_url = $6,
+          cdn_url = $7,
+          cache_control = COALESCE(cache_control, $8),
+          provider_metadata_json = jsonb_build_object('lastRefreshAt', NOW(), 'diskPath', $9, 'local', true),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        fileId,
+        stats.size,
+        checksumSha256,
+        checksumMd5,
+        objectKey,
+        publicUrl || null,
+        cdnUrl || null,
+        file.bucket_cache_control || "private, max-age=0",
+        storagePath,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_storage_object_versions (
+          id,
+          file_id,
+          bucket_id,
+          object_key,
+          version_id,
+          version_number,
+          provider,
+          size_bytes,
+          checksum_sha256,
+          checksum_md5,
+          storage_path,
+          public_url,
+          cdn_url,
+          status,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id,
+          created_by
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'active',$14::jsonb,$15,$16,$17,(SELECT id FROM users ORDER BY created_at ASC LIMIT 1))
+        ON CONFLICT (id) DO UPDATE
+        SET
+          size_bytes = EXCLUDED.size_bytes,
+          checksum_sha256 = EXCLUDED.checksum_sha256,
+          checksum_md5 = EXCLUDED.checksum_md5,
+          storage_path = EXCLUDED.storage_path,
+          public_url = EXCLUDED.public_url,
+          cdn_url = EXCLUDED.cdn_url,
+          status = 'active'
+      `,
+      [
+        `storver_${fileId}_v${file.version_number || 1}`,
+        fileId,
+        file.bucket_id,
+        objectKey,
+        file.version_id || "v1",
+        Number(file.version_number || 1),
+        file.provider || "local",
+        stats.size,
+        checksumSha256,
+        checksumMd5,
+        storagePath,
+        publicUrl || null,
+        cdnUrl || null,
+        JSON.stringify({ refreshedFrom: "Storage V2 Console", refreshedAt: new Date().toISOString() }),
+        file.organization_id || "org_goodos",
+        file.project_id || "proj_goodos_platform",
+        file.environment_id || "env_goodos_production",
+      ]
+    );
+
+    return ok(res, {
+      file: updateResult.rows[0],
+      message: "Storage file metadata refreshed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to refresh storage file metadata", 500, error.message);
+  }
+});
+
 router.get("/storage-manager-page-data", async (req, res) => {
   try {
     const bucketsResult = await dbQuery(`

@@ -178,7 +178,7 @@
     "/storage/buckets": {
       "get": {
         "summary": "List storage buckets",
-        "description": "Requires scope: read:storage",
+        "description": "Requires scope: read:storage. Returns Storage V2 bucket metadata including provider/CDN fields when available.",
         "security": [
           {
             "GoodOSApiKey": []
@@ -204,7 +204,7 @@
     "/storage/files": {
       "get": {
         "summary": "List storage files",
-        "description": "Requires scope: read:storage",
+        "description": "Requires scope: read:storage. Returns Storage V2 file/object metadata including object keys, checksums, versions, and public/CDN URLs when available.",
         "security": [
           {
             "GoodOSApiKey": []
@@ -557,6 +557,48 @@
         "responses": {
           "200": {
             "description": "Row deleted"
+          }
+        }
+      }
+    },
+    "/storage/public/{bucketName}/{objectKey}": {
+      "get": {
+        "summary": "Read a public Storage V2 object",
+        "description": "Public object delivery route for buckets marked public or public_read_enabled. This route is served from the root backend domain, not /api/v1.",
+        "servers": [
+          {
+            "url": "https://backend.goodos.app"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucketName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "storage-v2-public"
+          },
+          {
+            "name": "objectKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "v2-public-health.txt"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Object file"
+          },
+          "403": {
+            "description": "Bucket or path blocked"
+          },
+          "404": {
+            "description": "Object not found"
           }
         }
       }

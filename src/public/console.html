@@ -5193,6 +5193,301 @@ window.editStorageBucketPolicy = async function editStorageBucketPolicy(bucketId
   }
 };
 
+
+window.loadStorageV2Center = async function loadStorageV2Center() {
+  try {
+    const response = await fetch("/api/admin/storage-v2-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Storage V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.storageV2Providers = Array.isArray(data.providers) ? data.providers : [];
+    state.storageV2Buckets = Array.isArray(data.buckets) ? data.buckets : [];
+    state.storageV2Files = Array.isArray(data.files) ? data.files : [];
+    state.storageV2Versions = Array.isArray(data.versions) ? data.versions : [];
+    state.storageV2Counts = data.counts || {};
+    state.storageV2Loaded = true;
+    state.storageV2Loading = false;
+    state.storageV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.storageV2Loaded = true;
+    state.storageV2Loading = false;
+    state.storageV2Error = error.message || "Failed to load Storage V2.";
+    console.error("Storage V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshStorageV2CenterNow = async function refreshStorageV2CenterNow() {
+  state.storageV2Loaded = false;
+  state.storageV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadStorageV2Center();
+};
+
+window.createStorageProvider = async function createStorageProvider() {
+  const provider = prompt("Provider type: local, s3, r2, minio, spaces, wasabi", "local") || "local";
+  const name = prompt("Provider name:", provider.toUpperCase() + " Provider") || provider.toUpperCase() + " Provider";
+  const endpointUrl = prompt("Endpoint URL:", provider === "local" ? "file:///var/www/GoodAppBackEnd/storage/buckets" : "") || "";
+  const bucketName = prompt("Provider bucket name:", "") || "";
+  const cdnBaseUrl = prompt("CDN base URL:", "") || "";
+
+  try {
+    const response = await fetch("/api/admin/storage/providers/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        provider,
+        name,
+        endpointUrl,
+        bucketName,
+        cdnBaseUrl,
+        metadata: { createdFrom: "GoodAppBackEnd Console" }
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create provider failed with status " + response.status);
+    }
+
+    alert("Storage provider created.");
+    await window.loadStorageV2Center();
+  } catch (error) {
+    alert("Create provider failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.editStorageV2Bucket = async function editStorageV2Bucket(bucketId) {
+  const bucket = (state.storageV2Buckets || state.storageBuckets || []).find(item => item.id === bucketId);
+  if (!bucket) return alert("Bucket not found.");
+
+  const current = {
+    provider: bucket.provider || "local",
+    providerConfigId: bucket.provider_config_id || bucket.providerConfigId || "storage_provider_local_goodos",
+    providerBucketName: bucket.provider_bucket_name || bucket.providerBucketName || bucket.name,
+    providerRegion: bucket.provider_region || bucket.providerRegion || "local",
+    providerEndpoint: bucket.provider_endpoint || bucket.providerEndpoint || "file:///var/www/GoodAppBackEnd/storage/buckets",
+    providerPrefix: bucket.provider_prefix || bucket.providerPrefix || "",
+    cdnEnabled: Boolean(bucket.cdn_enabled || bucket.cdnEnabled),
+    cdnBaseUrl: bucket.cdn_base_url || bucket.cdnBaseUrl || "",
+    publicReadEnabled: Boolean(bucket.public_read_enabled || bucket.publicReadEnabled),
+    cacheControl: bucket.cache_control || bucket.cacheControl || "private, max-age=0",
+    objectLockEnabled: Boolean(bucket.object_lock_enabled || bucket.objectLockEnabled),
+    lifecycleJson: bucket.lifecycle_json || bucket.lifecycleJson || {},
+    corsJson: bucket.cors_json || bucket.corsJson || {},
+    storageClass: bucket.storage_class || bucket.storageClass || "standard",
+    checksumAlgorithm: bucket.checksum_algorithm || bucket.checksumAlgorithm || "sha256",
+    metadataJson: bucket.metadata_json || bucket.metadataJson || {}
+  };
+
+  const input = prompt("Edit Storage V2 bucket JSON:", JSON.stringify(current, null, 2));
+  if (input === null) return;
+
+  let patch;
+  try {
+    patch = JSON.parse(input);
+  } catch (error) {
+    return alert("Invalid JSON.");
+  }
+
+  try {
+    const response = await fetch("/api/admin/storage/buckets/" + encodeURIComponent(bucketId) + "/v2/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(patch)
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Storage V2 bucket update failed with status " + response.status);
+    }
+
+    alert("Storage V2 bucket updated.");
+    await window.loadStorageV2Center();
+    if (window.refreshStorageManagerNow) await window.refreshStorageManagerNow();
+  } catch (error) {
+    alert("Storage V2 bucket update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.refreshStorageFileMetadata = async function refreshStorageFileMetadata(fileId) {
+  if (!fileId) return alert("Missing file id.");
+
+  try {
+    const response = await fetch("/api/admin/storage/files/" + encodeURIComponent(fileId) + "/metadata-refresh-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Refresh metadata failed with status " + response.status);
+    }
+
+    alert("File metadata refreshed.");
+    await window.loadStorageV2Center();
+    if (window.refreshStorageManagerNow) await window.refreshStorageManagerNow();
+  } catch (error) {
+    alert("Refresh metadata failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function storageV2Section() {
+  if (!state.storageV2Loaded && !state.storageV2Loading) {
+    state.storageV2Loading = true;
+    setTimeout(() => window.loadStorageV2Center(), 100);
+  }
+
+  const providers = Array.isArray(state.storageV2Providers) ? state.storageV2Providers : [];
+  const buckets = Array.isArray(state.storageV2Buckets) ? state.storageV2Buckets : [];
+  const files = Array.isArray(state.storageV2Files) ? state.storageV2Files : [];
+  const versions = Array.isArray(state.storageV2Versions) ? state.storageV2Versions : [];
+  const counts = state.storageV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Storage V2 / CDN / S3-Compatible Layer</h3>
+      <div>
+        <button class="logout" onclick="window.refreshStorageV2CenterNow()">Refresh Storage V2</button>
+        <button class="logout" onclick="window.createStorageProvider()">Create Provider</button>
+      </div>
+    </div>
+
+    ${state.storageV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Storage V2...</p></div>` : ""}
+    ${state.storageV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Storage V2 error: ${safeText(state.storageV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Providers", counts.providers ?? providers.length, "Local / S3-compatible configs")}
+      ${card("CDN Buckets", counts.cdnEnabledBuckets ?? buckets.filter(bucket => bucket.cdn_enabled).length, "CDN URL enabled")}
+      ${card("Public Buckets", counts.publicBuckets ?? buckets.filter(bucket => bucket.public_read_enabled || bucket.visibility === "public").length, "Public object routing")}
+      ${card("Versions", counts.versions ?? versions.length, "Object version records")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Providers</h3><span class="badge">${safeText(String(providers.length))} Providers</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Endpoint</th>
+            <th>Bucket</th>
+            <th>CDN</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${providers.map(provider => `
+            <tr>
+              <td><strong>${safeText(provider.name || provider.id)}</strong><div class="muted">${safeText(provider.provider || "local")}</div></td>
+              <td>${safeText(provider.endpointUrl || provider.endpoint_url || "-")}</td>
+              <td>${safeText(provider.bucketName || provider.bucket_name || "-")}</td>
+              <td>${safeText(provider.cdnBaseUrl || provider.cdn_base_url || "-")}</td>
+              <td><span class="badge">${safeText(provider.status || "active")}</span></td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No storage providers found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Storage V2 Buckets</h3><span class="badge">${safeText(String(buckets.length))} Buckets</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Bucket</th>
+            <th>Provider</th>
+            <th>CDN / Public</th>
+            <th>Lifecycle</th>
+            <th>Files</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${buckets.map(bucket => `
+            <tr>
+              <td><strong>${safeText(bucket.name || bucket.id)}</strong><div class="muted">${safeText(bucket.id || "")}</div></td>
+              <td>${safeText(bucket.provider || "local")}<div class="muted">${safeText(bucket.provider_bucket_name || bucket.providerBucketName || "-")}</div></td>
+              <td>
+                <span class="badge">${bucket.cdn_enabled ? "CDN On" : "CDN Off"}</span>
+                <span class="badge">${(bucket.public_read_enabled || bucket.visibility === "public") ? "Public" : "Private"}</span>
+                <div class="muted">${safeText(bucket.cdn_base_url || bucket.cdnBaseUrl || "-")}</div>
+              </td>
+              <td>${safeText(JSON.stringify(bucket.lifecycle_json || bucket.lifecycleJson || {})).slice(0, 120)}</td>
+              <td>${safeText(String(bucket.fileCount || bucket.file_count || 0))}</td>
+              <td><button class="logout" onclick="window.editStorageV2Bucket('${safeText(bucket.id)}')">V2 Settings</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No Storage V2 buckets found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Object Metadata</h3><span class="badge">${safeText(String(files.length))} Files</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Object</th>
+            <th>Provider</th>
+            <th>Checksum</th>
+            <th>URLs</th>
+            <th>Version</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${files.slice(0, 80).map(file => `
+            <tr>
+              <td><strong>${safeText(file.display_name || file.displayName || file.original_filename || file.originalFilename || file.filename)}</strong><div class="muted">${safeText(file.object_key || file.objectKey || file.filename || "")}</div></td>
+              <td>${safeText(file.provider || "local")}<div class="muted">${safeText(file.provider_bucket_name || file.providerBucketName || file.bucket_name || "")}</div></td>
+              <td><code>${safeText(file.checksum_sha256 || file.checksumSha256 || "-").slice(0, 24)}</code></td>
+              <td>
+                ${file.public_url || file.publicUrl ? `<a href="${safeText(file.public_url || file.publicUrl)}" target="_blank" rel="noopener">Public</a>` : `<span class="muted">No public URL</span>`}
+                <div>${file.cdn_url || file.cdnUrl ? `<a href="${safeText(file.cdn_url || file.cdnUrl)}" target="_blank" rel="noopener">CDN</a>` : `<span class="muted">No CDN URL</span>`}</div>
+              </td>
+              <td>${safeText(file.version_id || file.versionId || "v1")}<div class="muted">#${safeText(String(file.version_number || file.versionNumber || 1))}</div></td>
+              <td><button class="logout" onclick="window.refreshStorageFileMetadata('${safeText(file.id)}')">Refresh Metadata</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No files found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function storageView() {
   if (!state.storageManagerLoaded && !state.storageManagerLoading) {
     state.storageManagerLoading = true;
@@ -5339,6 +5634,8 @@ function storageView() {
 
   return `
     ${hero("Storage / Files", "Buckets, uploads, folders, search, signed URLs, downloads, and file lifecycle controls.")}
+
+    ${storageV2Section()}
     <div class="section-head">
       <h3>Storage Buckets</h3>
       <div>
