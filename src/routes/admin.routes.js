@@ -2252,4 +2252,135 @@ router.post("/edge-functions/:id/run-test-safe", async (req, res) => {
   }
 });
 
+
+function readTailLines(filePath, lineCount = 80) {
+  try {
+    const fs = require("fs");
+    const childProcess = require("child_process");
+
+    if (!fs.existsSync(filePath)) return [];
+
+    const output = childProcess.execFileSync("tail", ["-n", String(lineCount), filePath], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 3000,
+    });
+
+    return output
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch (error) {
+    return [];
+  }
+}
+
+router.get("/logs-page-data", async (req, res) => {
+  try {
+    const dbLogsResult = await dbQuery(`
+      SELECT
+        id,
+        source,
+        level,
+        message,
+        context,
+        created_at AS "createdAt"
+      FROM backend_system_logs
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const pm2OutPath = "/root/.pm2/logs/goodapp-backend-out.log";
+    const pm2ErrorPath = "/root/.pm2/logs/goodapp-backend-error.log";
+
+    const outputLines = readTailLines(pm2OutPath, 120).map((line, index) => ({
+      id: `pm2_out_${index}`,
+      source: "pm2:goodapp-backend",
+      level: "output",
+      message: line,
+      filePath: pm2OutPath,
+      createdAt: null,
+    }));
+
+    const errorLines = readTailLines(pm2ErrorPath, 120).map((line, index) => ({
+      id: `pm2_error_${index}`,
+      source: "pm2:goodapp-backend",
+      level: "error",
+      message: line,
+      filePath: pm2ErrorPath,
+      createdAt: null,
+    }));
+
+    const databaseLogs = dbLogsResult.rows;
+
+    const logs = [
+      ...databaseLogs,
+      ...errorLines.reverse(),
+      ...outputLines.reverse(),
+    ].slice(0, 250);
+
+    return ok(res, {
+      logs,
+      counts: {
+        logFiles: [pm2OutPath, pm2ErrorPath].length,
+        databaseLogs: databaseLogs.length,
+        errors: logs.filter((log) => log.level === "error").length,
+        output: logs.filter((log) => log.level === "output").length,
+        total: logs.length,
+      },
+      files: {
+        output: pm2OutPath,
+        error: pm2ErrorPath,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load logs page data", 500, error.message);
+  }
+});
+
+router.post("/logs/create-test-safe", async (req, res) => {
+  try {
+    const id = `log_${crypto.randomUUID().replace(/-/g, "")}`;
+    const level = String(req.body?.level || "info").trim();
+    const source = String(req.body?.source || "backend-console").trim();
+    const message = String(req.body?.message || "Test log from GoodAppBackEnd console.").trim();
+
+    const context = req.body?.context && typeof req.body.context === "object"
+      ? req.body.context
+      : {
+          test: true,
+          createdFrom: "GoodAppBackEnd Console",
+          time: new Date().toISOString(),
+        };
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_system_logs (
+          id,
+          source,
+          level,
+          message,
+          context
+        )
+        VALUES ($1, $2, $3, $4, $5::jsonb)
+        RETURNING
+          id,
+          source,
+          level,
+          message,
+          context,
+          created_at AS "createdAt"
+      `,
+      [id, source, level, message, JSON.stringify(context)]
+    );
+
+    return ok(res, {
+      log: result.rows[0],
+      message: "Test log created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create test log", 500, error.message);
+  }
+});
+
 module.exports = router;

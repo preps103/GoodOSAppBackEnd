@@ -1031,31 +1031,154 @@ function databaseView() {
 }
 
 
+
+window.loadLiveLogs = async function loadLiveLogs() {
+  try {
+    const response = await fetch("/api/admin/logs-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Logs refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.logs = Array.isArray(data.logs) ? data.logs : [];
+    state.logCounts = data.counts || {};
+    state.logFiles = data.files || {};
+    state.logsLiveLoaded = true;
+    state.logsLiveLoading = false;
+    state.logsLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.logsLiveError = error.message || "Failed to load logs page data.";
+    state.logsLiveLoading = false;
+    alert("Logs refresh failed: " + state.logsLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshLogsNow = async function refreshLogsNow() {
+  return window.loadLiveLogs();
+};
+
+window.createTestLog = async function createTestLog() {
+  const level = prompt("Log level: info, warn, error", "info");
+  if (!level) return;
+
+  const message = prompt("Log message:", "Test log from GoodAppBackEnd console.");
+  if (!message) return;
+
+  try {
+    const response = await fetch("/api/admin/logs/create-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        level,
+        source: "backend-console",
+        message,
+        context: {
+          test: true,
+          createdFrom: "GoodAppBackEnd Console",
+          time: new Date().toISOString()
+        }
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Test log creation failed with status " + response.status);
+    }
+
+    alert("Test log created.");
+    await window.loadLiveLogs();
+  } catch (error) {
+    alert("Test log creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function logsView() {
+  if (!state.logsLiveLoaded && !state.logsLiveLoading) {
+    state.logsLiveLoading = true;
+    setTimeout(() => window.loadLiveLogs(), 100);
+  }
+
   const logs = Array.isArray(state.logs) ? state.logs : [];
+  const counts = state.logCounts || {};
+  const errors = logs.filter(log => log.level === "error");
+  const outputs = logs.filter(log => log.level === "output");
 
   return `
-    ${hero("Logs & Monitoring", "Live PM2 log visibility for GoodAppBackEnd. Error filtering, search, and retention controls come next.")}
-    <div class="grid cards">
-      ${card("Log Files", logs.length, "Detected PM2 log files")}
-      ${card("Errors", logs.filter(log => String(log.file || "").includes("error")).length, "Error streams")}
-      ${card("Output", logs.filter(log => String(log.file || "").includes("out")).length, "Output streams")}
-      ${card("Retention", "Next", "Log retention rules")}
+    ${hero("Logs & Monitoring", "Live PM2 log visibility and backend database log records.")}
+    <div class="section-head">
+      <h3>Backend Logs</h3>
+      <div>
+        <button class="logout" onclick="window.refreshLogsNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createTestLog()">Create Test Log</button>
+      </div>
     </div>
-    <div class="grid" style="margin-top:18px;">
-      ${logs.length === 0 ? '<div class="card"><strong>No logs returned yet.</strong><p class="muted">The backend is running, but the console could not read PM2 log files from the current process environment.</p></div>' : logs.map(log => `
-        <div class="card">
-          <div class="section-head">
-            <h3>${safeText(log.file)}</h3>
-            <span class="badge">${Math.round((log.size || 0) / 1024)} KB</span>
-          </div>
-          <div class="muted" style="margin-bottom:10px;">${safeText(log.path || "")}</div>
-          <div class="codebox">${(log.lines || []).map(line => safeText(line)).join("\\n")}</div>
-        </div>
-      `).join("")}
+
+    ${state.logsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live log data...</p></div>` : ""}
+    ${state.logsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Logs load error: ${safeText(state.logsLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Log Files", counts.logFiles ?? 2, "Detected PM2 log files")}
+      ${card("Errors", counts.errors ?? errors.length, "Error streams")}
+      ${card("Output", counts.output ?? outputs.length, "Output streams")}
+      ${card("Database Logs", counts.databaseLogs ?? 0, "Stored log records")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Log Sources</h3><span class="badge">Live</span></div>
+      <table>
+        <tbody>
+          <tr><td>PM2 Output</td><td>${safeText(state.logFiles?.output || "/root/.pm2/logs/goodapp-backend-out.log")}</td></tr>
+          <tr><td>PM2 Error</td><td>${safeText(state.logFiles?.error || "/root/.pm2/logs/goodapp-backend-error.log")}</td></tr>
+          <tr><td>Database Table</td><td>backend_system_logs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent Logs</h3><span class="badge">Last 250</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Level</th>
+            <th>Source</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.map(log => `
+            <tr>
+              <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : "-"}</td>
+              <td><span class="badge">${safeText(log.level || "-")}</span></td>
+              <td>${safeText(log.source || "-")}</td>
+              <td>${safeText(log.message || "-")}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No logs returned yet. Click Create Test Log.</td></tr>'}
+        </tbody>
+      </table>
     </div>
   `;
 }
+
 
 function securityView() {
   const security = state.security || {};
