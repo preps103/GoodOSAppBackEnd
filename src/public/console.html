@@ -1041,6 +1041,18 @@ window.prevDatabaseRows = async function prevDatabaseRows() {
   return window.loadDatabaseTableRows(state.selectedDbTable, prevOffset);
 };
 
+
+window.closeDatabaseRows = function closeDatabaseRows() {
+  state.selectedDbTable = "";
+  state.selectedDbColumns = [];
+  state.selectedDbRows = [];
+  state.selectedDbPagination = {};
+  state.databaseRowSearch = "";
+  state.databaseRowsError = "";
+  state.databaseRowsLoading = false;
+  goodosRenderNow();
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1049,9 +1061,76 @@ function databaseView() {
 
   const tables = Array.isArray(state.tables) ? state.tables : [];
   const totalRows = tables.reduce((sum, table) => sum + Number(table.rowCount || table.rows || 0), 0);
+  const selectedTable = state.selectedDbTable || "";
+  const selectedColumns = Array.isArray(state.selectedDbColumns) ? state.selectedDbColumns : [];
+  const selectedRows = Array.isArray(state.selectedDbRows) ? state.selectedDbRows : [];
+  const selectedPagination = state.selectedDbPagination || {};
+
+  const inlineRowViewer = (tableName) => {
+    if (selectedTable !== tableName) return "";
+
+    return `
+      <tr>
+        <td colspan="5" style="padding:0;">
+          <div class="card" style="margin:12px 0 18px 0; border-color:rgba(96,165,250,.35); background:rgba(96,165,250,.04);">
+            <div class="section-head">
+              <h3>Rows: ${safeText(tableName)}</h3>
+              <div>
+                <button class="logout" onclick="window.loadDatabaseTableRows('${safeText(tableName)}', 0)">Refresh Rows</button>
+                <button class="logout" onclick="window.closeDatabaseRows()">Close</button>
+              </div>
+            </div>
+
+            ${state.databaseRowsLoading ? `<p class="muted">Loading rows from ${safeText(tableName)}...</p>` : ""}
+            ${state.databaseRowsError ? `<p class="muted">Row viewer error: ${safeText(state.databaseRowsError)}</p>` : ""}
+
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+              <input
+                id="database-row-search"
+                value="${safeText(state.databaseRowSearch || "")}"
+                placeholder="Search rows in ${safeText(tableName)}..."
+                style="flex:1; min-width:260px; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff;"
+              />
+              <button class="logout" onclick="window.searchDatabaseRows()">Search</button>
+              <button class="logout" onclick="window.prevDatabaseRows()">Prev</button>
+              <button class="logout" onclick="window.nextDatabaseRows()">Next</button>
+            </div>
+
+            <p class="muted" style="margin-bottom:12px;">
+              Showing ${safeText(String(selectedRows.length))} of ${safeText(String(selectedPagination.total || 0))} rows.
+              Offset: ${safeText(String(selectedPagination.offset || 0))}
+            </p>
+
+            <div style="overflow:auto; max-height:460px; border:1px solid rgba(255,255,255,.08); border-radius:14px;">
+              <table>
+                <thead>
+                  <tr>
+                    ${selectedColumns.map(column => `<th>${safeText(column.columnName || "-")}</th>`).join("") || "<th>No columns loaded</th>"}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${selectedRows.map(row => `
+                    <tr>
+                      ${selectedColumns.map(column => {
+                        const value = row[column.columnName];
+                        let display = value;
+                        if (typeof value === "object" && value !== null) display = JSON.stringify(value);
+                        if (display === null || display === undefined) display = "";
+                        return `<td>${safeText(String(display)).slice(0, 240)}</td>`;
+                      }).join("")}
+                    </tr>
+                  `).join("") || `<tr><td class="muted" colspan="${Math.max(selectedColumns.length, 1)}">No rows loaded yet.</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  };
 
   return `
-    ${hero("Database Browser", "Live Postgres table visibility, row counts, and schema metadata.")}
+    ${hero("Database Browser", "Live Postgres table visibility, row counts, schema metadata, and inline row inspection.")}
     <div class="section-head">
       <h3>Database Tables</h3>
       <div>
@@ -1070,7 +1149,7 @@ function databaseView() {
     </div>
 
     <div class="card" style="margin-top:18px;">
-      <div class="section-head"><h3>Tables</h3><span class="badge">Live</span></div>
+      <div class="section-head"><h3>Tables</h3><span class="badge">Click View Rows</span></div>
       <table>
         <thead>
           <tr>
@@ -1082,67 +1161,26 @@ function databaseView() {
           </tr>
         </thead>
         <tbody>
-          ${tables.map(table => `
-            <tr>
-              <td><strong>${safeText(table.tableName || table.name || "-")}</strong></td>
-              <td>${safeText(String(table.rowCount ?? table.rows ?? 0))}</td>
-              <td>${safeText(String((table.columns || []).length))}</td>
-              <td><span class="badge">${safeText(table.status || "live")}</span></td>
-              <td><button class="logout" onclick="window.loadDatabaseTableRows('${safeText(table.tableName || table.name || "-")}', 0)">View Rows</button></td>
-            </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No database tables loaded yet.</td></tr>'}
+          ${tables.map(table => {
+            const tableName = table.tableName || table.name || "-";
+            const isSelected = selectedTable === tableName;
+            return `
+              <tr style="${isSelected ? "background:rgba(96,165,250,.08);" : ""}">
+                <td><strong>${safeText(tableName)}</strong></td>
+                <td>${safeText(String(table.rowCount ?? table.rows ?? 0))}</td>
+                <td>${safeText(String((table.columns || []).length))}</td>
+                <td><span class="badge">${safeText(table.status || "live")}</span></td>
+                <td>
+                  <button class="logout" onclick="window.loadDatabaseTableRows('${safeText(tableName)}', 0)">
+                    ${isSelected ? "Reload Rows" : "View Rows"}
+                  </button>
+                </td>
+              </tr>
+              ${inlineRowViewer(tableName)}
+            `;
+          }).join("") || '<tr><td colspan="5" class="muted">No database tables loaded yet.</td></tr>'}
         </tbody>
       </table>
-    </div>
-
-
-    <div class="card" style="margin-top:18px;">
-      <div class="section-head">
-        <h3>Table Row Viewer</h3>
-        <span class="badge">${safeText(state.selectedDbTable || "Select Table")}</span>
-      </div>
-
-      ${state.databaseRowsLoading ? `<p class="muted">Loading rows...</p>` : ""}
-      ${state.databaseRowsError ? `<p class="muted">Row viewer error: ${safeText(state.databaseRowsError)}</p>` : ""}
-
-      <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px;">
-        <input
-          id="database-row-search"
-          value="${safeText(state.databaseRowSearch || "")}"
-          placeholder="Search selected table rows..."
-          style="flex:1; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#fff;"
-        />
-        <button class="logout" onclick="window.searchDatabaseRows()">Search</button>
-        <button class="logout" onclick="window.prevDatabaseRows()">Prev</button>
-        <button class="logout" onclick="window.nextDatabaseRows()">Next</button>
-      </div>
-
-      <p class="muted">
-        ${state.selectedDbTable ? `Showing ${safeText(String((state.selectedDbRows || []).length))} of ${safeText(String(state.selectedDbPagination?.total || 0))} rows from ${safeText(state.selectedDbTable)}.` : "Click View Rows beside a table to inspect data."}
-      </p>
-
-      <div style="overflow:auto; max-height:520px;">
-        <table>
-          <thead>
-            <tr>
-              ${(state.selectedDbColumns || []).map(column => `<th>${safeText(column.columnName || "-")}</th>`).join("") || "<th>No table selected</th>"}
-            </tr>
-          </thead>
-          <tbody>
-            ${(state.selectedDbRows || []).map(row => `
-              <tr>
-                ${(state.selectedDbColumns || []).map(column => {
-                  const value = row[column.columnName];
-                  let display = value;
-                  if (typeof value === "object" && value !== null) display = JSON.stringify(value);
-                  if (display === null || display === undefined) display = "";
-                  return `<td>${safeText(String(display)).slice(0, 240)}</td>`;
-                }).join("")}
-              </tr>
-            `).join("") || `<tr><td class="muted" colspan="${Math.max((state.selectedDbColumns || []).length, 1)}">No rows loaded yet.</td></tr>`}
-          </tbody>
-        </table>
-      </div>
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -1173,86 +1211,6 @@ function databaseView() {
   `;
 }
 
-
-
-window.loadLiveLogs = async function loadLiveLogs() {
-  try {
-    const response = await fetch("/api/admin/logs-page-data?t=" + Date.now(), {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Logs refresh failed with status " + response.status);
-    }
-
-    const data = payload.data || payload;
-    state.logs = Array.isArray(data.logs) ? data.logs : [];
-    state.logCounts = data.counts || {};
-    state.logFiles = data.files || {};
-    state.logsLiveLoaded = true;
-    state.logsLiveLoading = false;
-    state.logsLiveError = "";
-
-    goodosRenderNow();
-  } catch (error) {
-    state.logsLiveError = error.message || "Failed to load logs page data.";
-    state.logsLiveLoading = false;
-    alert("Logs refresh failed: " + state.logsLiveError);
-    console.error(error);
-    goodosRenderNow();
-  }
-};
-
-window.refreshLogsNow = async function refreshLogsNow() {
-  return window.loadLiveLogs();
-};
-
-window.createTestLog = async function createTestLog() {
-  const level = prompt("Log level: info, warn, error", "info");
-  if (!level) return;
-
-  const message = prompt("Log message:", "Test log from GoodAppBackEnd console.");
-  if (!message) return;
-
-  try {
-    const response = await fetch("/api/admin/logs/create-test-safe", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        level,
-        source: "backend-console",
-        message,
-        context: {
-          test: true,
-          createdFrom: "GoodAppBackEnd Console",
-          time: new Date().toISOString()
-        }
-      })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Test log creation failed with status " + response.status);
-    }
-
-    alert("Test log created.");
-    await window.loadLiveLogs();
-  } catch (error) {
-    alert("Test log creation failed: " + (error.message || "Unknown error"));
-    console.error(error);
-  }
-};
 
 function logsView() {
   if (!state.logsLiveLoaded && !state.logsLiveLoading) {
