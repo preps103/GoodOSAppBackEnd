@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>GoodAppBackEnd Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #07080d;
+      --panel: #10131b;
+      --panel2: #151923;
+      --border: rgba(255,255,255,.08);
+      --muted: #8b90a0;
+      --text: #f5f7fb;
+      --green: #22c55e;
+      --indigo: #7367ff;
+      --cyan: #22d3ee;
+      --red: #fb7185;
+      --amber: #fbbf24;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(115,103,255,.18), transparent 32%),
+        radial-gradient(circle at 86% 4%, rgba(34,211,238,.08), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+
+    .hidden { display: none !important; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: rgba(8,10,16,.82);
+      padding: 22px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 10px 24px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--indigo), #4f46e5);
+      box-shadow: 0 20px 50px rgba(115,103,255,.25);
+      font-weight: 950;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: -.04em;
+    }
+
+    .brand p {
+      font-size: 12px;
+      margin: 2px 0 0;
+      color: var(--muted);
+    }
+
+    .nav-section { margin-top: 22px; }
+
+    .nav-title {
+      font-size: 10px;
+      font-weight: 900;
+      color: #626878;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      padding: 0 10px;
+      margin-bottom: 8px;
+    }
+
+    .nav button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: #a8adbd;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: .16s ease;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: rgba(115,103,255,.16);
+      color: white;
+    }
+
+    main { min-width: 0; }
+
+    .topbar {
+      height: 72px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(7,8,13,.72);
+      backdrop-filter: blur(18px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .search {
+      width: min(620px, 52vw);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: var(--muted);
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: white;
+    }
+
+    .session {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: #c7cbda;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      margin-right: 8px;
+      box-shadow: 0 0 20px rgba(34,197,94,.55);
+    }
+
+    .logout {
+      border: 1px solid rgba(251,113,133,.25);
+      background: rgba(251,113,133,.08);
+      color: #fecdd3;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 950;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .content { padding: 32px; }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+
+    .hero h2 {
+      font-size: 34px;
+      margin: 0;
+      letter-spacing: -.05em;
+    }
+
+    .hero p {
+      color: var(--muted);
+      margin: 8px 0 0;
+      max-width: 760px;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .grid { display: grid; gap: 18px; }
+    .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .two { grid-template-columns: 1.25fr .75fr; margin-top: 18px; }
+    .module-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card, .module {
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.18);
+    }
+
+    .card .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+    }
+
+    .card .value {
+      font-size: 32px;
+      font-weight: 950;
+      margin-top: 8px;
+      letter-spacing: -.04em;
+    }
+
+    .card .sub {
+      color: #737988;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      color: #747b8c;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 10px;
+      text-align: left;
+      padding: 13px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      color: #d7dae5;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    tr:hover td { background: rgba(255,255,255,.025); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(34,197,94,.1);
+      color: #86efac;
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .badge.next {
+      background: rgba(34,211,238,.1);
+      color: #67e8f9;
+    }
+
+    .badge.warn {
+      background: rgba(251,191,36,.1);
+      color: #fde68a;
+    }
+
+    .muted { color: var(--muted); }
+
+    .module h4 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .module p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .module .tag {
+      margin-top: 16px;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+    }
+
+    .codebox {
+      max-height: 440px;
+      overflow: auto;
+      background: rgba(0,0,0,.28);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #b8bdcc;
+      white-space: pre-wrap;
+    }
+
+    .login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 28px 90px rgba(0,0,0,.42);
+    }
+
+    .login-card h1 {
+      margin: 16px 0 0;
+      font-size: 30px;
+      letter-spacing: -.04em;
+    }
+
+    .login-card p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    label {
+      color: #9aa1b3;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-weight: 950;
+      display: block;
+      margin: 18px 0 8px;
+    }
+
+    .login input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      color: white;
+      padding: 14px;
+      border-radius: 14px;
+      outline: none;
+    }
+
+    .primary {
+      width: 100%;
+      border: 0;
+      background: var(--indigo);
+      color: white;
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      cursor: pointer;
+    }
+
+    .error {
+      background: rgba(251,113,133,.1);
+      border: 1px solid rgba(251,113,133,.25);
+      color: #fecdd3;
+      padding: 12px;
+      border-radius: 14px;
+      margin-top: 16px;
+      display: none;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1050px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      .cards, .two, .module-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .content { padding: 20px; }
+      .search { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="login" class="login hidden">
+    <form class="login-card" id="loginForm">
+      <div class="logo">G</div>
+      <h1>GoodAppBackEnd</h1>
+      <p>Sign in with your GoodOS owner account to access the production backend console.</p>
+      <div id="loginError" class="error"></div>
+      <label>Email</label>
+      <input id="email" type="email" value="mgoodloe1988@gmail.com" required />
+      <label>Password</label>
+      <input id="password" type="password" required />
+      <button class="primary" type="submit">Sign In</button>
+    </form>
+  </div>
+
+  <div id="app" class="shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">G</div>
+        <div>
+          <h1>GoodAppBackEnd</h1>
+          <p>Self-hosted backend console</p>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-section">
+          <div class="nav-title">Core</div>
+          <button class="active" data-view="dashboard">Dashboard</button>
+          <button data-view="auth">Auth / Users</button>
+          <button data-view="apps">App Registry</button>
+          <button data-view="database">Database Browser</button>
+          <button data-view="storage">Storage / Files</button>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-title">Build</div>
+          <button data-view="api">API Keys</button>
+          <button data-view="webhooks">Webhooks</button>
+          <button data-view="realtime">Realtime Events</button>
+          <button data-view="functions">Edge Functions</button>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-title">Operate</div>
+          <button data-view="logs">Logs & Monitoring</button>
+          <button data-view="security">Security Rules</button>
+          <button data-view="backups">Backups</button>
+          <button data-view="settings">Settings</button>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="search">
+          ⌘
+          <input id="searchInput" placeholder="Search backend resources, users, apps, logs..." />
+        </div>
+        <div class="session">
+          <div class="pill"><span class="status-dot"></span>Production</div>
+          <div class="pill" id="userPill">Loading...</div>
+          <button class="logout" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <section class="content" id="view"></section>
+    </main>
+  </div>
+
+<script>
+const state = {
+  user: null,
+  overview: {},
+  apps: [],
+  users: [],
+  tables: [],
+  memberships: [],
+  logs: [],
+  backups: [],
+  security: {},
+  apiKeys: [],
+  webhooks: [],
+  webhookDeliveries: [],
+  buckets: [],
+  events: [],
+  view: "dashboard",
+};
+
+async function request(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || data.success === false) {
+    throw new Error(data.message || "Request failed");
+  }
+
+  return data;
+}
+
+function safeText(value) {
+  return String(value ?? "").replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+}
+
+async function checkSession() {
+  try {
+    const data = await request("/api/auth/me");
+    state.user = data.user;
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    document.getElementById("userPill").textContent = state.user.displayName || state.user.email;
+
+    try {
+      await loadData();
+    } catch (dataError) {
+      console.error("Console data load failed:", dataError);
+      state.overview = {
+        status: "data-error",
+        environment: "production",
+        version: "1.0.0",
+        stats: {},
+        runtime: {},
+        error: dataError.message || "Console data failed to load."
+      };
+    }
+
+    render();
+  } catch (authError) {
+    console.error("Auth check failed:", authError);
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("login").classList.remove("hidden");
+  }
+}
+
+async function loadData() {
+  const payload = await request("/api/admin/console-data");
+  const data = payload.data || payload;
+
+  state.overview = data.overview || {};
+  state.apps = data.apps || [];
+  state.users = data.users || [];
+  state.tables = data.tables || [];
+  state.memberships = data.memberships || [];
+  state.logs = Array.isArray(data.logs) ? data.logs : (data.logs?.logs || []);
+  state.backups = Array.isArray(data.backups) ? data.backups : (data.backups?.backups || []);
+  state.security = data.security || {};
+  state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : (data.apiKeys?.apiKeys || []);
+  state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : (data.webhooks?.webhooks || []);
+  state.webhookDeliveries = Array.isArray(data.webhookDeliveries) ? data.webhookDeliveries : (data.webhookDeliveries?.deliveries || []);
+  state.buckets = Array.isArray(data.buckets) ? data.buckets : (data.buckets?.buckets || []);
+  state.events = Array.isArray(data.events) ? data.events : (data.events?.events || []);
+}
+
+function card(label, value, sub = "") {
+  return '<div class="card"><div class="label">' + label + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>';
+}
+
+function hero(title, body, badge = "") {
+  return '<div class="hero"><div><h2>' + title + '</h2><p>' + body + '</p></div>' + (badge ? '<div class="pill"><span class="status-dot"></span>' + badge + '</div>' : '') + '</div>';
+}
+
+function appsTable() {
+  return `
+    <table>
+      <thead><tr><th>App</th><th>Domain</th><th>Status</th><th>Members</th></tr></thead>
+      <tbody>
+        ${state.apps.map(app => `
+          <tr>
+            <td><strong>${safeText(app.name)}</strong><div class="muted">${safeText(app.id)}</div></td>
+            <td>${safeText(app.domain || "-")}</td>
+            <td><span class="badge">${safeText(app.status || "active")}</span></td>
+            <td>${safeText(app.memberCount ?? "-")}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function dashboard() {
+  const stats = state.overview?.stats || {};
+  return `
+    ${state.overview?.error ? '<div class="card" style="border-color:rgba(251,113,133,.35);color:#fecdd3;margin-bottom:18px;"><strong>Console data error:</strong><br>' + safeText(state.overview.error) + '</div>' : ''}
+    ${hero("Backend Console", "GoodAppBackEnd is moving from a simple health monitor into a full backend platform with auth, app registry, database visibility, API management, webhooks, logs, storage, realtime, and security controls.", state.overview?.status || "operational")}
+
+    <div class="grid cards">
+      ${card("Users", stats.users ?? state.users.length, "GoodOS accounts")}
+      ${card("Apps", stats.activeApps ?? state.apps.length, "Active registered apps")}
+      ${card("Memberships", stats.activeMemberships ?? state.memberships.length, "Active app access grants")}
+      ${card("Sessions", stats.sessions ?? 0, "Active session table")}
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <div class="section-head"><h3>Registered Apps</h3><span class="badge">Live Registry</span></div>
+        ${appsTable()}
+      </div>
+      <div class="card">
+        <div class="section-head"><h3>Runtime</h3><span class="badge">Healthy</span></div>
+        <table>
+          <tr><td>Environment</td><td>${safeText(state.overview?.environment || "production")}</td></tr>
+          <tr><td>Version</td><td>${safeText(state.overview?.version || "1.0.0")}</td></tr>
+          <tr><td>Node</td><td>${safeText(state.overview?.runtime?.node || "-")}</td></tr>
+          <tr><td>Uptime</td><td>${safeText(state.overview?.runtime?.uptimeFormatted || state.overview?.runtime?.uptimeSeconds || "-")}</td></tr>
+          <tr><td>Memory</td><td>${safeText(state.overview?.runtime?.memoryMb?.heapUsed || "-")} MB heap</td></tr>
+          <tr><td>Database</td><td><span class="badge">Connected</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid module-grid" style="margin-top:18px;">
+      ${moduleCard("Auth / Users", "Production SSO, users, sessions, invites, and workspace roles.", "Live")}
+      ${moduleCard("App Registry", "Manage GoodOS apps, domains, status, and membership rules.", "Live")}
+      ${moduleCard("Database Browser", "Inspect backend tables, row counts, and schema metadata.", "Live")}
+      ${moduleCard("Storage / Files", `${state.buckets.length} buckets configured. Signed URLs and upload handling come next.`, state.buckets.length ? "Live" : "Next")}
+      ${moduleCard("API Keys", `${state.apiKeys.length} active or historical backend keys.`, state.apiKeys.length ? "Live" : "Next")}
+      ${moduleCard("Webhooks", `${state.webhooks.length} webhook endpoints configured.`, state.webhooks.length ? "Live" : "Next")}
+    </div>
+  `;
+}
+
+function moduleCard(name, desc, tag) {
+  return '<div class="module"><h4>' + safeText(name) + '</h4><p>' + safeText(desc) + '</p><div class="tag">' + safeText(tag) + '</div></div>';
+}
+
+function usersView() {
+  return `
+    ${hero("Auth / Users", "Manage GoodOS accounts, owner access, session state, and future invite flows.")}
+    <div class="card">
+      <table>
+        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Email Verified</th></tr></thead>
+        <tbody>
+          ${state.users.map(user => `
+            <tr>
+              <td><strong>${safeText(user.displayName || user.email)}</strong><div class="muted">${safeText(user.email)}</div></td>
+              <td>${safeText(user.platformRole)}</td>
+              <td><span class="badge">${safeText(user.status)}</span></td>
+              <td>${user.emailVerified ? "Verified" : "Pending"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function appsView() {
+  return `
+    ${hero("App Registry", "Registered apps and access memberships loaded from GoodAppBackEnd.")}
+    <div class="grid two">
+      <div class="card"><div class="section-head"><h3>Apps</h3><span class="badge">Live</span></div>${appsTable()}</div>
+      <div class="card">
+        <div class="section-head"><h3>Memberships</h3><span class="badge">Live</span></div>
+        <table>
+          <thead><tr><th>User</th><th>App</th><th>Role</th><th>Status</th></tr></thead>
+          <tbody>
+            ${state.memberships.map(item => `
+              <tr>
+                <td>${safeText(item.email)}</td>
+                <td>${safeText(item.appName)}</td>
+                <td>${safeText(item.role)}</td>
+                <td><span class="badge">${safeText(item.status)}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function databaseView() {
+  return `
+    ${hero("Database Browser", "Live Postgres table visibility. Full row viewer, schema editor, and query console come next.")}
+    <div class="card">
+      <table>
+        <thead><tr><th>Table</th><th>Rows</th><th>Status</th></tr></thead>
+        <tbody>
+          ${state.tables.map(table => `
+            <tr>
+              <td><strong>${safeText(table.tableName)}</strong></td>
+              <td>${safeText(table.rowCount ?? "-")}</td>
+              <td><span class="badge">${safeText(table.status || "available")}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function logsView() {
+  const logs = Array.isArray(state.logs) ? state.logs : [];
+
+  return `
+    ${hero("Logs & Monitoring", "Live PM2 log visibility for GoodAppBackEnd. Error filtering, search, and retention controls come next.")}
+    <div class="grid cards">
+      ${card("Log Files", logs.length, "Detected PM2 log files")}
+      ${card("Errors", logs.filter(log => String(log.file || "").includes("error")).length, "Error streams")}
+      ${card("Output", logs.filter(log => String(log.file || "").includes("out")).length, "Output streams")}
+      ${card("Retention", "Next", "Log retention rules")}
+    </div>
+    <div class="grid" style="margin-top:18px;">
+      ${logs.length === 0 ? '<div class="card"><strong>No logs returned yet.</strong><p class="muted">The backend is running, but the console could not read PM2 log files from the current process environment.</p></div>' : logs.map(log => `
+        <div class="card">
+          <div class="section-head">
+            <h3>${safeText(log.file)}</h3>
+            <span class="badge">${Math.round((log.size || 0) / 1024)} KB</span>
+          </div>
+          <div class="muted" style="margin-bottom:10px;">${safeText(log.path || "")}</div>
+          <div class="codebox">${(log.lines || []).map(line => safeText(line)).join("\\n")}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function securityView() {
+  const security = state.security || {};
+  const headers = security.headers || { helmet: true, hsts: true, csp: true };
+
+  return `
+    ${hero("Security Rules", "Current authentication, cookie, CORS, and security header settings.")}
+    <div class="grid cards">
+      ${card("Cookie", security.auth?.cookieName || "goodos_session", "SSO cookie")}
+      ${card("Domain", security.cors?.allowedDomain || ".goodos.app", "Cross-subdomain SSO")}
+      ${card("SameSite", security.cors?.sameSite || "lax", "Cookie policy")}
+      ${card("JWT", security.auth?.jwtExpiresIn || "7d", "Token expiration")}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Security Headers</h3><span class="badge">Active</span></div>
+      <table>
+        <tr><td>Helmet</td><td><span class="badge">${headers.helmet ? "Enabled" : "Pending"}</span></td></tr>
+        <tr><td>HSTS</td><td><span class="badge">${headers.hsts ? "Enabled" : "Pending"}</span></td></tr>
+        <tr><td>CSP</td><td><span class="badge">${headers.csp ? "Enabled" : "Pending"}</span></td></tr>
+        <tr><td>Credentials</td><td><span class="badge">${security.cors?.cookieCredentials !== false ? "Enabled" : "Pending"}</span></td></tr>
+      </table>
+    </div>
+  `;
+}
+
+function backupsView() {
+  const backups = Array.isArray(state.backups) ? state.backups : [];
+
+  return `
+    ${hero("Backups", "Server-side backup inventory with manual JSON database snapshots.")}
+    <div class="section-head">
+      <h3>Backup Inventory</h3>
+      <button class="logout" onclick="createBackup()">Create Backup Snapshot</button>
+    </div>
+    <div class="grid cards">
+      ${card("Backups", backups.length, "Tracked backup entries")}
+      ${card("Snapshots", backups.filter(item => String(item.name || "").includes("snapshot")).length, "Database snapshots")}
+      ${card("Restore", "Next", "Restore workflow")}
+      ${card("Schedule", "Next", "Automated snapshots")}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <table>
+        <thead><tr><th>Name</th><th>Type</th><th>Modified</th><th>Size</th></tr></thead>
+        <tbody>
+          ${backups.map(item => `
+            <tr>
+              <td><strong>${safeText(item.name)}</strong></td>
+              <td>${safeText(item.type)}</td>
+              <td>${item.modifiedAt ? new Date(item.modifiedAt).toLocaleString() : "-"}</td>
+              <td>${safeText(item.size || 0)}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No backups found yet. Create a snapshot to begin.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function storageView() {
+  return `
+    ${hero("Storage / Files", "Buckets, uploads, signed URLs, and file permission rules.")}
+    <div class="section-head">
+      <h3>Storage Buckets</h3>
+      <button class="logout" onclick="createBucket()">Create Bucket</button>
+    </div>
+    <div class="grid cards">
+      ${card("Buckets", state.buckets.length, "Active storage buckets")}
+      ${card("Files", state.buckets.reduce((sum, b) => sum + Number(b.fileCount || 0), 0), "Tracked files")}
+      ${card("Visibility", "Private", "Default bucket policy")}
+      ${card("Signed URLs", "Next", "Private file delivery")}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <table>
+        <thead><tr><th>Bucket</th><th>Visibility</th><th>Files</th><th>Status</th></tr></thead>
+        <tbody>
+          ${state.buckets.map(bucket => `
+            <tr>
+              <td><strong>${safeText(bucket.name)}</strong><div class="muted">${safeText(bucket.id)}</div></td>
+              <td>${safeText(bucket.visibility)}</td>
+              <td>${safeText(bucket.fileCount ?? 0)}</td>
+              <td><span class="badge">${safeText(bucket.status)}</span></td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No buckets created yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function apiKeysView() {
+  return `
+    ${hero("API Keys", "Create scoped project keys, rotate secrets, and manage server integration tokens.")}
+    <div class="section-head">
+      <h3>Project Keys</h3>
+      <button class="logout" onclick="createApiKey()">Generate Key</button>
+    </div>
+    <div class="grid cards">
+      ${card("API Keys", state.apiKeys.length, "Stored key records")}
+      ${card("Active", state.apiKeys.filter(k => k.status === "active").length, "Usable keys")}
+      ${card("Revoked", state.apiKeys.filter(k => k.status === "revoked").length, "Disabled keys")}
+      ${card("Scopes", "Next", "Fine-grained permissions")}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <table>
+        <thead><tr><th>Name</th><th>Prefix</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          ${state.apiKeys.map(key => `
+            <tr>
+              <td><strong>${safeText(key.name)}</strong><div class="muted">${safeText(key.id)}</div></td>
+              <td>${safeText(key.keyPrefix)}••••</td>
+              <td>${safeText(key.type)}</td>
+              <td><span class="badge">${safeText(key.status)}</span></td>
+              <td>${key.status === "active" ? `<button class="logout" onclick="revokeApiKey('${safeText(key.id)}')">Revoke</button>` : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No API keys created yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function webhooksView() {
+  const webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
+  const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
+
+  return `
+    ${hero("Webhooks", "Send auth, app, storage, payment, and custom backend events to external services.")}
+    <div class="section-head">
+      <h3>Webhook Endpoints</h3>
+      <button class="logout" onclick="createWebhook()">Create Webhook</button>
+    </div>
+
+    <div class="grid cards">
+      ${card("Webhooks", webhooks.length, "Configured endpoints")}
+      ${card("Active", webhooks.filter(w => w.status === "active").length, "Receiving events")}
+      ${card("Deliveries", deliveries.length, "Delivery attempts")}
+      ${card("Failed", deliveries.filter(d => d.status === "failed").length, "Needs retry")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Endpoints</h3><span class="badge">Live</span></div>
+      <table>
+        <thead><tr><th>Name</th><th>URL</th><th>Events</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          ${webhooks.map(webhook => `
+            <tr>
+              <td><strong>${safeText(webhook.name)}</strong><div class="muted">${safeText(webhook.id)}</div></td>
+              <td>${safeText(webhook.url)}</td>
+              <td>${safeText((webhook.events || []).join(", "))}</td>
+              <td><span class="badge">${safeText(webhook.status)}</span></td>
+              <td>
+                <button class="logout" onclick="sendTestWebhook('${safeText(webhook.id)}')">Send Test</button>
+                ${webhook.status === "active" ? `<button class="logout" onclick="disableWebhook('${safeText(webhook.id)}')">Disable</button>` : ""}
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No webhooks created yet. Click Create Webhook to begin.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Delivery Logs</h3><span class="badge">Retry Queue</span></div>
+      <table>
+        <thead><tr><th>Delivery</th><th>Webhook</th><th>Event</th><th>Status</th><th>Response</th><th>Attempts</th><th>Action</th></tr></thead>
+        <tbody>
+          ${deliveries.map(delivery => `
+            <tr>
+              <td><strong>${safeText(delivery.id)}</strong><div class="muted">${delivery.createdAt ? new Date(delivery.createdAt).toLocaleString() : "-"}</div></td>
+              <td>${safeText(delivery.webhookName || delivery.webhookId || "-")}</td>
+              <td>${safeText(delivery.eventType || "-")}</td>
+              <td><span class="badge">${safeText(delivery.status)}</span></td>
+              <td>${safeText(delivery.responseStatus || delivery.errorMessage || "-")}</td>
+              <td>${safeText(delivery.attemptCount ?? 0)}</td>
+              <td>${delivery.status === "failed" ? `<button class="logout" onclick="retryWebhookDelivery('${safeText(delivery.id)}')">Retry</button>` : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="7" class="muted">No webhook deliveries yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function realtimeView() {
+  const events = Array.isArray(state.events) ? state.events : [];
+
+  return `
+    ${hero("Realtime Events", "Backend event stream and future socket channels for live app updates.")}
+    <div class="section-head">
+      <h3>Backend Events</h3>
+      <button class="logout" onclick="createTestEvent()">Create Test Event</button>
+    </div>
+    <div class="grid cards">
+      ${card("Events", events.length, "Recent backend events")}
+      ${card("Channels", "Next", "Socket channels")}
+      ${card("Broadcast", "Next", "App event fanout")}
+      ${card("Consumers", "Next", "Event subscribers")}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <table>
+        <thead><tr><th>Event</th><th>Source</th><th>Message</th><th>Created</th></tr></thead>
+        <tbody>
+          ${events.map(event => `
+            <tr>
+              <td><strong>${safeText(event.eventType)}</strong><div class="muted">${safeText(event.id)}</div></td>
+              <td>${safeText(event.source)}</td>
+              <td>${safeText(event.message)}</td>
+              <td>${event.createdAt ? new Date(event.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No events recorded yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function functionsView() {
+  return `
+    ${hero("Edge Functions", "Deploy backend automations and serverless functions.")}
+    <div class="grid cards">
+      ${card("Functions", "0", "No functions deployed")}
+      ${card("Runtime", "Node", "JavaScript automation")}
+      ${card("Triggers", "Next", "HTTP and event triggers")}
+      ${card("Deploy", "Next", "Function deployment")}
+    </div>
+    <div class="grid module-grid" style="margin-top:18px;">
+      ${moduleCard("HTTP Functions", "Deploy callable API routes for automation workflows.", "Next")}
+      ${moduleCard("Event Functions", "Run backend actions when auth, storage, app, or webhook events happen.", "Next")}
+      ${moduleCard("Scheduled Jobs", "Run recurring tasks like backups, syncs, and cleanup jobs.", "Next")}
+    </div>
+  `;
+}
+
+function settingsView() {
+  const overview = state.overview || {};
+  const security = state.security || {};
+
+  return `
+    ${hero("Settings", "Backend environment, domains, CORS, and runtime settings.")}
+    <div class="grid cards">
+      ${card("Environment", overview.environment || "production", "Runtime mode")}
+      ${card("Service", overview.service || "GoodAppBackEnd", "Backend service")}
+      ${card("Node", overview.runtime?.node || "-", "Node runtime")}
+      ${card("PID", overview.runtime?.pid || "-", "Process ID")}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Runtime Configuration</h3><span class="badge">Read Only</span></div>
+      <table>
+        <tr><td>Backend Domain</td><td>backend.goodos.app</td></tr>
+        <tr><td>SSO Domain</td><td>${safeText(security.cors?.allowedDomain || ".goodos.app")}</td></tr>
+        <tr><td>Cookie Name</td><td>${safeText(security.auth?.cookieName || "goodos_session")}</td></tr>
+        <tr><td>Session Length</td><td>${safeText(security.auth?.sessionDays || "7")} days</td></tr>
+        <tr><td>Database</td><td><span class="badge">Connected</span></td></tr>
+      </table>
+    </div>
+  `;
+}
+
+function placeholder(title, body) {
+  return `
+    ${hero(title, body)}
+    <div class="grid module-grid">
+      ${moduleCard("Phase 1", "Console shell and live backend data are active.", "Complete")}
+      ${moduleCard("Phase 2", "CRUD endpoints and secured write actions come next.", "Next")}
+      ${moduleCard("Phase 3", "Usage analytics, realtime events, and automation hooks.", "Planned")}
+    </div>
+  `;
+}
+
+function render() {
+  const view = document.getElementById("view");
+
+  if (state.view === "dashboard") view.innerHTML = dashboard();
+  else if (state.view === "auth") view.innerHTML = usersView();
+  else if (state.view === "apps") view.innerHTML = appsView();
+  else if (state.view === "database") view.innerHTML = databaseView();
+  else if (state.view === "storage") view.innerHTML = storageView();
+  else if (state.view === "api") view.innerHTML = apiKeysView();
+  else if (state.view === "webhooks") view.innerHTML = webhooksView();
+  else if (state.view === "realtime") view.innerHTML = realtimeView();
+  else if (state.view === "functions") view.innerHTML = functionsView();
+  else if (state.view === "logs") view.innerHTML = logsView();
+  else if (state.view === "security") view.innerHTML = securityView();
+  else if (state.view === "backups") view.innerHTML = backupsView();
+  else if (state.view === "settings") view.innerHTML = settingsView();
+}
+
+
+
+async function createBackup() {
+  if (!confirm("Create a database snapshot now?")) return;
+
+  const payload = await request("/api/admin/backups/create", {
+    method: "POST"
+  });
+
+  alert("Backup created: " + (payload.data?.backup?.name || "snapshot"));
+  await refreshConsole();
+}
+
+async function createTestEvent() {
+  await request("/api/admin/events/test", {
+    method: "POST"
+  });
+
+  await refreshConsole();
+}
+
+async function refreshConsole() {
+  await loadData();
+  render();
+}
+
+async function createApiKey() {
+  const name = prompt("API key name:");
+  if (!name) return;
+
+  const typeChoice = prompt("Type: read_only or full_access", "read_only") || "read_only";
+
+  const payload = await request("/api/admin/api-keys", {
+    method: "POST",
+    body: JSON.stringify({ name, type: typeChoice })
+  });
+
+  alert("Copy this API key now. It will not be shown again:\n\n" + payload.data.secret);
+  await refreshConsole();
+}
+
+async function revokeApiKey(id) {
+  if (!confirm("Revoke this API key?")) return;
+
+  await request("/api/admin/api-keys/" + encodeURIComponent(id) + "/revoke", {
+    method: "POST"
+  });
+
+  await refreshConsole();
+}
+
+
+async function sendTestWebhook(webhookId) {
+  const payload = await request("/api/admin/webhooks/" + encodeURIComponent(webhookId) + "/test", {
+    method: "POST"
+  });
+
+  const status = payload.data?.delivery?.status || "sent";
+  alert("Test webhook delivery status: " + status);
+  await refreshConsole();
+}
+
+async function retryWebhookDelivery(deliveryId) {
+  const payload = await request("/api/admin/webhook-deliveries/" + encodeURIComponent(deliveryId) + "/retry", {
+    method: "POST"
+  });
+
+  const status = payload.data?.delivery?.status || "retried";
+  alert("Webhook retry status: " + status);
+  await refreshConsole();
+}
+
+async function createWebhook() {
+  const name = prompt("Webhook name:");
+  if (!name) return;
+
+  const url = prompt("Webhook URL. Use a test endpoint first:");
+  if (!url) return;
+
+  const eventsRaw = prompt("Events to send. Use * for all events, or comma-separated event names:", "*") || "*";
+  const events = eventsRaw.split(",").map(item => item.trim()).filter(Boolean);
+
+  try {
+    const payload = await request("/api/admin/webhooks/create-safe", {
+      method: "POST",
+      body: JSON.stringify({ name, url, events })
+    });
+
+    const secret = payload.data?.secret || "";
+    const webhookName = payload.data?.webhook?.name || name;
+
+    if (secret) {
+      prompt("Webhook created: " + webhookName + "\\nCopy this secret now. It will not be shown again:", secret);
+    } else {
+      alert("Webhook created: " + webhookName);
+    }
+
+    await refreshConsole();
+  } catch (error) {
+    alert("Webhook creation failed: " + (error.message || "Unknown error"));
+  }
+}
+
+async function disableWebhook(id) {
+  if (!confirm("Disable this webhook?")) return;
+
+  await request("/api/admin/webhooks/" + encodeURIComponent(id) + "/disable", {
+    method: "POST"
+  });
+
+  await refreshConsole();
+}
+
+async function createBucket() {
+  const name = prompt("Bucket name:");
+  if (!name) return;
+
+  const visibility = prompt("Visibility: private or public", "private") || "private";
+
+  await request("/api/admin/storage/buckets", {
+    method: "POST",
+    body: JSON.stringify({ name, visibility })
+  });
+
+  await refreshConsole();
+}
+
+
+document.querySelectorAll("[data-view]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-view]").forEach(x => x.classList.remove("active"));
+    btn.classList.add("active");
+    state.view = btn.dataset.view;
+    render();
+  });
+});
+
+document.getElementById("loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const error = document.getElementById("loginError");
+  error.style.display = "none";
+
+  try {
+    await request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+      })
+    });
+
+    await checkSession();
+  } catch (err) {
+    error.textContent = err.message;
+    error.style.display = "block";
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await request("/api/auth/logout", { method: "POST" }).catch(() => null);
+  location.reload();
+});
+
+document.getElementById("searchInput").addEventListener("input", event => {
+  const term = event.target.value.toLowerCase().trim();
+  if (!term) return render();
+
+  const matches = [
+    ...state.apps.map(app => "App: " + app.name + " — " + app.domain),
+    ...state.users.map(user => "User: " + (user.displayName || user.email) + " — " + user.email),
+    ...state.tables.map(table => "Table: " + table.tableName + " — " + table.rowCount + " rows"),
+  ].filter(item => item.toLowerCase().includes(term));
+
+  document.getElementById("view").innerHTML = `
+    ${hero("Search Results", "Matching backend resources for: " + safeText(term))}
+    <div class="card">
+      ${matches.length === 0 ? '<p class="muted">No matches found.</p>' : matches.map(item => '<div style="padding:12px 0;border-bottom:1px solid var(--border);">' + safeText(item) + '</div>').join("")}
+    </div>
+  `;
+});
+
+checkSession();
+</script>
+</body>
+</html>
