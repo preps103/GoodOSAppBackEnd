@@ -26,6 +26,33 @@ function extractApiKey(req) {
   return "";
 }
 
+function normalizeList(value, fallback = []) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  if (typeof value === "string" && value.trim()) return [value.trim()];
+  return fallback;
+}
+
+function hasScope(apiKey, requiredScope) {
+  const scopes = normalizeList(apiKey.scopes, []);
+  const type = String(apiKey.type || "").toLowerCase();
+
+  if (type === "full_access" || type === "admin" || type === "owner") return true;
+  if (scopes.includes("*")) return true;
+  if (scopes.includes(requiredScope)) return true;
+
+  const [family] = requiredScope.split(":");
+  if (scopes.includes(`${family}:*`)) return true;
+
+  if (requiredScope.startsWith("read:") && scopes.includes("read:*")) return true;
+  if (requiredScope.startsWith("write:") && scopes.includes("write:*")) return true;
+
+  return false;
+}
+
+function allowedApps(apiKey) {
+  return normalizeList(apiKey.allowedAppIds || apiKey.allowed_app_ids, ["*"]);
+}
+
 async function apiKeyRequired(req, res, next) {
   try {
     const key = extractApiKey(req);
@@ -46,6 +73,9 @@ async function apiKeyRequired(req, res, next) {
           name,
           type,
           key_prefix AS "keyPrefix",
+          key_hash AS "keyHash",
+          scopes,
+          allowed_app_ids AS "allowedAppIds",
           status,
           created_by AS "createdBy",
           created_at AS "createdAt",
@@ -87,7 +117,22 @@ async function apiKeyRequired(req, res, next) {
   }
 }
 
-router.get("/health", apiKeyRequired, async (req, res) => {
+function requireScope(scope) {
+  return (req, res, next) => {
+    if (!hasScope(req.goodosApiKey, scope)) {
+      return res.status(403).json({
+        success: false,
+        message: `API key missing required scope: ${scope}`,
+        requiredScope: scope,
+        keyScopes: req.goodosApiKey.scopes || [],
+      });
+    }
+
+    return next();
+  };
+}
+
+router.get("/health", apiKeyRequired, requireScope("read:health"), async (req, res) => {
   return res.json({
     success: true,
     service: "GoodAppBackEnd Public API",
@@ -96,30 +141,43 @@ router.get("/health", apiKeyRequired, async (req, res) => {
       id: req.goodosApiKey.id,
       name: req.goodosApiKey.name,
       type: req.goodosApiKey.type,
+      scopes: req.goodosApiKey.scopes || [],
+      allowedAppIds: req.goodosApiKey.allowedAppIds || [],
     },
     time: new Date().toISOString(),
   });
 });
 
-router.get("/apps", apiKeyRequired, async (req, res) => {
+router.get("/apps", apiKeyRequired, requireScope("read:apps"), async (req, res) => {
   try {
-    const result = await dbQuery(`
-      SELECT
-        a.id,
-        a.name,
-        a.domain,
-        a.status,
-        COUNT(m.user_id)::int AS "memberCount"
-      FROM apps a
-      LEFT JOIN app_memberships m ON m.app_id = a.id AND m.status = 'active'
-      GROUP BY a.id, a.name, a.domain, a.status
-      ORDER BY a.name ASC
-    `);
+    const appIds = allowedApps(req.goodosApiKey);
+    const unrestricted = appIds.includes("*");
+
+    const result = await dbQuery(
+      `
+        SELECT
+          a.id,
+          a.name,
+          a.domain,
+          a.status,
+          COUNT(m.user_id)::int AS "memberCount"
+        FROM apps a
+        LEFT JOIN app_memberships m ON m.app_id = a.id AND m.status = 'active'
+        WHERE ($1::boolean = true OR a.id = ANY($2::text[]))
+        GROUP BY a.id, a.name, a.domain, a.status
+        ORDER BY a.name ASC
+      `,
+      [unrestricted, appIds]
+    );
 
     return res.json({
       success: true,
       data: {
         apps: result.rows,
+        access: {
+          unrestricted,
+          allowedAppIds: appIds,
+        },
       },
     });
   } catch (error) {
@@ -131,7 +189,7 @@ router.get("/apps", apiKeyRequired, async (req, res) => {
   }
 });
 
-router.get("/storage/buckets", apiKeyRequired, async (req, res) => {
+router.get("/storage/buckets", apiKeyRequired, requireScope("read:storage"), async (req, res) => {
   try {
     const result = await dbQuery(`
       SELECT
@@ -163,7 +221,7 @@ router.get("/storage/buckets", apiKeyRequired, async (req, res) => {
   }
 });
 
-router.get("/storage/files", apiKeyRequired, async (req, res) => {
+router.get("/storage/files", apiKeyRequired, requireScope("read:storage"), async (req, res) => {
   try {
     const result = await dbQuery(`
       SELECT
