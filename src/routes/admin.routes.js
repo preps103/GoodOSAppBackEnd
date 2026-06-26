@@ -4441,6 +4441,337 @@ router.post("/users/sessions/:id/revoke-safe", async (req, res) => {
   }
 });
 
+
+function normalizeDbApiAdminSlug(value, fallback = "table") {
+  return String(value || fallback)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 100) || fallback;
+}
+
+function normalizeDbApiBoolean(value) {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function normalizeDbApiArray(value, fallback = []) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  if (typeof value === "string" && value.trim()) {
+    return value.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  return fallback;
+}
+
+router.get("/db-api-page-data", async (req, res) => {
+  try {
+    const rulesResult = await dbQuery(`
+      SELECT
+        r.id,
+        r.table_name AS "tableName",
+        r.api_slug AS "apiSlug",
+        r.display_name AS "displayName",
+        r.description,
+        r.read_enabled AS "readEnabled",
+        r.write_enabled AS "writeEnabled",
+        r.insert_enabled AS "insertEnabled",
+        r.update_enabled AS "updateEnabled",
+        r.delete_enabled AS "deleteEnabled",
+        r.exposed_columns AS "exposedColumns",
+        r.searchable_columns AS "searchableColumns",
+        r.allowed_api_key_scopes AS "allowedApiKeyScopes",
+        r.allowed_app_ids AS "allowedAppIds",
+        r.max_rows AS "maxRows",
+        r.status,
+        r.organization_id AS "organizationId",
+        r.project_id AS "projectId",
+        r.environment_id AS "environmentId",
+        r.metadata_json AS "metadata",
+        r.created_at AS "createdAt",
+        r.updated_at AS "updatedAt"
+      FROM backend_table_api_rules r
+      ORDER BY r.display_name ASC, r.api_slug ASC
+      LIMIT 250
+    `);
+
+    const tablesResult = await dbQuery(`
+      SELECT
+        t.table_name AS "tableName",
+        COALESCE(s.n_live_tup, 0)::bigint AS "estimatedRows",
+        EXISTS (
+          SELECT 1
+          FROM backend_table_api_rules r
+          WHERE r.table_name = t.table_name
+            AND r.status = 'active'
+        ) AS "isPublished"
+      FROM information_schema.tables t
+      LEFT JOIN pg_stat_user_tables s
+        ON s.relname = t.table_name
+       AND s.schemaname = 'public'
+      WHERE t.table_schema = 'public'
+        AND t.table_type = 'BASE TABLE'
+      ORDER BY t.table_name ASC
+    `);
+
+    const columnsResult = await dbQuery(`
+      SELECT
+        table_name AS "tableName",
+        column_name AS "columnName",
+        data_type AS "dataType",
+        ordinal_position AS "position"
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+      ORDER BY table_name ASC, ordinal_position ASC
+    `);
+
+    const rules = rulesResult.rows;
+    const tables = tablesResult.rows.map((table) => ({
+      ...table,
+      columns: columnsResult.rows.filter((column) => column.tableName === table.tableName),
+    }));
+
+    return ok(res, {
+      rules,
+      tables,
+      counts: {
+        publishedTables: rules.filter((rule) => rule.status === "active" && rule.readEnabled).length,
+        writableTables: rules.filter((rule) => rule.status === "active" && rule.writeEnabled).length,
+        totalRules: rules.length,
+        totalTables: tables.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load Database API page data", 500, error.message);
+  }
+});
+
+router.post("/db-api/rules/create-safe", async (req, res) => {
+  try {
+    const tableName = String(req.body?.tableName || "").trim();
+    const apiSlug = normalizeDbApiAdminSlug(req.body?.apiSlug || tableName);
+    const id = `tblapi_${apiSlug.replace(/-/g, "_")}_${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
+    const displayName = String(req.body?.displayName || tableName).trim();
+    const description = String(req.body?.description || "").trim();
+    const readEnabled = normalizeDbApiBoolean(req.body?.readEnabled ?? true);
+    const writeEnabled = normalizeDbApiBoolean(req.body?.writeEnabled ?? false);
+    const insertEnabled = normalizeDbApiBoolean(req.body?.insertEnabled ?? false);
+    const updateEnabled = normalizeDbApiBoolean(req.body?.updateEnabled ?? false);
+    const deleteEnabled = normalizeDbApiBoolean(req.body?.deleteEnabled ?? false);
+    const exposedColumns = normalizeDbApiArray(req.body?.exposedColumns || []);
+    const searchableColumns = normalizeDbApiArray(req.body?.searchableColumns || []);
+    const allowedApiKeyScopes = normalizeDbApiArray(req.body?.allowedApiKeyScopes || ["read:db"]);
+    const allowedAppIds = normalizeDbApiArray(req.body?.allowedAppIds || ["*"]);
+    const maxRows = Math.min(Math.max(Number(req.body?.maxRows || 100), 1), 500);
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!tableName) return fail(res, "tableName is required", 400);
+
+    const exists = await dbQuery(
+      `
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_type = 'BASE TABLE'
+          AND table_name = $1
+        LIMIT 1
+      `,
+      [tableName]
+    );
+
+    if (!exists.rows[0]) return fail(res, "Public table does not exist", 404);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_table_api_rules (
+          id,
+          table_name,
+          api_slug,
+          display_name,
+          description,
+          read_enabled,
+          write_enabled,
+          insert_enabled,
+          update_enabled,
+          delete_enabled,
+          exposed_columns,
+          searchable_columns,
+          allowed_api_key_scopes,
+          allowed_app_ids,
+          max_rows,
+          status,
+          organization_id,
+          project_id,
+          environment_id,
+          metadata_json
+        )
+        VALUES ($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,$9,$10,$11::text[],$12::text[],$13::text[],$14::text[],$15,$16,'org_goodos','proj_goodos_platform','env_goodos_production',$17::jsonb)
+        RETURNING *
+      `,
+      [
+        id,
+        tableName,
+        apiSlug,
+        displayName,
+        description,
+        readEnabled,
+        writeEnabled,
+        insertEnabled,
+        updateEnabled,
+        deleteEnabled,
+        exposedColumns,
+        searchableColumns,
+        allowedApiKeyScopes,
+        allowedAppIds,
+        maxRows,
+        status,
+        JSON.stringify({ createdFrom: "GoodAppBackEnd Console" }),
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1,$2,'database.api.rule.create','table_api_rule',$3,$4::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',$5,$6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { rule: result.rows[0], message: "Database API rule created." });
+  } catch (error) {
+    if (String(error.message || "").includes("duplicate key")) {
+      return fail(res, "A rule with this API slug already exists", 409, error.message);
+    }
+    return fail(res, "Failed to create Database API rule", 500, error.message);
+  }
+});
+
+router.post("/db-api/rules/:id/update-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_table_api_rules
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Database API rule not found", 404);
+
+    const patch = req.body && typeof req.body === "object" ? req.body : {};
+
+    const displayName = String(patch.displayName ?? before.display_name ?? "").trim();
+    const description = String(patch.description ?? before.description ?? "").trim();
+    const readEnabled = normalizeDbApiBoolean(patch.readEnabled ?? before.read_enabled);
+    const writeEnabled = normalizeDbApiBoolean(patch.writeEnabled ?? before.write_enabled);
+    const insertEnabled = normalizeDbApiBoolean(patch.insertEnabled ?? before.insert_enabled);
+    const updateEnabled = normalizeDbApiBoolean(patch.updateEnabled ?? before.update_enabled);
+    const deleteEnabled = normalizeDbApiBoolean(patch.deleteEnabled ?? before.delete_enabled);
+    const exposedColumns = normalizeDbApiArray(patch.exposedColumns ?? before.exposed_columns ?? []);
+    const searchableColumns = normalizeDbApiArray(patch.searchableColumns ?? before.searchable_columns ?? []);
+    const allowedApiKeyScopes = normalizeDbApiArray(patch.allowedApiKeyScopes ?? before.allowed_api_key_scopes ?? ["read:db"]);
+    const allowedAppIds = normalizeDbApiArray(patch.allowedAppIds ?? before.allowed_app_ids ?? ["*"]);
+    const maxRows = Math.min(Math.max(Number(patch.maxRows ?? before.max_rows ?? 100), 1), 500);
+    const status = String(patch.status ?? before.status ?? "active").trim().toLowerCase();
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_table_api_rules
+        SET
+          display_name = NULLIF($2, ''),
+          description = NULLIF($3, ''),
+          read_enabled = $4,
+          write_enabled = $5,
+          insert_enabled = $6,
+          update_enabled = $7,
+          delete_enabled = $8,
+          exposed_columns = $9::text[],
+          searchable_columns = $10::text[],
+          allowed_api_key_scopes = $11::text[],
+          allowed_app_ids = $12::text[],
+          max_rows = $13,
+          status = $14,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [
+        id,
+        displayName,
+        description,
+        readEnabled,
+        writeEnabled,
+        insertEnabled,
+        updateEnabled,
+        deleteEnabled,
+        exposedColumns,
+        searchableColumns,
+        allowedApiKeyScopes,
+        allowedAppIds,
+        maxRows,
+        status,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          organization_id,
+          project_id,
+          environment_id,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1,$2,'database.api.rule.update','table_api_rule',$3,$4::jsonb,$5::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',$6,$7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, { rule: result.rows[0], message: "Database API rule updated." });
+  } catch (error) {
+    return fail(res, "Failed to update Database API rule", 500, error.message);
+  }
+});
+
 router.get("/database-page-data", async (req, res) => {
   try {
     const tablesResult = await dbQuery(`

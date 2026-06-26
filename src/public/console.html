@@ -2813,6 +2813,219 @@ window.loadDatabaseTableMetadata = async function loadDatabaseTableMetadata(tabl
   }
 };
 
+
+window.loadDbApiCenter = async function loadDbApiCenter() {
+  try {
+    const response = await fetch("/api/admin/db-api-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Database API load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.dbApiRules = Array.isArray(data.rules) ? data.rules : [];
+    state.dbApiTables = Array.isArray(data.tables) ? data.tables : [];
+    state.dbApiCounts = data.counts || {};
+    state.dbApiLoaded = true;
+    state.dbApiLoading = false;
+    state.dbApiError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.dbApiLoaded = true;
+    state.dbApiLoading = false;
+    state.dbApiError = error.message || "Failed to load Database API.";
+    console.error("Database API load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshDbApiCenterNow = async function refreshDbApiCenterNow() {
+  state.dbApiLoaded = false;
+  state.dbApiLoading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadDbApiCenter();
+};
+
+window.createDbApiRule = async function createDbApiRule() {
+  const tableName = prompt("Public table name to publish:");
+  if (!tableName) return;
+
+  const apiSlug = prompt("API slug:", tableName.replace(/_/g, "-")) || "";
+  const displayName = prompt("Display name:", tableName) || tableName;
+  const exposedColumns = prompt("Exposed columns comma-separated. Leave blank for all:", "") || "";
+  const searchableColumns = prompt("Searchable columns comma-separated:", "") || "";
+
+  try {
+    const response = await fetch("/api/admin/db-api/rules/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        tableName,
+        apiSlug,
+        displayName,
+        description: "Published from GoodAppBackEnd Console.",
+        readEnabled: true,
+        writeEnabled: false,
+        insertEnabled: false,
+        updateEnabled: false,
+        deleteEnabled: false,
+        exposedColumns,
+        searchableColumns,
+        allowedApiKeyScopes: ["read:db"],
+        allowedAppIds: ["*"],
+        maxRows: 100,
+        status: "active"
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Rule creation failed with status " + response.status);
+    }
+
+    alert("Database API rule created.");
+    await window.loadDbApiCenter();
+  } catch (error) {
+    alert("Database API rule creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.editDbApiRule = async function editDbApiRule(id) {
+  const rule = (state.dbApiRules || []).find(item => item.id === id);
+  if (!rule) return alert("Rule not found.");
+
+  const current = {
+    displayName: rule.displayName || "",
+    description: rule.description || "",
+    readEnabled: !!rule.readEnabled,
+    writeEnabled: !!rule.writeEnabled,
+    insertEnabled: !!rule.insertEnabled,
+    updateEnabled: !!rule.updateEnabled,
+    deleteEnabled: !!rule.deleteEnabled,
+    exposedColumns: rule.exposedColumns || [],
+    searchableColumns: rule.searchableColumns || [],
+    allowedApiKeyScopes: rule.allowedApiKeyScopes || ["read:db"],
+    allowedAppIds: rule.allowedAppIds || ["*"],
+    maxRows: rule.maxRows || 100,
+    status: rule.status || "active"
+  };
+
+  const input = prompt("Edit Database API rule JSON:", JSON.stringify(current, null, 2));
+  if (input === null) return;
+
+  let patch;
+  try {
+    patch = JSON.parse(input);
+  } catch (error) {
+    return alert("Invalid JSON.");
+  }
+
+  try {
+    const response = await fetch("/api/admin/db-api/rules/" + encodeURIComponent(id) + "/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(patch)
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Rule update failed with status " + response.status);
+    }
+
+    alert("Database API rule updated.");
+    await window.loadDbApiCenter();
+  } catch (error) {
+    alert("Database API rule update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function dbApiCenterSection() {
+  if (!state.dbApiLoaded && !state.dbApiLoading) {
+    state.dbApiLoading = true;
+    setTimeout(() => window.loadDbApiCenter(), 100);
+  }
+
+  const rules = Array.isArray(state.dbApiRules) ? state.dbApiRules : [];
+  const counts = state.dbApiCounts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Generated Database API</h3>
+      <div>
+        <button class="logout" onclick="window.refreshDbApiCenterNow()">Refresh DB API</button>
+        <button class="logout" onclick="window.createDbApiRule()">Publish Table</button>
+      </div>
+    </div>
+
+    ${state.dbApiLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading generated Database API rules...</p></div>` : ""}
+    ${state.dbApiError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Database API error: ${safeText(state.dbApiError)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Published Tables", counts.publishedTables ?? rules.filter(rule => rule.readEnabled).length, "Public REST tables")}
+      ${card("Writable Tables", counts.writableTables ?? rules.filter(rule => rule.writeEnabled).length, "Write-enabled rules")}
+      ${card("Rules", counts.totalRules ?? rules.length, "Table API policies")}
+      ${card("Scope", "read:db", "Public DB API permission")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Published Table Rules</h3><span class="badge">${safeText(String(rules.length))} Rules</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>API</th>
+            <th>Table</th>
+            <th>Access</th>
+            <th>Columns</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rules.map(rule => `
+            <tr>
+              <td><strong>/api/v1/db/${safeText(rule.apiSlug || "")}/rows</strong><div class="muted">${safeText(rule.displayName || "")}</div></td>
+              <td>${safeText(rule.tableName || "-")}</td>
+              <td>
+                <span class="badge">${rule.readEnabled ? "Read" : "No Read"}</span>
+                <span class="badge">${rule.writeEnabled ? "Write" : "Read Only"}</span>
+              </td>
+              <td>${safeText(Array.isArray(rule.exposedColumns) ? rule.exposedColumns.join(", ") : "-").slice(0, 150)}</td>
+              <td><span class="badge">${safeText(rule.status || "-")}</span></td>
+              <td><button class="logout" onclick="window.editDbApiRule('${safeText(rule.id)}')">Edit</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No Database API rules found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -2960,6 +3173,7 @@ function databaseView() {
 
   return `
     ${hero("Database Browser", "Live Postgres table visibility, row counts, schema metadata, and inline row inspection.")}
+    ${dbApiCenterSection()}
     <div class="section-head">
       <h3>Database Tables</h3>
       <div>

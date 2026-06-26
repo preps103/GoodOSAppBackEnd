@@ -80,7 +80,10 @@ async function apiKeyRequired(req, res, next) {
           created_by AS "createdBy",
           created_at AS "createdAt",
           last_used_at AS "lastUsedAt",
-          revoked_at AS "revokedAt"
+          revoked_at AS "revokedAt",
+          organization_id AS "organizationId",
+          project_id AS "projectId",
+          environment_id AS "environmentId"
         FROM backend_api_keys
         WHERE key_hash = $1
         LIMIT 1
@@ -601,6 +604,560 @@ router.get("/storage/files", apiKeyRequired, requireScope("read:storage"), async
   }
 });
 
+
+
+
+function normalizeDbApiSlug(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\/+/, "")
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 100);
+}
+
+function quoteDbApiIdentifier(value) {
+  const identifier = String(value || "").trim();
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(identifier)) {
+    const error = new Error("Unsafe database identifier.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return '"' + identifier.replace(/"/g, '""') + '"';
+}
+
+function intersectsList(left = [], right = []) {
+  const a = normalizeList(left, []);
+  const b = normalizeList(right, []);
+  if (a.includes("*") || b.includes("*")) return true;
+  return a.some((item) => b.includes(item));
+}
+
+function dbApiAllowedByApp(rule, apiKey) {
+  return intersectsList(rule.allowedAppIds || rule.allowed_app_ids || ["*"], allowedApps(apiKey));
+}
+
+async function getDbApiRule(apiSlug, operation, apiKey) {
+  const slug = normalizeDbApiSlug(apiSlug);
+
+  if (!slug) {
+    const error = new Error("Database API table slug is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await dbQuery(
+    `
+      SELECT
+        id,
+        table_name AS "tableName",
+        api_slug AS "apiSlug",
+        display_name AS "displayName",
+        description,
+        read_enabled AS "readEnabled",
+        write_enabled AS "writeEnabled",
+        insert_enabled AS "insertEnabled",
+        update_enabled AS "updateEnabled",
+        delete_enabled AS "deleteEnabled",
+        exposed_columns AS "exposedColumns",
+        searchable_columns AS "searchableColumns",
+        allowed_api_key_scopes AS "allowedApiKeyScopes",
+        allowed_app_ids AS "allowedAppIds",
+        max_rows AS "maxRows",
+        status,
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId",
+        metadata_json AS "metadata"
+      FROM backend_table_api_rules
+      WHERE api_slug = $1
+        AND status = 'active'
+      LIMIT 1
+    `,
+    [slug]
+  );
+
+  const rule = result.rows[0];
+
+  if (!rule) {
+    const error = new Error(`Published table not found: ${slug}`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!dbApiAllowedByApp(rule, apiKey)) {
+    const error = new Error("API key is not allowed to access this published table.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (operation === "read" && !rule.readEnabled) {
+    const error = new Error("Read access is not enabled for this table.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (operation === "insert" && (!rule.writeEnabled || !rule.insertEnabled)) {
+    const error = new Error("Insert access is not enabled for this table.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (operation === "update" && (!rule.writeEnabled || !rule.updateEnabled)) {
+    const error = new Error("Update access is not enabled for this table.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (operation === "delete" && (!rule.writeEnabled || !rule.deleteEnabled)) {
+    const error = new Error("Delete access is not enabled for this table.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return rule;
+}
+
+async function getDbApiColumns(tableName, exposedColumns = []) {
+  const result = await dbQuery(
+    `
+      SELECT
+        column_name AS "columnName",
+        data_type AS "dataType",
+        is_nullable AS "isNullable",
+        column_default AS "columnDefault",
+        is_identity AS "isIdentity",
+        is_generated AS "isGenerated",
+        ordinal_position AS "position"
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = $1
+      ORDER BY ordinal_position ASC
+    `,
+    [tableName]
+  );
+
+  const realColumns = result.rows;
+  const allowed = normalizeList(exposedColumns, []);
+
+  if (!allowed.length) return realColumns;
+
+  const allowedSet = new Set(allowed);
+  return realColumns.filter((column) => allowedSet.has(column.columnName));
+}
+
+async function getDbApiPrimaryKey(tableName) {
+  const result = await dbQuery(
+    `
+      SELECT kcu.column_name AS "columnName"
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+       AND tc.table_schema = kcu.table_schema
+      WHERE tc.table_schema = 'public'
+        AND tc.table_name = $1
+        AND tc.constraint_type = 'PRIMARY KEY'
+      ORDER BY kcu.ordinal_position ASC
+      LIMIT 1
+    `,
+    [tableName]
+  );
+
+  return result.rows[0]?.columnName || "id";
+}
+
+function normalizeDbApiValue(value, column) {
+  if (value === undefined) return null;
+  if (value === "") return null;
+
+  if (column && ["json", "jsonb"].includes(column.dataType)) {
+    if (typeof value === "string") {
+      try {
+        JSON.parse(value);
+        return value;
+      } catch {
+        return JSON.stringify(value);
+      }
+    }
+    return JSON.stringify(value);
+  }
+
+  return value;
+}
+
+function dbApiValueExpression(index, column) {
+  if (column && column.dataType === "jsonb") return `$${index}::jsonb`;
+  if (column && column.dataType === "json") return `$${index}::json`;
+  return `$${index}`;
+}
+
+function dbApiSafePublicError(res, error) {
+  const status = Number(error.statusCode || error.status || 500);
+  return res.status(status).json({
+    success: false,
+    message: error.message || "Database API request failed.",
+  });
+}
+
+router.get("/db/tables", apiKeyRequired, requireScope("read:db"), async (req, res) => {
+  try {
+    const result = await dbQuery(
+      `
+        SELECT
+          id,
+          table_name AS "tableName",
+          api_slug AS "apiSlug",
+          display_name AS "displayName",
+          description,
+          read_enabled AS "readEnabled",
+          write_enabled AS "writeEnabled",
+          insert_enabled AS "insertEnabled",
+          update_enabled AS "updateEnabled",
+          delete_enabled AS "deleteEnabled",
+          exposed_columns AS "exposedColumns",
+          searchable_columns AS "searchableColumns",
+          max_rows AS "maxRows",
+          status,
+          organization_id AS "organizationId",
+          project_id AS "projectId",
+          environment_id AS "environmentId"
+        FROM backend_table_api_rules
+        WHERE status = 'active'
+          AND read_enabled = true
+        ORDER BY display_name ASC, api_slug ASC
+      `
+    );
+
+    const tables = result.rows.filter((rule) => dbApiAllowedByApp(rule, req.goodosApiKey));
+
+    return res.json({
+      success: true,
+      data: {
+        tables,
+      },
+    });
+  } catch (error) {
+    return dbApiSafePublicError(res, error);
+  }
+});
+
+router.get("/db/:tableSlug/rows", apiKeyRequired, requireScope("read:db"), async (req, res) => {
+  try {
+    const rule = await getDbApiRule(req.params.tableSlug, "read", req.goodosApiKey);
+    const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
+    const columnNames = columns.map((column) => column.columnName);
+
+    if (!columnNames.length) {
+      return res.json({
+        success: true,
+        data: {
+          table: rule,
+          columns: [],
+          rows: [],
+          pagination: { limit: 0, offset: 0, total: 0, hasMore: false },
+        },
+      });
+    }
+
+    const limit = Math.min(Math.max(Number(req.query.limit || 25), 1), Math.min(Number(rule.maxRows || 100), 500));
+    const offset = Math.max(Number(req.query.offset || 0), 0);
+    const search = String(req.query.search || "").trim();
+
+    const quotedTable = quoteDbApiIdentifier(rule.tableName);
+    const selectSql = columnNames.map(quoteDbApiIdentifier).join(", ");
+
+    let whereSql = "";
+    let countParams = [];
+    let rowsParams = [limit, offset];
+
+    if (search) {
+      const searchable = normalizeList(rule.searchableColumns, []).filter((column) => columnNames.includes(column));
+      const searchColumns = searchable.length ? searchable : columnNames;
+
+      whereSql = `WHERE (${searchColumns.map((column) => `COALESCE(${quoteDbApiIdentifier(column)}::text, '')`).join(" || ' ' || ")}) ILIKE $1`;
+      countParams = [`%${search}%`];
+      rowsParams = [`%${search}%`, limit, offset];
+    }
+
+    const primaryKey = await getDbApiPrimaryKey(rule.tableName);
+    const orderColumn = columnNames.includes("created_at") ? "created_at" : (columnNames.includes(primaryKey) ? primaryKey : columnNames[0]);
+    const orderDirection = orderColumn === "created_at" ? "DESC" : "ASC";
+
+    const countResult = await dbQuery(
+      `
+        SELECT COUNT(*)::int AS count
+        FROM ${quotedTable}
+        ${whereSql}
+      `,
+      countParams
+    );
+
+    const rowsResult = await dbQuery(
+      `
+        SELECT ${selectSql}
+        FROM ${quotedTable}
+        ${whereSql}
+        ORDER BY ${quoteDbApiIdentifier(orderColumn)} ${orderDirection}
+        LIMIT $${search ? 2 : 1}
+        OFFSET $${search ? 3 : 2}
+      `,
+      rowsParams
+    );
+
+    const total = Number(countResult.rows[0]?.count || 0);
+
+    return res.json({
+      success: true,
+      data: {
+        table: rule,
+        columns,
+        rows: rowsResult.rows,
+        pagination: {
+          limit,
+          offset,
+          total,
+          nextOffset: offset + rowsResult.rows.length,
+          hasMore: offset + rowsResult.rows.length < total,
+        },
+        search,
+      },
+    });
+  } catch (error) {
+    return dbApiSafePublicError(res, error);
+  }
+});
+
+router.get("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("read:db"), async (req, res) => {
+  try {
+    const rule = await getDbApiRule(req.params.tableSlug, "read", req.goodosApiKey);
+    const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
+    const columnNames = columns.map((column) => column.columnName);
+    const primaryKey = await getDbApiPrimaryKey(rule.tableName);
+
+    if (!columnNames.includes(primaryKey)) {
+      const error = new Error("Primary key is not exposed for this table.");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const result = await dbQuery(
+      `
+        SELECT ${columnNames.map(quoteDbApiIdentifier).join(", ")}
+        FROM ${quoteDbApiIdentifier(rule.tableName)}
+        WHERE ${quoteDbApiIdentifier(primaryKey)}::text = $1
+        LIMIT 1
+      `,
+      [String(req.params.id || "")]
+    );
+
+    const row = result.rows[0];
+
+    if (!row) {
+      return res.status(404).json({
+        success: false,
+        message: "Row not found.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        table: rule,
+        row,
+      },
+    });
+  } catch (error) {
+    return dbApiSafePublicError(res, error);
+  }
+});
+
+router.post("/db/:tableSlug/rows", apiKeyRequired, requireScope("write:db"), async (req, res) => {
+  try {
+    const rule = await getDbApiRule(req.params.tableSlug, "insert", req.goodosApiKey);
+    const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
+    const columnMap = new Map(columns.map((column) => [column.columnName, column]));
+    const input = req.body?.row && typeof req.body.row === "object" ? req.body.row : (req.body && typeof req.body === "object" ? req.body : {});
+
+    if (columnMap.has("id") && !input.id) {
+      input.id = `row_${crypto.randomUUID().replace(/-/g, "")}`;
+    }
+
+    const entries = Object.entries(input).filter(([key]) => {
+      const column = columnMap.get(key);
+      if (!column) return false;
+      if (["created_at", "updated_at"].includes(key)) return false;
+      if (column.isGenerated === "ALWAYS" || column.isIdentity === "YES") return false;
+      return true;
+    });
+
+    if (!entries.length) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid writable columns provided.",
+      });
+    }
+
+    const params = [];
+    const quotedColumns = [];
+    const valueExpressions = [];
+
+    entries.forEach(([key, value], index) => {
+      const column = columnMap.get(key);
+      params.push(normalizeDbApiValue(value, column));
+      quotedColumns.push(quoteDbApiIdentifier(key));
+      valueExpressions.push(dbApiValueExpression(index + 1, column));
+    });
+
+    const result = await dbQuery(
+      `
+        INSERT INTO ${quoteDbApiIdentifier(rule.tableName)} (${quotedColumns.join(", ")})
+        VALUES (${valueExpressions.join(", ")})
+        RETURNING ${columns.map((column) => quoteDbApiIdentifier(column.columnName)).join(", ")}
+      `,
+      params
+    );
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        table: rule,
+        row: result.rows[0],
+      },
+    });
+  } catch (error) {
+    return dbApiSafePublicError(res, error);
+  }
+});
+
+router.patch("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("write:db"), async (req, res) => {
+  try {
+    const rule = await getDbApiRule(req.params.tableSlug, "update", req.goodosApiKey);
+    const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
+    const columnMap = new Map(columns.map((column) => [column.columnName, column]));
+    const primaryKey = await getDbApiPrimaryKey(rule.tableName);
+    const input = req.body?.row && typeof req.body.row === "object" ? req.body.row : (req.body && typeof req.body === "object" ? req.body : {});
+
+    if (!columnMap.has(primaryKey)) {
+      const error = new Error("Primary key is not exposed for this table.");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const entries = Object.entries(input).filter(([key]) => {
+      const column = columnMap.get(key);
+      if (!column) return false;
+      if ([primaryKey, "id", "created_at", "updated_at"].includes(key)) return false;
+      if (column.isGenerated === "ALWAYS" || column.isIdentity === "YES") return false;
+      return true;
+    });
+
+    if (!entries.length) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid writable columns provided.",
+      });
+    }
+
+    const params = [];
+    const assignments = [];
+
+    entries.forEach(([key, value], index) => {
+      const column = columnMap.get(key);
+      params.push(normalizeDbApiValue(value, column));
+      assignments.push(`${quoteDbApiIdentifier(key)} = ${dbApiValueExpression(index + 1, column)}`);
+    });
+
+    if (columnMap.has("updated_at")) {
+      assignments.push(`${quoteDbApiIdentifier("updated_at")} = NOW()`);
+    }
+
+    params.push(String(req.params.id || ""));
+
+    const result = await dbQuery(
+      `
+        UPDATE ${quoteDbApiIdentifier(rule.tableName)}
+        SET ${assignments.join(", ")}
+        WHERE ${quoteDbApiIdentifier(primaryKey)}::text = $${params.length}
+        RETURNING ${columns.map((column) => quoteDbApiIdentifier(column.columnName)).join(", ")}
+      `,
+      params
+    );
+
+    if (!result.rows[0]) {
+      return res.status(404).json({
+        success: false,
+        message: "Row not found.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        table: rule,
+        row: result.rows[0],
+      },
+    });
+  } catch (error) {
+    return dbApiSafePublicError(res, error);
+  }
+});
+
+router.delete("/db/:tableSlug/rows/:id", apiKeyRequired, requireScope("write:db"), async (req, res) => {
+  try {
+    const rule = await getDbApiRule(req.params.tableSlug, "delete", req.goodosApiKey);
+    const columns = await getDbApiColumns(rule.tableName, rule.exposedColumns);
+    const columnNames = columns.map((column) => column.columnName);
+    const primaryKey = await getDbApiPrimaryKey(rule.tableName);
+
+    if (!columnNames.includes(primaryKey)) {
+      const error = new Error("Primary key is not exposed for this table.");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    let result;
+
+    if (columnNames.includes("status")) {
+      result = await dbQuery(
+        `
+          UPDATE ${quoteDbApiIdentifier(rule.tableName)}
+          SET status = 'deleted'${columnNames.includes("updated_at") ? ', updated_at = NOW()' : ''}
+          WHERE ${quoteDbApiIdentifier(primaryKey)}::text = $1
+          RETURNING ${columnNames.map(quoteDbApiIdentifier).join(", ")}
+        `,
+        [String(req.params.id || "")]
+      );
+    } else {
+      result = await dbQuery(
+        `
+          DELETE FROM ${quoteDbApiIdentifier(rule.tableName)}
+          WHERE ${quoteDbApiIdentifier(primaryKey)}::text = $1
+          RETURNING ${columnNames.map(quoteDbApiIdentifier).join(", ")}
+        `,
+        [String(req.params.id || "")]
+      );
+    }
+
+    if (!result.rows[0]) {
+      return res.status(404).json({
+        success: false,
+        message: "Row not found.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        table: rule,
+        row: result.rows[0],
+      },
+    });
+  } catch (error) {
+    return dbApiSafePublicError(res, error);
+  }
+});
 
 router.get("/functions/:slug", apiKeyRequired, requireScope("execute:functions"), publicCallableFunctionHandler);
 router.post("/functions/:slug", apiKeyRequired, requireScope("execute:functions"), publicCallableFunctionHandler);
