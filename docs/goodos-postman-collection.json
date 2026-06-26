@@ -198,6 +198,31 @@
         },
         "url": "{{base_url}}/realtime/events"
       }
+    },
+    {
+      "name": "Auth V2 - Session",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "https://backend.goodos.app/api/auth/session"
+      }
+    },
+    {
+      "name": "Auth V2 - Password Reset Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@example.com\"\n}"
+        },
+        "url": "https://backend.goodos.app/api/auth/password-reset/request"
+      }
     }
   ]
 }

@@ -1,5 +1,10 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const speakeasy = require("speakeasy");
+const qrcode = require("qrcode");
+
 
 const env = require("../config/env");
 const { success, error } = require("../utils/response");
@@ -11,6 +16,48 @@ const {
 } = require("../services/auth.service");
 const { logAudit } = require("../services/audit.service");
 const authRequired = require("../middleware/authRequired");
+const database = require("../config/database");
+
+
+function authV2DbQuery(sql, params = []) {
+  if (typeof database.query === "function") return database.query(sql, params);
+  if (database.pool && typeof database.pool.query === "function") return database.pool.query(sql, params);
+  if (typeof database.getPool === "function") return database.getPool().query(sql, params);
+  if (database.default && typeof database.default.query === "function") return database.default.query(sql, params);
+  throw new Error("Database query function not found");
+}
+
+function authV2Hash(value) {
+  return crypto.createHash("sha256").update(String(value || "")).digest("hex");
+}
+
+function authV2PublicFactor(row = {}) {
+  return {
+    id: row.id,
+    type: row.type,
+    label: row.label,
+    status: row.status,
+    verifiedAt: row.verified_at || row.verifiedAt || null,
+    lastUsedAt: row.last_used_at || row.lastUsedAt || null,
+    createdAt: row.created_at || row.createdAt || null,
+  };
+}
+
+function authV2Token(prefix = "tok") {
+  return `${prefix}_${crypto.randomBytes(32).toString("hex")}`;
+}
+
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many password reset attempts. Please try again later."
+  }
+});
+
 
 const router = express.Router();
 
@@ -182,5 +229,451 @@ router.post("/logout-all", authRequired, async (req, res) => {
     return error(res, "Logout all failed", 500);
   }
 });
+
+
+router.get("/session", authRequired, async (req, res) => {
+  try {
+    const sessionResult = await authV2DbQuery(
+      `
+        SELECT
+          id,
+          user_id AS "userId",
+          ip_address AS "ipAddress",
+          user_agent AS "userAgent",
+          auth_level AS "authLevel",
+          mfa_verified AS "mfaVerified",
+          risk_score AS "riskScore",
+          device_label AS "deviceLabel",
+          created_at AS "createdAt",
+          expires_at AS "expiresAt",
+          revoked_at AS "revokedAt",
+          last_seen_at AS "lastSeenAt"
+        FROM sessions
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [req.auth.sessionId]
+    );
+
+    const rolesResult = await authV2DbQuery(
+      `
+        SELECT role_name AS "roleName", scope_type AS "scopeType", scope_id AS "scopeId", status
+        FROM backend_user_roles
+        WHERE user_id = $1::uuid
+        ORDER BY assigned_at DESC
+      `,
+      [req.user.id]
+    );
+
+    const factorsResult = await authV2DbQuery(
+      `
+        SELECT id, type, label, status, verified_at, last_used_at, created_at
+        FROM backend_mfa_factors
+        WHERE user_id = $1::uuid
+        ORDER BY created_at DESC
+      `,
+      [req.user.id]
+    );
+
+    await authV2DbQuery(
+      "UPDATE sessions SET last_seen_at = NOW() WHERE id = $1",
+      [req.auth.sessionId]
+    ).catch(() => null);
+
+    return success(res, {
+      user: req.user,
+      session: sessionResult.rows[0] || null,
+      roles: rolesResult.rows,
+      mfa: {
+        enabled: factorsResult.rows.some((factor) => factor.status === "active"),
+        factors: factorsResult.rows.map(authV2PublicFactor),
+      },
+      authSource: req.auth.source,
+    });
+  } catch (err) {
+    console.error("Auth V2 session failed:", err);
+    return error(res, "Failed to load auth session", 500);
+  }
+});
+
+router.get("/roles", authRequired, async (req, res) => {
+  try {
+    const rolesResult = await authV2DbQuery(`
+      SELECT id, name, display_name AS "displayName", description, level, status
+      FROM backend_roles
+      WHERE status = 'active'
+      ORDER BY level ASC
+    `);
+
+    const userRolesResult = await authV2DbQuery(
+      `
+        SELECT role_id AS "roleId", role_name AS "roleName", scope_type AS "scopeType", scope_id AS "scopeId", status
+        FROM backend_user_roles
+        WHERE user_id = $1::uuid
+        ORDER BY assigned_at DESC
+      `,
+      [req.user.id]
+    );
+
+    return success(res, {
+      roles: rolesResult.rows,
+      userRoles: userRolesResult.rows,
+    });
+  } catch (err) {
+    console.error("Auth V2 roles failed:", err);
+    return error(res, "Failed to load roles", 500);
+  }
+});
+
+router.post("/mfa/setup", authRequired, async (req, res) => {
+  try {
+    const label = String(req.body?.label || "Authenticator App").trim().slice(0, 80) || "Authenticator App";
+    const secret = speakeasy.generateSecret({
+      length: 20,
+      name: `GoodOS (${req.user.email})`,
+      issuer: "GoodOS",
+    });
+
+    const factorId = `mfa_${crypto.randomUUID().replace(/-/g, "")}`;
+    const secretHash = authV2Hash(secret.base32);
+    const otpauthUrl = secret.otpauth_url;
+    const qrDataUrl = await qrcode.toDataURL(otpauthUrl);
+
+    await authV2DbQuery(
+      `
+        INSERT INTO backend_mfa_factors (
+          id,
+          user_id,
+          type,
+          label,
+          status,
+          secret_hash,
+          secret_prefix,
+          secret_encrypted,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id
+        )
+        VALUES ($1,$2::uuid,'totp',$3,'pending',$4,$5,$6,$7::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+      `,
+      [
+        factorId,
+        req.user.id,
+        label,
+        secretHash,
+        secret.base32.slice(0, 6),
+        secret.base32,
+        JSON.stringify({ createdFrom: "Auth V2 setup", rawSecretReturnedOnce: true }),
+      ]
+    );
+
+    await authV2DbQuery(
+      `
+        INSERT INTO backend_auth_audit_events (
+          id,
+          user_id,
+          event_type,
+          status,
+          ip_address,
+          user_agent,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id
+        )
+        VALUES ($1,$2::uuid,'auth.mfa.setup_started','recorded',$3,$4,$5::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+      `,
+      [
+        `authevt_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user.id,
+        req.ip,
+        req.headers["user-agent"] || null,
+        JSON.stringify({ factorId, label }),
+      ]
+    );
+
+    return success(res, {
+      factorId,
+      label,
+      type: "totp",
+      secret: secret.base32,
+      otpauthUrl,
+      qrDataUrl,
+      message: "Scan the QR code, then verify a TOTP code to activate MFA.",
+    });
+  } catch (err) {
+    console.error("MFA setup failed:", err);
+    return error(res, "Failed to start MFA setup", 500);
+  }
+});
+
+router.post("/mfa/verify", authRequired, async (req, res) => {
+  try {
+    const factorId = String(req.body?.factorId || req.body?.factor_id || "").trim();
+    const token = String(req.body?.token || "").replace(/\s+/g, "");
+
+    if (!factorId || !token) {
+      return error(res, "factorId and token are required", 400);
+    }
+
+    const factorResult = await authV2DbQuery(
+      `
+        SELECT *
+        FROM backend_mfa_factors
+        WHERE id = $1
+          AND user_id = $2::uuid
+          AND status IN ('pending','active')
+        LIMIT 1
+      `,
+      [factorId, req.user.id]
+    );
+
+    const factor = factorResult.rows[0];
+
+    if (!factor) {
+      return error(res, "MFA factor not found", 404);
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: factor.secret_encrypted,
+      encoding: "base32",
+      token,
+      window: 1,
+    });
+
+    const challengeId = `mfach_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    await authV2DbQuery(
+      `
+        INSERT INTO backend_mfa_challenges (
+          id,
+          user_id,
+          factor_id,
+          challenge_type,
+          status,
+          attempts,
+          ip_address,
+          user_agent,
+          verified_at,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id
+        )
+        VALUES ($1,$2::uuid,$3,'totp',$4,1,$5,$6,CASE WHEN $4 = 'verified' THEN NOW() ELSE NULL END,$7::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+      `,
+      [
+        challengeId,
+        req.user.id,
+        factorId,
+        verified ? "verified" : "failed",
+        req.ip,
+        req.headers["user-agent"] || null,
+        JSON.stringify({ factorId }),
+      ]
+    );
+
+    if (!verified) {
+      return error(res, "Invalid MFA code", 400);
+    }
+
+    await authV2DbQuery(
+      `
+        UPDATE backend_mfa_factors
+        SET status = 'active',
+            verified_at = COALESCE(verified_at, NOW()),
+            last_used_at = NOW(),
+            updated_at = NOW()
+        WHERE id = $1
+      `,
+      [factorId]
+    );
+
+    await authV2DbQuery(
+      `
+        UPDATE users
+        SET mfa_enabled = true,
+            auth_metadata_json = COALESCE(auth_metadata_json, '{}'::jsonb) || '{"mfa":"enabled"}'::jsonb,
+            updated_at = NOW()
+        WHERE id = $1::uuid
+      `,
+      [req.user.id]
+    );
+
+    await authV2DbQuery(
+      "UPDATE sessions SET mfa_verified = true, auth_level = 'mfa', last_seen_at = NOW() WHERE id = $1",
+      [req.auth.sessionId]
+    ).catch(() => null);
+
+    return success(res, {
+      verified: true,
+      factorId,
+      message: "MFA factor verified and activated.",
+    });
+  } catch (err) {
+    console.error("MFA verify failed:", err);
+    return error(res, "Failed to verify MFA", 500);
+  }
+});
+
+router.post("/mfa/disable", authRequired, async (req, res) => {
+  try {
+    const factorId = String(req.body?.factorId || req.body?.factor_id || "").trim();
+
+    await authV2DbQuery(
+      `
+        UPDATE backend_mfa_factors
+        SET status = 'disabled',
+            updated_at = NOW()
+        WHERE user_id = $1::uuid
+          AND ($2::text = '' OR id = $2)
+      `,
+      [req.user.id, factorId]
+    );
+
+    const activeResult = await authV2DbQuery(
+      "SELECT COUNT(*)::int AS count FROM backend_mfa_factors WHERE user_id = $1::uuid AND status = 'active'",
+      [req.user.id]
+    );
+
+    const enabled = Number(activeResult.rows[0]?.count || 0) > 0;
+
+    await authV2DbQuery(
+      "UPDATE users SET mfa_enabled = $2, updated_at = NOW() WHERE id = $1::uuid",
+      [req.user.id, enabled]
+    );
+
+    return success(res, {
+      enabled,
+      message: enabled ? "MFA factor disabled." : "MFA disabled for user.",
+    });
+  } catch (err) {
+    console.error("MFA disable failed:", err);
+    return error(res, "Failed to disable MFA", 500);
+  }
+});
+
+router.post("/password-reset/request", passwordResetLimiter, async (req, res) => {
+  try {
+    const email = String(req.body?.email || "").trim().toLowerCase();
+
+    if (!email || !email.includes("@")) {
+      return error(res, "Valid email is required", 400);
+    }
+
+    const userResult = await authV2DbQuery(
+      "SELECT id, email, status FROM users WHERE lower(email) = lower($1) LIMIT 1",
+      [email]
+    );
+
+    const user = userResult.rows[0];
+
+    if (user && user.status === "active") {
+      const rawToken = authV2Token("reset");
+      const tokenId = `reset_${crypto.randomUUID().replace(/-/g, "")}`;
+
+      await authV2DbQuery(
+        `
+          INSERT INTO backend_password_reset_tokens (
+            id,
+            user_id,
+            token_hash,
+            requested_by,
+            ip_address,
+            user_agent,
+            expires_at,
+            metadata_json,
+            organization_id,
+            project_id,
+            environment_id
+          )
+          VALUES ($1,$2::uuid,$3,'self_service',$4,$5,NOW() + INTERVAL '1 hour',$6::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+        `,
+        [
+          tokenId,
+          user.id,
+          authV2Hash(rawToken),
+          req.ip,
+          req.headers["user-agent"] || null,
+          JSON.stringify({ route: "/api/auth/password-reset/request", rawTokenShown: false }),
+        ]
+      );
+    }
+
+    return success(res, {
+      message: "If an active account exists, a password reset token has been created.",
+    });
+  } catch (err) {
+    console.error("Password reset request failed:", err);
+    return error(res, "Failed to request password reset", 500);
+  }
+});
+
+router.post("/password-reset/complete", async (req, res) => {
+  try {
+    const token = String(req.body?.token || "").trim();
+    const password = String(req.body?.password || "");
+
+    if (!token || password.length < 10) {
+      return error(res, "Token and a password with at least 10 characters are required", 400);
+    }
+
+    const tokenHash = authV2Hash(token);
+
+    const resetResult = await authV2DbQuery(
+      `
+        SELECT *
+        FROM backend_password_reset_tokens
+        WHERE token_hash = $1
+          AND status = 'active'
+          AND used_at IS NULL
+          AND expires_at > NOW()
+        LIMIT 1
+      `,
+      [tokenHash]
+    );
+
+    const reset = resetResult.rows[0];
+
+    if (!reset) {
+      return error(res, "Invalid or expired reset token", 400);
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await authV2DbQuery(
+      `
+        UPDATE users
+        SET password_hash = $2,
+            failed_login_count = 0,
+            locked_until = NULL,
+            password_updated_at = NOW(),
+            last_password_reset_at = NOW(),
+            updated_at = NOW()
+        WHERE id = $1::uuid
+      `,
+      [reset.user_id, passwordHash]
+    );
+
+    await authV2DbQuery(
+      "UPDATE backend_password_reset_tokens SET status = 'used', used_at = NOW(), updated_at = NOW() WHERE id = $1",
+      [reset.id]
+    );
+
+    await authV2DbQuery(
+      "UPDATE sessions SET revoked_at = NOW(), metadata_json = COALESCE(metadata_json, '{}'::jsonb) || '{\"revokedBy\":\"password_reset\"}'::jsonb WHERE user_id = $1::uuid AND revoked_at IS NULL",
+      [reset.user_id]
+    );
+
+    return success(res, {
+      message: "Password reset complete. Please log in again.",
+    });
+  } catch (err) {
+    console.error("Password reset complete failed:", err);
+    return error(res, "Failed to complete password reset", 500);
+  }
+});
+
 
 module.exports = router;

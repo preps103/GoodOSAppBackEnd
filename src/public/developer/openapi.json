@@ -757,6 +757,78 @@
           }
         }
       }
+    },
+    "/auth/session": {
+      "get": {
+        "summary": "Get Auth V2 session",
+        "description": "Requires GoodOS session cookie or bearer token. Returns user, session, roles, and MFA factor state.",
+        "responses": {
+          "200": {
+            "description": "Current Auth V2 session"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/auth/roles": {
+      "get": {
+        "summary": "Get Auth V2 roles for current user",
+        "description": "Requires authentication.",
+        "responses": {
+          "200": {
+            "description": "Role matrix and current user roles"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/auth/mfa/setup": {
+      "post": {
+        "summary": "Start TOTP MFA setup",
+        "description": "Requires authentication. Returns QR code data URL and setup secret once.",
+        "responses": {
+          "200": {
+            "description": "MFA setup started"
+          }
+        }
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "summary": "Verify TOTP MFA factor",
+        "description": "Requires authentication.",
+        "responses": {
+          "200": {
+            "description": "MFA verified"
+          }
+        }
+      }
+    },
+    "/auth/password-reset/request": {
+      "post": {
+        "summary": "Request password reset",
+        "description": "Creates a password reset token if an active account exists.",
+        "responses": {
+          "200": {
+            "description": "Password reset requested"
+          }
+        }
+      }
+    },
+    "/auth/password-reset/complete": {
+      "post": {
+        "summary": "Complete password reset",
+        "description": "Uses a reset token to set a new password.",
+        "responses": {
+          "200": {
+            "description": "Password reset complete"
+          }
+        }
+      }
     }
   }
 }

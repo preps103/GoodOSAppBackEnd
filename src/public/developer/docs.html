@@ -143,6 +143,28 @@ console.log(response);</code></pre>
 
 
 
+
+    <h2>Auth V2</h2>
+    <p>Auth V2 adds session metadata, role and permission tables, MFA/TOTP setup, password reset tokens, refresh-token foundation, and auth audit events.</p>
+
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /api/auth/session</code></td><td>Return current user, session, roles, and MFA status.</td></tr>
+        <tr><td><code>GET /api/auth/roles</code></td><td>Return role matrix and current user roles.</td></tr>
+        <tr><td><code>POST /api/auth/mfa/setup</code></td><td>Create pending TOTP factor and QR code.</td></tr>
+        <tr><td><code>POST /api/auth/mfa/verify</code></td><td>Verify TOTP code and activate MFA.</td></tr>
+        <tr><td><code>POST /api/auth/password-reset/request</code></td><td>Create reset token for active account.</td></tr>
+        <tr><td><code>POST /api/auth/password-reset/complete</code></td><td>Use token to set a new password.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>const session = await goodos.authSession();
+const setup = await goodos.setupMfa();
+await goodos.verifyMfa(setup.data.factorId, "123456");</code></pre>
+
     <h2>Realtime V2</h2>
     <p>Realtime V2 adds WebSocket channels, SSE subscriptions, REST publishing, message logs, connection records, and presence tracking.</p>
 

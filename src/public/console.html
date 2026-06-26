@@ -1905,6 +1905,267 @@ window.viewAuthAuditDetail = function viewAuthAuditDetail(id) {
 
 
 
+
+window.loadAuthV2Center = async function loadAuthV2Center() {
+  try {
+    const response = await fetch("/api/admin/auth-v2-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Auth V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.authV2Users = Array.isArray(data.users) ? data.users : [];
+    state.authV2Roles = Array.isArray(data.roles) ? data.roles : [];
+    state.authV2Permissions = Array.isArray(data.permissions) ? data.permissions : [];
+    state.authV2UserRoles = Array.isArray(data.userRoles) ? data.userRoles : [];
+    state.authV2MfaFactors = Array.isArray(data.mfaFactors) ? data.mfaFactors : [];
+    state.authV2Sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    state.authV2PasswordResets = Array.isArray(data.passwordResets) ? data.passwordResets : [];
+    state.authV2AuditEvents = Array.isArray(data.auditEvents) ? data.auditEvents : [];
+    state.authV2Counts = data.counts || {};
+    state.authV2Loaded = true;
+    state.authV2Loading = false;
+    state.authV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.authV2Loaded = true;
+    state.authV2Loading = false;
+    state.authV2Error = error.message || "Failed to load Auth V2.";
+    console.error("Auth V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshAuthV2CenterNow = async function refreshAuthV2CenterNow() {
+  state.authV2Loaded = false;
+  state.authV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadAuthV2Center();
+};
+
+window.assignAuthV2Role = async function assignAuthV2Role(userId, currentRole) {
+  const role = prompt("Role: owner, admin, manager, developer, user, viewer", currentRole || "user");
+  if (!role) return;
+
+  try {
+    const response = await fetch("/api/admin/auth-v2/users/" + encodeURIComponent(userId) + "/role-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ role })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Role assignment failed with status " + response.status);
+    }
+
+    alert("Auth V2 role assigned.");
+    await window.loadAuthV2Center();
+    if (window.refreshUsersNow) await window.refreshUsersNow();
+  } catch (error) {
+    alert("Role assignment failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.toggleAuthV2MfaRequired = async function toggleAuthV2MfaRequired(userId, currentValue) {
+  const required = !Boolean(currentValue);
+
+  try {
+    const response = await fetch("/api/admin/auth-v2/users/" + encodeURIComponent(userId) + "/mfa-require-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ required })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "MFA requirement update failed with status " + response.status);
+    }
+
+    alert(required ? "MFA required." : "MFA no longer required.");
+    await window.loadAuthV2Center();
+  } catch (error) {
+    alert("MFA requirement update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.createAuthV2PasswordReset = async function createAuthV2PasswordReset(userId) {
+  if (!confirm("Create a password reset token for this user?")) return;
+
+  try {
+    const response = await fetch("/api/admin/auth-v2/password-resets/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ userId })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    const data = payload.data || payload;
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Password reset token creation failed with status " + response.status);
+    }
+
+    alert("Copy this reset token now. It will not be shown again:\\n\\n" + (data.rawToken || data.resetUrl || "Created"));
+    await window.loadAuthV2Center();
+  } catch (error) {
+    alert("Password reset token failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function authV2Section() {
+  if (!state.authV2Loaded && !state.authV2Loading) {
+    state.authV2Loading = true;
+    setTimeout(() => window.loadAuthV2Center(), 100);
+  }
+
+  const users = Array.isArray(state.authV2Users) ? state.authV2Users : [];
+  const roles = Array.isArray(state.authV2Roles) ? state.authV2Roles : [];
+  const permissions = Array.isArray(state.authV2Permissions) ? state.authV2Permissions : [];
+  const userRoles = Array.isArray(state.authV2UserRoles) ? state.authV2UserRoles : [];
+  const mfaFactors = Array.isArray(state.authV2MfaFactors) ? state.authV2MfaFactors : [];
+  const sessions = Array.isArray(state.authV2Sessions) ? state.authV2Sessions : [];
+  const passwordResets = Array.isArray(state.authV2PasswordResets) ? state.authV2PasswordResets : [];
+  const counts = state.authV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Auth V2 / Sessions / Roles / MFA</h3>
+      <div>
+        <button class="logout" onclick="window.refreshAuthV2CenterNow()">Refresh Auth V2</button>
+      </div>
+    </div>
+
+    ${state.authV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Auth V2...</p></div>` : ""}
+    ${state.authV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Auth V2 error: ${safeText(state.authV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Roles", counts.roles ?? roles.length, "Role matrix")}
+      ${card("Permissions", counts.permissions ?? permissions.length, "Permission catalog")}
+      ${card("MFA Enabled", counts.mfaEnabled ?? users.filter(user => user.mfaEnabled).length, "Protected accounts")}
+      ${card("Active Sessions", counts.activeSessions ?? sessions.filter(item => item.status === "active").length, "Live sessions")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Auth V2 Users</h3><span class="badge">${safeText(String(users.length))} Users</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>MFA</th>
+            <th>Password</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(user => `
+            <tr>
+              <td><strong>${safeText(user.displayName || user.email || user.id)}</strong><div class="muted">${safeText(user.email || "")}</div></td>
+              <td><span class="badge">${safeText(user.platformRole || "user")}</span></td>
+              <td>
+                <span class="badge">${user.mfaEnabled ? "Enabled" : "Not enabled"}</span>
+                <span class="badge">${user.mfaRequired ? "Required" : "Optional"}</span>
+              </td>
+              <td>${safeText(formatDate(user.passwordUpdatedAt || user.lastPasswordResetAt))}</td>
+              <td><span class="badge">${safeText(user.status || "-")}</span></td>
+              <td>
+                <button class="logout" onclick="window.assignAuthV2Role('${safeText(user.id)}','${safeText(user.platformRole || "user")}')">Role</button>
+                <button class="logout" onclick="window.toggleAuthV2MfaRequired('${safeText(user.id)}', ${user.mfaRequired ? "true" : "false"})">${user.mfaRequired ? "MFA Optional" : "Require MFA"}</button>
+                <button class="logout" onclick="window.createAuthV2PasswordReset('${safeText(user.id)}')">Reset Token</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No Auth V2 users found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Roles / Permissions</h3><span class="badge">${safeText(String(roles.length))} Roles</span></div>
+      <table>
+        <thead><tr><th>Role</th><th>Level</th><th>Description</th><th>Status</th></tr></thead>
+        <tbody>
+          ${roles.map(role => `
+            <tr>
+              <td><strong>${safeText(role.displayName || role.name)}</strong><div class="muted">${safeText(role.id || "")}</div></td>
+              <td>${safeText(String(role.level || "-"))}</td>
+              <td>${safeText(role.description || "-")}</td>
+              <td><span class="badge">${safeText(role.status || "-")}</span></td>
+            </tr>
+          `).join("") || '<tr><td colspan="4" class="muted">No roles found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>MFA Factors / Password Reset Tokens</h3><span class="badge">${safeText(String(mfaFactors.length))} Factors</span></div>
+      <table>
+        <thead><tr><th>Type</th><th>User</th><th>Status</th><th>Verified</th><th>Created</th></tr></thead>
+        <tbody>
+          ${mfaFactors.map(factor => `
+            <tr>
+              <td><strong>${safeText(factor.type || "totp")}</strong><div class="muted">${safeText(factor.label || "")}</div></td>
+              <td>${safeText(factor.email || factor.userId || "-")}</td>
+              <td><span class="badge">${safeText(factor.status || "-")}</span></td>
+              <td>${safeText(formatDate(factor.verifiedAt))}</td>
+              <td>${safeText(formatDate(factor.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No MFA factors yet.</td></tr>'}
+        </tbody>
+      </table>
+      <div style="height:18px;"></div>
+      <table>
+        <thead><tr><th>Reset Token</th><th>User</th><th>Status</th><th>Expires</th><th>Used</th></tr></thead>
+        <tbody>
+          ${passwordResets.slice(0, 60).map(reset => `
+            <tr>
+              <td><strong>${safeText(reset.id || "-")}</strong></td>
+              <td>${safeText(reset.email || reset.userId || "-")}</td>
+              <td><span class="badge">${safeText(reset.status || "-")}</span></td>
+              <td>${safeText(formatDate(reset.expiresAt))}</td>
+              <td>${safeText(formatDate(reset.usedAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No password reset tokens.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function usersView() {
   if (!state.usersLiveLoaded && !state.usersLiveLoading) {
     state.usersLiveLoading = true;
@@ -1921,6 +2182,8 @@ function usersView() {
 
   return `
     ${hero("Auth / Users", "Manage GoodOS accounts, invites, platform roles, app memberships, and session state.")}
+
+    ${authV2Section()}
     <div class="section-head">
       <h3>User Access Control</h3>
       <div>

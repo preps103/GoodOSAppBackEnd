@@ -11354,4 +11354,357 @@ if (!global.__goodosWebhookRetryWorkerStarted) {
   }
 }
 
+
+function authV2CleanRole(value, fallback = "user") {
+  const role = String(value || fallback).trim().toLowerCase();
+  if (["owner", "admin", "manager", "developer", "user", "viewer"].includes(role)) return role;
+  return fallback;
+}
+
+function authV2Hash(value) {
+  return crypto.createHash("sha256").update(String(value || "")).digest("hex");
+}
+
+function authV2Token(prefix = "tok") {
+  return `${prefix}_${crypto.randomBytes(32).toString("hex")}`;
+}
+
+router.get("/auth-v2-page-data", async (req, res) => {
+  try {
+    const usersResult = await dbQuery(`
+      SELECT
+        id::text,
+        email,
+        display_name AS "displayName",
+        platform_role AS "platformRole",
+        status,
+        email_verified AS "emailVerified",
+        mfa_enabled AS "mfaEnabled",
+        mfa_required AS "mfaRequired",
+        failed_login_count AS "failedLoginCount",
+        locked_until AS "lockedUntil",
+        password_updated_at AS "passwordUpdatedAt",
+        last_password_reset_at AS "lastPasswordResetAt",
+        last_login_at AS "lastLoginAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT 300
+    `);
+
+    const rolesResult = await dbQuery(`
+      SELECT id, name, display_name AS "displayName", description, level, status, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM backend_roles
+      ORDER BY level ASC, name ASC
+    `);
+
+    const permissionsResult = await dbQuery(`
+      SELECT id, name, category, description, status, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM backend_permissions
+      ORDER BY category ASC, name ASC
+    `);
+
+    const userRolesResult = await dbQuery(`
+      SELECT
+        ur.id,
+        ur.user_id::text AS "userId",
+        u.email,
+        ur.role_id AS "roleId",
+        ur.role_name AS "roleName",
+        ur.scope_type AS "scopeType",
+        ur.scope_id AS "scopeId",
+        ur.status,
+        ur.assigned_at AS "assignedAt",
+        ur.revoked_at AS "revokedAt"
+      FROM backend_user_roles ur
+      LEFT JOIN users u ON u.id = ur.user_id
+      ORDER BY ur.assigned_at DESC
+      LIMIT 500
+    `);
+
+    const mfaResult = await dbQuery(`
+      SELECT
+        f.id,
+        f.user_id::text AS "userId",
+        u.email,
+        f.type,
+        f.label,
+        f.status,
+        f.secret_prefix AS "secretPrefix",
+        f.verified_at AS "verifiedAt",
+        f.last_used_at AS "lastUsedAt",
+        f.created_at AS "createdAt",
+        f.updated_at AS "updatedAt"
+      FROM backend_mfa_factors f
+      LEFT JOIN users u ON u.id = f.user_id
+      ORDER BY f.created_at DESC
+      LIMIT 300
+    `);
+
+    const sessionsResult = await dbQuery(`
+      SELECT
+        s.id,
+        s.user_id::text AS "userId",
+        u.email,
+        u.display_name AS "displayName",
+        s.ip_address AS "ipAddress",
+        s.user_agent AS "userAgent",
+        s.auth_level AS "authLevel",
+        s.mfa_verified AS "mfaVerified",
+        s.risk_score AS "riskScore",
+        s.device_label AS "deviceLabel",
+        s.created_at AS "createdAt",
+        s.expires_at AS "expiresAt",
+        s.revoked_at AS "revokedAt",
+        s.last_seen_at AS "lastSeenAt",
+        CASE
+          WHEN s.revoked_at IS NOT NULL THEN 'revoked'
+          WHEN s.expires_at <= NOW() THEN 'expired'
+          ELSE 'active'
+        END AS status
+      FROM sessions s
+      LEFT JOIN users u ON u.id = s.user_id
+      ORDER BY s.created_at DESC
+      LIMIT 300
+    `);
+
+    const resetsResult = await dbQuery(`
+      SELECT
+        r.id,
+        r.user_id::text AS "userId",
+        u.email,
+        r.status,
+        r.requested_by AS "requestedBy",
+        r.expires_at AS "expiresAt",
+        r.used_at AS "usedAt",
+        r.created_at AS "createdAt"
+      FROM backend_password_reset_tokens r
+      LEFT JOIN users u ON u.id = r.user_id
+      ORDER BY r.created_at DESC
+      LIMIT 300
+    `);
+
+    const auditResult = await dbQuery(`
+      SELECT
+        id,
+        user_id::text AS "userId",
+        event_type AS "eventType",
+        status,
+        ip_address AS "ipAddress",
+        risk_score AS "riskScore",
+        metadata_json AS "metadata",
+        created_at AS "createdAt"
+      FROM backend_auth_audit_events
+      ORDER BY created_at DESC
+      LIMIT 300
+    `);
+
+    return ok(res, {
+      users: usersResult.rows,
+      roles: rolesResult.rows,
+      permissions: permissionsResult.rows,
+      userRoles: userRolesResult.rows,
+      mfaFactors: mfaResult.rows,
+      sessions: sessionsResult.rows,
+      passwordResets: resetsResult.rows,
+      auditEvents: auditResult.rows,
+      counts: {
+        users: usersResult.rows.length,
+        activeUsers: usersResult.rows.filter((user) => user.status === "active").length,
+        mfaEnabled: usersResult.rows.filter((user) => user.mfaEnabled === true).length,
+        roles: rolesResult.rows.length,
+        permissions: permissionsResult.rows.length,
+        activeSessions: sessionsResult.rows.filter((item) => item.status === "active").length,
+        activePasswordResets: resetsResult.rows.filter((item) => item.status === "active").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load Auth V2 page data", 500, error.message);
+  }
+});
+
+router.post("/auth-v2/users/:id/role-safe", async (req, res) => {
+  try {
+    const userId = String(req.params.id || "").trim();
+    const roleName = authV2CleanRole(req.body?.role || req.body?.roleName || req.body?.role_name || "user");
+    const scopeType = String(req.body?.scopeType || req.body?.scope_type || "platform").trim();
+    const scopeId = String(req.body?.scopeId || req.body?.scope_id || "*").trim() || "*";
+
+    const roleResult = await dbQuery("SELECT * FROM backend_roles WHERE name = $1 AND status = 'active' LIMIT 1", [roleName]);
+    const role = roleResult.rows[0];
+    if (!role) return fail(res, "Role not found", 404);
+
+    const userResult = await dbQuery("SELECT id, email FROM users WHERE id = $1::uuid LIMIT 1", [userId]);
+    const user = userResult.rows[0];
+    if (!user) return fail(res, "User not found", 404);
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_user_roles (
+          id,
+          user_id,
+          role_id,
+          role_name,
+          scope_type,
+          scope_id,
+          status,
+          assigned_by,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id
+        )
+        VALUES ($1,$2::uuid,$3,$4,$5,$6,'active',(SELECT id FROM users ORDER BY created_at ASC LIMIT 1),$7::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+        ON CONFLICT (user_id, role_id, scope_type, scope_id) DO UPDATE
+        SET
+          role_name = EXCLUDED.role_name,
+          status = 'active',
+          revoked_at = NULL,
+          updated_at = NOW()
+        RETURNING *
+      `,
+      [
+        `userrole_${userId.replace(/-/g, "")}_${roleName}_${scopeType}_${scopeId.replace(/[^a-zA-Z0-9]/g, "_")}`.slice(0, 180),
+        userId,
+        role.id,
+        roleName,
+        scopeType,
+        scopeId,
+        JSON.stringify({ assignedFrom: "Auth V2 Console" }),
+      ]
+    );
+
+    await dbQuery(
+      "UPDATE users SET platform_role = $2, updated_at = NOW() WHERE id = $1::uuid",
+      [userId, roleName]
+    );
+
+    return ok(res, {
+      userRole: result.rows[0],
+      message: "Auth V2 role assigned.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to assign Auth V2 role", 500, error.message);
+  }
+});
+
+router.post("/auth-v2/users/:id/mfa-require-safe", async (req, res) => {
+  try {
+    const userId = String(req.params.id || "").trim();
+    const required = req.body?.required === true || req.body?.required === "true" || req.body?.mfaRequired === true || req.body?.mfa_required === true;
+
+    const result = await dbQuery(
+      `
+        UPDATE users
+        SET mfa_required = $2,
+            auth_metadata_json = COALESCE(auth_metadata_json, '{}'::jsonb) || jsonb_build_object('mfaRequiredUpdatedAt', NOW()),
+            updated_at = NOW()
+        WHERE id = $1::uuid
+        RETURNING id::text, email, platform_role AS "platformRole", mfa_enabled AS "mfaEnabled", mfa_required AS "mfaRequired", status
+      `,
+      [userId, required]
+    );
+
+    if (!result.rows[0]) return fail(res, "User not found", 404);
+
+    return ok(res, {
+      user: result.rows[0],
+      message: required ? "MFA is now required for this user." : "MFA is no longer required for this user.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update MFA requirement", 500, error.message);
+  }
+});
+
+router.post("/auth-v2/mfa/factors/:id/status-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = String(req.body?.status || "disabled").trim().toLowerCase();
+    if (!["active", "pending", "disabled", "revoked"].includes(status)) return fail(res, "Invalid MFA factor status", 400);
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_mfa_factors
+        SET status = $2,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, user_id::text AS "userId", type, label, status, verified_at AS "verifiedAt", last_used_at AS "lastUsedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "MFA factor not found", 404);
+
+    await dbQuery(
+      `
+        UPDATE users
+        SET mfa_enabled = EXISTS (
+          SELECT 1 FROM backend_mfa_factors
+          WHERE user_id = users.id
+            AND status = 'active'
+        ),
+        updated_at = NOW()
+        WHERE id = $1::uuid
+      `,
+      [result.rows[0].userId]
+    );
+
+    return ok(res, {
+      factor: result.rows[0],
+      message: "MFA factor status updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update MFA factor", 500, error.message);
+  }
+});
+
+router.post("/auth-v2/password-resets/create-safe", async (req, res) => {
+  try {
+    const userId = String(req.body?.userId || req.body?.user_id || "").trim();
+    const userResult = await dbQuery("SELECT id, email FROM users WHERE id = $1::uuid LIMIT 1", [userId]);
+    const user = userResult.rows[0];
+    if (!user) return fail(res, "User not found", 404);
+
+    const rawToken = authV2Token("reset");
+    const tokenId = `reset_${crypto.randomUUID().replace(/-/g, "")}`;
+
+    const result = await dbQuery(
+      `
+        INSERT INTO backend_password_reset_tokens (
+          id,
+          user_id,
+          token_hash,
+          status,
+          requested_by,
+          expires_at,
+          metadata_json,
+          organization_id,
+          project_id,
+          environment_id
+        )
+        VALUES ($1,$2::uuid,$3,'active',$4,NOW() + INTERVAL '1 hour',$5::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+        RETURNING id, user_id::text AS "userId", status, expires_at AS "expiresAt", created_at AS "createdAt"
+      `,
+      [
+        tokenId,
+        userId,
+        authV2Hash(rawToken),
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        JSON.stringify({ createdFrom: "Auth V2 Admin", rawTokenReturnedOnce: true }),
+      ]
+    );
+
+    return ok(res, {
+      reset: result.rows[0],
+      rawToken,
+      resetUrl: `https://backend.goodos.app/password-reset/${rawToken}`,
+      warning: "Copy this reset token now. It will not be shown again.",
+      message: "Password reset token created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create password reset token", 500, error.message);
+  }
+});
+
 module.exports = router;

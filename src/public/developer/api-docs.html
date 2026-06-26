@@ -116,6 +116,19 @@
       <p>Connect to <code>wss://backend.goodos.app/api/v1/realtime/ws?api_key=YOUR_KEY&amp;channel=system</code>.</p>
     </div>
 
+
+    <div class="card">
+      <h2><span class="badge">GET</span> /auth/session</h2>
+      <p>Auth V2 session endpoint. Requires cookie or bearer token.</p>
+      <pre><code>curl https://backend.goodos.app/api/auth/session \
+  -H "Cookie: goodos_session=YOUR_SESSION"</code></pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="badge">POST</span> /auth/mfa/setup</h2>
+      <p>Start TOTP MFA setup for the current signed-in user.</p>
+    </div>
+
   </main>
 </body>
 </html>

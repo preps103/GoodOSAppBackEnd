@@ -124,6 +124,42 @@
       return this.request(`/storage/files${query ? `?${query}` : ""}`);
     }
 
+    authSession() {
+      return this.request("/../auth/session");
+    }
+
+    authRoles() {
+      return this.request("/../auth/roles");
+    }
+
+    setupMfa(label = "Authenticator App") {
+      return this.request("/../auth/mfa/setup", {
+        method: "POST",
+        body: { label },
+      });
+    }
+
+    verifyMfa(factorId, token) {
+      return this.request("/../auth/mfa/verify", {
+        method: "POST",
+        body: { factorId, token },
+      });
+    }
+
+    requestPasswordReset(email) {
+      return this.request("/../auth/password-reset/request", {
+        method: "POST",
+        body: { email },
+      });
+    }
+
+    completePasswordReset(token, password) {
+      return this.request("/../auth/password-reset/complete", {
+        method: "POST",
+        body: { token, password },
+      });
+    }
+
     realtimeChannels() {
       return this.request("/realtime/channels");
     }

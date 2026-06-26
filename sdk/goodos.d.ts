@@ -53,6 +53,12 @@ export class GoodOSClient {
   createDbRow(tableSlug: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   updateDbRow(tableSlug: string, id: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   deleteDbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
+  authSession(): Promise<GoodOSResponse>;
+  authRoles(): Promise<GoodOSResponse>;
+  setupMfa(label?: string): Promise<GoodOSResponse>;
+  verifyMfa(factorId: string, token: string): Promise<GoodOSResponse>;
+  requestPasswordReset(email: string): Promise<GoodOSResponse>;
+  completePasswordReset(token: string, password: string): Promise<GoodOSResponse>;
   realtimeChannels(): Promise<GoodOSResponse>;
   realtimeEvents(params?: { channel?: string; limit?: number; offset?: number }): Promise<GoodOSResponse>;
   publishRealtimeEvent(channel?: string, event?: { eventType?: string; event_type?: string; message?: string; payload?: Record<string, unknown> }): Promise<GoodOSResponse>;
