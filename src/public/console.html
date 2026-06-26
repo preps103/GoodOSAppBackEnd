@@ -3562,6 +3562,35 @@ window.disableWebhook = async function disableWebhook(id) {
 };
 
 
+
+window.processWebhookRetries = async function processWebhookRetries() {
+  try {
+    const response = await fetch("/api/admin/webhook-deliveries/process-retries-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ limit: 25 })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Retry processor failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Retry processor complete. Processed: " + String(data.processed || 0));
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Retry processor failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function webhooksView() {
   if (!state.webhooksLoaded && !state.webhooksLoading) {
     state.webhooksLoading = true;
@@ -3580,6 +3609,7 @@ function webhooksView() {
       <h3>Webhook Endpoints</h3>
       <div>
         <button class="logout" onclick="window.refreshWebhooksNow()">Refresh Data</button>
+        <button class="logout" onclick="window.processWebhookRetries()">Process Retries</button>
         <button class="logout" onclick="window.createWebhook()">Create Webhook</button>
       </div>
     </div>

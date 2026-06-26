@@ -414,6 +414,19 @@ function getSecuritySummary() {
 }
 
 async function createEvent(eventType, message, payload = {}) {
+  const eventId = randomId("evt");
+  const createdAt = new Date();
+
+  const eventPayload = {
+    id: eventId,
+    type: eventType,
+    eventType,
+    source: "goodapp-backend",
+    message,
+    createdAt: createdAt.toISOString(),
+    data: payload || {},
+  };
+
   try {
     await dbQuery(
       `
@@ -421,15 +434,25 @@ async function createEvent(eventType, message, payload = {}) {
         VALUES ($1, $2, $3, $4, $5::jsonb)
       `,
       [
-        randomId("evt"),
+        eventId,
         eventType,
         "goodapp-backend",
         message,
-        JSON.stringify(payload),
+        JSON.stringify(payload || {}),
       ]
     );
+
+    if (typeof dispatchWebhooksForEvent === "function") {
+      setImmediate(() => {
+        dispatchWebhooksForEvent(eventPayload).catch((error) => {
+          console.warn("Webhook dispatch failed:", error.message);
+        });
+      });
+    }
+
+    return eventPayload;
   } catch {
-    // Do not block main action if event logging fails.
+    return eventPayload;
   }
 }
 
@@ -1286,9 +1309,188 @@ async function getWebhookDeliveries() {
   return result.rows;
 }
 
+function webhookEventMatches(events = [], eventType = "") {
+  const normalizedEvents = Array.isArray(events)
+    ? events.map((item) => String(item || "").trim()).filter(Boolean)
+    : ["*"];
+
+  if (!normalizedEvents.length) return true;
+  if (normalizedEvents.includes("*")) return true;
+  if (normalizedEvents.includes(eventType)) return true;
+
+  return normalizedEvents.some((pattern) => {
+    if (!pattern.endsWith(".*")) return false;
+    const prefix = pattern.slice(0, -1);
+    return eventType.startsWith(prefix);
+  });
+}
+
+async function getActiveWebhooksForEvent(eventType) {
+  const result = await dbQuery(
+    `
+      SELECT
+        id,
+        name,
+        url,
+        events,
+        secret,
+        status,
+        delivery_timeout_seconds,
+        max_retries,
+        retry_backoff_seconds
+      FROM backend_webhooks
+      WHERE status = 'active'
+      ORDER BY created_at ASC
+    `
+  );
+
+  return result.rows.filter((webhook) => webhookEventMatches(webhook.events, eventType));
+}
+
+function getWebhookTimeoutMs(webhook) {
+  return Math.min(Math.max(Number(webhook.delivery_timeout_seconds || 15), 3), 60) * 1000;
+}
+
+function getWebhookRetryDelayMs(webhook) {
+  return Math.min(Math.max(Number(webhook.retry_backoff_seconds || 300), 30), 86400) * 1000;
+}
+
+function getWebhookMaxAttempts(webhook) {
+  return Math.min(Math.max(Number(webhook.max_retries || 3), 0), 10);
+}
+
+async function recordWebhookCounter(webhookId, isSuccess) {
+  try {
+    await dbQuery(
+      `
+        UPDATE backend_webhooks
+        SET
+          success_count = success_count + $2,
+          failure_count = failure_count + $3,
+          last_triggered_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [webhookId, isSuccess ? 1 : 0, isSuccess ? 0 : 1]
+    );
+  } catch (error) {
+    console.warn("Webhook counter update failed:", error.message);
+  }
+}
+
+async function sendWebhookDeliveryAttempt(deliveryId, webhook, eventPayload, rawBody, headers) {
+  const timeoutMs = getWebhookTimeoutMs(webhook);
+  const maxAttempts = getWebhookMaxAttempts(webhook);
+
+  const currentDeliveryResult = await dbQuery(
+    `
+      SELECT attempt_count
+      FROM backend_webhook_deliveries
+      WHERE id = $1
+      LIMIT 1
+    `,
+    [deliveryId]
+  );
+
+  const currentAttemptCount = Number(currentDeliveryResult.rows[0]?.attempt_count || 0);
+  const nextAttemptCount = currentAttemptCount + 1;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(webhook.url, {
+      method: "POST",
+      headers,
+      body: rawBody,
+      signal: controller.signal,
+    });
+
+    const responseText = await response.text();
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    const isSuccess = response.status >= 200 && response.status < 300;
+    const shouldRetry = !isSuccess && nextAttemptCount < maxAttempts;
+    const nextRetryAt = shouldRetry ? new Date(Date.now() + getWebhookRetryDelayMs(webhook)) : null;
+
+    await dbQuery(
+      `
+        UPDATE backend_webhook_deliveries
+        SET
+          response_status = $1,
+          response_headers = $2::jsonb,
+          response_body = $3,
+          status = $4,
+          attempt_count = attempt_count + 1,
+          error_message = $5,
+          next_retry_at = $6,
+          delivered_at = $7,
+          updated_at = NOW()
+        WHERE id = $8
+      `,
+      [
+        response.status,
+        JSON.stringify(responseHeaders),
+        responseText.slice(0, 10000),
+        isSuccess ? "delivered" : (shouldRetry ? "retrying" : "failed"),
+        isSuccess ? null : `HTTP ${response.status}`,
+        nextRetryAt,
+        isSuccess ? new Date() : null,
+        deliveryId,
+      ]
+    );
+
+    await recordWebhookCounter(webhook.id, isSuccess);
+
+    return {
+      id: deliveryId,
+      status: isSuccess ? "delivered" : (shouldRetry ? "retrying" : "failed"),
+      responseStatus: response.status,
+      attemptCount: nextAttemptCount,
+      nextRetryAt,
+    };
+  } catch (error) {
+    const shouldRetry = nextAttemptCount < maxAttempts;
+    const nextRetryAt = shouldRetry ? new Date(Date.now() + getWebhookRetryDelayMs(webhook)) : null;
+    const message = error.name === "AbortError"
+      ? `Request timed out after ${Math.floor(timeoutMs / 1000)} seconds`
+      : error.message;
+
+    await dbQuery(
+      `
+        UPDATE backend_webhook_deliveries
+        SET
+          status = $1,
+          attempt_count = attempt_count + 1,
+          error_message = $2,
+          next_retry_at = $3,
+          updated_at = NOW()
+        WHERE id = $4
+      `,
+      [
+        shouldRetry ? "retrying" : "failed",
+        message,
+        nextRetryAt,
+        deliveryId,
+      ]
+    );
+
+    await recordWebhookCounter(webhook.id, false);
+
+    return {
+      id: deliveryId,
+      status: shouldRetry ? "retrying" : "failed",
+      error: message,
+      attemptCount: nextAttemptCount,
+      nextRetryAt,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function deliverWebhook(webhook, eventPayload) {
   const deliveryId = webhookRandomId("whdel");
-  const rawBody = JSON.stringify(eventPayload);
+  const rawBody = JSON.stringify(eventPayload || {});
   const secret = webhook.secret || "";
   const signature = webhookSignature(secret, rawBody);
 
@@ -1330,90 +1532,105 @@ async function deliverWebhook(webhook, eventPayload) {
     ]
   );
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-
-  try {
-    const response = await fetch(webhook.url, {
-      method: "POST",
-      headers,
-      body: rawBody,
-      signal: controller.signal,
-    });
-
-    const responseText = await response.text();
-    const responseHeaders = Object.fromEntries(response.headers.entries());
-    const isSuccess = response.status >= 200 && response.status < 300;
-
-    await dbQuery(
-      `
-        UPDATE backend_webhook_deliveries
-        SET
-          response_status = $1,
-          response_headers = $2::jsonb,
-          response_body = $3,
-          status = $4,
-          attempt_count = attempt_count + 1,
-          error_message = $5,
-          next_retry_at = $6,
-          delivered_at = $7,
-          updated_at = NOW()
-        WHERE id = $8
-      `,
-      [
-        response.status,
-        JSON.stringify(responseHeaders),
-        responseText.slice(0, 10000),
-        isSuccess ? "delivered" : "failed",
-        isSuccess ? null : `HTTP ${response.status}`,
-        isSuccess ? null : new Date(Date.now() + 5 * 60 * 1000),
-        isSuccess ? new Date() : null,
-        deliveryId,
-      ]
-    );
-
-    await dbQuery(
-      `
-        UPDATE backend_webhooks
-        SET last_triggered_at = NOW()
-        WHERE id = $1
-      `,
-      [webhook.id]
-    );
-
-    return {
-      id: deliveryId,
-      status: isSuccess ? "delivered" : "failed",
-      responseStatus: response.status,
-    };
-  } catch (error) {
-    await dbQuery(
-      `
-        UPDATE backend_webhook_deliveries
-        SET
-          status = 'failed',
-          attempt_count = attempt_count + 1,
-          error_message = $1,
-          next_retry_at = $2,
-          updated_at = NOW()
-        WHERE id = $3
-      `,
-      [
-        error.name === "AbortError" ? "Request timed out after 15 seconds" : error.message,
-        new Date(Date.now() + 5 * 60 * 1000),
-        deliveryId,
-      ]
-    );
-
-    return {
-      id: deliveryId,
-      status: "failed",
-      error: error.message,
-    };
-  } finally {
-    clearTimeout(timeout);
-  }
+  return sendWebhookDeliveryAttempt(deliveryId, webhook, eventPayload, rawBody, headers);
 }
+
+async function dispatchWebhooksForEvent(eventPayload) {
+  const eventType = eventPayload.type || eventPayload.eventType || "system.event";
+  const webhooks = await getActiveWebhooksForEvent(eventType);
+
+  if (!webhooks.length) {
+    return {
+      dispatched: 0,
+      eventType,
+    };
+  }
+
+  const results = await Promise.allSettled(
+    webhooks.map((webhook) => deliverWebhook(webhook, eventPayload))
+  );
+
+  return {
+    dispatched: webhooks.length,
+    eventType,
+    results,
+  };
+}
+
+async function processDueWebhookRetries(limit = 25) {
+  const result = await dbQuery(
+    `
+      SELECT
+        d.id AS "deliveryId",
+        d.request_body AS "requestBody",
+        d.request_headers AS "requestHeaders",
+        d.event_type AS "eventType",
+        w.id,
+        w.name,
+        w.url,
+        w.secret,
+        w.status,
+        w.events,
+        w.delivery_timeout_seconds,
+        w.max_retries,
+        w.retry_backoff_seconds
+      FROM backend_webhook_deliveries d
+      JOIN backend_webhooks w ON w.id = d.webhook_id
+      WHERE d.status IN ('failed', 'retrying')
+        AND d.next_retry_at IS NOT NULL
+        AND d.next_retry_at <= NOW()
+        AND w.status = 'active'
+        AND d.attempt_count < w.max_retries
+      ORDER BY d.next_retry_at ASC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(Number(limit || 25), 1), 100)]
+  );
+
+  const processed = [];
+
+  for (const row of result.rows) {
+    const rawBody = JSON.stringify(row.requestBody || {});
+    const headers = row.requestHeaders || {
+      "Content-Type": "application/json",
+      "User-Agent": "GoodAppBackEnd-Webhooks/1.0",
+      "X-GoodOS-Event": row.eventType || "system.event",
+      "X-GoodOS-Webhook-Id": row.id,
+      "X-GoodOS-Delivery-Id": row.deliveryId,
+    };
+
+    const webhook = {
+      id: row.id,
+      name: row.name,
+      url: row.url,
+      secret: row.secret,
+      status: row.status,
+      events: row.events,
+      delivery_timeout_seconds: row.delivery_timeout_seconds,
+      max_retries: row.max_retries,
+      retry_backoff_seconds: row.retry_backoff_seconds,
+    };
+
+    const eventPayload = row.requestBody || {};
+
+    try {
+      const delivery = await sendWebhookDeliveryAttempt(row.deliveryId, webhook, eventPayload, rawBody, headers);
+      processed.push(delivery);
+    } catch (error) {
+      processed.push({
+        id: row.deliveryId,
+        status: "error",
+        error: error.message,
+      });
+    }
+  }
+
+  return {
+    processed: processed.length,
+    deliveries: processed,
+  };
+}
+
 
 
 async function getWebhookConsolePayloadDirect() {
@@ -5553,6 +5770,21 @@ function normalizeWebhookUrl(value) {
   return url;
 }
 
+
+router.post("/webhook-deliveries/process-retries-safe", async (req, res) => {
+  try {
+    const limit = Number(req.body?.limit || 25);
+    const result = await processDueWebhookRetries(limit);
+
+    return ok(res, {
+      ...result,
+      message: "Webhook retry queue processed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to process webhook retry queue", 500, error.message);
+  }
+});
+
 router.post("/webhooks/:id/policy/update-safe", async (req, res) => {
   try {
     const id = String(req.params.id || "").trim();
@@ -5855,5 +6087,22 @@ router.post("/webhook-deliveries/:id/replay-safe", async (req, res) => {
     return fail(res, "Failed to replay webhook delivery", 500, error.message);
   }
 });
+
+
+if (!global.__goodosWebhookRetryWorkerStarted) {
+  global.__goodosWebhookRetryWorkerStarted = true;
+
+  const webhookRetryWorker = setInterval(() => {
+    if (typeof processDueWebhookRetries === "function") {
+      processDueWebhookRetries(25).catch((error) => {
+        console.warn("Webhook retry worker failed:", error.message);
+      });
+    }
+  }, Number(process.env.WEBHOOK_RETRY_WORKER_INTERVAL_MS || 60000));
+
+  if (typeof webhookRetryWorker.unref === "function") {
+    webhookRetryWorker.unref();
+  }
+}
 
 module.exports = router;
