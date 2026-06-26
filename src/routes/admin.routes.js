@@ -1650,7 +1650,15 @@ router.get("/webhooks-live", async (req, res) => {
         url,
         events,
         status,
+        description,
+        signing_algorithm AS "signingAlgorithm",
+        delivery_timeout_seconds AS "deliveryTimeoutSeconds",
+        max_retries AS "maxRetries",
+        retry_backoff_seconds AS "retryBackoffSeconds",
+        failure_count AS "failureCount",
+        success_count AS "successCount",
         created_at AS "createdAt",
+        updated_at AS "updatedAt",
         last_triggered_at AS "lastTriggeredAt"
       FROM backend_webhooks
       ORDER BY
@@ -1704,7 +1712,15 @@ router.get("/webhooks-page-data", async (req, res) => {
         url,
         events,
         status,
+        description,
+        signing_algorithm AS "signingAlgorithm",
+        delivery_timeout_seconds AS "deliveryTimeoutSeconds",
+        max_retries AS "maxRetries",
+        retry_backoff_seconds AS "retryBackoffSeconds",
+        failure_count AS "failureCount",
+        success_count AS "successCount",
         created_at AS "createdAt",
+        updated_at AS "updatedAt",
         last_triggered_at AS "lastTriggeredAt"
       FROM backend_webhooks
       ORDER BY
@@ -5500,6 +5516,343 @@ router.post("/storage/buckets/:bucketId/policy/update-safe", async (req, res) =>
     });
   } catch (error) {
     return fail(res, "Failed to update bucket policy", error.statusCode || 500, error.message);
+  }
+});
+
+
+function normalizeWebhookEventsInput(value) {
+  if (!Array.isArray(value) || !value.length) return ["*"];
+
+  const events = value
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, 100);
+
+  return events.length ? events : ["*"];
+}
+
+function normalizeWebhookUrl(value) {
+  const url = String(value || "").trim();
+
+  let parsed;
+
+  try {
+    parsed = new URL(url);
+  } catch {
+    const error = new Error("Webhook URL must be a valid URL.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    const error = new Error("Webhook URL must start with http:// or https://.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return url;
+}
+
+router.post("/webhooks/:id/policy/update-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Webhook id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_webhooks
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Webhook not found", 404);
+
+    const name = String(req.body?.name || before.name || "").trim();
+    const url = normalizeWebhookUrl(req.body?.url || before.url);
+    const description = String(req.body?.description || "").trim();
+    const events = normalizeWebhookEventsInput(req.body?.events || before.events || ["*"]);
+    const status = String(req.body?.status || before.status || "active").trim().toLowerCase();
+
+    if (!name) return fail(res, "Webhook name is required", 400);
+    if (!["active", "disabled"].includes(status)) return fail(res, "Status must be active or disabled", 400);
+
+    const deliveryTimeoutSeconds = Math.min(Math.max(Number(req.body?.deliveryTimeoutSeconds ?? before.delivery_timeout_seconds ?? 15), 3), 60);
+    const maxRetries = Math.min(Math.max(Number(req.body?.maxRetries ?? before.max_retries ?? 3), 0), 10);
+    const retryBackoffSeconds = Math.min(Math.max(Number(req.body?.retryBackoffSeconds ?? before.retry_backoff_seconds ?? 300), 30), 86400);
+    const signingAlgorithm = String(req.body?.signingAlgorithm || before.signing_algorithm || "sha256").trim().toLowerCase();
+
+    if (!["sha256"].includes(signingAlgorithm)) {
+      return fail(res, "Signing algorithm must be sha256.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_webhooks
+        SET
+          name = $2,
+          url = $3,
+          description = $4,
+          events = $5::text[],
+          status = $6,
+          delivery_timeout_seconds = $7,
+          max_retries = $8,
+          retry_backoff_seconds = $9,
+          signing_algorithm = $10,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          url,
+          description,
+          events,
+          status,
+          signing_algorithm AS "signingAlgorithm",
+          delivery_timeout_seconds AS "deliveryTimeoutSeconds",
+          max_retries AS "maxRetries",
+          retry_backoff_seconds AS "retryBackoffSeconds",
+          failure_count AS "failureCount",
+          success_count AS "successCount",
+          created_at AS "createdAt",
+          updated_at AS "updatedAt",
+          last_triggered_at AS "lastTriggeredAt"
+      `,
+      [
+        id,
+        name,
+        url,
+        description || null,
+        events,
+        status,
+        deliveryTimeoutSeconds,
+        maxRetries,
+        retryBackoffSeconds,
+        signingAlgorithm,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'webhook.policy.update', 'webhook', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(before),
+        JSON.stringify(result.rows[0]),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      webhook: result.rows[0],
+      message: "Webhook policy updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update webhook policy", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/webhooks/:id/rotate-secret-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Webhook id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT id, name, url, events, status
+        FROM backend_webhooks
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const before = beforeResult.rows[0];
+    if (!before) return fail(res, "Webhook not found", 404);
+
+    const secret = `whsec_${crypto.randomBytes(24).toString("hex")}`;
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_webhooks
+        SET
+          secret = $2,
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          url,
+          events,
+          status,
+          created_at AS "createdAt",
+          updated_at AS "updatedAt",
+          last_triggered_at AS "lastTriggeredAt"
+      `,
+      [id, secret]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'webhook.secret.rotate', 'webhook', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(before),
+        JSON.stringify({ rotated: true }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      webhook: result.rows[0],
+      secret,
+      warning: "Copy this webhook secret now. It will not be shown again.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to rotate webhook secret", 500, error.message);
+  }
+});
+
+router.post("/webhook-deliveries/:id/replay-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+
+    if (!id) return fail(res, "Delivery id is required", 400);
+
+    const deliveryResult = await dbQuery(
+      `
+        SELECT
+          d.*,
+          w.id AS webhook_id,
+          w.name AS webhook_name,
+          w.url AS webhook_url,
+          w.events AS webhook_events,
+          w.secret AS webhook_secret,
+          w.status AS webhook_status,
+          w.delivery_timeout_seconds,
+          w.max_retries,
+          w.retry_backoff_seconds
+        FROM backend_webhook_deliveries d
+        JOIN backend_webhooks w ON w.id = d.webhook_id
+        WHERE d.id = $1
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    const delivery = deliveryResult.rows[0];
+
+    if (!delivery) return fail(res, "Webhook delivery not found", 404);
+    if (delivery.webhook_status !== "active") return fail(res, "Webhook is not active", 400);
+
+    const replayPayload = {
+      id: webhookRandomId("evt"),
+      type: delivery.event_type || "webhook.replay",
+      eventType: delivery.event_type || "webhook.replay",
+      replay: true,
+      replayedFromDeliveryId: id,
+      createdAt: new Date().toISOString(),
+      data: {
+        originalDeliveryId: id,
+        originalEventId: delivery.event_id,
+        originalRequestBody: delivery.request_body || {},
+      },
+    };
+
+    const webhook = {
+      id: delivery.webhook_id,
+      name: delivery.webhook_name,
+      url: delivery.webhook_url,
+      events: delivery.webhook_events || ["*"],
+      secret: delivery.webhook_secret,
+      delivery_timeout_seconds: delivery.delivery_timeout_seconds,
+      max_retries: delivery.max_retries,
+      retry_backoff_seconds: delivery.retry_backoff_seconds,
+    };
+
+    const replayDelivery = await deliverWebhook(webhook, replayPayload);
+
+    await dbQuery(
+      `
+        UPDATE backend_webhook_deliveries
+        SET
+          replayed_from_delivery_id = $2,
+          replayed_at = NOW(),
+          replayed_by = $3
+        WHERE id = $1
+      `,
+      [
+        replayDelivery.id,
+        id,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'webhook.delivery.replay', 'webhook_delivery', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify({ replayDeliveryId: replayDelivery.id }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      delivery: replayDelivery,
+      message: "Webhook delivery replayed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to replay webhook delivery", 500, error.message);
   }
 });
 

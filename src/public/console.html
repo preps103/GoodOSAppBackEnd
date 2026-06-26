@@ -3280,6 +3280,389 @@ function storageView() {
 }
 
 
+
+window.loadLiveWebhooks = async function loadLiveWebhooks() {
+  try {
+    const response = await fetch("/api/admin/webhooks-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Webhook refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : [];
+    state.webhookDeliveries = Array.isArray(data.deliveries) ? data.deliveries : (Array.isArray(data.webhookDeliveries) ? data.webhookDeliveries : []);
+    state.webhookCounts = data.counts || {};
+    state.webhooksLoaded = true;
+    state.webhooksLoading = false;
+    state.webhooksError = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.webhooksLoading = false;
+    state.webhooksError = error.message || "Failed to load webhooks.";
+    alert("Webhook refresh failed: " + state.webhooksError);
+    console.error(error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshWebhooksNow = async function refreshWebhooksNow() {
+  return window.loadLiveWebhooks();
+};
+
+window.createWebhook = async function createWebhook() {
+  const name = prompt("Webhook name:", "New Webhook");
+  if (!name) return;
+
+  const url = prompt("Webhook URL:", "https://backend.goodos.app/webhook-test-receiver");
+  if (!url) return;
+
+  const eventsText = prompt("Events, comma-separated. Use * for all events:", "*") || "*";
+  const events = eventsText.split(",").map(item => item.trim()).filter(Boolean);
+
+  try {
+    const response = await fetch("/api/admin/webhooks/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, url, events })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Webhook creation failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    const secret = data.secret || "";
+
+    if (secret) {
+      prompt("Webhook created. Copy this secret now. It will not be shown again:", secret);
+    } else {
+      alert("Webhook created.");
+    }
+
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Webhook creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.editWebhookPolicy = async function editWebhookPolicy(id) {
+  const webhook = (state.webhooks || []).find(item => item.id === id);
+  if (!webhook) return alert("Webhook not found.");
+
+  const policy = {
+    name: webhook.name || "",
+    url: webhook.url || "",
+    description: webhook.description || "",
+    events: webhook.events || ["*"],
+    status: webhook.status || "active",
+    deliveryTimeoutSeconds: Number(webhook.deliveryTimeoutSeconds || webhook.delivery_timeout_seconds || 15),
+    maxRetries: Number(webhook.maxRetries || webhook.max_retries || 3),
+    retryBackoffSeconds: Number(webhook.retryBackoffSeconds || webhook.retry_backoff_seconds || 300),
+    signingAlgorithm: webhook.signingAlgorithm || webhook.signing_algorithm || "sha256"
+  };
+
+  const policyText = prompt("Edit webhook policy JSON:", JSON.stringify(policy, null, 2));
+  if (policyText === null) return;
+
+  let parsed;
+
+  try {
+    parsed = JSON.parse(policyText);
+  } catch (error) {
+    alert("Invalid webhook policy JSON.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/admin/webhooks/" + encodeURIComponent(id) + "/policy/update-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(parsed)
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Webhook policy update failed with status " + response.status);
+    }
+
+    alert("Webhook policy updated.");
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Webhook policy update failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.rotateWebhookSecret = async function rotateWebhookSecret(id) {
+  if (!confirm("Rotate webhook signing secret? Existing integrations using the old secret must be updated.")) return;
+
+  try {
+    const response = await fetch("/api/admin/webhooks/" + encodeURIComponent(id) + "/rotate-secret-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Secret rotation failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    prompt("Secret rotated. Copy this secret now. It will not be shown again:", data.secret || "");
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Secret rotation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.sendTestWebhook = async function sendTestWebhook(id) {
+  try {
+    const response = await fetch("/api/admin/webhooks/" + encodeURIComponent(id) + "/test", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Test webhook failed with status " + response.status);
+    }
+
+    alert("Test webhook sent.");
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Test webhook failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.retryWebhookDelivery = async function retryWebhookDelivery(id) {
+  try {
+    const response = await fetch("/api/admin/webhook-deliveries/" + encodeURIComponent(id) + "/retry", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Retry failed with status " + response.status);
+    }
+
+    alert("Delivery retry complete.");
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Delivery retry failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.replayWebhookDelivery = async function replayWebhookDelivery(id) {
+  if (!confirm("Replay this webhook delivery?")) return;
+
+  try {
+    const response = await fetch("/api/admin/webhook-deliveries/" + encodeURIComponent(id) + "/replay-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Replay failed with status " + response.status);
+    }
+
+    alert("Delivery replay complete.");
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Delivery replay failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.disableWebhook = async function disableWebhook(id) {
+  if (!confirm("Disable this webhook?")) return;
+
+  try {
+    const response = await fetch("/api/admin/webhooks/" + encodeURIComponent(id) + "/disable", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Disable failed with status " + response.status);
+    }
+
+    alert("Webhook disabled.");
+    await window.loadLiveWebhooks();
+  } catch (error) {
+    alert("Disable webhook failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+
+function webhooksView() {
+  if (!state.webhooksLoaded && !state.webhooksLoading) {
+    state.webhooksLoading = true;
+    setTimeout(() => window.loadLiveWebhooks(), 100);
+  }
+
+  const webhooks = Array.isArray(state.webhooks) ? state.webhooks : [];
+  const deliveries = Array.isArray(state.webhookDeliveries) ? state.webhookDeliveries : [];
+  const counts = state.webhookCounts || {};
+  const activeWebhooks = webhooks.filter(item => item.status === "active");
+  const failedDeliveries = deliveries.filter(item => item.status === "failed");
+
+  return `
+    ${hero("Webhooks", "Event subscriptions, signing secrets, delivery logs, retries, and replay controls.")}
+    <div class="section-head">
+      <h3>Webhook Endpoints</h3>
+      <div>
+        <button class="logout" onclick="window.refreshWebhooksNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createWebhook()">Create Webhook</button>
+      </div>
+    </div>
+
+    ${state.webhooksLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live webhook data...</p></div>` : ""}
+    ${state.webhooksError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Webhook error: ${safeText(state.webhooksError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Webhooks", counts.webhooks ?? webhooks.length, "Total endpoints")}
+      ${card("Active", counts.active ?? activeWebhooks.length, "Receiving events")}
+      ${card("Deliveries", counts.deliveries ?? deliveries.length, "Logged delivery attempts")}
+      ${card("Failed", counts.failed ?? failedDeliveries.length, "Needs attention")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Active + Disabled Endpoints</h3><span class="badge">Subscriptions</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Webhook</th>
+            <th>Events</th>
+            <th>Status</th>
+            <th>Retry Policy</th>
+            <th>Last Triggered</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${webhooks.map(webhook => `
+            <tr>
+              <td><strong>${safeText(webhook.name || "-")}</strong><div class="muted">${safeText(webhook.url || "")}</div><div class="muted">${safeText(webhook.id || "")}</div></td>
+              <td>${safeText((webhook.events || []).join(", ") || "-")}</td>
+              <td><span class="badge">${safeText(webhook.status || "-")}</span></td>
+              <td>${safeText(String(webhook.maxRetries ?? 3))} retries / ${safeText(String(webhook.retryBackoffSeconds ?? 300))}s</td>
+              <td>${webhook.lastTriggeredAt ? new Date(webhook.lastTriggeredAt).toLocaleString() : "-"}</td>
+              <td>
+                <button class="logout" onclick="window.sendTestWebhook('${safeText(webhook.id)}')">Test</button>
+                <button class="logout" onclick="window.editWebhookPolicy('${safeText(webhook.id)}')">Policy</button>
+                <button class="logout" onclick="window.rotateWebhookSecret('${safeText(webhook.id)}')">Rotate Secret</button>
+                <button class="logout" onclick="window.disableWebhook('${safeText(webhook.id)}')">Disable</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No webhook endpoints found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Delivery Logs</h3><span class="badge">Retry + Replay</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Delivery</th>
+            <th>Webhook</th>
+            <th>Event</th>
+            <th>Status</th>
+            <th>HTTP</th>
+            <th>Attempts</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${deliveries.map(delivery => `
+            <tr>
+              <td><strong>${safeText(delivery.id || "-")}</strong><div class="muted">${delivery.createdAt ? new Date(delivery.createdAt).toLocaleString() : "-"}</div></td>
+              <td>${safeText(delivery.webhookName || delivery.webhookId || "-")}</td>
+              <td>${safeText(delivery.eventType || "-")}</td>
+              <td><span class="badge">${safeText(delivery.status || "-")}</span></td>
+              <td>${safeText(String(delivery.responseStatus || "-"))}</td>
+              <td>${safeText(String(delivery.attemptCount || 0))}</td>
+              <td>
+                <button class="logout" onclick="window.retryWebhookDelivery('${safeText(delivery.id)}')">Retry</button>
+                <button class="logout" onclick="window.replayWebhookDelivery('${safeText(delivery.id)}')">Replay</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="7" class="muted">No delivery logs found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
 function render() {
   const view = document.getElementById("view");
 
