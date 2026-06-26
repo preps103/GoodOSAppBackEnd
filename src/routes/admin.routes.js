@@ -4139,4 +4139,270 @@ router.post("/database/saved-queries/:id/delete-safe", async (req, res) => {
   }
 });
 
+
+const DATABASE_BROWSER_ALLOWED_TYPES = new Set([
+  "text",
+  "integer",
+  "bigint",
+  "numeric",
+  "boolean",
+  "timestamptz",
+  "timestamp",
+  "date",
+  "jsonb",
+  "uuid"
+]);
+
+function isSafeDbIdentifier(value) {
+  return /^[a-zA-Z_][a-zA-Z0-9_]{0,62}$/.test(String(value || ""));
+}
+
+function validateSchemaColumn(column) {
+  const name = String(column?.name || "").trim();
+  const type = String(column?.type || "text").trim().toLowerCase();
+  const nullable = column?.nullable !== false;
+  const unique = column?.unique === true;
+  const primaryKey = column?.primaryKey === true;
+  const defaultValue = column?.defaultValue;
+
+  if (!isSafeDbIdentifier(name)) {
+    return { ok: false, message: `Invalid column name: ${name}` };
+  }
+
+  if (!DATABASE_BROWSER_ALLOWED_TYPES.has(type)) {
+    return { ok: false, message: `Unsupported column type: ${type}` };
+  }
+
+  let definition = `${quoteDbIdentifierSafe(name)} ${type}`;
+
+  if (primaryKey) definition += " PRIMARY KEY";
+  if (!nullable || primaryKey) definition += " NOT NULL";
+  if (unique && !primaryKey) definition += " UNIQUE";
+
+  if (defaultValue !== undefined && defaultValue !== null && String(defaultValue).trim() !== "") {
+    const defaultText = String(defaultValue).trim();
+
+    const allowedDefaults = [
+      "now()",
+      "gen_random_uuid()",
+      "true",
+      "false",
+      "0",
+      "1",
+      "CURRENT_TIMESTAMP"
+    ];
+
+    if (!allowedDefaults.includes(defaultText) && !/^'.*'$/.test(defaultText) && !/^[0-9]+(\.[0-9]+)?$/.test(defaultText)) {
+      return { ok: false, message: `Unsafe default value for ${name}. Use quoted text, number, now(), gen_random_uuid(), true, or false.` };
+    }
+
+    definition += ` DEFAULT ${defaultText}`;
+  }
+
+  return {
+    ok: true,
+    name,
+    type,
+    definition,
+  };
+}
+
+router.post("/database/schema/create-table-safe", async (req, res) => {
+  try {
+    const tableName = String(req.body?.tableName || "").trim();
+    const columnsInput = Array.isArray(req.body?.columns) ? req.body.columns : [];
+
+    if (!isSafeDbIdentifier(tableName)) {
+      return fail(res, "Invalid table name. Use letters, numbers, and underscores only. Must start with a letter or underscore.", 400);
+    }
+
+    if (!columnsInput.length) {
+      return fail(res, "At least one column is required.", 400);
+    }
+
+    const exists = await assertPublicTableExists(tableName);
+    if (exists) return fail(res, "Table already exists.", 409);
+
+    const validatedColumns = [];
+
+    for (const column of columnsInput) {
+      const validated = validateSchemaColumn(column);
+      if (!validated.ok) return fail(res, validated.message, 400);
+      validatedColumns.push(validated);
+    }
+
+    const hasPrimaryKey = validatedColumns.some((column) => / PRIMARY KEY/.test(column.definition));
+
+    const finalDefinitions = hasPrimaryKey
+      ? validatedColumns.map((column) => column.definition)
+      : [`"id" uuid PRIMARY KEY DEFAULT gen_random_uuid()`, ...validatedColumns.map((column) => column.definition)];
+
+    const sql = `
+      CREATE TABLE ${quoteDbIdentifierSafe(tableName)} (
+        ${finalDefinitions.join(",\n        ")}
+      )
+    `;
+
+    await dbQuery(sql);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.schema.create_table', 'database_table', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        tableName,
+        JSON.stringify({ tableName, columns: columnsInput }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      tableName,
+      message: "Table created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create table", 500, error.message);
+  }
+});
+
+router.post("/database/schema/add-column-safe", async (req, res) => {
+  try {
+    const tableName = String(req.body?.tableName || "").trim();
+    const column = req.body?.column || {};
+
+    if (!isSafeDbIdentifier(tableName)) {
+      return fail(res, "Invalid table name.", 400);
+    }
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found.", 404);
+
+    ensureTableWritable(tableName);
+
+    const validated = validateSchemaColumn(column);
+    if (!validated.ok) return fail(res, validated.message, 400);
+
+    const columns = await getPublicTableColumns(tableName);
+    if (columns.some((item) => item.columnName === validated.name)) {
+      return fail(res, "Column already exists.", 409);
+    }
+
+    const sql = `
+      ALTER TABLE ${quoteDbIdentifierSafe(tableName)}
+      ADD COLUMN ${validated.definition}
+    `;
+
+    await dbQuery(sql);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.schema.add_column', 'database_column', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        `${tableName}.${validated.name}`,
+        JSON.stringify({ tableName, column }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      tableName,
+      columnName: validated.name,
+      message: "Column added.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to add column", error.statusCode || 500, error.message);
+  }
+});
+
+router.post("/database/schema/create-index-safe", async (req, res) => {
+  try {
+    const tableName = String(req.body?.tableName || "").trim();
+    const columnName = String(req.body?.columnName || "").trim();
+    const unique = req.body?.unique === true;
+
+    if (!isSafeDbIdentifier(tableName)) return fail(res, "Invalid table name.", 400);
+    if (!isSafeDbIdentifier(columnName)) return fail(res, "Invalid column name.", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found.", 404);
+
+    ensureTableWritable(tableName);
+
+    const columns = await getPublicTableColumns(tableName);
+    if (!columns.some((item) => item.columnName === columnName)) {
+      return fail(res, "Column not found.", 404);
+    }
+
+    const indexName = `${tableName}_${columnName}_${unique ? "uniq" : "idx"}`.slice(0, 60);
+
+    const sql = `
+      CREATE ${unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${quoteDbIdentifierSafe(indexName)}
+      ON ${quoteDbIdentifierSafe(tableName)} (${quoteDbIdentifierSafe(columnName)})
+    `;
+
+    await dbQuery(sql);
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'database.schema.create_index', 'database_index', $3, $4::jsonb, $5, $6)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        indexName,
+        JSON.stringify({ tableName, columnName, unique, indexName }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      tableName,
+      columnName,
+      indexName,
+      unique,
+      message: "Index created.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to create index", error.statusCode || 500, error.message);
+  }
+});
+
 module.exports = router;

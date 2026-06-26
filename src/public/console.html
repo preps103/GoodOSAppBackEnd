@@ -1398,6 +1398,143 @@ window.deleteSavedDatabaseQuery = async function deleteSavedDatabaseQuery(id) {
   }
 };
 
+
+window.createDatabaseTable = async function createDatabaseTable() {
+  const tableName = prompt("New table name. Use lowercase letters, numbers, and underscores:", "custom_records");
+  if (!tableName) return;
+
+  const columnsText = prompt(
+    "Columns JSON array:",
+    '[{"name":"name","type":"text","nullable":false},{"name":"status","type":"text","defaultValue":"\'active\'"},{"name":"metadata","type":"jsonb"}]'
+  );
+
+  if (columnsText === null) return;
+
+  let columns;
+
+  try {
+    columns = JSON.parse(columnsText);
+  } catch (error) {
+    alert("Invalid columns JSON.");
+    return;
+  }
+
+  const confirmed = confirm("Create table " + tableName + "?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/database/schema/create-table-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ tableName, columns })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create table failed with status " + response.status);
+    }
+
+    alert("Table created.");
+    await window.loadLiveDatabase();
+  } catch (error) {
+    alert("Create table failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.addDatabaseColumn = async function addDatabaseColumn(tableName) {
+  const targetTable = tableName || state.selectedDbTable;
+  if (!targetTable) return alert("Select a table first.");
+
+  const columnText = prompt(
+    "Column JSON:",
+    '{"name":"notes","type":"text","nullable":true}'
+  );
+
+  if (columnText === null) return;
+
+  let column;
+
+  try {
+    column = JSON.parse(columnText);
+  } catch (error) {
+    alert("Invalid column JSON.");
+    return;
+  }
+
+  const confirmed = confirm("Add column to " + targetTable + "?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/database/schema/add-column-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ tableName: targetTable, column })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Add column failed with status " + response.status);
+    }
+
+    alert("Column added.");
+    await window.loadLiveDatabase();
+    if (state.selectedDbTable === targetTable) {
+      await window.loadDatabaseTableRows(targetTable, state.selectedDbPagination?.offset || 0);
+    }
+  } catch (error) {
+    alert("Add column failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.createDatabaseIndex = async function createDatabaseIndex(tableName) {
+  const targetTable = tableName || state.selectedDbTable;
+  if (!targetTable) return alert("Select a table first.");
+
+  const columnName = prompt("Column to index:", "");
+  if (!columnName) return;
+
+  const unique = confirm("Should this be a UNIQUE index? Press OK for unique, Cancel for normal index.");
+
+  try {
+    const response = await fetch("/api/admin/database/schema/create-index-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ tableName: targetTable, columnName, unique })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create index failed with status " + response.status);
+    }
+
+    alert("Index created.");
+    await window.loadLiveDatabase();
+  } catch (error) {
+    alert("Create index failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1488,6 +1625,7 @@ function databaseView() {
       <h3>Database Tables</h3>
       <div>
         <button class="logout" onclick="window.refreshDatabaseNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createDatabaseTable()">Create Table</button>
       </div>
     </div>
 
@@ -1527,6 +1665,8 @@ function databaseView() {
                   <button class="logout" onclick="window.loadDatabaseTableRows('${safeText(tableName)}', 0)">
                     ${isSelected ? "Reload Rows" : "View Rows"}
                   </button>
+                  <button class="logout" onclick="window.addDatabaseColumn('${safeText(tableName)}')">Add Column</button>
+                  <button class="logout" onclick="window.createDatabaseIndex('${safeText(tableName)}')">Create Index</button>
                 </td>
               </tr>
               ${inlineRowViewer(tableName)}
@@ -1644,6 +1784,20 @@ function databaseView() {
           `).join("") || '<tr><td colspan="5" class="muted">No query history yet.</td></tr>'}
         </tbody>
       </table>
+    </div>
+
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Schema Editor</h3><span class="badge">Safe Changes</span></div>
+      <div class="grid module-grid">
+        ${moduleCard("Create Table", "Create a new public table with safe column definitions. Auto-adds id uuid primary key if missing.", "Live")}
+        ${moduleCard("Add Column", "Add safe columns to existing writable tables. No destructive column drops yet.", "Live")}
+        ${moduleCard("Create Index", "Create normal or unique indexes for selected columns.", "Live")}
+      </div>
+      <p class="muted" style="margin-top:14px;">
+        Allowed types: text, integer, bigint, numeric, boolean, timestamptz, timestamp, date, jsonb, uuid.
+        Destructive schema changes are intentionally blocked for now.
+      </p>
     </div>
 
     <div class="card" style="margin-top:18px;">
