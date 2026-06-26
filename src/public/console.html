@@ -658,6 +658,32 @@ async function loadData() {
 }
 
 
+
+function goodosRenderNow() {
+  if (typeof render === "function") {
+    return render();
+  }
+
+  const view = document.getElementById("view");
+  if (!view || !state) return;
+
+  if (state.view === "dashboard") view.innerHTML = dashboard();
+  else if (state.view === "auth") view.innerHTML = usersView();
+  else if (state.view === "apps") view.innerHTML = appsView();
+  else if (state.view === "database") view.innerHTML = databaseView();
+  else if (state.view === "storage") view.innerHTML = storageView();
+  else if (state.view === "api") view.innerHTML = apiKeysView();
+  else if (state.view === "webhooks") view.innerHTML = webhooksView();
+  else if (state.view === "realtime") view.innerHTML = realtimeView();
+  else if (state.view === "functions") view.innerHTML = functionsView();
+  else if (state.view === "logs") view.innerHTML = logsView();
+  else if (state.view === "security") view.innerHTML = securityView();
+  else if (state.view === "backups") view.innerHTML = backupsView();
+  else if (state.view === "settings") view.innerHTML = settingsView();
+}
+
+window.goodosRenderNow = goodosRenderNow;
+
 function card(label, value, sub = "") {
   return '<div class="card"><div class="label">' + label + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>';
 }
