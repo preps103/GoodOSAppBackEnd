@@ -914,25 +914,122 @@ function appsView() {
   `;
 }
 
+
+window.loadLiveDatabase = async function loadLiveDatabase() {
+  try {
+    const response = await fetch("/api/admin/database-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Database refresh failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.tables = Array.isArray(data.tables) ? data.tables : [];
+    state.databaseLiveLoaded = true;
+    state.databaseLiveLoading = false;
+    state.databaseLiveError = "";
+
+    goodosRenderNow();
+  } catch (error) {
+    state.databaseLiveError = error.message || "Failed to load database page data.";
+    state.databaseLiveLoading = false;
+    alert("Database refresh failed: " + state.databaseLiveError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
+window.refreshDatabaseNow = async function refreshDatabaseNow() {
+  return window.loadLiveDatabase();
+};
+
 function databaseView() {
+  if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
+    state.databaseLiveLoading = true;
+    setTimeout(() => window.loadLiveDatabase(), 100);
+  }
+
+  const tables = Array.isArray(state.tables) ? state.tables : [];
+  const totalRows = tables.reduce((sum, table) => sum + Number(table.rowCount || table.rows || 0), 0);
+
   return `
-    ${hero("Database Browser", "Live Postgres table visibility. Full row viewer, schema editor, and query console come next.")}
-    <div class="card">
+    ${hero("Database Browser", "Live Postgres table visibility, row counts, and schema metadata.")}
+    <div class="section-head">
+      <h3>Database Tables</h3>
+      <div>
+        <button class="logout" onclick="window.refreshDatabaseNow()">Refresh Data</button>
+      </div>
+    </div>
+
+    ${state.databaseLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live database data...</p></div>` : ""}
+    ${state.databaseLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Database load error: ${safeText(state.databaseLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("Tables", tables.length, "Public database tables")}
+      ${card("Rows", totalRows, "Total tracked rows")}
+      ${card("Database", "Postgres", "Production database")}
+      ${card("Status", "Connected", "Live metadata")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Tables</h3><span class="badge">Live</span></div>
       <table>
-        <thead><tr><th>Table</th><th>Rows</th><th>Status</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Rows</th>
+            <th>Columns</th>
+            <th>Status</th>
+          </tr>
+        </thead>
         <tbody>
-          ${state.tables.map(table => `
+          ${tables.map(table => `
             <tr>
-              <td><strong>${safeText(table.tableName)}</strong></td>
-              <td>${safeText(table.rowCount ?? "-")}</td>
-              <td><span class="badge">${safeText(table.status || "available")}</span></td>
+              <td><strong>${safeText(table.tableName || table.name || "-")}</strong></td>
+              <td>${safeText(String(table.rowCount ?? table.rows ?? 0))}</td>
+              <td>${safeText(String((table.columns || []).length))}</td>
+              <td><span class="badge">${safeText(table.status || "live")}</span></td>
             </tr>
-          `).join("")}
+          `).join("") || '<tr><td colspan="4" class="muted">No database tables loaded yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Schema Columns</h3><span class="badge">Metadata</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Nullable</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tables.flatMap(table => (table.columns || []).map(column => `
+            <tr>
+              <td>${safeText(table.tableName || "-")}</td>
+              <td><strong>${safeText(column.columnName || "-")}</strong></td>
+              <td>${safeText(column.dataType || "-")}</td>
+              <td>${safeText(column.isNullable || "-")}</td>
+              <td>${safeText(column.columnDefault || "-")}</td>
+            </tr>
+          `)).join("") || '<tr><td colspan="5" class="muted">No schema columns loaded yet.</td></tr>'}
         </tbody>
       </table>
     </div>
   `;
 }
+
 
 function logsView() {
   const logs = Array.isArray(state.logs) ? state.logs : [];

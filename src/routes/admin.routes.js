@@ -1970,4 +1970,65 @@ router.get("/dashboard-real-page-data", async (req, res) => {
   }
 });
 
+
+function quoteIdentifier(value) {
+  return '"' + String(value).replace(/"/g, '""') + '"';
+}
+
+router.get("/database-page-data", async (req, res) => {
+  try {
+    const tablesResult = await dbQuery(`
+      SELECT table_name AS "tableName"
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_type = 'BASE TABLE'
+      ORDER BY table_name ASC
+    `);
+
+    const columnsResult = await dbQuery(`
+      SELECT
+        table_name AS "tableName",
+        ordinal_position AS "position",
+        column_name AS "columnName",
+        data_type AS "dataType",
+        is_nullable AS "isNullable",
+        column_default AS "columnDefault"
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+      ORDER BY table_name ASC, ordinal_position ASC
+    `);
+
+    const tables = [];
+
+    for (const table of tablesResult.rows) {
+      const tableName = table.tableName;
+
+      let rowCount = 0;
+      try {
+        const countResult = await dbQuery(`SELECT COUNT(*)::int AS count FROM ${quoteIdentifier(tableName)}`);
+        rowCount = Number(countResult.rows[0]?.count || 0);
+      } catch (error) {
+        rowCount = 0;
+      }
+
+      tables.push({
+        tableName,
+        rowCount,
+        status: "live",
+        columns: columnsResult.rows.filter((column) => column.tableName === tableName),
+      });
+    }
+
+    return ok(res, {
+      tables,
+      counts: {
+        tables: tables.length,
+        rows: tables.reduce((sum, table) => sum + Number(table.rowCount || 0), 0),
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load database page data", 500, error.message);
+  }
+});
+
 module.exports = router;
