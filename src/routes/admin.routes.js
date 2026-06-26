@@ -1576,4 +1576,41 @@ router.get("/webhooks-page-data", async (req, res) => {
   }
 });
 
+
+router.get("/api-keys-page-data", async (req, res) => {
+  try {
+    const result = await dbQuery(`
+      SELECT
+        id,
+        name,
+        type,
+        key_prefix AS "keyPrefix",
+        scopes,
+        allowed_app_ids AS "allowedAppIds",
+        description,
+        status,
+        last_used_at AS "lastUsedAt",
+        revoked_at AS "revokedAt",
+        created_at AS "createdAt"
+      FROM backend_api_keys
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const rows = result.rows;
+
+    return ok(res, {
+      apiKeys: rows,
+      counts: {
+        total: rows.length,
+        active: rows.filter((row) => row.status === "active").length,
+        revoked: rows.filter((row) => row.status !== "active").length,
+        scoped: rows.filter((row) => row.type === "scoped").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load API keys page data", 500, error.message);
+  }
+});
+
 module.exports = router;

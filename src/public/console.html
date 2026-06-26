@@ -853,97 +853,12 @@ function storageView() {
   `;
 }
 
-function apiKeysView() {
-  return `
-    ${hero("API Keys", "Create scoped project keys, rotate secrets, and manage server integration tokens.")}
-    <div class="section-head">
-      <h3>Project Keys</h3>
-      <button class="logout" onclick="createApiKey()">Generate Key</button>
-    </div>
-    <div class="grid cards">
-      ${card("API Keys", state.apiKeys.length, "Stored key records")}
-      ${card("Active", state.apiKeys.filter(k => k.status === "active").length, "Usable keys")}
-      ${card("Revoked", state.apiKeys.filter(k => k.status === "revoked").length, "Disabled keys")}
-      ${card("Scopes", "Next", "Fine-grained permissions")}
-    </div>
-    <div class="card" style="margin-top:18px;">
-      <table>
-        <thead><tr><th>Name</th><th>Prefix</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>
-          ${state.apiKeys.map(key => `
-            <tr>
-              <td><strong>${safeText(key.name)}</strong><div class="muted">${safeText(key.id)}</div></td>
-              <td>${safeText(key.keyPrefix)}••••</td>
-              <td>${safeText(key.type)}</td>
-              <td><span class="badge">${safeText(key.status)}</span></td>
-              <td>${key.status === "active" ? `<button class="logout" onclick="revokeApiKey('${safeText(key.id)}')">Revoke</button>` : "-"}</td>
-            </tr>
-          `).join("") || '<tr><td colspan="5" class="muted">No API keys created yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-
-async function directAdminGet(path) {
-  const response = await fetch(path + (path.includes("?") ? "&" : "?") + "t=" + Date.now(), {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-    headers: {
-      "Accept": "application/json"
-    }
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok || payload.success === false) {
-    throw new Error(payload.message || "Request failed: " + response.status);
-  }
-
-  return payload.data || payload;
-}
-
-async function forceLoadWebhooksNow() {
-  try {
-    state.webhookLiveLoading = true;
-
-    const webhooksPayload = await directAdminGet("/api/admin/webhooks-live");
-    const deliveriesPayload = await directAdminGet("/api/admin/webhook-deliveries-live");
-
-    state.webhooks = Array.isArray(webhooksPayload.webhooks)
-      ? webhooksPayload.webhooks
-      : [];
-
-    state.webhookDeliveries = Array.isArray(deliveriesPayload.deliveries)
-      ? deliveriesPayload.deliveries
-      : [];
-
-    state.webhookLiveLoaded = true;
-    state.webhookLiveLoading = false;
-  } catch (error) {
-    state.webhookLiveLoading = false;
-    state.webhookLiveError = error.message || "Failed to load webhook data.";
-    console.error("Webhook live load failed:", error);
-  }
-}
-
-async function refreshWebhooksNow() {
-  await forceLoadWebhooksNow();
-  goodosRenderNow();
-}
-
-
 
 function goodosRenderNow() {
   if (typeof render === "function") return render();
   if (typeof renderConsole === "function") return renderConsole();
   if (typeof renderPage === "function") return renderPage();
   if (typeof renderView === "function") return renderView();
-  if (typeof renderDashboard === "function") return renderDashboard();
-  if (typeof updateApp === "function") return updateApp();
-  if (typeof mountApp === "function") return mountApp();
 
   const target =
     document.querySelector("#app") ||
@@ -952,53 +867,198 @@ function goodosRenderNow() {
     document.querySelector(".content") ||
     document.querySelector(".main");
 
-  if (target && state && state.view === "webhooks" && typeof webhooksView === "function") {
-    target.innerHTML = webhooksView();
+  if (target && state && typeof views !== "undefined" && views[state.view]) {
+    target.innerHTML = views[state.view]();
+    return;
+  }
+
+  if (target && state && state.view === "api-keys" && typeof apiKeysView === "function") {
+    target.innerHTML = apiKeysView();
     return;
   }
 
   console.warn("No known render function found.");
 }
 
-window.refreshWebhooksNow = async function refreshWebhooksNow() {
-  const button = document.querySelector('[data-webhook-refresh-button="true"]');
+window.refreshApiKeysNow = async function refreshApiKeysNow() {
+  const button = document.querySelector('[data-api-key-refresh-button="true"]');
   if (button) button.textContent = "LOADING...";
 
   try {
-    const response = await fetch("/api/admin/webhooks-page-data?t=" + Date.now(), {
+    const response = await fetch("/api/admin/api-keys-page-data?t=" + Date.now(), {
       method: "GET",
       credentials: "include",
       cache: "no-store",
-      headers: {
-        "Accept": "application/json"
-      }
+      headers: { "Accept": "application/json" }
     });
 
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Webhook refresh failed with status " + response.status);
+      throw new Error(payload.message || "API key refresh failed with status " + response.status);
     }
 
     const data = payload.data || payload;
-
-    state.webhooks = Array.isArray(data.webhooks) ? data.webhooks : [];
-    state.webhookDeliveries = Array.isArray(data.deliveries) ? data.deliveries : [];
-    state.webhookLiveLoaded = true;
-    state.webhookLiveLoading = false;
-    state.webhookLiveError = "";
+    state.apiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : [];
+    state.apiKeysLiveLoaded = true;
+    state.apiKeysLiveLoading = false;
+    state.apiKeysLiveError = "";
 
     goodosRenderNow();
   } catch (error) {
-    state.webhookLiveError = error.message || "Webhook refresh failed.";
-    alert("Webhook refresh failed: " + state.webhookLiveError);
+    state.apiKeysLiveError = error.message || "API key refresh failed.";
+    alert("API key refresh failed: " + state.apiKeysLiveError);
     console.error(error);
     goodosRenderNow();
   } finally {
-    const freshButton = document.querySelector('[data-webhook-refresh-button="true"]');
+    const freshButton = document.querySelector('[data-api-key-refresh-button="true"]');
     if (freshButton) freshButton.textContent = "REFRESH DATA";
   }
 };
+
+window.createScopedApiKey = async function createScopedApiKey() {
+  const name = prompt("API key name:", "GoodFleet Read Key");
+  if (!name) return;
+
+  const scopesRaw = prompt("Scopes, comma separated:", "read:health,read:apps");
+  if (!scopesRaw) return;
+
+  const appsRaw = prompt("Allowed app IDs. Use * for all apps, or goodfleet,goodqr,etc:", "goodfleet");
+  if (!appsRaw) return;
+
+  const description = prompt("Description:", "Created from GoodAppBackEnd console") || "";
+
+  const scopes = scopesRaw.split(",").map(item => item.trim()).filter(Boolean);
+  const allowedAppIds = appsRaw.split(",").map(item => item.trim()).filter(Boolean);
+
+  try {
+    const response = await fetch("/api/admin/api-keys/create-scoped", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        type: "scoped",
+        scopes,
+        allowedAppIds,
+        description
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "API key creation failed with status " + response.status);
+    }
+
+    const secret = payload.data?.secret || payload.secret || "";
+    if (secret) {
+      prompt("API key created. Copy this key now. It will not be shown again:", secret);
+    } else {
+      alert("API key created.");
+    }
+
+    await window.refreshApiKeysNow();
+  } catch (error) {
+    alert("API key creation failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function apiKeysView() {
+  if (!state.apiKeysLiveLoaded && !state.apiKeysLiveLoading) {
+    state.apiKeysLiveLoading = true;
+    setTimeout(() => window.refreshApiKeysNow(), 100);
+  }
+
+  const keys = Array.isArray(state.apiKeys) ? state.apiKeys : [];
+  const activeKeys = keys.filter(key => key.status === "active");
+  const revokedKeys = keys.filter(key => key.status !== "active");
+
+  return `
+    ${hero("API Keys", "Create scoped project keys, rotate secrets, and manage server integration tokens.")}
+    <div class="section-head">
+      <h3>Project Keys</h3>
+      <div>
+        <button class="logout" data-api-key-refresh-button="true" onclick="window.refreshApiKeysNow()">Refresh Data</button>
+        <button class="logout" onclick="window.createScopedApiKey()">Create Scoped Key</button>
+      </div>
+    </div>
+
+    ${state.apiKeysLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading API keys...</p></div>` : ""}
+    ${state.apiKeysLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">API key load error: ${safeText(state.apiKeysLiveError)}</p></div>` : ""}
+
+    <div class="grid cards">
+      ${card("API Keys", keys.length, "Stored key records")}
+      ${card("Active", activeKeys.length, "Usable keys")}
+      ${card("Revoked", revokedKeys.length, "Disabled keys")}
+      ${card("Scoped", keys.filter(key => key.type === "scoped").length, "Fine-grained permissions")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Active Keys</h3><span class="badge">Live</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Prefix</th>
+            <th>Type</th>
+            <th>Scopes</th>
+            <th>Apps</th>
+            <th>Status</th>
+            <th>Last Used</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${activeKeys.map(key => `
+            <tr>
+              <td><strong>${safeText(key.name)}</strong><div class="muted">${safeText(key.id)}</div></td>
+              <td>${safeText(key.keyPrefix || key.key_prefix || "-")}</td>
+              <td>${safeText(key.type || "-")}</td>
+              <td>${safeText((key.scopes || []).join(", ") || "-")}</td>
+              <td>${safeText((key.allowedAppIds || key.allowed_app_ids || []).join(", ") || "-")}</td>
+              <td><span class="badge">${safeText(key.status || "-")}</span></td>
+              <td>${key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleString() : "-"}</td>
+              <td><button class="logout" onclick="revokeApiKey('${safeText(key.id)}')">Revoke</button></td>
+            </tr>
+          `).join("") || '<tr><td colspan="8" class="muted">No active API keys.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    ${revokedKeys.length ? `
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Revoked Keys</h3><span class="badge">Disabled</span></div>
+      <table>
+        <thead><tr><th>Name</th><th>Prefix</th><th>Type</th><th>Scopes</th><th>Status</th><th>Revoked</th></tr></thead>
+        <tbody>
+          ${revokedKeys.map(key => `
+            <tr>
+              <td><strong>${safeText(key.name)}</strong><div class="muted">${safeText(key.id)}</div></td>
+              <td>${safeText(key.keyPrefix || key.key_prefix || "-")}</td>
+              <td>${safeText(key.type || "-")}</td>
+              <td>${safeText((key.scopes || []).join(", ") || "-")}</td>
+              <td><span class="badge">${safeText(key.status || "-")}</span></td>
+              <td>${key.revokedAt ? new Date(key.revokedAt).toLocaleString() : "-"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+    ` : ""}
+
+    <div class="card" style="margin-top:18px;">
+      <h3>Scope Examples</h3>
+      <p class="muted">read:health, read:apps, read:storage, read:*, write:*, *</p>
+      <p class="muted">Allowed apps can be * for all apps or IDs like goodfleet, goodqr, goodads.</p>
+    </div>
+  `;
+}
 
 function webhooksView() {
   if (!state.webhookLiveLoaded && !state.webhookLiveLoading) {
