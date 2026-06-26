@@ -124,6 +124,14 @@
       return this.request(`/storage/files${query ? `?${query}` : ""}`);
     }
 
+    billingPlans() {
+      return this.request("/billing/plans");
+    }
+
+    usage() {
+      return this.request("/usage");
+    }
+
     authSession() {
       return this.request("/../auth/session");
     }

@@ -2,6 +2,7 @@ const express = require("express");
 const crypto = require("crypto");
 const database = require("../config/database");
 const realtimeHub = require("../realtime/hub");
+const usageService = require("../services/usage.service");
 
 const router = express.Router();
 
@@ -111,6 +112,28 @@ async function apiKeyRequired(req, res, next) {
     );
 
     req.goodosApiKey = apiKey;
+
+    try {
+      await usageService.enforceApiQuota(req, apiKey);
+      await usageService.recordApiUsage(req, apiKey, {
+        metricKey: "api.calls.monthly",
+        category: "api",
+      });
+    } catch (usageError) {
+      if (usageError.statusCode === 429) {
+        return res.status(429).json({
+          success: false,
+          message: usageError.message,
+          code: usageError.code || "usage_quota_exceeded",
+          metricKey: usageError.metricKey || "api.calls.monthly",
+          current: usageError.current,
+          limit: usageError.limit,
+        });
+      }
+
+      console.warn("[usage] public API usage tracking failed:", usageError.message);
+    }
+
     return next();
   } catch (error) {
     return res.status(500).json({
@@ -1140,6 +1163,52 @@ router.get("/realtime/stream", apiKeyRequired, requireScope("subscribe:realtime"
     return res.status(error.statusCode || 500).json({
       success: false,
       message: "Failed to open realtime stream.",
+      detail: error.message,
+    });
+  }
+});
+
+
+
+router.get("/billing/plans", async (req, res) => {
+  try {
+    const snapshot = await usageService.getBillingSnapshot();
+
+    return res.json({
+      success: true,
+      data: snapshot,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load billing plans.",
+      detail: error.message,
+    });
+  }
+});
+
+router.get("/usage", apiKeyRequired, requireScope("read:usage"), async (req, res) => {
+  try {
+    await enforceGoodOSPolicy({
+      targetType: "usage",
+      targetId: "*",
+      operation: "read",
+      actorType: "api_key",
+      actorId: req.goodosApiKey.id,
+      apiKey: req.goodosApiKey,
+      context: { route: "/usage", method: req.method }
+    }).catch(() => null);
+
+    const snapshot = await usageService.getUsageSnapshot(req.goodosApiKey);
+
+    return res.json({
+      success: true,
+      data: snapshot,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "Failed to load usage.",
       detail: error.message,
     });
   }

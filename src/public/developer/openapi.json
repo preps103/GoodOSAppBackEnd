@@ -829,6 +829,37 @@
           }
         }
       }
+    },
+    "/billing/plans": {
+      "get": {
+        "summary": "List billing plans",
+        "description": "Returns the public GoodOS billing plan catalog.",
+        "responses": {
+          "200": {
+            "description": "Billing plans"
+          }
+        }
+      }
+    },
+    "/usage": {
+      "get": {
+        "summary": "Get usage snapshot",
+        "description": "Requires scope: read:usage. Returns usage, quotas, and current API key usage.",
+        "security": [
+          {
+            "GoodOSApiKey": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "x-goodos-scope": "read:usage",
+        "responses": {
+          "200": {
+            "description": "Usage snapshot"
+          }
+        }
+      }
     }
   }
 }

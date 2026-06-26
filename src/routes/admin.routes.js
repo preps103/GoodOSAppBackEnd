@@ -7939,6 +7939,264 @@ router.get("/settings-audit-page-data", async (req, res) => {
 });
 
 
+
+router.get("/billing-page-data", async (req, res) => {
+  try {
+    const plansResult = await dbQuery(`
+      SELECT
+        id,
+        name,
+        display_name AS "displayName",
+        description,
+        currency,
+        monthly_price_cents AS "monthlyPriceCents",
+        annual_price_cents AS "annualPriceCents",
+        included_json AS "included",
+        limits_json AS "limits",
+        features_json AS "features",
+        status,
+        sort_order AS "sortOrder",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_billing_plans
+      ORDER BY sort_order ASC, monthly_price_cents ASC
+    `);
+
+    const customersResult = await dbQuery(`
+      SELECT
+        id,
+        organization_id AS "organizationId",
+        user_id::text AS "userId",
+        name,
+        email,
+        provider,
+        billing_email AS "billingEmail",
+        tax_status AS "taxStatus",
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_billing_customers
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const subscriptionsResult = await dbQuery(`
+      SELECT
+        s.id,
+        s.customer_id AS "customerId",
+        c.name AS "customerName",
+        s.organization_id AS "organizationId",
+        s.plan_id AS "planId",
+        s.plan_name AS "planName",
+        p.display_name AS "planDisplayName",
+        s.status,
+        s.billing_cycle AS "billingCycle",
+        s.current_period_start AS "currentPeriodStart",
+        s.current_period_end AS "currentPeriodEnd",
+        s.provider,
+        s.created_at AS "createdAt",
+        s.updated_at AS "updatedAt"
+      FROM backend_subscriptions s
+      LEFT JOIN backend_billing_customers c ON c.id = s.customer_id
+      LEFT JOIN backend_billing_plans p ON p.id = s.plan_id
+      ORDER BY s.created_at DESC
+      LIMIT 250
+    `);
+
+    const invoicesResult = await dbQuery(`
+      SELECT
+        id,
+        customer_id AS "customerId",
+        subscription_id AS "subscriptionId",
+        invoice_number AS "invoiceNumber",
+        status,
+        currency,
+        subtotal_cents AS "subtotalCents",
+        tax_cents AS "taxCents",
+        total_cents AS "totalCents",
+        amount_paid_cents AS "amountPaidCents",
+        amount_due_cents AS "amountDueCents",
+        period_start AS "periodStart",
+        period_end AS "periodEnd",
+        due_at AS "dueAt",
+        paid_at AS "paidAt",
+        provider,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM backend_invoices
+      ORDER BY created_at DESC
+      LIMIT 250
+    `);
+
+    const meterResult = await dbQuery(`
+      SELECT
+        id,
+        metric_key AS "metricKey",
+        meter_name AS "meterName",
+        quantity,
+        unit,
+        billable,
+        api_key_id AS "apiKeyId",
+        customer_id AS "customerId",
+        subscription_id AS "subscriptionId",
+        usage_event_id AS "usageEventId",
+        created_at AS "createdAt"
+      FROM backend_meter_events
+      ORDER BY created_at DESC
+      LIMIT 300
+    `);
+
+    const plans = plansResult.rows;
+    const customers = customersResult.rows;
+    const subscriptions = subscriptionsResult.rows;
+    const invoices = invoicesResult.rows;
+    const meterEvents = meterResult.rows;
+
+    return ok(res, {
+      plans,
+      customers,
+      subscriptions,
+      invoices,
+      meterEvents,
+      counts: {
+        plans: plans.length,
+        activePlans: plans.filter((item) => item.status === "active").length,
+        customers: customers.length,
+        subscriptions: subscriptions.length,
+        activeSubscriptions: subscriptions.filter((item) => item.status === "active").length,
+        invoices: invoices.length,
+        meterEvents: meterEvents.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load billing page data", 500, error.message);
+  }
+});
+
+router.get("/usage-v2-page-data", async (req, res) => {
+  try {
+    const usageEventsResult = await dbQuery(`
+      SELECT
+        id,
+        metric_key AS "metricKey",
+        category,
+        source,
+        quantity,
+        unit,
+        api_key_id AS "apiKeyId",
+        route,
+        method,
+        status_code AS "statusCode",
+        organization_id AS "organizationId",
+        project_id AS "projectId",
+        environment_id AS "environmentId",
+        created_at AS "createdAt"
+      FROM backend_usage_events
+      ORDER BY created_at DESC
+      LIMIT 300
+    `);
+
+    const apiLogsResult = await dbQuery(`
+      SELECT
+        id,
+        api_key_id AS "apiKeyId",
+        api_key_prefix AS "apiKeyPrefix",
+        metric_key AS "metricKey",
+        route,
+        method,
+        status_code AS "statusCode",
+        quantity,
+        ip_address AS "ipAddress",
+        created_at AS "createdAt"
+      FROM backend_api_key_usage_logs
+      ORDER BY created_at DESC
+      LIMIT 300
+    `);
+
+    const dailyResult = await dbQuery(`
+      SELECT
+        id,
+        usage_date AS "usageDate",
+        metric_key AS "metricKey",
+        category,
+        quantity,
+        unit,
+        api_key_id AS "apiKeyId",
+        organization_id AS "organizationId",
+        updated_at AS "updatedAt"
+      FROM backend_usage_daily
+      ORDER BY usage_date DESC, metric_key ASC
+      LIMIT 300
+    `);
+
+    const countersResult = await dbQuery(`
+      SELECT
+        id,
+        metric_key AS "metricKey",
+        scope_type AS "scopeType",
+        scope_id AS "scopeId",
+        period,
+        period_start AS "periodStart",
+        period_end AS "periodEnd",
+        quantity,
+        quota_limit AS "quotaLimit",
+        status,
+        updated_at AS "updatedAt"
+      FROM backend_quota_counters
+      ORDER BY updated_at DESC
+      LIMIT 300
+    `);
+
+    return ok(res, {
+      usageEvents: usageEventsResult.rows,
+      apiKeyUsageLogs: apiLogsResult.rows,
+      dailyUsage: dailyResult.rows,
+      quotaCounters: countersResult.rows,
+      counts: {
+        usageEvents: usageEventsResult.rows.length,
+        apiKeyUsageLogs: apiLogsResult.rows.length,
+        dailyUsage: dailyResult.rows.length,
+        quotaCounters: countersResult.rows.length,
+        warnings: countersResult.rows.filter((item) => item.status === "warning").length,
+        overLimit: countersResult.rows.filter((item) => item.status === "over_limit").length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load Usage V2 page data", 500, error.message);
+  }
+});
+
+router.post("/billing/plans/:id/status-safe", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    const status = String(req.body?.status || "active").trim().toLowerCase();
+
+    if (!["active", "archived", "disabled"].includes(status)) {
+      return fail(res, "Status must be active, archived, or disabled.", 400);
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_billing_plans
+        SET status = $2,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, name, display_name AS "displayName", status, updated_at AS "updatedAt"
+      `,
+      [id, status]
+    );
+
+    if (!result.rows[0]) return fail(res, "Billing plan not found", 404);
+
+    return ok(res, {
+      plan: result.rows[0],
+      message: "Billing plan status updated.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to update billing plan", 500, error.message);
+  }
+});
+
 router.get("/usage-page-data", async (req, res) => {
   try {
     const usageResult = await dbQuery(`

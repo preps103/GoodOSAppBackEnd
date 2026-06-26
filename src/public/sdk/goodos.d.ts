@@ -53,6 +53,8 @@ export class GoodOSClient {
   createDbRow(tableSlug: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   updateDbRow(tableSlug: string, id: string, row?: Record<string, unknown>): Promise<GoodOSResponse>;
   deleteDbRow(tableSlug: string, id: string): Promise<GoodOSResponse>;
+  billingPlans(): Promise<GoodOSResponse>;
+  usage(): Promise<GoodOSResponse>;
   authSession(): Promise<GoodOSResponse>;
   authRoles(): Promise<GoodOSResponse>;
   setupMfa(label?: string): Promise<GoodOSResponse>;

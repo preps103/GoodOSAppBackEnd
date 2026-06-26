@@ -4897,6 +4897,145 @@ window.editUsageQuota = async function editUsageQuota(metricKey, currentLimit) {
   }
 };
 
+
+window.loadBillingV2Center = async function loadBillingV2Center() {
+  try {
+    const billingResponse = await fetch("/api/admin/billing-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const usageResponse = await fetch("/api/admin/usage-v2-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const billingPayload = await billingResponse.json().catch(() => ({}));
+    const usagePayload = await usageResponse.json().catch(() => ({}));
+
+    if (!billingResponse.ok || billingPayload.success === false) {
+      throw new Error(billingPayload.message || "Billing V2 load failed with status " + billingResponse.status);
+    }
+
+    if (!usageResponse.ok || usagePayload.success === false) {
+      throw new Error(usagePayload.message || "Usage V2 load failed with status " + usageResponse.status);
+    }
+
+    const billingData = billingPayload.data || billingPayload;
+    const usageData = usagePayload.data || usagePayload;
+
+    state.billingV2Plans = Array.isArray(billingData.plans) ? billingData.plans : [];
+    state.billingV2Customers = Array.isArray(billingData.customers) ? billingData.customers : [];
+    state.billingV2Subscriptions = Array.isArray(billingData.subscriptions) ? billingData.subscriptions : [];
+    state.billingV2Invoices = Array.isArray(billingData.invoices) ? billingData.invoices : [];
+    state.billingV2MeterEvents = Array.isArray(billingData.meterEvents) ? billingData.meterEvents : [];
+    state.billingV2Counts = billingData.counts || {};
+
+    state.usageV2Events = Array.isArray(usageData.usageEvents) ? usageData.usageEvents : [];
+    state.usageV2ApiLogs = Array.isArray(usageData.apiKeyUsageLogs) ? usageData.apiKeyUsageLogs : [];
+    state.usageV2Daily = Array.isArray(usageData.dailyUsage) ? usageData.dailyUsage : [];
+    state.usageV2QuotaCounters = Array.isArray(usageData.quotaCounters) ? usageData.quotaCounters : [];
+    state.usageV2Counts = usageData.counts || {};
+
+    state.billingV2Loaded = true;
+    state.billingV2Loading = false;
+    state.billingV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.billingV2Loaded = true;
+    state.billingV2Loading = false;
+    state.billingV2Error = error.message || "Failed to load Billing V2.";
+    console.error("Billing V2 load failed:", error);
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshBillingV2CenterNow = async function refreshBillingV2CenterNow() {
+  state.billingV2Loaded = false;
+  state.billingV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadBillingV2Center();
+};
+
+function billingV2Section() {
+  if (!state.billingV2Loaded && !state.billingV2Loading) {
+    state.billingV2Loading = true;
+    setTimeout(() => window.loadBillingV2Center(), 100);
+  }
+
+  const plans = Array.isArray(state.billingV2Plans) ? state.billingV2Plans : [];
+  const subscriptions = Array.isArray(state.billingV2Subscriptions) ? state.billingV2Subscriptions : [];
+  const meterEvents = Array.isArray(state.billingV2MeterEvents) ? state.billingV2MeterEvents : [];
+  const apiLogs = Array.isArray(state.usageV2ApiLogs) ? state.usageV2ApiLogs : [];
+  const quotaCounters = Array.isArray(state.usageV2QuotaCounters) ? state.usageV2QuotaCounters : [];
+  const billingCounts = state.billingV2Counts || {};
+  const usageCounts = state.usageV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Billing V2 / Usage Meter</h3>
+      <div>
+        <button class="logout" onclick="window.refreshBillingV2CenterNow()">Refresh Billing V2</button>
+      </div>
+    </div>
+
+    ${state.billingV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Billing V2...</p></div>` : ""}
+    ${state.billingV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Billing V2 error: ${safeText(state.billingV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Plans", billingCounts.plans ?? plans.length, "Billing plans")}
+      ${card("Subscriptions", billingCounts.activeSubscriptions ?? subscriptions.filter(item => item.status === "active").length, "Active subscriptions")}
+      ${card("API Logs", usageCounts.apiKeyUsageLogs ?? apiLogs.length, "Tracked API calls")}
+      ${card("Quota Counters", usageCounts.quotaCounters ?? quotaCounters.length, "Live counters")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Plans</h3><span class="badge">${safeText(String(plans.length))} Plans</span></div>
+      <table>
+        <thead><tr><th>Plan</th><th>Monthly</th><th>Annual</th><th>Status</th><th>Limits</th></tr></thead>
+        <tbody>
+          ${plans.map(plan => `
+            <tr>
+              <td><strong>${safeText(plan.displayName || plan.name)}</strong><div class="muted">${safeText(plan.description || "")}</div></td>
+              <td>$${safeText(String(((plan.monthlyPriceCents || 0) / 100).toFixed(2)))}</td>
+              <td>$${safeText(String(((plan.annualPriceCents || 0) / 100).toFixed(2)))}</td>
+              <td><span class="badge">${safeText(plan.status || "-")}</span></td>
+              <td><code>${safeText(JSON.stringify(plan.limits || {})).slice(0, 160)}</code></td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No billing plans found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Recent Usage Logs</h3><span class="badge">${safeText(String(apiLogs.length))} Logs</span></div>
+      <table>
+        <thead><tr><th>Metric</th><th>Route</th><th>Method</th><th>API Key</th><th>Time</th></tr></thead>
+        <tbody>
+          ${apiLogs.slice(0, 80).map(log => `
+            <tr>
+              <td><strong>${safeText(log.metricKey || "-")}</strong></td>
+              <td>${safeText(log.route || "-")}</td>
+              <td>${safeText(log.method || "-")}</td>
+              <td>${safeText(log.apiKeyPrefix || log.apiKeyId || "-")}</td>
+              <td>${safeText(formatDate(log.createdAt))}</td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No API usage logs yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function settingsView() {
   if (!state.settingsLiveLoaded && !state.settingsLiveLoading) {
     state.settingsLiveLoading = true;
@@ -4934,6 +5073,8 @@ function settingsView() {
   const usageCounts = state.usageCounts || {};
   return `
     ${hero("Settings", "Complete backend platform configuration for auth, apps, API keys, storage, webhooks, realtime, functions, logs, backups, security, notifications, billing, usage, and developer operations.")}
+
+    ${billingV2Section()}
     <div class="section-head">
       <h3>Platform Control Center</h3>
       <div>

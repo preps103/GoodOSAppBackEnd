@@ -129,6 +129,20 @@
       <p>Start TOTP MFA setup for the current signed-in user.</p>
     </div>
 
+
+    <div class="card">
+      <h2><span class="badge">GET</span> /billing/plans</h2>
+      <p>Public billing plan catalog.</p>
+      <pre><code>curl https://backend.goodos.app/api/v1/billing/plans</code></pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="badge">GET</span> /usage — Usage V2 / Billing Meter</h2>
+      <p>Scope: <code>read:usage</code></p>
+      <pre><code>curl https://backend.goodos.app/api/v1/usage \
+  -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
+    </div>
+
   </main>
 </body>
 </html>

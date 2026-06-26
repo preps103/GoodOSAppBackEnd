@@ -223,6 +223,27 @@
         },
         "url": "https://backend.goodos.app/api/auth/password-reset/request"
       }
+    },
+    {
+      "name": "Usage V2 - Billing Plans",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/billing/plans"
+      }
+    },
+    {
+      "name": "Usage V2 - Usage Snapshot",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-GoodOS-API-Key",
+            "value": "{{GOODOS_API_KEY}}"
+          }
+        ],
+        "url": "{{base_url}}/usage"
+      }
     }
   ]
 }

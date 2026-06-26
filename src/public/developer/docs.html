@@ -144,6 +144,23 @@ console.log(response);</code></pre>
 
 
 
+
+    <h2>Usage V2 / Billing Meter</h2>
+    <p>Usage V2 adds billing plans, customer/subscription records, usage event logging, meter events, API key usage logs, daily rollups, and quota counters.</p>
+
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Scope</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /api/v1/billing/plans</code></td><td>Public</td><td>List billing plans.</td></tr>
+        <tr><td><code>GET /api/v1/usage</code></td><td><code>read:usage</code></td><td>Read current usage and quota state.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>const plans = await goodos.billingPlans();
+const usage = await goodos.usage();</code></pre>
+
     <h2>Auth V2</h2>
     <p>Auth V2 adds session metadata, role and permission tables, MFA/TOTP setup, password reset tokens, refresh-token foundation, and auth audit events.</p>
 
