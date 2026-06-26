@@ -1535,6 +1535,44 @@ window.createDatabaseIndex = async function createDatabaseIndex(tableName) {
   }
 };
 
+
+window.loadDatabaseTableMetadata = async function loadDatabaseTableMetadata(tableName) {
+  if (!tableName) return alert("Missing table name.");
+
+  state.selectedDbMetadataTable = tableName;
+  state.selectedDbMetadataLoading = true;
+  state.selectedDbMetadataError = "";
+  goodosRenderNow();
+
+  try {
+    const response = await fetch("/api/admin/database/tables/" + encodeURIComponent(tableName) + "/metadata?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Metadata load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.selectedDbMetadataTable = tableName;
+    state.selectedDbMetadata = data;
+    state.selectedDbMetadataLoading = false;
+    state.selectedDbMetadataError = "";
+    goodosRenderNow();
+  } catch (error) {
+    state.selectedDbMetadataLoading = false;
+    state.selectedDbMetadataError = error.message || "Failed to load table metadata.";
+    alert("Table metadata failed: " + state.selectedDbMetadataError);
+    console.error(error);
+    goodosRenderNow();
+  }
+};
+
 function databaseView() {
   if (!state.databaseLiveLoaded && !state.databaseLiveLoading) {
     state.databaseLiveLoading = true;
@@ -1559,9 +1597,70 @@ function databaseView() {
               <h3>Rows: ${safeText(tableName)}</h3>
               <div>
                 <button class="logout" onclick="window.loadDatabaseTableRows('${safeText(tableName)}', 0)">Refresh Rows</button>
+                <button class="logout" onclick="window.loadDatabaseTableMetadata('${safeText(tableName)}')">Load Details</button>
                 <button class="logout" onclick="window.closeDatabaseRows()">Close</button>
               </div>
             </div>
+
+
+            ${state.selectedDbMetadataTable === tableName ? `
+              <div class="card" style="margin:12px 0; background:rgba(255,255,255,.035);">
+                <div class="section-head">
+                  <h3>Table Details</h3>
+                  <span class="badge">${safeText(tableName)}</span>
+                </div>
+
+                ${state.selectedDbMetadataLoading ? `<p class="muted">Loading table metadata...</p>` : ""}
+                ${state.selectedDbMetadataError ? `<p class="muted">Metadata error: ${safeText(state.selectedDbMetadataError)}</p>` : ""}
+
+                ${state.selectedDbMetadata ? `
+                  <div class="grid cards" style="margin-bottom:18px;">
+                    ${card("Columns", state.selectedDbMetadata.counts?.columns ?? 0, "Table fields")}
+                    ${card("Indexes", state.selectedDbMetadata.counts?.indexes ?? 0, "Performance indexes")}
+                    ${card("Constraints", state.selectedDbMetadata.counts?.constraints ?? 0, "Rules")}
+                    ${card("Size", state.selectedDbMetadata.size?.totalSizePretty || "-", "Total relation size")}
+                  </div>
+
+                  <div class="grid cards" style="margin-bottom:18px;">
+                    ${card("Estimated Rows", state.selectedDbMetadata.stats?.estimatedRows ?? 0, "Planner estimate")}
+                    ${card("Seq Scans", state.selectedDbMetadata.stats?.seqScan ?? 0, "Sequential scans")}
+                    ${card("Index Scans", state.selectedDbMetadata.stats?.idxScan ?? 0, "Indexed reads")}
+                    ${card("Foreign Keys", state.selectedDbMetadata.counts?.foreignKeys ?? 0, "Relationships")}
+                  </div>
+
+                  <div style="overflow:auto; margin-top:12px;">
+                    <div class="section-head"><h3>Indexes</h3><span class="badge">${safeText(String((state.selectedDbMetadata.indexes || []).length))}</span></div>
+                    <table>
+                      <thead><tr><th>Name</th><th>Definition</th></tr></thead>
+                      <tbody>
+                        ${(state.selectedDbMetadata.indexes || []).map(index => `
+                          <tr>
+                            <td><strong>${safeText(index.indexName || "-")}</strong></td>
+                            <td>${safeText(index.indexDef || "-")}</td>
+                          </tr>
+                        `).join("") || '<tr><td colspan="2" class="muted">No indexes found.</td></tr>'}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div style="overflow:auto; margin-top:18px;">
+                    <div class="section-head"><h3>Constraints + Relationships</h3><span class="badge">${safeText(String((state.selectedDbMetadata.constraints || []).length))}</span></div>
+                    <table>
+                      <thead><tr><th>Name</th><th>Type</th><th>Definition</th></tr></thead>
+                      <tbody>
+                        ${(state.selectedDbMetadata.constraints || []).map(item => `
+                          <tr>
+                            <td><strong>${safeText(item.constraintName || "-")}</strong></td>
+                            <td><span class="badge">${safeText(item.constraintLabel || item.constraintType || "-")}</span></td>
+                            <td>${safeText(item.definition || "-")}</td>
+                          </tr>
+                        `).join("") || '<tr><td colspan="3" class="muted">No constraints found.</td></tr>'}
+                      </tbody>
+                    </table>
+                  </div>
+                ` : `<p class="muted">Click Load Details to inspect indexes, constraints, relationships, size, and scan stats.</p>`}
+              </div>
+            ` : ""}
 
             ${state.databaseRowsLoading ? `<p class="muted">Loading rows from ${safeText(tableName)}...</p>` : ""}
             ${state.databaseRowsError ? `<p class="muted">Row viewer error: ${safeText(state.databaseRowsError)}</p>` : ""}
@@ -1667,6 +1766,7 @@ function databaseView() {
                   </button>
                   <button class="logout" onclick="window.addDatabaseColumn('${safeText(tableName)}')">Add Column</button>
                   <button class="logout" onclick="window.createDatabaseIndex('${safeText(tableName)}')">Create Index</button>
+                  <button class="logout" onclick="window.loadDatabaseTableMetadata('${safeText(tableName)}')">Details</button>
                 </td>
               </tr>
               ${inlineRowViewer(tableName)}

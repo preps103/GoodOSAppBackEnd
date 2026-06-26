@@ -4405,4 +4405,140 @@ router.post("/database/schema/create-index-safe", async (req, res) => {
   }
 });
 
+
+router.get("/database/tables/:tableName/metadata", async (req, res) => {
+  try {
+    const tableName = String(req.params.tableName || "").trim();
+
+    if (!tableName) return fail(res, "Table name is required", 400);
+
+    const exists = await assertPublicTableExists(tableName);
+    if (!exists) return fail(res, "Table not found or not allowed", 404);
+
+    const qualifiedName = `public.${tableName}`;
+
+    const columnsResult = await dbQuery(
+      `
+        SELECT
+          column_name AS "columnName",
+          data_type AS "dataType",
+          is_nullable AS "isNullable",
+          column_default AS "columnDefault",
+          ordinal_position AS "position"
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = $1
+        ORDER BY ordinal_position ASC
+      `,
+      [tableName]
+    );
+
+    const indexesResult = await dbQuery(
+      `
+        SELECT
+          indexname AS "indexName",
+          indexdef AS "indexDef"
+        FROM pg_indexes
+        WHERE schemaname = 'public'
+          AND tablename = $1
+        ORDER BY indexname ASC
+      `,
+      [tableName]
+    );
+
+    const constraintsResult = await dbQuery(
+      `
+        SELECT
+          con.conname AS "constraintName",
+          con.contype AS "constraintType",
+          CASE con.contype
+            WHEN 'p' THEN 'primary_key'
+            WHEN 'f' THEN 'foreign_key'
+            WHEN 'u' THEN 'unique'
+            WHEN 'c' THEN 'check'
+            ELSE con.contype::text
+          END AS "constraintLabel",
+          pg_get_constraintdef(con.oid) AS "definition"
+        FROM pg_constraint con
+        JOIN pg_class rel ON rel.oid = con.conrelid
+        JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+        WHERE nsp.nspname = 'public'
+          AND rel.relname = $1
+        ORDER BY con.contype ASC, con.conname ASC
+      `,
+      [tableName]
+    );
+
+    const foreignKeysResult = await dbQuery(
+      `
+        SELECT
+          con.conname AS "constraintName",
+          pg_get_constraintdef(con.oid) AS "definition",
+          ref.relname AS "referencedTable"
+        FROM pg_constraint con
+        JOIN pg_class rel ON rel.oid = con.conrelid
+        JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+        JOIN pg_class ref ON ref.oid = con.confrelid
+        WHERE nsp.nspname = 'public'
+          AND rel.relname = $1
+          AND con.contype = 'f'
+        ORDER BY con.conname ASC
+      `,
+      [tableName]
+    );
+
+    const statsResult = await dbQuery(
+      `
+        SELECT
+          COALESCE(n_live_tup, 0)::bigint AS "estimatedRows",
+          COALESCE(seq_scan, 0)::bigint AS "seqScan",
+          COALESCE(idx_scan, 0)::bigint AS "idxScan",
+          COALESCE(n_tup_ins, 0)::bigint AS "rowsInserted",
+          COALESCE(n_tup_upd, 0)::bigint AS "rowsUpdated",
+          COALESCE(n_tup_del, 0)::bigint AS "rowsDeleted",
+          last_vacuum AS "lastVacuum",
+          last_autovacuum AS "lastAutovacuum",
+          last_analyze AS "lastAnalyze",
+          last_autoanalyze AS "lastAutoanalyze"
+        FROM pg_stat_user_tables
+        WHERE schemaname = 'public'
+          AND relname = $1
+        LIMIT 1
+      `,
+      [tableName]
+    );
+
+    const sizeResult = await dbQuery(
+      `
+        SELECT
+          pg_total_relation_size($1::regclass)::bigint AS "totalSizeBytes",
+          pg_relation_size($1::regclass)::bigint AS "tableSizeBytes",
+          pg_indexes_size($1::regclass)::bigint AS "indexSizeBytes",
+          pg_size_pretty(pg_total_relation_size($1::regclass)) AS "totalSizePretty",
+          pg_size_pretty(pg_relation_size($1::regclass)) AS "tableSizePretty",
+          pg_size_pretty(pg_indexes_size($1::regclass)) AS "indexSizePretty"
+      `,
+      [qualifiedName]
+    );
+
+    return ok(res, {
+      tableName,
+      columns: columnsResult.rows,
+      indexes: indexesResult.rows,
+      constraints: constraintsResult.rows,
+      foreignKeys: foreignKeysResult.rows,
+      stats: statsResult.rows[0] || {},
+      size: sizeResult.rows[0] || {},
+      counts: {
+        columns: columnsResult.rows.length,
+        indexes: indexesResult.rows.length,
+        constraints: constraintsResult.rows.length,
+        foreignKeys: foreignKeysResult.rows.length,
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load table metadata", 500, error.message);
+  }
+});
+
 module.exports = router;
