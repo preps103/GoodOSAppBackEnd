@@ -1405,6 +1405,73 @@ window.restoreVerifyBackup = async function restoreVerifyBackup(id) {
   }
 };
 
+
+window.deleteBackupSafe = async function deleteBackupSafe(id) {
+  if (!id) return alert("Missing backup id.");
+
+  const reason = prompt("Delete reason:", "Manual delete from GoodAppBackEnd console.");
+  if (reason === null) return;
+
+  const confirmed = confirm("This will delete the backup file from disk and mark the record. Continue?");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/backups/" + encodeURIComponent(id) + "/delete-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ reason })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Backup delete failed with status " + response.status);
+    }
+
+    alert("Backup deleted safely.");
+    await window.loadLiveBackups();
+  } catch (error) {
+    alert("Backup delete failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.runBackupRetentionCleanup = async function runBackupRetentionCleanup() {
+  const confirmed = confirm("Run backup retention cleanup now? This deletes files older than the configured retention period.");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/admin/backups/retention-cleanup-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Retention cleanup failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    alert("Retention cleanup complete. Checked: " + (data.checked ?? 0));
+    await window.loadLiveBackups();
+  } catch (error) {
+    alert("Retention cleanup failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
 function backupsView() {
   if (!state.backupsLiveLoaded && !state.backupsLiveLoading) {
     state.backupsLiveLoading = true;
@@ -1421,6 +1488,7 @@ function backupsView() {
       <div>
         <button class="logout" onclick="window.refreshBackupsNow()">Refresh Data</button>
         <button class="logout" onclick="window.createRealBackup()">Create Real Backup</button>
+        <button class="logout" onclick="window.runBackupRetentionCleanup()">Run Retention Cleanup</button>
         <button class="logout" onclick="window.createSafeBackup()">Create Backup Record</button>
       </div>
     </div>
@@ -1466,6 +1534,7 @@ function backupsView() {
                 <button class="logout" onclick="window.verifyBackup('${safeText(backup.id)}')">Checksum</button>
                 <button class="logout" onclick="window.restoreVerifyBackup('${safeText(backup.id)}')">Restore Test</button>
                 <button class="logout" onclick="window.downloadBackup('${safeText(backup.id)}')">Download</button>
+                <button class="logout" onclick="window.deleteBackupSafe('${safeText(backup.id)}')">Delete</button>
               </td>
             </tr>
           `).join("") || '<tr><td colspan="9" class="muted">No backup records found.</td></tr>'}

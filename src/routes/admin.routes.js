@@ -2401,6 +2401,10 @@ router.get("/backups-page-data", async (req, res) => {
         error_message AS "errorMessage",
         created_by AS "createdBy",
         completed_at AS "completedAt",
+        deleted_at AS "deletedAt",
+        deleted_by AS "deletedBy",
+        deleted_reason AS "deletedReason",
+        file_deleted AS "fileDeleted",
         created_at AS "createdAt"
       FROM backend_backups
       ORDER BY created_at DESC
@@ -2952,6 +2956,7 @@ router.get("/backups/:id/download", async (req, res) => {
 
     if (!backup) return fail(res, "Backup not found", 404);
     if (backup.status !== "completed") return fail(res, "Backup is not completed", 400);
+    if (backup.deleted_at || backup.file_deleted) return fail(res, "Backup file was deleted", 410);
     if (!backup.file_path || !fs.existsSync(backup.file_path)) {
       return fail(res, "Backup file does not exist on disk", 404);
     }
@@ -3062,6 +3067,222 @@ router.post("/backups/:id/restore-verify-safe", async (req, res) => {
     });
   } catch (error) {
     return fail(res, "Failed to verify backup restore", 500, error.message);
+  }
+});
+
+
+async function getBackupRetentionDays() {
+  try {
+    const result = await dbQuery(`
+      SELECT value_json ->> 'value' AS value
+      FROM backend_platform_settings
+      WHERE setting_key = 'backups.retention_days'
+      LIMIT 1
+    `);
+
+    const days = Number(result.rows[0]?.value || 30);
+    return Number.isFinite(days) && days > 0 ? days : 30;
+  } catch (error) {
+    return 30;
+  }
+}
+
+router.post("/backups/:id/delete-safe", async (req, res) => {
+  try {
+    const fs = require("fs");
+
+    const id = String(req.params.id || "").trim();
+    const reason = String(req.body?.reason || "Manual delete from GoodAppBackEnd console.").trim();
+
+    if (!id) return fail(res, "Backup id is required", 400);
+
+    const beforeResult = await dbQuery(
+      `
+        SELECT *
+        FROM backend_backups
+        WHERE id = $1
+      `,
+      [id]
+    );
+
+    const before = beforeResult.rows[0];
+
+    if (!before) return fail(res, "Backup not found", 404);
+
+    let fileDeleted = false;
+
+    if (before.file_path && fs.existsSync(before.file_path)) {
+      fs.unlinkSync(before.file_path);
+      fileDeleted = true;
+    }
+
+    const result = await dbQuery(
+      `
+        UPDATE backend_backups
+        SET
+          status = CASE WHEN status = 'completed' THEN 'deleted' ELSE status END,
+          deleted_at = NOW(),
+          deleted_by = $2,
+          deleted_reason = $3,
+          file_deleted = true
+        WHERE id = $1
+        RETURNING
+          id,
+          name,
+          type,
+          status,
+          size_bytes AS "sizeBytes",
+          file_path AS "filePath",
+          backup_format AS "backupFormat",
+          checksum_sha256 AS "checksumSha256",
+          database_name AS "databaseName",
+          notes,
+          error_message AS "errorMessage",
+          created_by AS "createdBy",
+          completed_at AS "completedAt",
+          deleted_at AS "deletedAt",
+          deleted_by AS "deletedBy",
+          deleted_reason AS "deletedReason",
+          file_deleted AS "fileDeleted",
+          created_at AS "createdAt"
+      `,
+      [
+        id,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        reason,
+      ]
+    );
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          before_json,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'backup.delete', 'backup', $3, $4::jsonb, $5::jsonb, $6, $7)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        id,
+        JSON.stringify(before),
+        JSON.stringify({ fileDeleted, reason }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      backup: result.rows[0],
+      fileDeleted,
+      message: fileDeleted ? "Backup file deleted and record marked." : "Backup record marked; no file was found on disk.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to delete backup safely", 500, error.message);
+  }
+});
+
+router.post("/backups/retention-cleanup-safe", async (req, res) => {
+  try {
+    const fs = require("fs");
+
+    const retentionDays = await getBackupRetentionDays();
+
+    const result = await dbQuery(
+      `
+        SELECT *
+        FROM backend_backups
+        WHERE deleted_at IS NULL
+          AND created_at < NOW() - ($1::text || ' days')::interval
+        ORDER BY created_at ASC
+        LIMIT 250
+      `,
+      [String(retentionDays)]
+    );
+
+    const candidates = result.rows;
+    const deleted = [];
+
+    for (const backup of candidates) {
+      let fileDeleted = false;
+
+      try {
+        if (backup.file_path && fs.existsSync(backup.file_path)) {
+          fs.unlinkSync(backup.file_path);
+          fileDeleted = true;
+        }
+
+        const updated = await dbQuery(
+          `
+            UPDATE backend_backups
+            SET
+              status = CASE WHEN status = 'completed' THEN 'deleted' ELSE status END,
+              deleted_at = NOW(),
+              deleted_by = $2,
+              deleted_reason = $3,
+              file_deleted = true
+            WHERE id = $1
+            RETURNING id, status, deleted_at AS "deletedAt", file_deleted AS "fileDeleted"
+          `,
+          [
+            backup.id,
+            req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+            `Retention cleanup after ${retentionDays} days.`,
+          ]
+        );
+
+        deleted.push({
+          id: backup.id,
+          fileDeleted,
+          record: updated.rows[0],
+        });
+      } catch (deleteError) {
+        deleted.push({
+          id: backup.id,
+          fileDeleted: false,
+          error: deleteError.message,
+        });
+      }
+    }
+
+    await dbQuery(
+      `
+        INSERT INTO backend_admin_audit_logs (
+          id,
+          actor,
+          action,
+          target_type,
+          target_id,
+          after_json,
+          ip_address,
+          user_agent
+        )
+        VALUES ($1, $2, 'backup.retention_cleanup', 'backup_retention', 'retention', $3::jsonb, $4, $5)
+      `,
+      [
+        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
+        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
+        JSON.stringify({ retentionDays, checked: candidates.length, deleted }),
+        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        req.headers["user-agent"] || null,
+      ]
+    );
+
+    return ok(res, {
+      retentionDays,
+      checked: candidates.length,
+      deleted,
+      message: "Retention cleanup completed.",
+    });
+  } catch (error) {
+    return fail(res, "Failed to run backup retention cleanup", 500, error.message);
   }
 });
 
