@@ -1774,4 +1774,87 @@ router.post("/storage/buckets/create-safe", async (req, res) => {
   }
 });
 
+
+async function safeTableCount(tableName) {
+  try {
+    const exists = await dbQuery("SELECT to_regclass($1) AS table_name", [`public.${tableName}`]);
+    if (!exists.rows[0]?.table_name) return 0;
+
+    const result = await dbQuery(`SELECT COUNT(*)::int AS count FROM ${tableName}`);
+    return Number(result.rows[0]?.count || 0);
+  } catch (error) {
+    return 0;
+  }
+}
+
+async function safeDashboardApps() {
+  const candidates = [
+    "backend_apps",
+    "backend_app_registry",
+    "backend_registered_apps"
+  ];
+
+  for (const tableName of candidates) {
+    try {
+      const exists = await dbQuery("SELECT to_regclass($1) AS table_name", [`public.${tableName}`]);
+      if (!exists.rows[0]?.table_name) continue;
+
+      const result = await dbQuery(`
+        SELECT *
+        FROM ${tableName}
+        ORDER BY created_at DESC NULLS LAST
+        LIMIT 50
+      `);
+
+      return result.rows.map((row) => ({
+        id: row.id || row.app_id || row.slug || "-",
+        name: row.name || row.app_name || row.title || row.id || "-",
+        domain: row.domain || row.base_url || row.url || "-",
+        status: row.status || "active",
+        memberCount: row.member_count || row.members || 0,
+        createdAt: row.created_at || row.createdAt || null,
+      }));
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return [];
+}
+
+router.get("/dashboard-page-data", async (req, res) => {
+  try {
+    const apps = await safeDashboardApps();
+
+    const counts = {
+      users: await safeTableCount("backend_users"),
+      apps: apps.length || await safeTableCount("backend_apps"),
+      memberships: await safeTableCount("backend_app_memberships"),
+      sessions: await safeTableCount("backend_sessions"),
+      apiKeys: await safeTableCount("backend_api_keys"),
+      webhooks: await safeTableCount("backend_webhooks"),
+      storageBuckets: await safeTableCount("backend_storage_buckets"),
+      storageFiles: await safeTableCount("backend_storage_files"),
+    };
+
+    const memory = process.memoryUsage();
+
+    return ok(res, {
+      counts,
+      apps,
+      runtime: {
+        environment: process.env.NODE_ENV || "production",
+        version: process.env.APP_VERSION || "1.0.0",
+        node: process.version,
+        uptimeSeconds: Math.floor(process.uptime()),
+        uptime: `${Math.floor(process.uptime() / 60)} min`,
+        memoryHeapMb: Math.round(memory.heapUsed / 1024 / 1024),
+        database: "connected",
+      },
+    });
+  } catch (error) {
+    return fail(res, "Failed to load dashboard page data", 500, error.message);
+  }
+});
+
 module.exports = router;
