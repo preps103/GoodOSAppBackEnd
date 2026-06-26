@@ -728,34 +728,6 @@ router.post("/storage/buckets/:bucketId/files", upload.single("file"), async (re
   try {
     const bucketId = String(req.params.bucketId || "").trim();
 
-    const bucketPolicy = await loadStorageBucketPolicy(bucketId);
-    const uploadPolicyCheck = validateUploadAgainstBucketPolicy(req.file, bucketPolicy);
-
-    if (!uploadPolicyCheck.ok) {
-      const removedTempFile = removeUploadedTempFile(req.file);
-
-      await auditStoragePolicyViolation(req, {
-        targetType: "storage_bucket",
-        targetId: bucketId,
-        code: uploadPolicyCheck.code || "storage_policy_blocked",
-        message: uploadPolicyCheck.message,
-        removedTempFile,
-        file: req.file ? {
-          originalname: req.file.originalname,
-          mimetype: req.file.mimetype,
-          size: req.file.size,
-          filename: req.file.filename,
-        } : null,
-        bucketPolicy,
-      });
-
-      return fail(res, uploadPolicyCheck.message, 400, {
-        code: uploadPolicyCheck.code || "storage_policy_blocked",
-        removedTempFile,
-      });
-    }
-
-
     const bucketResult = await dbQuery(
       `
         SELECT id, name, status
@@ -875,9 +847,6 @@ router.get("/storage/signed-urls", async (req, res) => {
 router.post("/storage/files/:fileId/signed-url", async (req, res) => {
   try {
     const fileId = String(req.params.fileId || "").trim();
-
-    const signedUrlPolicyCheckApplied = true;
-
     const expiresMinutes = Math.max(1, Math.min(10080, Number(req.body?.expiresMinutes || 60)));
     const maxDownloads = Math.max(1, Math.min(1000, Number(req.body?.maxDownloads || 1)));
 
@@ -913,51 +882,7 @@ router.post("/storage/files/:fileId/signed-url", async (req, res) => {
 
     await dbQuery(
       `
-        
-    const signedFilePolicyResult = await dbQuery(
-      `
-        SELECT
-          f.*,
-          b.signed_url_ttl_seconds,
-          b.public_read_enabled,
-          b.visibility AS bucket_visibility
-        FROM backend_storage_files f
-        JOIN backend_storage_buckets b ON b.id = f.bucket_id
-        WHERE f.id = $1
-        LIMIT 1
-      `,
-      [fileId]
-    );
-
-    const signedUrlFile = signedFilePolicyResult.rows[0];
-
-    if (!signedUrlFile) {
-      return fail(res, "File not found", 404);
-    }
-
-    if (signedUrlFile.deleted_at || signedUrlFile.file_deleted) {
-      await auditStoragePolicyViolation(req, {
-        targetType: "storage_file",
-        targetId: fileId,
-        code: "storage_signed_url_deleted_file_blocked",
-        message: "Signed URL creation blocked because file is deleted.",
-      });
-
-      return fail(res, "Cannot create a signed URL for a deleted file.", 410);
-    }
-
-    const signedUrlBucketPolicy = {
-      signedUrlTtlSeconds: Number(signedUrlFile.signed_url_ttl_seconds || 3600),
-    };
-
-    if (typeof expiresInMinutes !== "undefined") {
-      const maxMinutes = Math.max(1, Math.floor(signedUrlBucketPolicy.signedUrlTtlSeconds / 60));
-      if (Number(expiresInMinutes) > maxMinutes) {
-        expiresInMinutes = maxMinutes;
-      }
-    }
-
-INSERT INTO backend_storage_signed_urls (
+        INSERT INTO backend_storage_signed_urls (
           id,
           file_id,
           token_hash,
@@ -5406,141 +5331,5 @@ router.post("/storage/buckets/:bucketId/policy/update-safe", async (req, res) =>
     return fail(res, "Failed to update bucket policy", error.statusCode || 500, error.message);
   }
 });
-
-
-async function loadStorageBucketPolicy(bucketId) {
-  const result = await dbQuery(
-    `
-      SELECT
-        id,
-        name,
-        visibility,
-        max_file_size_bytes,
-        allowed_mime_types,
-        allowed_extensions,
-        public_read_enabled,
-        signed_url_ttl_seconds,
-        file_versioning_enabled,
-        virus_scan_required,
-        encryption_mode
-      FROM backend_storage_buckets
-      WHERE id = $1
-      LIMIT 1
-    `,
-    [bucketId]
-  );
-
-  return result.rows[0] || null;
-}
-
-function getUploadFileExtension(filename = "") {
-  const path = require("path");
-  const ext = path.extname(String(filename || "")).toLowerCase();
-  return ext || "";
-}
-
-function normalizePolicyArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.map((item) => String(item || "").toLowerCase().trim()).filter(Boolean);
-  return [];
-}
-
-function validateUploadAgainstBucketPolicy(file, bucket) {
-  if (!bucket) {
-    return { ok: false, message: "Storage bucket not found." };
-  }
-
-  if (!file) {
-    return { ok: false, message: "File upload is required." };
-  }
-
-  const maxFileSizeBytes = Number(bucket.max_file_size_bytes || bucket.maxFileSizeBytes || 10485760);
-  const fileSize = Number(file.size || file.sizeBytes || file.size_bytes || 0);
-
-  if (fileSize > maxFileSizeBytes) {
-    return {
-      ok: false,
-      message: `File exceeds bucket max size. Max ${maxFileSizeBytes} bytes, received ${fileSize} bytes.`,
-      code: "storage_policy_size_exceeded",
-    };
-  }
-
-  const allowedMimeTypes = normalizePolicyArray(bucket.allowed_mime_types || bucket.allowedMimeTypes);
-  const fileMimeType = String(file.mimetype || file.mimeType || file.mime_type || "application/octet-stream").toLowerCase();
-
-  if (allowedMimeTypes.length && !allowedMimeTypes.includes(fileMimeType)) {
-    return {
-      ok: false,
-      message: `File MIME type is not allowed for this bucket: ${fileMimeType}`,
-      code: "storage_policy_mime_blocked",
-    };
-  }
-
-  const allowedExtensions = normalizePolicyArray(bucket.allowed_extensions || bucket.allowedExtensions);
-  const fileExtension = getUploadFileExtension(file.originalname || file.filename || file.name || "");
-
-  if (allowedExtensions.length && !allowedExtensions.includes(fileExtension)) {
-    return {
-      ok: false,
-      message: `File extension is not allowed for this bucket: ${fileExtension || "none"}`,
-      code: "storage_policy_extension_blocked",
-    };
-  }
-
-  if (bucket.virus_scan_required || bucket.virusScanRequired) {
-    return {
-      ok: false,
-      message: "This bucket requires virus scanning, but no scanner is connected yet.",
-      code: "storage_policy_virus_scan_required",
-    };
-  }
-
-  return {
-    ok: true,
-    message: "Upload allowed.",
-  };
-}
-
-async function auditStoragePolicyViolation(req, details = {}) {
-  try {
-    await dbQuery(
-      `
-        INSERT INTO backend_admin_audit_logs (
-          id,
-          actor,
-          action,
-          target_type,
-          target_id,
-          after_json,
-          ip_address,
-          user_agent
-        )
-        VALUES ($1, $2, 'storage.policy.violation', $3, $4, $5::jsonb, $6, $7)
-      `,
-      [
-        `audit_${crypto.randomUUID().replace(/-/g, "")}`,
-        req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
-        details.targetType || "storage_policy",
-        details.targetId || "unknown",
-        JSON.stringify(details),
-        req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
-        req.headers["user-agent"] || null,
-      ]
-    );
-  } catch (error) {
-    console.warn("Storage policy violation audit failed:", error.message);
-  }
-}
-
-function removeUploadedTempFile(file) {
-  try {
-    const fs = require("fs");
-    if (file && file.path && fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
-      return true;
-    }
-  } catch (error) {}
-  return false;
-}
 
 module.exports = router;
