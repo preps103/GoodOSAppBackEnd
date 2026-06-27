@@ -2804,6 +2804,113 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-functions-v2-kpi-charts-v70">
+/* V70: Functions / Edge Functions V2 KPI charts only */
+
+.goodos-functions-chart-card-v70 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  padding-bottom: 22px !important;
+}
+
+.goodos-functions-chart-card-v70::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(124,58,237,.42), rgba(54,220,255,.08));
+  border: 1px solid rgba(139,92,246,.48);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-functions-chart-card-v70[data-goodos-functions-type-v70="versions"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,197,94,.48), rgba(20,184,166,.10));
+  border-color: rgba(34,197,94,.45);
+}
+
+.goodos-functions-chart-card-v70[data-goodos-functions-type-v70="deployments"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(59,130,246,.55), rgba(54,220,255,.10));
+  border-color: rgba(59,130,246,.48);
+}
+
+.goodos-functions-chart-card-v70[data-goodos-functions-type-v70="secrets"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(236,72,153,.56), rgba(244,63,94,.13));
+  border-color: rgba(236,72,153,.52);
+}
+
+.goodos-functions-chart-v70 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  min-height: 230px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
+}
+
+.goodos-functions-chart-v70 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 208px !important;
+  overflow: visible !important;
+}
+
+.goodos-functions-chart-v70 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-functions-chart-v70 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-functions-chart-v70 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-functions-trend-v70 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-functions-trend-v70 strong {
+  color: #94a3b8 !important;
+  font-weight: 950 !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -16476,6 +16583,330 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   var observer = new MutationObserver(function () {
     clearTimeout(timer);
     timer = setTimeout(run, 250);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 750);
+  setTimeout(run, 1500);
+  setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-functions-v2-kpi-charts-v70-js">
+(function () {
+  if (window.__goodosFunctionsV2KpiChartsV70) return;
+  window.__goodosFunctionsV2KpiChartsV70 = true;
+
+  var TARGETS = [
+    {
+      key: "v2-ready",
+      label: "V2 READY",
+      description: "Versioned functions",
+      suffix: "ready",
+      trend: "0",
+      colorA: "#8b5cf6",
+      colorB: "#7c3aed",
+      maxLabel: "6",
+      midLabel: "3"
+    },
+    {
+      key: "versions",
+      label: "VERSIONS",
+      description: "Function versions",
+      suffix: "versions",
+      trend: "0",
+      colorA: "#22c55e",
+      colorB: "#16a34a",
+      maxLabel: "6",
+      midLabel: "3"
+    },
+    {
+      key: "deployments",
+      label: "DEPLOYMENTS",
+      description: "Deployment records",
+      suffix: "deployments",
+      trend: "0",
+      colorA: "#3b82f6",
+      colorB: "#2563eb",
+      maxLabel: "6",
+      midLabel: "3"
+    },
+    {
+      key: "secrets",
+      label: "SECRETS",
+      description: "Secret refs only",
+      suffix: "secrets",
+      trend: "0",
+      colorA: "#ec4899",
+      colorB: "#db2777",
+      maxLabel: "6",
+      midLabel: "3"
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+    return r.width > 0 && r.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function functionsPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("v2 ready") !== -1 &&
+      text.indexOf("versioned functions") !== -1 &&
+      text.indexOf("function versions") !== -1 &&
+      text.indexOf("deployment records") !== -1 &&
+      text.indexOf("secret refs only") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-functions-chart-v70,.goodos-functions-trend-v70")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-functions-chart-card-v70")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-functions-chart-card-v70");
+      el.removeAttribute("data-goodos-functions-type-v70");
+    });
+  }
+
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-functions-chart-v70")) return false;
+      if (el.children.length > 2) return false;
+      return compact(cleanText(el)) === wanted;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function cardForLabel(labelNode, target) {
+    if (!labelNode) return null;
+
+    var label = cleanText(labelNode);
+    var desc = norm(target.description);
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        norm(text).indexOf(desc) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 920 &&
+        rect.height >= 70 &&
+        rect.height <= 560
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function getValueFromCard(card, label) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(
+      clone.querySelectorAll(".goodos-functions-chart-v70,.goodos-functions-trend-v70")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function makeSeries(target, value) {
+    var v = Math.max(0, Number(value || 0));
+
+    if (v <= 0) {
+      return [160,160,160,160,160,160,160,160,160,160,160,160,160,160,160,160,160,160];
+    }
+
+    if (target.key === "v2-ready") {
+      return [158,150,136,120,104,92,82,74,70,68,66,64,62,60,58,56,54,50];
+    }
+
+    if (target.key === "versions") {
+      return [160,152,140,128,112,98,84,72,62,54,48,42,36,30,24,18,14,10];
+    }
+
+    if (target.key === "deployments") {
+      return [160,160,154,134,106,92,92,88,82,72,52,74,82,92,86,72,54,42];
+    }
+
+    return [160,160,159,160,160,159,160,158,160,160,159,160,160,159,160,160,159,160];
+  }
+
+  function pathFromPoints(points) {
+    return points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function chartSvg(target, value) {
+    var ys = makeSeries(target, value);
+    var points = ys.map(function (y, i) {
+      return [42 + i * 15.4, y];
+    });
+
+    var path = pathFromPoints(points);
+    var last = points[points.length - 1];
+
+    return '' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosFunctionsLineV70' + target.key + '" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosFunctionsFillV70' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosFunctionsFillV70' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosFunctionsLineV70' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.4) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 28</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
+      '</svg>';
+  }
+
+  function chartMarkup(target, value) {
+    return '' +
+      '<div class="goodos-functions-chart-v70" data-goodos-functions-chart-v70="' + target.key + '">' +
+        chartSvg(target, value) +
+      '</div>' +
+      '<div class="goodos-functions-trend-v70">' +
+        '<strong>— ' + target.trend + '</strong> vs last 30 days' +
+      '</div>';
+  }
+
+  function renderFunctionsCharts() {
+    if (!functionsPageVisible()) return;
+
+    if (document.querySelectorAll(".goodos-functions-chart-v70").length >= TARGETS.length) {
+      return;
+    }
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label, target);
+
+      if (!card) {
+        console.warn("GoodOS V70: Functions KPI card not found for", target.label);
+        return;
+      }
+
+      var value = getValueFromCard(card, target.label);
+
+      card.classList.add("goodos-functions-chart-card-v70");
+      card.setAttribute("data-goodos-functions-type-v70", target.key);
+      card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
+    });
+  }
+
+  function run() {
+    renderFunctionsCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 750);
+    setTimeout(run, 1500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 350);
   });
 
   try {
