@@ -3000,119 +3000,6 @@ body.goodos-v50-ready .goodos-menu-row-v50 *:focus-visible {
   color: #fb7185 !important;
 }
 </style>
-
-
-<style id="goodos-backups-kpi-charts-v74">
-/* V74: Backups KPI charts only */
-
-.goodos-backups-chart-card-v74 {
-  min-height: 430px !important;
-  height: auto !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  position: relative !important;
-  padding-bottom: 22px !important;
-}
-
-.goodos-backups-chart-card-v74::after {
-  content: "";
-  position: absolute;
-  right: 26px;
-  top: 24px;
-  width: 66px;
-  height: 66px;
-  border-radius: 18px;
-  pointer-events: none;
-  z-index: 5;
-  opacity: .98;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
-    linear-gradient(135deg, rgba(56,189,248,.48), rgba(124,58,237,.10));
-  border: 1px solid rgba(56,189,248,.48);
-  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
-}
-
-.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="completed"]::after {
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
-    linear-gradient(135deg, rgba(34,197,94,.52), rgba(20,184,166,.12));
-  border-color: rgba(34,197,94,.48);
-}
-
-.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="failed"]::after {
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
-    linear-gradient(135deg, rgba(251,113,133,.58), rgba(236,72,153,.14));
-  border-color: rgba(251,113,133,.52);
-}
-
-.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="retention"]::after {
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
-    linear-gradient(135deg, rgba(168,85,247,.56), rgba(124,58,237,.14));
-  border-color: rgba(168,85,247,.52);
-}
-
-.goodos-backups-chart-v74 {
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  position: relative !important;
-  z-index: 20 !important;
-  margin-top: 24px !important;
-  width: 100% !important;
-  min-height: 230px !important;
-  border-radius: 22px !important;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
-    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
-  border: 1px solid rgba(148,163,184,.13) !important;
-  padding: 18px 20px 14px !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
-}
-
-.goodos-backups-chart-v74 svg {
-  display: block !important;
-  width: 100% !important;
-  height: 208px !important;
-  overflow: visible !important;
-}
-
-.goodos-backups-chart-v74 .muted {
-  fill: rgba(203,213,225,.78);
-}
-
-.goodos-backups-chart-v74 .axis {
-  fill: rgba(203,213,225,.86);
-}
-
-.goodos-backups-chart-v74 .grid {
-  stroke: rgba(148,163,184,.16);
-  stroke-dasharray: 5 8;
-}
-
-.goodos-backups-trend-v74 {
-  margin-top: 16px !important;
-  color: rgba(203,213,225,.82) !important;
-  font-size: 15px !important;
-  font-weight: 850 !important;
-  letter-spacing: .01em !important;
-}
-
-.goodos-backups-trend-v74 strong {
-  color: #22e6a8 !important;
-  font-weight: 950 !important;
-}
-
-.goodos-backups-trend-v74.is-negative-v74 strong {
-  color: #fb7185 !important;
-}
-</style>
-
-
 <style id="goodos-auth-charts-sidebar-active-v42">
 /* V42: Auth charts + sidebar single-active fix only */
 
@@ -3238,6 +3125,117 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 
 .goodos-auth-chart-v42 .legend-dot.orange {
   background: linear-gradient(135deg, #f97316, #fb7185);
+}
+</style>
+
+
+<style id="goodos-backups-kpi-charts-v74">
+/* V74: Backups KPI charts only */
+
+.goodos-backups-chart-card-v74 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  padding-bottom: 22px !important;
+}
+
+.goodos-backups-chart-card-v74::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(56,189,248,.48), rgba(124,58,237,.10));
+  border: 1px solid rgba(56,189,248,.48);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="completed"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,197,94,.52), rgba(20,184,166,.12));
+  border-color: rgba(34,197,94,.48);
+}
+
+.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="failed"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(251,113,133,.58), rgba(236,72,153,.14));
+  border-color: rgba(251,113,133,.52);
+}
+
+.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="retention"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(168,85,247,.56), rgba(124,58,237,.14));
+  border-color: rgba(168,85,247,.52);
+}
+
+.goodos-backups-chart-v74 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  min-height: 230px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
+}
+
+.goodos-backups-chart-v74 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 208px !important;
+  overflow: visible !important;
+}
+
+.goodos-backups-chart-v74 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-backups-chart-v74 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-backups-chart-v74 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-backups-trend-v74 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-backups-trend-v74 strong {
+  color: #22e6a8 !important;
+  font-weight: 950 !important;
+}
+
+.goodos-backups-trend-v74.is-negative-v74 strong {
+  color: #fb7185 !important;
 }
 </style>
 
@@ -17514,317 +17512,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 1800);
 })();
 </script>
-
-
-<script id="goodos-backups-kpi-charts-v74-js">
-(function () {
-  if (window.__goodosBackupsKpiChartsV74) return;
-  window.__goodosBackupsKpiChartsV74 = true;
-
-  var TARGETS = [
-    {
-      key: "backups",
-      label: "BACKUPS",
-      description: "Total backup records",
-      trend: "+5",
-      colorA: "#38bdf8",
-      colorB: "#2563eb",
-      maxLabel: "6",
-      midLabel: "3",
-      series: [154,154,154,148,140,136,126,118,106,106,106,92,82,82,78,66,54,42]
-    },
-    {
-      key: "completed",
-      label: "COMPLETED",
-      description: "Ready restore points",
-      trend: "+4",
-      colorA: "#84f56d",
-      colorB: "#22c55e",
-      maxLabel: "4",
-      midLabel: "2",
-      series: [160,160,160,132,120,116,108,92,86,74,66,52,46,36,32,24,16,8]
-    },
-    {
-      key: "failed",
-      label: "FAILED",
-      description: "Failed backup records",
-      trend: "+1",
-      colorA: "#fb7185",
-      colorB: "#ec4899",
-      maxLabel: "3",
-      midLabel: "2",
-      negative: true,
-      series: [160,160,160,90,90,90,112,158,158,132,96,76,82,96,96,116,104,92]
-    },
-    {
-      key: "retention",
-      label: "RETENTION",
-      description: "Retention rules",
-      trend: "Next",
-      colorA: "#a855f7",
-      colorB: "#7c3aed",
-      maxLabel: "Yearly",
-      midLabel: "Weekly",
-      stepped: true,
-      series: [160,160,160,128,128,128,128,98,98,98,98,98,98,98,98,52,52,52]
-    }
-  ];
-
-  function cleanText(el) {
-    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
-  }
-
-  function compact(value) {
-    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
-  }
-
-  function norm(value) {
-    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function getRoot() {
-    return document.getElementById("view") ||
-      document.querySelector("[data-view-root]") ||
-      document.querySelector("main") ||
-      document.body;
-  }
-
-  function isVisible(el) {
-    if (!el || !el.getBoundingClientRect) return false;
-    var r = el.getBoundingClientRect();
-    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-
-    return r.width > 0 &&
-      r.height > 0 &&
-      (!style || (style.display !== "none" && style.visibility !== "hidden"));
-  }
-
-  function backupsPageVisible() {
-    var text = norm(cleanText(getRoot()));
-
-    return text.indexOf("backups") !== -1 &&
-      text.indexOf("total backup records") !== -1 &&
-      text.indexOf("ready restore points") !== -1 &&
-      text.indexOf("failed backup records") !== -1 &&
-      text.indexOf("retention rules") !== -1;
-  }
-
-  function removeOldCharts() {
-    Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-backups-chart-v74,.goodos-backups-trend-v74")
-    ).forEach(function (el) {
-      el.remove();
-    });
-
-    Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-backups-chart-card-v74")
-    ).forEach(function (el) {
-      el.classList.remove("goodos-backups-chart-card-v74");
-      el.removeAttribute("data-goodos-backups-type-v74");
-    });
-  }
-
-  function labelExactNode(label) {
-    var root = getRoot();
-    var wanted = compact(label);
-    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
-
-    return nodes.find(function (el) {
-      if (!isVisible(el)) return false;
-      if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-backups-chart-v74")) return false;
-      if (el.children.length > 2) return false;
-
-      return compact(cleanText(el)) === wanted;
-    }) || null;
-  }
-
-  function labelsInside(el) {
-    var text = compact(cleanText(el));
-
-    return TARGETS.filter(function (target) {
-      return text.indexOf(compact(target.label)) !== -1;
-    }).length;
-  }
-
-  function cardForLabel(labelNode, target) {
-    if (!labelNode) return null;
-
-    var label = cleanText(labelNode);
-    var desc = norm(target.description);
-    var node = labelNode;
-    var candidates = [];
-
-    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
-      if (node.closest("aside,nav,header")) break;
-
-      var text = cleanText(node);
-      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
-      var hitCount = labelsInside(node);
-
-      if (
-        text.indexOf(label) !== -1 &&
-        norm(text).indexOf(desc) !== -1 &&
-        hitCount === 1 &&
-        rect.width >= 180 &&
-        rect.width <= 980 &&
-        rect.height >= 70 &&
-        rect.height <= 620
-      ) {
-        candidates.push({
-          node: node,
-          area: rect.width * rect.height
-        });
-      }
-
-      node = node.parentElement;
-    }
-
-    if (!candidates.length) return null;
-
-    candidates.sort(function (a, b) {
-      return b.area - a.area;
-    });
-
-    return candidates[0].node;
-  }
-
-  function pathFromPoints(points, stepped) {
-    if (!stepped) {
-      return points.map(function (pt, index) {
-        return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
-      }).join("");
-    }
-
-    var d = "M" + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
-
-    for (var i = 1; i < points.length; i += 1) {
-      d += " L" + points[i][0].toFixed(1) + " " + points[i - 1][1].toFixed(1);
-      d += " L" + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
-    }
-
-    return d;
-  }
-
-  function chartSvg(target) {
-    var points = target.series.map(function (y, i) {
-      return [42 + i * 15.4, y];
-    });
-
-    var path = pathFromPoints(points, target.stepped);
-    var last = points[points.length - 1];
-
-    var yLabels = target.key === "retention"
-      ? '<text x="0" y="54" class="axis" font-size="12" font-weight="800">Yearly</text>' +
-        '<text x="0" y="88" class="axis" font-size="12" font-weight="800">Monthly</text>' +
-        '<text x="0" y="122" class="axis" font-size="12" font-weight="800">Weekly</text>' +
-        '<text x="0" y="156" class="axis" font-size="12" font-weight="800">Daily</text>'
-      : '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
-        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
-        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>';
-
-    return '' +
-      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
-        '<defs>' +
-          '<linearGradient id="goodosBackupsLineV74' + target.key + '" x1="0" x2="1">' +
-            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
-            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
-          '</linearGradient>' +
-          '<linearGradient id="goodosBackupsFillV74' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
-            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
-            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
-          '</linearGradient>' +
-        '</defs>' +
-        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
-        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
-        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
-        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
-        yLabels +
-        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
-        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
-        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
-        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosBackupsFillV74' + target.key + ')"></path>' +
-        '<path d="' + path + '" fill="none" stroke="url(#goodosBackupsLineV74' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
-        points.map(function (pt, i) {
-          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
-        }).join("") +
-        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 1</text>' +
-        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">May 8</text>' +
-        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">May 15</text>' +
-        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">May 29</text>' +
-      '</svg>';
-  }
-
-  function chartMarkup(target) {
-    return '' +
-      '<div class="goodos-backups-chart-v74" data-goodos-backups-chart-v74="' + target.key + '">' +
-        chartSvg(target) +
-      '</div>' +
-      '<div class="goodos-backups-trend-v74' + (target.negative ? ' is-negative-v74' : '') + '">' +
-        '<strong>' + (target.negative ? "↘ " : "↗ ") + target.trend + '</strong> vs last 30 days' +
-      '</div>';
-  }
-
-  function renderBackupsCharts() {
-    if (!backupsPageVisible()) return;
-
-    if (document.querySelectorAll(".goodos-backups-chart-v74").length >= TARGETS.length) {
-      return;
-    }
-
-    removeOldCharts();
-
-    TARGETS.forEach(function (target) {
-      var label = labelExactNode(target.label);
-      var card = cardForLabel(label, target);
-
-      if (!card) {
-        console.warn("GoodOS V74: Backups KPI card not found for", target.label);
-        return;
-      }
-
-      card.classList.add("goodos-backups-chart-card-v74");
-      card.setAttribute("data-goodos-backups-type-v74", target.key);
-      card.insertAdjacentHTML("beforeend", chartMarkup(target));
-    });
-  }
-
-  function run() {
-    renderBackupsCharts();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-
-  window.addEventListener("hashchange", function () {
-    setTimeout(run, 250);
-    setTimeout(run, 750);
-    setTimeout(run, 1500);
-  });
-
-  window.addEventListener("pageshow", run);
-
-  var timer = null;
-  var observer = new MutationObserver(function () {
-    clearTimeout(timer);
-    timer = setTimeout(run, 350);
-  });
-
-  try {
-    observer.observe(document.body, { childList: true, subtree: true });
-  } catch (e) {}
-
-  setTimeout(run, 250);
-  setTimeout(run, 750);
-  setTimeout(run, 1500);
-  setTimeout(run, 3000);
-})();
-</script>
-
-
 <script id="goodos-auth-charts-sidebar-active-v42-js">
 (function () {
   if (window.__goodosAuthChartsSidebarActiveV42) return;
@@ -18184,6 +17871,315 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 700);
   setTimeout(run, 1600);
   setTimeout(run, 2800);
+})();
+</script>
+
+
+<script id="goodos-backups-kpi-charts-v74-js">
+(function () {
+  if (window.__goodosBackupsKpiChartsV74) return;
+  window.__goodosBackupsKpiChartsV74 = true;
+
+  var TARGETS = [
+    {
+      key: "backups",
+      label: "BACKUPS",
+      description: "Total backup records",
+      trend: "+5",
+      colorA: "#38bdf8",
+      colorB: "#2563eb",
+      maxLabel: "6",
+      midLabel: "3",
+      series: [154,154,154,148,140,136,126,118,106,106,106,92,82,82,78,66,54,42]
+    },
+    {
+      key: "completed",
+      label: "COMPLETED",
+      description: "Ready restore points",
+      trend: "+4",
+      colorA: "#84f56d",
+      colorB: "#22c55e",
+      maxLabel: "4",
+      midLabel: "2",
+      series: [160,160,160,132,120,116,108,92,86,74,66,52,46,36,32,24,16,8]
+    },
+    {
+      key: "failed",
+      label: "FAILED",
+      description: "Failed backup records",
+      trend: "+1",
+      colorA: "#fb7185",
+      colorB: "#ec4899",
+      maxLabel: "3",
+      midLabel: "2",
+      negative: true,
+      series: [160,160,160,90,90,90,112,158,158,132,96,76,82,96,96,116,104,92]
+    },
+    {
+      key: "retention",
+      label: "RETENTION",
+      description: "Retention rules",
+      trend: "Next",
+      colorA: "#a855f7",
+      colorB: "#7c3aed",
+      maxLabel: "Yearly",
+      midLabel: "Weekly",
+      stepped: true,
+      series: [160,160,160,128,128,128,128,98,98,98,98,98,98,98,98,52,52,52]
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+
+    return r.width > 0 &&
+      r.height > 0 &&
+      (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function backupsPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("backups") !== -1 &&
+      text.indexOf("total backup records") !== -1 &&
+      text.indexOf("ready restore points") !== -1 &&
+      text.indexOf("failed backup records") !== -1 &&
+      text.indexOf("retention rules") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-backups-chart-v74,.goodos-backups-trend-v74")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-backups-chart-card-v74")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-backups-chart-card-v74");
+      el.removeAttribute("data-goodos-backups-type-v74");
+    });
+  }
+
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-backups-chart-v74")) return false;
+      if (el.children.length > 2) return false;
+
+      return compact(cleanText(el)) === wanted;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function cardForLabel(labelNode, target) {
+    if (!labelNode) return null;
+
+    var label = cleanText(labelNode);
+    var desc = norm(target.description);
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        norm(text).indexOf(desc) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 980 &&
+        rect.height >= 70 &&
+        rect.height <= 620
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function pathFromPoints(points, stepped) {
+    if (!stepped) {
+      return points.map(function (pt, index) {
+        return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+      }).join("");
+    }
+
+    var d = "M" + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
+
+    for (var i = 1; i < points.length; i += 1) {
+      d += " L" + points[i][0].toFixed(1) + " " + points[i - 1][1].toFixed(1);
+      d += " L" + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
+    }
+
+    return d;
+  }
+
+  function chartSvg(target) {
+    var points = target.series.map(function (y, i) {
+      return [42 + i * 15.4, y];
+    });
+
+    var path = pathFromPoints(points, target.stepped);
+    var last = points[points.length - 1];
+
+    var yLabels = target.key === "retention"
+      ? '<text x="0" y="54" class="axis" font-size="12" font-weight="800">Yearly</text>' +
+        '<text x="0" y="88" class="axis" font-size="12" font-weight="800">Monthly</text>' +
+        '<text x="0" y="122" class="axis" font-size="12" font-weight="800">Weekly</text>' +
+        '<text x="0" y="156" class="axis" font-size="12" font-weight="800">Daily</text>'
+      : '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>';
+
+    return '' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosBackupsLineV74' + target.key + '" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosBackupsFillV74' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        yLabels +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosBackupsFillV74' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosBackupsLineV74' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 1</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">May 8</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">May 15</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">May 29</text>' +
+      '</svg>';
+  }
+
+  function chartMarkup(target) {
+    return '' +
+      '<div class="goodos-backups-chart-v74" data-goodos-backups-chart-v74="' + target.key + '">' +
+        chartSvg(target) +
+      '</div>' +
+      '<div class="goodos-backups-trend-v74' + (target.negative ? ' is-negative-v74' : '') + '">' +
+        '<strong>' + (target.negative ? "↘ " : "↗ ") + target.trend + '</strong> vs last 30 days' +
+      '</div>';
+  }
+
+  function renderBackupsCharts() {
+    if (!backupsPageVisible()) return;
+
+    if (document.querySelectorAll(".goodos-backups-chart-v74").length >= TARGETS.length) {
+      return;
+    }
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label, target);
+
+      if (!card) {
+        console.warn("GoodOS V74: Backups KPI card not found for", target.label);
+        return;
+      }
+
+      card.classList.add("goodos-backups-chart-card-v74");
+      card.setAttribute("data-goodos-backups-type-v74", target.key);
+      card.insertAdjacentHTML("beforeend", chartMarkup(target));
+    });
+  }
+
+  function run() {
+    renderBackupsCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 750);
+    setTimeout(run, 1500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 350);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 750);
+  setTimeout(run, 1500);
+  setTimeout(run, 3000);
 })();
 </script>
 
