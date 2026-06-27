@@ -2464,6 +2464,67 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-api-keys-kpi-charts-v64">
+/* V64: API Keys KPI charts only */
+
+.goodos-api-key-chart-card-v64 {
+  min-height: 300px !important;
+  height: auto !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.goodos-api-key-chart-v64 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: auto !important;
+  width: 100% !important;
+  min-height: 150px !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.16), transparent 42%),
+    linear-gradient(180deg, rgba(6,17,34,.72), rgba(8,16,31,.40)) !important;
+  border: 1px solid rgba(148,163,184,.17) !important;
+  padding: 14px 16px 12px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 16px 36px rgba(0,0,0,.12) !important;
+}
+
+.goodos-api-key-chart-v64 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 120px !important;
+  overflow: visible !important;
+}
+
+.goodos-api-key-chart-v64 .muted {
+  fill: #9eabc2;
+}
+
+.goodos-api-key-chart-v64 .green {
+  fill: #a8ffd4;
+}
+
+.goodos-api-key-chart-v64 .grid {
+  stroke: rgba(148,163,184,.18);
+  stroke-dasharray: 4 7;
+}
+
+.goodos-api-key-chart-note-v64 {
+  color: #8fa0ba !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  margin-top: 7px !important;
+  letter-spacing: .02em !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -15065,6 +15126,352 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function run() {
     renderStorageCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 750);
+    setTimeout(run, 1500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 250);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 750);
+  setTimeout(run, 1500);
+  setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-api-keys-kpi-charts-v64-js">
+(function () {
+  if (window.__goodosApiKeysKpiChartsV64) return;
+  window.__goodosApiKeysKpiChartsV64 = true;
+
+  var TARGETS = [
+    {
+      key: "api-keys",
+      label: "API KEYS",
+      note: "Key records over time",
+      type: "line",
+      suffix: " records"
+    },
+    {
+      key: "active-keys",
+      label: "ACTIVE KEYS",
+      note: "Usable keys out of total",
+      type: "progress",
+      suffix: " keys"
+    },
+    {
+      key: "restricted-keys",
+      label: "RESTRICTED KEYS",
+      note: "Restricted keys over time",
+      type: "line",
+      suffix: " keys"
+    },
+    {
+      key: "scopes",
+      label: "SCOPES",
+      note: "Permission groups over time",
+      type: "bars",
+      suffix: " groups"
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+    return r.width > 0 && r.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function apiKeysPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("api keys") !== -1 &&
+      text.indexOf("active keys") !== -1 &&
+      text.indexOf("restricted keys") !== -1 &&
+      text.indexOf("scopes") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-api-key-chart-v64")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-api-key-chart-card-v64")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-api-key-chart-card-v64");
+    });
+  }
+
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
+
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-api-key-chart-v64")) return false;
+      if (el.children.length > 2) return false;
+      return compact(cleanText(el)) === wanted;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function cardForLabel(labelNode) {
+    if (!labelNode) return null;
+
+    var label = cleanText(labelNode);
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 800 &&
+        rect.height >= 70 &&
+        rect.height <= 380
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function getValueFromCard(card, label) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-api-key-chart-v64")).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function linePath(value, key) {
+    var v = Math.max(0, Number(value || 0));
+    var points = [];
+
+    for (var i = 0; i < 16; i += 1) {
+      var x = 10 + i * 20;
+      var y;
+
+      if (v <= 0) {
+        y = 80;
+      } else if (key === "api-keys") {
+        y = 86 - Math.min(50, v * 2.2) + ((i * 7) % 11) - (i > 8 ? 6 : 0);
+      } else {
+        y = 86 - Math.min(50, v * 2.2) + ((i * 8) % 13) - (i > 9 ? 7 : 0);
+      }
+
+      points.push([x, Math.max(22, Math.min(88, y))]);
+    }
+
+    return points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function lineChart(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var path = linePath(v, target.key);
+
+    return '' +
+      '<div class="goodos-api-key-chart-v64" data-goodos-api-key-chart-v64="' + target.key + '">' +
+        '<svg viewBox="0 0 340 120" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="goodosApiKeyLineV64' + target.key + '" x1="0" x2="1">' +
+              '<stop offset="0%" stop-color="#16e0ff"></stop>' +
+              '<stop offset="55%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="100%" stop-color="#7c3aed"></stop>' +
+            '</linearGradient>' +
+            '<linearGradient id="goodosApiKeyFillV64' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="rgba(54,220,255,.34)"></stop>' +
+              '<stop offset="100%" stop-color="rgba(54,220,255,0)"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
+          '<text x="0" y="52" class="muted" font-size="12" font-weight="850">20</text>' +
+          '<text x="0" y="84" class="muted" font-size="12" font-weight="850">10</text>' +
+          '<line x1="34" y1="42" x2="320" y2="42" class="grid"></line>' +
+          '<line x1="34" y1="74" x2="320" y2="74" class="grid"></line>' +
+          '<path d="' + path + ' L310 96 L10 96 Z" fill="url(#goodosApiKeyFillV64' + target.key + ')"></path>' +
+          '<path d="' + path + '" fill="none" stroke="url(#goodosApiKeyLineV64' + target.key + ')" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<circle cx="310" cy="' + (v <= 0 ? 80 : 33) + '" r="5.4" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="116" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="116" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
+        '</svg>' +
+        '<div class="goodos-api-key-chart-note-v64">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function progressChart(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var max = Math.max(20, v + 1);
+    var pct = Math.max(0, Math.min(100, (v / max) * 100));
+    var fill = (300 * pct / 100).toFixed(1);
+    var dot = Math.max(7, Math.min(293, 300 * pct / 100)).toFixed(1);
+
+    return '' +
+      '<div class="goodos-api-key-chart-v64" data-goodos-api-key-chart-v64="' + target.key + '">' +
+        '<svg viewBox="0 0 340 120" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="goodosApiKeyProgressV64" x1="0" x2="1">' +
+              '<stop offset="0%" stop-color="#20e6e6"></stop>' +
+              '<stop offset="54%" stop-color="#3b82f6"></stop>' +
+              '<stop offset="100%" stop-color="#22e6a8"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
+          '<rect x="0" y="52" width="300" height="16" rx="8" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="52" width="' + fill + '" height="16" rx="8" fill="url(#goodosApiKeyProgressV64)"></rect>' +
+          '<circle cx="' + dot + '" cy="60" r="8" fill="#22e6a8"></circle>' +
+          '<text x="0" y="95" class="muted" font-size="11" font-weight="850">0</text>' +
+          '<text x="160" y="95" text-anchor="middle" class="muted" font-size="11" font-weight="850">' + value + '</text>' +
+          '<text x="315" y="95" text-anchor="end" class="muted" font-size="11" font-weight="850">' + max + '</text>' +
+        '</svg>' +
+        '<div class="goodos-api-key-chart-note-v64">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function barsChart(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var bars = [];
+
+    for (var i = 0; i < 15; i += 1) {
+      var h = v <= 0 ? 5 : Math.max(12, Math.min(72, 12 + ((i * 11 + v * 5) % 62)));
+      var x = 16 + i * 19;
+      var y = 90 - h;
+
+      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#goodosApiKeyBarsV64)" opacity="' + (v <= 0 ? ".22" : ".94") + '"></rect>');
+    }
+
+    return '' +
+      '<div class="goodos-api-key-chart-v64" data-goodos-api-key-chart-v64="' + target.key + '">' +
+        '<svg viewBox="0 0 340 120" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="goodosApiKeyBarsV64" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="#36dcff"></stop>' +
+              '<stop offset="50%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="100%" stop-color="#7c3aed"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
+          '<text x="0" y="52" class="muted" font-size="12" font-weight="850">20</text>' +
+          '<text x="0" y="84" class="muted" font-size="12" font-weight="850">10</text>' +
+          '<line x1="34" y1="90" x2="320" y2="90" class="grid"></line>' +
+          bars.join("") +
+          '<text x="0" y="116" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="116" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
+        '</svg>' +
+        '<div class="goodos-api-key-chart-note-v64">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function chartMarkup(target, value) {
+    if (target.type === "progress") return progressChart(target, value);
+    if (target.type === "bars") return barsChart(target, value);
+    return lineChart(target, value);
+  }
+
+  function renderApiKeyCharts() {
+    if (!apiKeysPageVisible()) return;
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label);
+
+      if (!card) {
+        console.warn("GoodOS V64: API Keys KPI card not found for", target.label);
+        return;
+      }
+
+      var value = getValueFromCard(card, target.label);
+
+      card.classList.add("goodos-api-key-chart-card-v64");
+      card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
+    });
+  }
+
+  function run() {
+    renderApiKeyCharts();
   }
 
   if (document.readyState === "loading") {
