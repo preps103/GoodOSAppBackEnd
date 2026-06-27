@@ -5037,6 +5037,185 @@ function billingV2Section() {
 }
 
 
+
+window.loadSecretsV2Center = async function loadSecretsV2Center() {
+  try {
+    const response = await fetch("/api/admin/secrets-v2-page-data?t=" + Date.now(), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Secrets V2 load failed with status " + response.status);
+    }
+
+    const data = payload.data || payload;
+    state.secretsV2Vaults = Array.isArray(data.vaults) ? data.vaults : [];
+    state.secretsV2Secrets = Array.isArray(data.secrets) ? data.secrets : [];
+    state.secretsV2Providers = Array.isArray(data.providers) ? data.providers : [];
+    state.secretsV2Counts = data.counts || {};
+    state.secretsV2Loaded = true;
+    state.secretsV2Loading = false;
+    state.secretsV2Error = "";
+
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  } catch (error) {
+    state.secretsV2Loaded = true;
+    state.secretsV2Loading = false;
+    state.secretsV2Error = error.message || "Failed to load Secrets V2.";
+    console.error("Secrets V2 load failed:", error);
+    if (typeof goodosRenderNow === "function") goodosRenderNow();
+    else if (typeof render === "function") render();
+  }
+};
+
+window.refreshSecretsV2CenterNow = async function refreshSecretsV2CenterNow() {
+  state.secretsV2Loaded = false;
+  state.secretsV2Loading = true;
+  if (typeof goodosRenderNow === "function") goodosRenderNow();
+  else if (typeof render === "function") render();
+  return window.loadSecretsV2Center();
+};
+
+window.createSecretsV2Secret = async function createSecretsV2Secret(defaultKey) {
+  try {
+    const secretKey = prompt("Secret key:", defaultKey || "SMTP_HOST");
+    if (!secretKey) return;
+
+    const secretValue = prompt("Secret value. It will be encrypted and not shown again:", "");
+    if (!secretValue) return;
+
+    const category = prompt("Category:", secretKey.startsWith("SMTP") || secretKey.startsWith("MAIL") ? "email" : "general") || "general";
+
+    const response = await fetch("/api/admin/secrets/create-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secretKey,
+        secretValue,
+        displayName: secretKey,
+        category,
+        description: "Created from Secrets V2 console."
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Create secret failed with status " + response.status);
+    }
+
+    alert("Secret saved. Raw value was encrypted and will not be shown again.");
+    await window.loadSecretsV2Center();
+  } catch (error) {
+    alert("Create secret failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+window.testSecretsV2Resolve = async function testSecretsV2Resolve(secretKey) {
+  try {
+    const response = await fetch("/api/admin/secrets/" + encodeURIComponent(secretKey) + "/resolve-test-safe", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    const data = payload.data || payload;
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || "Resolve test failed with status " + response.status);
+    }
+
+    alert("Secret resolved safely. Length: " + String(data.length || 0) + ". Raw value was not returned.");
+  } catch (error) {
+    alert("Resolve test failed: " + (error.message || "Unknown error"));
+    console.error(error);
+  }
+};
+
+function secretsV2Section() {
+  if (!state.secretsV2Loaded && !state.secretsV2Loading) {
+    state.secretsV2Loading = true;
+    setTimeout(() => window.loadSecretsV2Center(), 100);
+  }
+
+  const vaults = Array.isArray(state.secretsV2Vaults) ? state.secretsV2Vaults : [];
+  const secrets = Array.isArray(state.secretsV2Secrets) ? state.secretsV2Secrets : [];
+  const providers = Array.isArray(state.secretsV2Providers) ? state.secretsV2Providers : [];
+  const counts = state.secretsV2Counts || {};
+
+  return `
+    <div class="section-head" style="margin-top:18px;">
+      <h3>Secrets V2 / Provider Credentials</h3>
+      <div>
+        <button class="logout" onclick="window.refreshSecretsV2CenterNow()">Refresh Secrets</button>
+        <button class="logout" onclick="window.createSecretsV2Secret('SMTP_HOST')">Add SMTP Host</button>
+        <button class="logout" onclick="window.createSecretsV2Secret('SMTP_USER')">Add SMTP User</button>
+        <button class="logout" onclick="window.createSecretsV2Secret('SMTP_PASS')">Add SMTP Pass</button>
+      </div>
+    </div>
+
+    ${state.secretsV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Secrets V2...</p></div>` : ""}
+    ${state.secretsV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Secrets V2 error: ${safeText(state.secretsV2Error)}</p></div>` : ""}
+
+    <div class="grid cards" style="margin-top:18px;">
+      ${card("Vaults", counts.vaults ?? vaults.length, "Encrypted storage")}
+      ${card("Secrets", counts.secrets ?? secrets.length, "Raw values hidden")}
+      ${card("Active Secrets", counts.activeSecrets ?? secrets.filter(item => item.status === "active").length, "Ready references")}
+      ${card("Providers", counts.providers ?? providers.length, "SMTP / Stripe / Storage")}
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Secrets</h3><span class="badge">${safeText(String(secrets.length))} Secrets</span></div>
+      <table>
+        <thead><tr><th>Secret</th><th>Category</th><th>Reference</th><th>Prefix</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${secrets.map(secret => `
+            <tr>
+              <td><strong>${safeText(secret.displayName || secret.secretKey)}</strong><div class="muted">${safeText(secret.secretKey || "")}</div></td>
+              <td>${safeText(secret.category || "-")}</td>
+              <td><code>${safeText(secret.secretRef || "-")}</code></td>
+              <td>${safeText(secret.valuePrefix || "-")}</td>
+              <td><span class="badge">${safeText(secret.status || "-")}</span></td>
+              <td>
+                <button class="logout" onclick="window.createSecretsV2Secret('${safeText(secret.secretKey || "")}')">Rotate</button>
+                <button class="logout" onclick="window.testSecretsV2Resolve('${safeText(secret.secretKey || "")}')">Resolve Test</button>
+              </td>
+            </tr>
+          `).join("") || '<tr><td colspan="6" class="muted">No secrets saved yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-head"><h3>Provider Credentials</h3><span class="badge">${safeText(String(providers.length))} Providers</span></div>
+      <table>
+        <thead><tr><th>Provider</th><th>Type</th><th>Status</th><th>Verification</th><th>Secret Refs</th></tr></thead>
+        <tbody>
+          ${providers.map(provider => `
+            <tr>
+              <td><strong>${safeText(provider.providerName || provider.providerKey)}</strong><div class="muted">${safeText(provider.providerKey || "")}</div></td>
+              <td>${safeText(provider.providerType || "-")}</td>
+              <td><span class="badge">${safeText(provider.status || "-")}</span></td>
+              <td>${safeText(provider.verificationStatus || "-")}</td>
+              <td><code>${safeText(JSON.stringify(provider.secretRefs || {})).slice(0, 180)}</code></td>
+            </tr>
+          `).join("") || '<tr><td colspan="5" class="muted">No provider credentials found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
 window.loadNotificationsV2Center = async function loadNotificationsV2Center() {
   try {
     const response = await fetch("/api/admin/notifications-page-data?t=" + Date.now(), {
@@ -5557,6 +5736,7 @@ function settingsView() {
 
     ${jobsV2Section()}
 
+    ${secretsV2Section()}
     ${notificationsV2Section()}
 
     ${billingV2Section()}
