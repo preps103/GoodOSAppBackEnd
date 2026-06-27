@@ -1692,144 +1692,65 @@ body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41.goodos-v43-is-active::
 }
 </style>
 
+<style id="goodos-menu-active-clean-v46">
+/* V46 MENU LOGIC ONLY */
+/* One active sidebar tab. Nothing else controls the highlight. */
 
-<style id="goodos-sidebar-active-logic-v44">
-/* V44 MENU LOGIC ONLY: one highlighted sidebar tab, controlled by data-goodos-active-v44 */
-
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41,
-body.goodos-menu-v44-ready aside button,
-body.goodos-menu-v44-ready aside a,
-body.goodos-menu-v44-ready nav button,
-body.goodos-menu-v44-ready nav a {
+body.goodos-menu-v46-ready .goodos-menu-v46-item {
   position: relative !important;
+  border: 1px solid transparent !important;
+  outline: none !important;
 }
 
-/* Hard-reset every sidebar item that is NOT the V44 active tab */
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41.active:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41.goodos-sidebar-active-v41:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41.goodos-v43-is-active:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[aria-current="page"]:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-active="true"]:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-goodos-active-v42="true"]:not([data-goodos-active-v44="true"]),
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-goodos-active-v43="true"]:not([data-goodos-active-v44="true"]) {
+/* Reset every menu item unless V46 says it is active */
+body.goodos-menu-v46-ready .goodos-menu-v46-item:not([data-goodos-active-menu="true"]) {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
   color: #dce8f7 !important;
 }
 
-/* Remove old active dots from inactive items */
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41.active:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41.goodos-sidebar-active-v41:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41.goodos-v43-is-active:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[aria-current="page"]:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-active="true"]:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-goodos-active-v42="true"]:not([data-goodos-active-v44="true"])::after,
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-goodos-active-v43="true"]:not([data-goodos-active-v44="true"])::after {
+/* Kill all older active dots/highlights on inactive tabs */
+body.goodos-menu-v46-ready .goodos-menu-v46-item:not([data-goodos-active-menu="true"])::after {
   display: none !important;
   opacity: 0 !important;
   content: none !important;
 }
 
-/* V44 active tab style */
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-goodos-active-v44="true"] {
+/* Active tab */
+body.goodos-menu-v46-ready .goodos-menu-v46-item[data-goodos-active-menu="true"] {
   color: #ffffff !important;
   background:
-    radial-gradient(circle at 100% 50%, rgba(54,220,255,.32), transparent 34%),
-    linear-gradient(135deg, rgba(79,140,255,.38), rgba(139,92,246,.30) 55%, rgba(34,211,238,.25)) !important;
-  border-color: rgba(95,213,255,.34) !important;
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.36), transparent 34%),
+    linear-gradient(135deg, rgba(79,140,255,.42), rgba(139,92,246,.34) 55%, rgba(34,211,238,.28)) !important;
+  border-color: rgba(95,213,255,.42) !important;
   box-shadow:
-    0 14px 32px rgba(79,140,255,.16),
-    inset 0 1px 0 rgba(255,255,255,.08) !important;
+    0 14px 34px rgba(79,140,255,.18),
+    inset 0 1px 0 rgba(255,255,255,.10) !important;
 }
 
-body.goodos-menu-v44-ready .goodos-sidebar-nav-item-v41[data-goodos-active-v44="true"]::after {
+/* Active tab right dot */
+body.goodos-menu-v46-ready .goodos-menu-v46-item[data-goodos-active-menu="true"]::after {
   content: "" !important;
   display: block !important;
   opacity: 1 !important;
   position: absolute !important;
   right: 13px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
   width: 7px !important;
   height: 7px !important;
   border-radius: 999px !important;
   background: #67f5ff !important;
-  box-shadow: 0 0 16px rgba(103,245,255,.72) !important;
+  box-shadow: 0 0 16px rgba(103,245,255,.78) !important;
 }
-</style>
 
-
-<style id="goodos-sidebar-active-hardfix-v45">
-/* V45 MENU LOGIC ONLY */
-/* Anything managed by V45 is inactive unless data-goodos-active-v45="true" */
-
-.goodos-menu-v45-ready .goodos-menu-row-v45 {
-  position: relative !important;
+/* Remove focus outlines that made the wrong row look selected */
+body.goodos-menu-v46-ready .goodos-menu-v46-item:focus,
+body.goodos-menu-v46-ready .goodos-menu-v46-item:focus-visible,
+body.goodos-menu-v46-ready .goodos-menu-v46-item *:focus,
+body.goodos-menu-v46-ready .goodos-menu-v46-item *:focus-visible {
   outline: none !important;
-}
-
-.goodos-menu-v45-ready .goodos-menu-row-v45:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45.active:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45.goodos-sidebar-active-v41:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45.goodos-v43-is-active:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45[aria-current="page"]:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-active="true"]:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v42="true"]:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v43="true"]:not([data-goodos-active-v45="true"]),
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v44="true"]:not([data-goodos-active-v45="true"]) {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  color: #dce8f7 !important;
-}
-
-.goodos-menu-v45-ready .goodos-menu-row-v45:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45.active:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45.goodos-sidebar-active-v41:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45.goodos-v43-is-active:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45[aria-current="page"]:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-active="true"]:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v42="true"]:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v43="true"]:not([data-goodos-active-v45="true"])::after,
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v44="true"]:not([data-goodos-active-v45="true"])::after {
-  display: none !important;
-  opacity: 0 !important;
-  content: none !important;
-}
-
-/* Active V45 tab */
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v45="true"] {
-  color: #ffffff !important;
-  background:
-    radial-gradient(circle at 100% 50%, rgba(54,220,255,.34), transparent 34%),
-    linear-gradient(135deg, rgba(79,140,255,.40), rgba(139,92,246,.31) 55%, rgba(34,211,238,.26)) !important;
-  border-color: rgba(95,213,255,.36) !important;
-  box-shadow:
-    0 14px 32px rgba(79,140,255,.16),
-    inset 0 1px 0 rgba(255,255,255,.08) !important;
-}
-
-.goodos-menu-v45-ready .goodos-menu-row-v45[data-goodos-active-v45="true"]::after {
-  content: "" !important;
-  display: block !important;
-  opacity: 1 !important;
-  position: absolute !important;
-  right: 13px !important;
-  width: 7px !important;
-  height: 7px !important;
-  border-radius: 999px !important;
-  background: #67f5ff !important;
-  box-shadow: 0 0 16px rgba(103,245,255,.72) !important;
-}
-
-/* Kill browser focus outline that was making another tab look active */
-.goodos-menu-v45-ready .goodos-menu-row-v45:focus,
-.goodos-menu-v45-ready .goodos-menu-row-v45:focus-visible,
-.goodos-menu-v45-ready .goodos-menu-row-v45 *:focus,
-.goodos-menu-v45-ready .goodos-menu-row-v45 *:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
 }
 </style>
 
@@ -11944,91 +11865,25 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-sidebar-active-logic-v44-js">
+<script id="goodos-menu-active-clean-v46-js">
 (function () {
-  if (window.__goodosSidebarActiveLogicV44) return;
-  window.__goodosSidebarActiveLogicV44 = true;
+  if (window.__goodosMenuActiveCleanV46) return;
+  window.__goodosMenuActiveCleanV46 = true;
 
   var MENU = [
-    {
-      key: "overview",
-      labels: ["overview", "dashboard"],
-      titles: ["backend console", "overview", "dashboard"],
-      hashes: ["", "dashboard", "overview"]
-    },
-    {
-      key: "auth",
-      labels: ["auth", "auth / users"],
-      titles: ["auth", "auth / users"],
-      hashes: ["auth", "auth-users", "users"]
-    },
-    {
-      key: "projects",
-      labels: ["projects", "app registry"],
-      titles: ["projects", "app registry"],
-      hashes: ["projects", "app-registry", "apps"]
-    },
-    {
-      key: "database",
-      labels: ["database", "database browser"],
-      titles: ["database", "database browser"],
-      hashes: ["database", "database-browser", "db"]
-    },
-    {
-      key: "storage",
-      labels: ["storage", "storage / files"],
-      titles: ["storage", "storage / files"],
-      hashes: ["storage", "storage-files", "files"]
-    },
-    {
-      key: "api keys",
-      labels: ["api keys"],
-      titles: ["api keys"],
-      hashes: ["api-keys", "api keys"]
-    },
-    {
-      key: "webhooks",
-      labels: ["webhooks"],
-      titles: ["webhooks"],
-      hashes: ["webhooks"]
-    },
-    {
-      key: "realtime",
-      labels: ["realtime", "realtime events"],
-      titles: ["realtime", "realtime events"],
-      hashes: ["realtime", "realtime-events"]
-    },
-    {
-      key: "functions",
-      labels: ["functions", "edge functions"],
-      titles: ["functions", "edge functions"],
-      hashes: ["functions", "edge-functions"]
-    },
-    {
-      key: "logs",
-      labels: ["logs", "logs & monitoring"],
-      titles: ["logs", "logs & monitoring"],
-      hashes: ["logs", "logs-monitoring", "monitoring"]
-    },
-    {
-      key: "alerts",
-      labels: ["alerts", "security rules"],
-      titles: ["alerts", "security rules", "rules engine"],
-      hashes: ["alerts", "security-rules", "rules"]
-    },
-    {
-      key: "backups",
-      labels: ["backups"],
-      titles: ["backups"],
-      hashes: ["backups"]
-    },
-    {
-      key: "settings",
-      labels: ["settings"],
-      titles: ["settings"],
-      hashes: ["settings"]
-    }
+    { key: "overview", label: "overview", hashes: ["", "dashboard", "overview"], titles: ["backend console", "dashboard", "overview"] },
+    { key: "auth", label: "auth", hashes: ["auth", "auth-users", "users"], titles: ["auth", "auth / users"] },
+    { key: "projects", label: "projects", hashes: ["projects", "app-registry", "apps"], titles: ["projects", "app registry"] },
+    { key: "database", label: "database", hashes: ["database", "database-browser", "db"], titles: ["database", "database browser"] },
+    { key: "storage", label: "storage", hashes: ["storage", "storage-files", "files"], titles: ["storage", "storage / files"] },
+    { key: "api-keys", label: "api keys", hashes: ["api-keys", "api keys"], titles: ["api keys"] },
+    { key: "webhooks", label: "webhooks", hashes: ["webhooks"], titles: ["webhooks"] },
+    { key: "realtime", label: "realtime", hashes: ["realtime", "realtime-events"], titles: ["realtime", "realtime events"] },
+    { key: "functions", label: "functions", hashes: ["functions", "edge-functions"], titles: ["functions", "edge functions"] },
+    { key: "logs", label: "logs", hashes: ["logs", "logs-monitoring", "monitoring"], titles: ["logs", "logs & monitoring"] },
+    { key: "alerts", label: "alerts", hashes: ["alerts", "security-rules", "rules"], titles: ["alerts", "security rules", "rules engine"] },
+    { key: "backups", label: "backups", hashes: ["backups"], titles: ["backups"] },
+    { key: "settings", label: "settings", hashes: ["settings"], titles: ["settings"] }
   ];
 
   function cleanText(el) {
@@ -12036,17 +11891,14 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   function norm(value) {
-    return String(value || "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
 
-  function currentHash() {
+  function getHash() {
     return norm(String(window.location.hash || "").replace("#", ""));
   }
 
-  function viewRoot() {
+  function getViewRoot() {
     return document.getElementById("view") ||
       document.querySelector("[data-view-root]") ||
       document.querySelector("main") ||
@@ -12058,44 +11910,31 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
     );
 
-    var match = candidates.find(function (el) {
-      var text = norm(cleanText(el));
-      return text.indexOf("goodos cloud") !== -1 &&
-        text.indexOf("overview") !== -1 &&
-        text.indexOf("settings") !== -1;
-    });
-
-    return match || document.querySelector(".goodos-sidebar-v41") || null;
+    return candidates.find(function (el) {
+      var t = norm(cleanText(el));
+      return t.indexOf("goodos cloud") !== -1 &&
+        t.indexOf("overview") !== -1 &&
+        t.indexOf("settings") !== -1;
+    }) || document.querySelector(".goodos-sidebar-v41") || null;
   }
 
-  function getPageTitleKey() {
-    var root = viewRoot();
+  function getTitleKey() {
+    var root = getViewRoot();
+    var nodes = Array.prototype.slice.call(
+      root.querySelectorAll("h1,h2,.page-title,.hero-title,[class*='title'],[class*='Title']")
+    );
 
-    var selectors = [
-      "h1",
-      "h2",
-      ".page-title",
-      ".hero-title",
-      "[class*='title']",
-      "[class*='Title']"
-    ];
+    var titles = nodes.filter(function (el) {
+      if (el.closest("aside,nav,header")) return false;
 
-    var nodes = Array.prototype.slice.call(root.querySelectorAll(selectors.join(",")));
+      var txt = norm(cleanText(el));
+      if (!txt || txt.length > 90) return false;
 
-    var titles = nodes
-      .filter(function (el) {
-        if (el.closest("aside, nav, header")) return false;
-        if (el.closest("[data-goodos-sidebar]")) return false;
-
-        var text = norm(cleanText(el));
-        if (!text || text.length > 80) return false;
-
-        var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
-        return rect.width >= 40 && rect.height >= 12;
-      })
-      .map(function (el) {
-        return norm(cleanText(el));
-      });
+      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
+      return rect.width > 50 && rect.height > 14;
+    }).map(function (el) {
+      return norm(cleanText(el));
+    });
 
     for (var i = 0; i < MENU.length; i += 1) {
       var item = MENU[i];
@@ -12103,14 +11942,12 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       for (var t = 0; t < titles.length; t += 1) {
         var title = titles[t];
 
-        if (item.titles.indexOf(title) !== -1) {
-          return item.key;
-        }
+        for (var j = 0; j < item.titles.length; j += 1) {
+          var allowed = item.titles[j];
 
-        if (item.titles.some(function (allowed) {
-          return title === allowed || title.indexOf(allowed + " ") === 0;
-        })) {
-          return item.key;
+          if (title === allowed || title.indexOf(allowed + " ") === 0) {
+            return item.key;
+          }
         }
       }
     }
@@ -12119,7 +11956,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   function getHashKey() {
-    var hash = currentHash();
+    var hash = getHash();
 
     for (var i = 0; i < MENU.length; i += 1) {
       if (MENU[i].hashes.indexOf(hash) !== -1) {
@@ -12132,7 +11969,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function getStoredKey() {
     try {
-      return norm(sessionStorage.getItem("goodosSidebarActiveKeyV44") || "");
+      return norm(sessionStorage.getItem("goodos-active-menu-v46") || "");
     } catch (error) {
       return "";
     }
@@ -12140,288 +11977,56 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function setStoredKey(key) {
     try {
-      sessionStorage.setItem("goodosSidebarActiveKeyV44", key);
+      sessionStorage.setItem("goodos-active-menu-v46", key);
     } catch (error) {}
   }
 
   function getCurrentKey() {
-    return getPageTitleKey() || getHashKey() || getStoredKey() || "overview";
+    return getTitleKey() || getHashKey() || getStoredKey() || "overview";
   }
 
-  function findSidebarItem(sidebar, item) {
-    if (!sidebar) return null;
+  function labelMatches(text, label) {
+    text = norm(text);
+    label = norm(label);
 
+    return text === label ||
+      text.indexOf(label) === 0 ||
+      text.replace(/\s+/g, "") === label.replace(/\s+/g, "");
+  }
+
+  function findLabelNode(sidebar, label) {
     var nodes = Array.prototype.slice.call(
       sidebar.querySelectorAll("button,a,[role='button'],div,span")
     );
 
-    var found = nodes.find(function (el) {
+    return nodes.find(function (el) {
       if (el.closest(".goodos-sidebar-brand-v41")) return false;
       if (el.closest(".goodos-sidebar-section-v41")) return false;
 
-      var text = norm(cleanText(el));
-      if (!text) return false;
+      var txt = norm(cleanText(el));
+      if (!txt) return false;
 
-      return item.labels.indexOf(text) !== -1;
-    });
-
-    if (!found) return null;
-
-    return found.closest("button,a,[role='button']") || found;
+      return labelMatches(txt, label);
+    }) || null;
   }
 
-  function removeAllOldActiveState(sidebar) {
-    if (!sidebar) return;
-
-    var nodes = Array.prototype.slice.call(
-      sidebar.querySelectorAll(".goodos-sidebar-nav-item-v41, button, a, [role='button']")
-    );
-
-    nodes.forEach(function (el) {
-      el.classList.remove("active");
-      el.classList.remove("goodos-sidebar-active-v41");
-      el.classList.remove("goodos-v43-is-active");
-
-      el.removeAttribute("aria-current");
-      el.removeAttribute("data-active");
-      el.removeAttribute("data-goodos-active-v42");
-      el.removeAttribute("data-goodos-active-v43");
-      el.setAttribute("data-goodos-active-v44", "false");
-    });
-  }
-
-  function applyActiveState() {
-    document.body.classList.add("goodos-menu-v44-ready");
-
-    var sidebar = getSidebar();
-    if (!sidebar) return;
-
-    var current = getCurrentKey();
-
-    removeAllOldActiveState(sidebar);
-
-    MENU.forEach(function (item) {
-      var el = findSidebarItem(sidebar, item);
-      if (!el) return;
-
-      el.classList.add("goodos-sidebar-nav-item-v41");
-      el.setAttribute("data-goodos-menu-key-v44", item.key);
-
-      if (item.key === current) {
-        el.setAttribute("data-goodos-active-v44", "true");
-        el.classList.add("goodos-sidebar-active-v41");
-        el.setAttribute("aria-current", "page");
-      } else {
-        el.setAttribute("data-goodos-active-v44", "false");
-      }
-    });
-  }
-
-  function attachClickLogic() {
-    var sidebar = getSidebar();
-    if (!sidebar || sidebar.__goodosV44ClickLogicAttached) return;
-
-    sidebar.__goodosV44ClickLogicAttached = true;
-
-    sidebar.addEventListener("click", function (event) {
-      var target = event.target;
-      var itemEl = target && target.closest ? target.closest(".goodos-sidebar-nav-item-v41, button, a, [role='button']") : null;
-      if (!itemEl || !sidebar.contains(itemEl)) return;
-
-      var clickedText = norm(cleanText(itemEl));
-
-      var matched = MENU.find(function (item) {
-        return item.labels.indexOf(clickedText) !== -1;
-      });
-
-      if (matched) {
-        setStoredKey(matched.key);
-
-        removeAllOldActiveState(sidebar);
-        itemEl.classList.add("goodos-sidebar-nav-item-v41");
-        itemEl.classList.add("goodos-sidebar-active-v41");
-        itemEl.setAttribute("data-goodos-active-v44", "true");
-        itemEl.setAttribute("aria-current", "page");
-      }
-
-      setTimeout(applyActiveState, 80);
-      setTimeout(applyActiveState, 300);
-      setTimeout(applyActiveState, 800);
-      setTimeout(applyActiveState, 1600);
-    }, true);
-  }
-
-  function run() {
-    attachClickLogic();
-    applyActiveState();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-
-  window.addEventListener("hashchange", function () {
-    setTimeout(run, 20);
-    setTimeout(run, 160);
-    setTimeout(run, 600);
-  });
-
-  var mutationTimer = null;
-  try {
-    var observer = new MutationObserver(function () {
-      clearTimeout(mutationTimer);
-      mutationTimer = setTimeout(run, 80);
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  } catch (error) {}
-
-  setTimeout(run, 400);
-  setTimeout(run, 1200);
-  setTimeout(run, 2600);
-})();
-</script>
-
-
-<script id="goodos-sidebar-active-hardfix-v45-js">
-(function () {
-  if (window.__goodosSidebarActiveHardFixV45) return;
-  window.__goodosSidebarActiveHardFixV45 = true;
-
-  var MENU = [
-    { key: "overview", labels: ["overview", "dashboard"], titles: ["backend console", "dashboard", "overview"], hashes: ["", "dashboard", "overview"] },
-    { key: "auth", labels: ["auth", "auth / users"], titles: ["auth", "auth / users"], hashes: ["auth", "auth-users", "users"] },
-    { key: "projects", labels: ["projects", "app registry"], titles: ["projects", "app registry"], hashes: ["projects", "app-registry", "apps"] },
-    { key: "database", labels: ["database", "database browser"], titles: ["database", "database browser"], hashes: ["database", "database-browser", "db"] },
-    { key: "storage", labels: ["storage", "storage / files"], titles: ["storage", "storage / files"], hashes: ["storage", "storage-files", "files"] },
-    { key: "api keys", labels: ["api keys"], titles: ["api keys"], hashes: ["api-keys", "api keys"] },
-    { key: "webhooks", labels: ["webhooks"], titles: ["webhooks"], hashes: ["webhooks"] },
-    { key: "realtime", labels: ["realtime", "realtime events"], titles: ["realtime", "realtime events"], hashes: ["realtime", "realtime-events"] },
-    { key: "functions", labels: ["functions", "edge functions"], titles: ["functions", "edge functions"], hashes: ["functions", "edge-functions"] },
-    { key: "logs", labels: ["logs", "logs & monitoring"], titles: ["logs", "logs & monitoring"], hashes: ["logs", "logs-monitoring", "monitoring"] },
-    { key: "alerts", labels: ["alerts", "security rules"], titles: ["alerts", "security rules", "rules engine"], hashes: ["alerts", "security-rules", "rules"] },
-    { key: "backups", labels: ["backups"], titles: ["backups"], hashes: ["backups"] },
-    { key: "settings", labels: ["settings"], titles: ["settings"], hashes: ["settings"] }
-  ];
-
-  function text(el) {
-    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
-  }
-
-  function norm(v) {
-    return String(v || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function getHash() {
-    return norm(String(window.location.hash || "").replace("#", ""));
-  }
-
-  function root() {
-    return document.getElementById("view") ||
-      document.querySelector("[data-view-root]") ||
-      document.querySelector("main") ||
-      document.body;
-  }
-
-  function sidebar() {
-    var candidates = Array.prototype.slice.call(
-      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
-    );
-
-    return candidates.find(function (el) {
-      var t = norm(text(el));
-      return t.indexOf("goodos cloud") !== -1 &&
-        t.indexOf("overview") !== -1 &&
-        t.indexOf("settings") !== -1;
-    }) || document.querySelector(".goodos-sidebar-v41") || null;
-  }
-
-  function findPageTitleKey() {
-    var r = root();
-    var titles = Array.prototype.slice.call(
-      r.querySelectorAll("h1,h2,.page-title,.hero-title,[class*='title'],[class*='Title']")
-    );
-
-    var visibleTitles = titles.filter(function (el) {
-      if (el.closest("aside,nav,header")) return false;
-      var t = norm(text(el));
-      if (!t || t.length > 80) return false;
-      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
-      return rect.width > 40 && rect.height > 12;
-    }).map(function (el) {
-      return norm(text(el));
-    });
-
-    for (var i = 0; i < MENU.length; i++) {
-      var item = MENU[i];
-      for (var j = 0; j < visibleTitles.length; j++) {
-        var title = visibleTitles[j];
-
-        if (item.titles.indexOf(title) !== -1) {
-          return item.key;
-        }
-
-        for (var k = 0; k < item.titles.length; k++) {
-          var allowed = item.titles[k];
-          if (title.indexOf(allowed + " ") === 0) {
-            return item.key;
-          }
-        }
-      }
-    }
-
-    return "";
-  }
-
-  function findHashKey() {
-    var h = getHash();
-
-    for (var i = 0; i < MENU.length; i++) {
-      if (MENU[i].hashes.indexOf(h) !== -1) return MENU[i].key;
-    }
-
-    return "";
-  }
-
-  function getStoredKey() {
-    try {
-      return norm(sessionStorage.getItem("goodosActiveMenuKeyV45") || "");
-    } catch (e) {
-      return "";
-    }
-  }
-
-  function setStoredKey(key) {
-    try {
-      sessionStorage.setItem("goodosActiveMenuKeyV45", key);
-    } catch (e) {}
-  }
-
-  function currentKey() {
-    return findPageTitleKey() || findHashKey() || getStoredKey() || "overview";
-  }
-
-  function climbToRow(node, side) {
-    if (!node || !side) return null;
+  function climbToMenuRow(node, sidebar) {
+    if (!node || !sidebar) return null;
 
     var current = node;
-    var best = node;
+    var best = null;
+    var sidebarWidth = sidebar.getBoundingClientRect ? sidebar.getBoundingClientRect().width : 320;
 
-    for (var i = 0; current && current !== side && current !== document.body && i < 8; i++) {
-      var t = norm(text(current));
+    for (var i = 0; current && current !== sidebar && current !== document.body && i < 9; i += 1) {
       var rect = current.getBoundingClientRect ? current.getBoundingClientRect() : { width: 0, height: 0 };
+      var txt = norm(cleanText(current));
 
       if (
-        t &&
-        rect.width >= 80 &&
-        rect.height >= 20 &&
-        rect.height <= 90 &&
-        rect.width <= side.getBoundingClientRect().width + 20
+        txt &&
+        rect.width >= 120 &&
+        rect.width <= sidebarWidth + 30 &&
+        rect.height >= 28 &&
+        rect.height <= 90
       ) {
         best = current;
       }
@@ -12429,40 +12034,37 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       current = current.parentElement;
     }
 
-    return best.closest("button,a,[role='button']") || best;
+    return (best && best.closest("button,a,[role='button']")) || best || node.closest("button,a,[role='button']") || node;
   }
 
-  function findMenuRow(side, item) {
+  function findMenuRow(sidebar, item) {
+    var labelNode = findLabelNode(sidebar, item.label);
+    if (!labelNode) return null;
+
+    return climbToMenuRow(labelNode, sidebar);
+  }
+
+  function keyFromClickedElement(el, sidebar) {
+    var current = el;
+
+    for (var depth = 0; current && current !== sidebar && current !== document.body && depth < 8; depth += 1) {
+      var txt = norm(cleanText(current));
+
+      for (var i = 0; i < MENU.length; i += 1) {
+        if (labelMatches(txt, MENU[i].label)) {
+          return MENU[i].key;
+        }
+      }
+
+      current = current.parentElement;
+    }
+
+    return "";
+  }
+
+  function clearAllMenuState(sidebar) {
     var nodes = Array.prototype.slice.call(
-      side.querySelectorAll("button,a,[role='button'],div,span")
-    );
-
-    var found = nodes.find(function (el) {
-      if (el.closest(".goodos-sidebar-brand-v41")) return false;
-      if (el.closest(".goodos-sidebar-section-v41")) return false;
-
-      var t = norm(text(el));
-      return item.labels.indexOf(t) !== -1;
-    });
-
-    return found ? climbToRow(found, side) : null;
-  }
-
-  function itemFromClickedRow(row) {
-    if (!row) return null;
-
-    var t = norm(text(row));
-
-    return MENU.find(function (item) {
-      return item.labels.indexOf(t) !== -1 || item.labels.some(function (label) {
-        return t === label || t.indexOf(label) === 0;
-      });
-    }) || null;
-  }
-
-  function resetSidebar(side) {
-    var nodes = Array.prototype.slice.call(
-      side.querySelectorAll(".goodos-menu-row-v45,.goodos-sidebar-nav-item-v41,button,a,[role='button']")
+      sidebar.querySelectorAll(".goodos-menu-v46-item,.goodos-sidebar-nav-item-v41,button,a,[role='button']")
     );
 
     nodes.forEach(function (el) {
@@ -12475,68 +12077,65 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       el.removeAttribute("data-goodos-active-v42");
       el.removeAttribute("data-goodos-active-v43");
       el.removeAttribute("data-goodos-active-v44");
+      el.removeAttribute("data-goodos-active-v45");
 
-      if (el.classList.contains("goodos-menu-row-v45") || el.classList.contains("goodos-sidebar-nav-item-v41")) {
-        el.setAttribute("data-goodos-active-v45", "false");
+      if (el.classList.contains("goodos-menu-v46-item") || el.classList.contains("goodos-sidebar-nav-item-v41")) {
+        el.setAttribute("data-goodos-active-menu", "false");
       }
     });
   }
 
-  function applyActive(forcedKey) {
-    document.body.classList.add("goodos-menu-v45-ready");
+  function applyActiveMenu(forcedKey) {
+    document.body.classList.add("goodos-menu-v46-ready");
 
-    var side = sidebar();
+    var side = getSidebar();
     if (!side) return;
 
-    var key = forcedKey || currentKey();
+    var activeKey = forcedKey || getCurrentKey();
 
-    resetSidebar(side);
+    clearAllMenuState(side);
 
     MENU.forEach(function (item) {
       var row = findMenuRow(side, item);
       if (!row) return;
 
-      row.classList.add("goodos-menu-row-v45");
+      row.classList.add("goodos-menu-v46-item");
       row.classList.add("goodos-sidebar-nav-item-v41");
-      row.setAttribute("data-goodos-menu-key-v45", item.key);
+      row.setAttribute("data-goodos-menu-key", item.key);
 
-      if (item.key === key) {
-        row.setAttribute("data-goodos-active-v45", "true");
+      if (item.key === activeKey) {
+        row.setAttribute("data-goodos-active-menu", "true");
         row.classList.add("goodos-sidebar-active-v41");
         row.setAttribute("aria-current", "page");
       } else {
-        row.setAttribute("data-goodos-active-v45", "false");
+        row.setAttribute("data-goodos-active-menu", "false");
       }
     });
   }
 
-  function attachClickFix() {
-    var side = sidebar();
-    if (!side || side.__goodosV45ClickFixAttached) return;
+  function attachClickHandler() {
+    var side = getSidebar();
+    if (!side || side.__goodosMenuV46ClickAttached) return;
 
-    side.__goodosV45ClickFixAttached = true;
+    side.__goodosMenuV46ClickAttached = true;
 
     side.addEventListener("click", function (event) {
-      var target = event.target;
-      var row = target && target.closest ? target.closest(".goodos-menu-row-v45,.goodos-sidebar-nav-item-v41,button,a,[role='button'],div,span") : null;
-      if (!row || !side.contains(row)) return;
+      var key = keyFromClickedElement(event.target, side);
+      if (!key) return;
 
-      var menuItem = itemFromClickedRow(row) || itemFromClickedRow(climbToRow(row, side));
-      if (!menuItem) return;
+      setStoredKey(key);
+      applyActiveMenu(key);
 
-      setStoredKey(menuItem.key);
-      applyActive(menuItem.key);
-
-      setTimeout(function () { applyActive(menuItem.key); }, 50);
-      setTimeout(function () { applyActive(menuItem.key); }, 180);
-      setTimeout(function () { applyActive(); }, 700);
-      setTimeout(function () { applyActive(); }, 1500);
+      setTimeout(function () { applyActiveMenu(key); }, 50);
+      setTimeout(function () { applyActiveMenu(key); }, 180);
+      setTimeout(function () { applyActiveMenu(); }, 700);
+      setTimeout(function () { applyActiveMenu(); }, 1400);
     }, true);
   }
 
   function run() {
-    attachClickFix();
-    applyActive();
+    attachClickHandler();
+    applyActiveMenu();
   }
 
   if (document.readyState === "loading") {
@@ -12547,23 +12146,23 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   window.addEventListener("hashchange", function () {
     setTimeout(run, 20);
-    setTimeout(run, 160);
-    setTimeout(run, 600);
-    setTimeout(run, 1300);
+    setTimeout(run, 150);
+    setTimeout(run, 500);
+    setTimeout(run, 1200);
   });
 
   try {
     var timer = null;
-    var obs = new MutationObserver(function () {
+    var observer = new MutationObserver(function () {
       clearTimeout(timer);
       timer = setTimeout(run, 80);
     });
 
-    obs.observe(document.body, {
+    observer.observe(document.body, {
       childList: true,
       subtree: true
     });
-  } catch (e) {}
+  } catch (error) {}
 
   setTimeout(run, 300);
   setTimeout(run, 900);
