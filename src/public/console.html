@@ -1052,7 +1052,48 @@ main [class*="badge"],
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="goodos-cache-version" content="20260627033853">
+
+<meta name="goodos-cache-version" content="KPI_CHARTS_V31">
+<style id="goodos-kpi-mini-charts-v31">
+.goodos-kpi-chart-v31 {
+  margin-top: 16px;
+  width: 100%;
+  height: 72px;
+  border-radius: 14px;
+  background: rgba(7,16,31,.26);
+  border: 1px solid rgba(148,163,184,.10);
+  overflow: hidden;
+  padding: 9px 11px;
+  box-sizing: border-box;
+}
+
+.goodos-kpi-chart-v31 svg {
+  width: 100%;
+  height: 42px;
+  display: block;
+}
+
+.goodos-kpi-chart-v31-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #9eabc2;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.goodos-kpi-chart-v31-value {
+  color: #a8ffd4;
+}
+
+.goodos-kpi-card-v31 {
+  min-height: 158px !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -9600,5 +9641,154 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setInterval(run, 1200);
 })();
 </script>
+
+<script id="goodos-kpi-mini-charts-v31-js">
+(function () {
+  if (window.__goodosKpiMiniChartsV31) return;
+  window.__goodosKpiMiniChartsV31 = true;
+
+  var KPI_LABELS = [
+    "ORGANIZATIONS",
+    "PROJECTS",
+    "ENVIRONMENTS",
+    "MODULE SCOPE"
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function findKpiCard(label) {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    var labelNode = nodes.find(function (el) {
+      if (el.closest(".goodos-kpi-chart-v31")) return false;
+      if (el.closest("aside, nav, header")) return false;
+      if (el.children.length > 2) return false;
+      return cleanText(el).toUpperCase() === label;
+    });
+
+    if (!labelNode) return null;
+
+    var node = labelNode;
+    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
+      if (node.closest && node.closest("aside, nav, header")) return null;
+      if (node.querySelector && node.querySelector("table")) return null;
+
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var text = cleanText(node).toUpperCase();
+
+      if (
+        text.indexOf(label) !== -1 &&
+        rect.width >= 180 &&
+        rect.width <= 620 &&
+        rect.height >= 70 &&
+        rect.height <= 290
+      ) {
+        return node;
+      }
+
+      node = node.parentElement;
+    }
+
+    return labelNode.parentElement;
+  }
+
+  function getCardValue(card, label) {
+    var text = cleanText(card);
+
+    if (label === "MODULE SCOPE") {
+      var pct = text.match(/(\d+(?:\.\d+)?)\s*%/);
+      return pct ? Number(pct[1]) : 0;
+    }
+
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function maxValue(values) {
+    var max = 1;
+    values.forEach(function (value) {
+      if (Number(value) > max) max = Number(value);
+    });
+    return max;
+  }
+
+  function chartHtml(label, value, max) {
+    var isPercent = label === "MODULE SCOPE";
+    var percent = isPercent ? Math.max(0, Math.min(100, value)) : Math.max(3, Math.min(100, (value / max) * 100));
+    var display = isPercent ? Math.round(value) + "%" : String(value);
+
+    return '' +
+      '<div class="goodos-kpi-chart-v31">' +
+        '<div class="goodos-kpi-chart-v31-top">' +
+          '<span>Live chart</span>' +
+          '<span class="goodos-kpi-chart-v31-value">' + display + '</span>' +
+        '</div>' +
+        '<svg viewBox="0 0 320 42" aria-hidden="true">' +
+          '<defs>' +
+            '<linearGradient id="goodosKpiGradientV31" x1="0" x2="1" y1="0" y2="0">' +
+              '<stop offset="0%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="55%" stop-color="#36dcff"></stop>' +
+              '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<rect x="0" y="15" width="320" height="12" rx="6" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="15" width="' + (320 * percent / 100).toFixed(1) + '" height="12" rx="6" fill="url(#goodosKpiGradientV31)"></rect>' +
+          '<circle cx="' + Math.max(7, Math.min(313, 320 * percent / 100)).toFixed(1) + '" cy="21" r="5" fill="#a8ffd4"></circle>' +
+        '</svg>' +
+      '</div>';
+  }
+
+  function renderKpiCharts() {
+    var cards = KPI_LABELS.map(function (label) {
+      var card = findKpiCard(label);
+      if (!card) return null;
+      return {
+        label: label,
+        card: card,
+        value: getCardValue(card, label)
+      };
+    }).filter(Boolean);
+
+    var max = maxValue(cards.filter(function (item) {
+      return item.label !== "MODULE SCOPE";
+    }).map(function (item) {
+      return item.value;
+    }));
+
+    cards.forEach(function (item) {
+      if (item.card.querySelector(".goodos-kpi-chart-v31")) return;
+      item.card.classList.add("goodos-kpi-card-v31");
+      item.card.insertAdjacentHTML("beforeend", chartHtml(item.label, item.value, max));
+    });
+  }
+
+  function start() {
+    renderKpiCharts();
+    setTimeout(renderKpiCharts, 800);
+    setTimeout(renderKpiCharts, 1800);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(renderKpiCharts, 500);
+  });
+})();
+</script>
+
 </body>
 </html>
