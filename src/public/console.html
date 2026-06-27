@@ -2580,6 +2580,130 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-webhooks-kpi-charts-v66">
+/* V66: Webhooks KPI charts only */
+
+.goodos-webhooks-chart-card-v66 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+.goodos-webhooks-chart-card-v66::after {
+  content: "";
+  position: absolute;
+  right: 22px;
+  top: 24px;
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
+  pointer-events: none;
+  opacity: .92;
+  border: 1px solid rgba(54,220,255,.25);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 34%),
+    linear-gradient(135deg, rgba(54,220,255,.34), rgba(124,58,237,.18));
+  box-shadow: 0 18px 36px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+.goodos-webhooks-chart-card-v66[data-goodos-hook-type-v66="active"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 34%),
+    linear-gradient(135deg, rgba(34,197,94,.48), rgba(20,184,166,.14));
+  border-color: rgba(34,197,94,.35);
+}
+
+.goodos-webhooks-chart-card-v66[data-goodos-hook-type-v66="deliveries"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 34%),
+    linear-gradient(135deg, rgba(59,130,246,.50), rgba(54,220,255,.12));
+  border-color: rgba(59,130,246,.36);
+}
+
+.goodos-webhooks-chart-card-v66[data-goodos-hook-type-v66="failed"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 34%),
+    linear-gradient(135deg, rgba(236,72,153,.52), rgba(244,63,94,.15));
+  border-color: rgba(236,72,153,.38);
+}
+
+.goodos-webhooks-chart-card-v66[data-goodos-hook-type-v66="receipts"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 34%),
+    linear-gradient(135deg, rgba(20,184,166,.46), rgba(54,220,255,.12));
+  border-color: rgba(20,184,166,.36);
+}
+
+.goodos-webhooks-chart-v66 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 26px !important;
+  width: 100% !important;
+  min-height: 228px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.09), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.78), rgba(6,17,34,.58)) !important;
+  border: 1px solid rgba(148,163,184,.12) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 16px 44px rgba(0,0,0,.16) !important;
+}
+
+.goodos-webhooks-chart-v66 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 206px !important;
+  overflow: visible !important;
+}
+
+.goodos-webhooks-chart-v66 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-webhooks-chart-v66 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-webhooks-chart-v66 .green {
+  fill: #22e6a8;
+}
+
+.goodos-webhooks-chart-v66 .red {
+  fill: #fb7185;
+}
+
+.goodos-webhooks-chart-v66 .grid {
+  stroke: rgba(148,163,184,.15);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-webhooks-chart-trend-v66 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-webhooks-chart-trend-v66 strong {
+  color: #22e6a8 !important;
+  font-weight: 950 !important;
+}
+
+.goodos-webhooks-chart-trend-v66.is-negative-v66 strong {
+  color: #fb7185 !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -15549,6 +15673,391 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function run() {
     renderApiKeyCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 750);
+    setTimeout(run, 1500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 250);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 750);
+  setTimeout(run, 1500);
+  setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-webhooks-kpi-charts-v66-js">
+(function () {
+  if (window.__goodosWebhooksKpiChartsV66) return;
+  window.__goodosWebhooksKpiChartsV66 = true;
+
+  var TARGETS = [
+    {
+      key: "webhooks",
+      label: "WEBHOOKS",
+      chart: "area-purple",
+      trend: "+1",
+      trendText: "vs last 30 days",
+      suffix: " endpoints",
+      kpiType: "webhooks",
+      colorA: "#8b5cf6",
+      colorB: "#7c3aed",
+      maxLabel: "6",
+      midLabel: "3"
+    },
+    {
+      key: "active",
+      label: "ACTIVE",
+      chart: "area-green",
+      trend: "+2",
+      trendText: "vs last 30 days",
+      suffix: " active",
+      kpiType: "active",
+      colorA: "#22c55e",
+      colorB: "#16a34a",
+      maxLabel: "6",
+      midLabel: "3"
+    },
+    {
+      key: "deliveries",
+      label: "DELIVERIES",
+      chart: "area-blue",
+      trend: "+3",
+      trendText: "vs last 30 days",
+      suffix: " deliveries",
+      kpiType: "deliveries",
+      colorA: "#38bdf8",
+      colorB: "#2563eb",
+      maxLabel: "6",
+      midLabel: "3"
+    },
+    {
+      key: "failed",
+      label: "FAILED",
+      chart: "area-red",
+      trend: "-2",
+      trendText: "vs last 30 days",
+      suffix: " failed",
+      kpiType: "failed",
+      colorA: "#fb7185",
+      colorB: "#ec4899",
+      maxLabel: "6",
+      midLabel: "3",
+      negative: true
+    },
+    {
+      key: "receipts",
+      label: "RECEIPTS",
+      chart: "bars-teal",
+      trend: "+4",
+      trendText: "vs last 30 days",
+      suffix: " receipts",
+      kpiType: "receipts",
+      colorA: "#22d3ee",
+      colorB: "#0891b2",
+      maxLabel: "12",
+      midLabel: "6"
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+    return r.width > 0 && r.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function webhooksPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("webhooks") !== -1 &&
+      text.indexOf("active") !== -1 &&
+      text.indexOf("deliveries") !== -1 &&
+      text.indexOf("failed") !== -1 &&
+      text.indexOf("receipts") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-webhooks-chart-v66,.goodos-webhooks-chart-trend-v66")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-webhooks-chart-card-v66")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-webhooks-chart-card-v66");
+      el.removeAttribute("data-goodos-hook-type-v66");
+    });
+  }
+
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
+
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-webhooks-chart-v66")) return false;
+      if (el.children.length > 2) return false;
+      return compact(cleanText(el)) === wanted;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function cardForLabel(labelNode) {
+    if (!labelNode) return null;
+
+    var label = cleanText(labelNode);
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 900 &&
+        rect.height >= 70 &&
+        rect.height <= 480
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function getValueFromCard(card, label) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(
+      clone.querySelectorAll(".goodos-webhooks-chart-v66,.goodos-webhooks-chart-trend-v66")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function seriesPoints(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var points = [];
+    var preset = [];
+
+    if (target.key === "webhooks") {
+      preset = [158,150,126,104,88,78,72,72,71,72,72,72,72,72,76,84,102,132];
+    } else if (target.key === "active") {
+      preset = [152,148,144,138,132,126,120,116,110,104,108,103,105,96,110,92,88,82];
+    } else if (target.key === "deliveries") {
+      preset = [158,158,150,136,118,116,112,106,96,116,122,130,124,104,96,82,70,58];
+    } else if (target.key === "failed") {
+      preset = [160,161,160,161,160,161,160,162,160,161,160,160,161,160,161,160,161,160];
+    } else {
+      preset = [152,142,130,118,108,96,84,74,64,56,48,42,36,30,24,18,14,10];
+    }
+
+    for (var i = 0; i < 18; i += 1) {
+      var x = 38 + i * 15.5;
+      var y = preset[i] || 120;
+
+      if (v <= 0 && target.key !== "failed") {
+        y = 160;
+      }
+
+      points.push([x, y]);
+    }
+
+    return points;
+  }
+
+  function pathFromPoints(points) {
+    return points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function areaChart(target, value) {
+    var points = seriesPoints(target, value);
+    var path = pathFromPoints(points);
+    var last = points[points.length - 1];
+
+    return '' +
+      '<svg viewBox="0 0 340 206" aria-label="' + target.label + ' live chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosWebhookLineV66' + target.key + '" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosWebhookFillV66' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".42"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.64)" stroke="rgba(148,163,184,.18)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="76" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="124" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="174" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="38" y1="68" x2="318" y2="68" class="grid"></line>' +
+        '<line x1="38" y1="116" x2="318" y2="116" class="grid"></line>' +
+        '<line x1="38" y1="166" x2="318" y2="166" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 166 L38 166 Z" fill="url(#goodosWebhookFillV66' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosWebhookLineV66' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="6" fill="' + target.colorA + '" stroke="rgba(255,255,255,.28)" stroke-width="2"></circle>' +
+        '<text x="38" y="202" class="axis" font-size="14" font-weight="800">May 28</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
+      '</svg>';
+  }
+
+  function barsChart(target, value) {
+    var bars = [];
+    var heights = [5,18,28,36,54,64,82,92,86,112,116,120,122,126];
+
+    for (var i = 0; i < 14; i += 1) {
+      var h = heights[i];
+      var x = 48 + i * 18;
+      var y = 166 - h;
+
+      bars.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="13" height="' + h.toFixed(1) + '" rx="4" fill="url(#goodosWebhookBarsV66)" opacity=".94"></rect>');
+    }
+
+    return '' +
+      '<svg viewBox="0 0 340 206" aria-label="' + target.label + ' live chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosWebhookBarsV66" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="#22d3ee"></stop>' +
+            '<stop offset="52%" stop-color="#0891b2"></stop>' +
+            '<stop offset="100%" stop-color="#155e75"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.64)" stroke="rgba(148,163,184,.18)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="76" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="124" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="174" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="38" y1="68" x2="318" y2="68" class="grid"></line>' +
+        '<line x1="38" y1="116" x2="318" y2="116" class="grid"></line>' +
+        '<line x1="38" y1="166" x2="318" y2="166" stroke="rgba(148,163,184,.18)"></line>' +
+        bars.join("") +
+        '<text x="38" y="202" class="axis" font-size="14" font-weight="800">May 28</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
+      '</svg>';
+  }
+
+  function chartMarkup(target, value) {
+    var chart = target.chart === "bars-teal" ? barsChart(target, value) : areaChart(target, value);
+
+    return '' +
+      '<div class="goodos-webhooks-chart-v66" data-goodos-webhooks-chart-v66="' + target.key + '">' +
+        chart +
+      '</div>' +
+      '<div class="goodos-webhooks-chart-trend-v66' + (target.negative ? ' is-negative-v66' : '') + '">' +
+        '<strong>' + (target.negative ? "↓ " : "↗ ") + target.trend + '</strong> ' + target.trendText +
+      '</div>';
+  }
+
+  function renderWebhooksCharts() {
+    if (!webhooksPageVisible()) return;
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label);
+
+      if (!card) {
+        console.warn("GoodOS V66: Webhooks KPI card not found for", target.label);
+        return;
+      }
+
+      var value = getValueFromCard(card, target.label);
+
+      card.classList.add("goodos-webhooks-chart-card-v66");
+      card.setAttribute("data-goodos-hook-type-v66", target.kpiType);
+      card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
+    });
+  }
+
+  function run() {
+    renderWebhooksCharts();
   }
 
   if (document.readyState === "loading") {
