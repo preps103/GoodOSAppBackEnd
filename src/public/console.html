@@ -5006,7 +5006,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
-<style id="goodos-database-management-functional-v93">
+<style id="goodos-database-management-functional-v95">
 .goodos-dbmgmt-card-v91 {
   cursor: pointer;
 }
@@ -5016,22 +5016,28 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   transform: translateY(-1px);
 }
 
-.goodos-dbmgmt-card-v91.is-dbmgmt-active-v93 {
+.goodos-dbmgmt-card-v91.is-dbmgmt-active-v95 {
   border-color: rgba(34,211,238,.70);
   box-shadow: 0 0 0 1px rgba(34,211,238,.22), 0 18px 45px rgba(34,211,238,.10);
 }
 
-.goodos-dbmgmt-functional-v93 {
-  margin-top: 30px;
+.goodos-dbmgmt-functional-v95 {
+  grid-column: 1 / -1;
+  margin: 8px 0 22px;
   border-radius: 24px;
   border: 1px solid rgba(148,163,184,.18);
   background:
     radial-gradient(circle at top right, rgba(34,211,238,.10), transparent 34%),
-    linear-gradient(180deg, rgba(30,41,59,.88), rgba(15,23,42,.92));
+    linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.94));
   padding: 24px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
 }
 
-.goodos-dbmgmt-functional-head-v93 {
+.goodos-dbmgmt-functional-v95.is-hidden-v95 {
+  display: none !important;
+}
+
+.goodos-dbmgmt-functional-head-v95 {
   display: flex;
   justify-content: space-between;
   gap: 18px;
@@ -5039,7 +5045,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   margin-bottom: 18px;
 }
 
-.goodos-dbmgmt-functional-title-v93 {
+.goodos-dbmgmt-functional-title-v95 {
   color: #f8fafc;
   font-size: 34px;
   line-height: 1;
@@ -5048,7 +5054,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   margin: 0 0 8px;
 }
 
-.goodos-dbmgmt-functional-copy-v93 {
+.goodos-dbmgmt-functional-copy-v95 {
   color: rgba(203,213,225,.76);
   font-size: 15px;
   line-height: 1.55;
@@ -5056,14 +5062,14 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   max-width: 900px;
 }
 
-.goodos-dbmgmt-functional-actions-v93 {
+.goodos-dbmgmt-functional-actions-v95 {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-.goodos-dbmgmt-btn-v93 {
+.goodos-dbmgmt-btn-v95 {
   border: 1px solid rgba(148,163,184,.20);
   background: rgba(15,23,42,.70);
   color: #e0f2fe;
@@ -5076,25 +5082,25 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   cursor: pointer;
 }
 
-.goodos-dbmgmt-btn-v93:hover {
+.goodos-dbmgmt-btn-v95:hover {
   border-color: rgba(34,211,238,.55);
 }
 
-.goodos-dbmgmt-stat-row-v93 {
+.goodos-dbmgmt-stat-row-v95 {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 18px;
 }
 
-.goodos-dbmgmt-stat-v93 {
+.goodos-dbmgmt-stat-v95 {
   border: 1px solid rgba(148,163,184,.13);
   background: rgba(2,6,23,.28);
   border-radius: 16px;
   padding: 13px;
 }
 
-.goodos-dbmgmt-stat-label-v93 {
+.goodos-dbmgmt-stat-label-v95 {
   color: rgba(148,163,184,.78);
   font-size: 10px;
   font-weight: 950;
@@ -5103,28 +5109,28 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   margin-bottom: 6px;
 }
 
-.goodos-dbmgmt-stat-value-v93 {
+.goodos-dbmgmt-stat-value-v95 {
   color: #f8fafc;
   font-size: 22px;
   font-weight: 950;
 }
 
-.goodos-dbmgmt-table-wrap-v93 {
+.goodos-dbmgmt-table-wrap-v95 {
   border: 1px solid rgba(148,163,184,.14);
   background: rgba(2,6,23,.30);
   border-radius: 18px;
   overflow: auto;
-  max-height: 560px;
+  max-height: 460px;
 }
 
-.goodos-dbmgmt-table-v93 {
+.goodos-dbmgmt-table-v95 {
   width: 100%;
   min-width: 980px;
   border-collapse: collapse;
 }
 
-.goodos-dbmgmt-table-v93 th,
-.goodos-dbmgmt-table-v93 td {
+.goodos-dbmgmt-table-v95 th,
+.goodos-dbmgmt-table-v95 td {
   border-bottom: 1px solid rgba(148,163,184,.10);
   padding: 12px;
   text-align: left;
@@ -5135,7 +5141,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   overflow-wrap: anywhere;
 }
 
-.goodos-dbmgmt-table-v93 th {
+.goodos-dbmgmt-table-v95 th {
   color: rgba(203,213,225,.80);
   font-size: 11px;
   font-weight: 950;
@@ -5147,7 +5153,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   z-index: 4;
 }
 
-.goodos-dbmgmt-status-v93 {
+.goodos-dbmgmt-status-v95 {
   margin-top: 13px;
   border-radius: 14px;
   border: 1px solid rgba(148,163,184,.13);
@@ -5158,35 +5164,35 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   font-weight: 800;
 }
 
-.goodos-dbmgmt-status-v93.is-error-v93 {
+.goodos-dbmgmt-status-v95.is-error-v95 {
   border-color: rgba(244,63,94,.28);
   color: #fecdd3;
   background: rgba(127,29,29,.20);
 }
 
-.goodos-dbmgmt-empty-v93 {
+.goodos-dbmgmt-empty-v95 {
   color: rgba(203,213,225,.66);
   padding: 28px;
   text-align: center;
 }
 
 @media (max-width: 1250px) {
-  .goodos-dbmgmt-functional-head-v93 {
+  .goodos-dbmgmt-functional-head-v95 {
     display: block;
   }
 
-  .goodos-dbmgmt-functional-actions-v93 {
+  .goodos-dbmgmt-functional-actions-v95 {
     justify-content: flex-start;
     margin-top: 14px;
   }
 
-  .goodos-dbmgmt-stat-row-v93 {
+  .goodos-dbmgmt-stat-row-v95 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
-  .goodos-dbmgmt-stat-row-v93 {
+  .goodos-dbmgmt-stat-row-v95 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -22567,17 +22573,15 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-<script id="goodos-database-management-functional-v93-js">
+<script id="goodos-database-management-functional-v95-js">
 (function () {
-  if (window.__goodosDatabaseManagementFunctionalV93) return;
-  window.__goodosDatabaseManagementFunctionalV93 = true;
+  if (window.__goodosDatabaseManagementFunctionalV95) return;
+  window.__goodosDatabaseManagementFunctionalV95 = true;
 
-  var activeSlug = "tables";
-  var isBooting = false;
+  var activeSlug = "";
   var isLoadingSection = false;
   var isLoadingSummary = false;
   var summaryLoaded = false;
-  var initialSectionLoaded = false;
   var observerTimer = null;
 
   var sectionMap = {
@@ -22622,14 +22626,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return String(n);
   }
 
-  function setStatus(message, isError) {
-    var el = document.querySelector("[data-dbmgmt-status-v93]");
-    if (!el) return;
-
-    el.textContent = message;
-    el.classList.toggle("is-error-v93", !!isError);
-  }
-
   function api(path) {
     var bases = [
       "/api/admin/database-management",
@@ -22670,56 +22666,108 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return tryBase(0);
   }
 
-  function ensurePanel() {
-    var shell = document.querySelector(".goodos-dbmgmt-shell-v91");
-    if (!shell) return null;
+  function getCardSlug(card) {
+    var title = card && card.querySelector(".goodos-dbmgmt-card-title-v91");
+    return title ? sectionMap[title.textContent.trim()] : "";
+  }
 
-    var panel = document.querySelector("[data-dbmgmt-functional-v93]");
+  function findCardBySlug(slug) {
+    var found = null;
+    document.querySelectorAll(".goodos-dbmgmt-card-v91").forEach(function (card) {
+      if (!found && getCardSlug(card) === slug) found = card;
+    });
+    return found;
+  }
+
+  function getGridForCard(card) {
+    if (!card) return null;
+    return card.closest(".goodos-dbmgmt-grid-v91");
+  }
+
+  function ensurePanel() {
+    var panel = document.querySelector("[data-dbmgmt-functional-v95]");
     if (panel) return panel;
 
     panel = document.createElement("section");
-    panel.className = "goodos-dbmgmt-functional-v93";
-    panel.setAttribute("data-dbmgmt-functional-v93", "true");
-    panel.setAttribute("data-dbmgmt-loaded-slug-v93", "");
-    panel.setAttribute("data-dbmgmt-summary-loaded-v93", "false");
+    panel.className = "goodos-dbmgmt-functional-v95 is-hidden-v95";
+    panel.setAttribute("data-dbmgmt-functional-v95", "true");
+    panel.setAttribute("data-dbmgmt-loaded-slug-v95", "");
     panel.innerHTML = '' +
-      '<div class="goodos-dbmgmt-functional-head-v93">' +
+      '<div class="goodos-dbmgmt-functional-head-v95">' +
         '<div>' +
-          '<h2 class="goodos-dbmgmt-functional-title-v93" data-dbmgmt-title-v93>Database Management</h2>' +
-          '<p class="goodos-dbmgmt-functional-copy-v93" data-dbmgmt-copy-v93>Select any chart card above to load live database data for that section.</p>' +
+          '<h2 class="goodos-dbmgmt-functional-title-v95" data-dbmgmt-title-v95>Database Management</h2>' +
+          '<p class="goodos-dbmgmt-functional-copy-v95" data-dbmgmt-copy-v95>Select any chart card to load live database data directly under that card row.</p>' +
         '</div>' +
-        '<div class="goodos-dbmgmt-functional-actions-v93">' +
-          '<button class="goodos-dbmgmt-btn-v93" data-dbmgmt-refresh-v93>Refresh Section</button>' +
-          '<button class="goodos-dbmgmt-btn-v93" data-dbmgmt-open-table-editor-v93>Table Editor</button>' +
-          '<button class="goodos-dbmgmt-btn-v93" data-dbmgmt-open-sql-editor-v93>SQL Editor</button>' +
+        '<div class="goodos-dbmgmt-functional-actions-v95">' +
+          '<button class="goodos-dbmgmt-btn-v95" data-dbmgmt-refresh-v95>Refresh Section</button>' +
+          '<button class="goodos-dbmgmt-btn-v95" data-dbmgmt-close-v95>Deselect</button>' +
+          '<button class="goodos-dbmgmt-btn-v95" data-dbmgmt-open-table-editor-v95>Table Editor</button>' +
+          '<button class="goodos-dbmgmt-btn-v95" data-dbmgmt-open-sql-editor-v95>SQL Editor</button>' +
         '</div>' +
       '</div>' +
-      '<div class="goodos-dbmgmt-stat-row-v93" data-dbmgmt-summary-v93></div>' +
-      '<div class="goodos-dbmgmt-table-wrap-v93" data-dbmgmt-table-v93 data-dbmgmt-has-render-v93="false">' +
-        '<div class="goodos-dbmgmt-empty-v93">Loading live database management data...</div>' +
+      '<div class="goodos-dbmgmt-stat-row-v95" data-dbmgmt-summary-v95></div>' +
+      '<div class="goodos-dbmgmt-table-wrap-v95" data-dbmgmt-table-v95>' +
+        '<div class="goodos-dbmgmt-empty-v95">Select a card above.</div>' +
       '</div>' +
-      '<div class="goodos-dbmgmt-status-v93" data-dbmgmt-status-v93>Ready.</div>';
+      '<div class="goodos-dbmgmt-status-v95" data-dbmgmt-status-v95>Ready.</div>';
 
-    shell.appendChild(panel);
+    document.body.appendChild(panel);
 
-    panel.querySelector("[data-dbmgmt-refresh-v93]").addEventListener("click", function () {
-      loadSection(activeSlug, true);
+    panel.querySelector("[data-dbmgmt-refresh-v95]").addEventListener("click", function () {
+      if (activeSlug) loadSection(activeSlug, true);
     });
 
-    panel.querySelector("[data-dbmgmt-open-table-editor-v93]").addEventListener("click", function () {
+    panel.querySelector("[data-dbmgmt-close-v95]").addEventListener("click", function () {
+      deselectPanel();
+    });
+
+    panel.querySelector("[data-dbmgmt-open-table-editor-v95]").addEventListener("click", function () {
       window.location.hash = "#table-editor";
     });
 
-    panel.querySelector("[data-dbmgmt-open-sql-editor-v93]").addEventListener("click", function () {
+    panel.querySelector("[data-dbmgmt-open-sql-editor-v95]").addEventListener("click", function () {
       window.location.hash = "#sql-editor";
     });
 
     return panel;
   }
 
+  function placePanelUnderCard(card) {
+    var panel = ensurePanel();
+    var grid = getGridForCard(card);
+
+    if (!panel || !grid || !card) return panel;
+
+    grid.insertBefore(panel, card.nextSibling);
+    panel.classList.remove("is-hidden-v95");
+
+    return panel;
+  }
+
+  function deselectPanel() {
+    activeSlug = "";
+
+    document.querySelectorAll(".goodos-dbmgmt-card-v91").forEach(function (card) {
+      card.classList.remove("is-dbmgmt-active-v95");
+    });
+
+    var panel = document.querySelector("[data-dbmgmt-functional-v95]");
+    if (panel) {
+      panel.classList.add("is-hidden-v95");
+      panel.setAttribute("data-dbmgmt-loaded-slug-v95", "");
+    }
+  }
+
+  function setStatus(message, isError) {
+    var el = document.querySelector("[data-dbmgmt-status-v95]");
+    if (!el) return;
+
+    el.textContent = message;
+    el.classList.toggle("is-error-v95", !!isError);
+  }
+
   function renderSummary(summary) {
-    var box = document.querySelector("[data-dbmgmt-summary-v93]");
-    var panel = document.querySelector("[data-dbmgmt-functional-v93]");
+    var box = document.querySelector("[data-dbmgmt-summary-v95]");
     if (!box || !summary) return;
 
     var keys = [
@@ -22735,26 +22783,22 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     box.innerHTML = keys.map(function (entry) {
       return '' +
-        '<div class="goodos-dbmgmt-stat-v93">' +
-          '<div class="goodos-dbmgmt-stat-label-v93">' + esc(entry[1]) + '</div>' +
-          '<div class="goodos-dbmgmt-stat-value-v93">' + esc(compact(summary[entry[0]] || 0)) + '</div>' +
+        '<div class="goodos-dbmgmt-stat-v95">' +
+          '<div class="goodos-dbmgmt-stat-label-v95">' + esc(entry[1]) + '</div>' +
+          '<div class="goodos-dbmgmt-stat-value-v95">' + esc(compact(summary[entry[0]] || 0)) + '</div>' +
         '</div>';
     }).join("");
-
-    if (panel) panel.setAttribute("data-dbmgmt-summary-loaded-v93", "true");
   }
 
   function renderTable(data) {
-    var wrap = document.querySelector("[data-dbmgmt-table-v93]");
+    var wrap = document.querySelector("[data-dbmgmt-table-v95]");
     if (!wrap) return;
 
     var columns = data.columns || [];
     var rows = data.rows || [];
 
-    wrap.setAttribute("data-dbmgmt-has-render-v93", "true");
-
     if (!rows.length) {
-      wrap.innerHTML = '<div class="goodos-dbmgmt-empty-v93">No records found for this section.</div>';
+      wrap.innerHTML = '<div class="goodos-dbmgmt-empty-v95">No records found for this section.</div>';
       return;
     }
 
@@ -22763,7 +22807,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     }
 
     wrap.innerHTML = '' +
-      '<table class="goodos-dbmgmt-table-v93">' +
+      '<table class="goodos-dbmgmt-table-v95">' +
         '<thead><tr>' +
           columns.map(function (col) {
             return '<th>' + esc(String(col).replaceAll("_", " ")) + '</th>';
@@ -22803,117 +22847,115 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   async function loadSection(slug, force) {
     if (!isRoute()) return;
+    if (!slug) return;
     if (isLoadingSection) return;
 
-    var panel = ensurePanel();
+    var card = findCardBySlug(slug);
+    var panel = placePanelUnderCard(card);
+
     if (!panel) return;
 
-    var alreadyLoadedSlug = panel.getAttribute("data-dbmgmt-loaded-slug-v93") || "";
-    if (!force && alreadyLoadedSlug === slug) {
-      markActiveCard(slug);
-      return;
-    }
+    var alreadyLoadedSlug = panel.getAttribute("data-dbmgmt-loaded-slug-v95") || "";
+    if (!force && alreadyLoadedSlug === slug) return;
 
     activeSlug = slug;
     isLoadingSection = true;
+    markActiveCard(slug);
 
     try {
       setStatus("Loading " + slug.replaceAll("-", " ") + "...");
-      var data = await api("/section/" + encodeURIComponent(slug));
 
-      var title = document.querySelector("[data-dbmgmt-title-v93]");
-      var copy = document.querySelector("[data-dbmgmt-copy-v93]");
+      var title = document.querySelector("[data-dbmgmt-title-v95]");
+      var copy = document.querySelector("[data-dbmgmt-copy-v95]");
+      var wrap = document.querySelector("[data-dbmgmt-table-v95]");
+
+      if (wrap) {
+        wrap.innerHTML = '<div class="goodos-dbmgmt-empty-v95">Loading live database management data...</div>';
+      }
+
+      var data = await api("/section/" + encodeURIComponent(slug));
 
       if (title) title.textContent = data.title || "Database Management";
       if (copy) copy.textContent = data.description || "";
 
       renderTable(data);
 
-      panel.setAttribute("data-dbmgmt-loaded-slug-v93", slug);
-      panel.setAttribute("data-dbmgmt-loaded-once-v93", "true");
-
-      markActiveCard(slug);
+      panel.setAttribute("data-dbmgmt-loaded-slug-v95", slug);
 
       setStatus(
         "Loaded " + (data.count || 0) + " records for " + (data.title || slug) + (data.error ? " — " + data.error : "") + ".",
         !data.queryOk
       );
     } catch (err) {
-      panel.setAttribute("data-dbmgmt-loaded-slug-v93", slug);
-      panel.setAttribute("data-dbmgmt-loaded-once-v93", "true");
+      panel.setAttribute("data-dbmgmt-loaded-slug-v95", slug);
 
-      var wrap = document.querySelector("[data-dbmgmt-table-v93]");
-      if (wrap) {
-        wrap.setAttribute("data-dbmgmt-has-render-v93", "true");
-        wrap.innerHTML = '<div class="goodos-dbmgmt-empty-v93">Load failed: ' + esc(err.message) + '</div>';
+      var failedWrap = document.querySelector("[data-dbmgmt-table-v95]");
+      if (failedWrap) {
+        failedWrap.innerHTML = '<div class="goodos-dbmgmt-empty-v95">Load failed: ' + esc(err.message) + '</div>';
       }
 
       setStatus("Load failed: " + err.message, true);
     } finally {
       isLoadingSection = false;
-      initialSectionLoaded = true;
     }
   }
 
   function markActiveCard(slug) {
     document.querySelectorAll(".goodos-dbmgmt-card-v91").forEach(function (card) {
-      var title = card.querySelector(".goodos-dbmgmt-card-title-v91");
-      var cardSlug = title ? sectionMap[title.textContent.trim()] : "";
-      card.classList.toggle("is-dbmgmt-active-v93", cardSlug === slug);
+      card.classList.toggle("is-dbmgmt-active-v95", getCardSlug(card) === slug);
     });
   }
 
   function wireCards() {
     document.querySelectorAll(".goodos-dbmgmt-card-v91").forEach(function (card) {
-      if (card.getAttribute("data-dbmgmt-wired-v93") === "true") return;
+      if (card.getAttribute("data-dbmgmt-wired-v95") === "true") return;
 
-      var title = card.querySelector(".goodos-dbmgmt-card-title-v91");
-      if (!title) return;
-
-      var slug = sectionMap[title.textContent.trim()];
+      var slug = getCardSlug(card);
       if (!slug) return;
 
-      card.setAttribute("data-dbmgmt-wired-v93", "true");
-      card.setAttribute("data-dbmgmt-section-v93", slug);
-      card.title = "Open live " + title.textContent.trim() + " data";
+      card.setAttribute("data-dbmgmt-wired-v95", "true");
+      card.setAttribute("data-dbmgmt-section-v95", slug);
 
       card.addEventListener("click", function () {
+        var panel = document.querySelector("[data-dbmgmt-functional-v95]");
+        var loadedSlug = panel ? panel.getAttribute("data-dbmgmt-loaded-slug-v95") : "";
+
+        if (activeSlug === slug && loadedSlug === slug && panel && !panel.classList.contains("is-hidden-v95")) {
+          deselectPanel();
+          return;
+        }
+
         loadSection(slug, false);
 
-        var panel = ensurePanel();
-        if (panel) {
-          setTimeout(function () {
-            panel.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 80);
-        }
+        setTimeout(function () {
+          var currentPanel = document.querySelector("[data-dbmgmt-functional-v95]");
+          if (currentPanel) {
+            currentPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 100);
       });
+    });
+  }
+
+  function removeOldBottomPanels() {
+    document.querySelectorAll("[data-dbmgmt-functional-v93], .goodos-dbmgmt-functional-v93").forEach(function (el) {
+      el.remove();
     });
   }
 
   function boot() {
     if (!isRoute()) return;
-    if (isBooting) return;
     if (!document.querySelector(".goodos-dbmgmt-v91")) return;
 
-    isBooting = true;
+    removeOldBottomPanels();
+    ensurePanel();
+    wireCards();
+    loadSummary(false);
 
-    try {
-      ensurePanel();
-      wireCards();
-      loadSummary(false);
-
-      var panel = document.querySelector("[data-dbmgmt-functional-v93]");
-      var hasLoadedOnce = panel && panel.getAttribute("data-dbmgmt-loaded-once-v93") === "true";
-
-      if (!hasLoadedOnce && !initialSectionLoaded) {
-        loadSection(activeSlug, false);
-      } else {
-        markActiveCard(activeSlug);
-      }
-    } finally {
-      setTimeout(function () {
-        isBooting = false;
-      }, 250);
+    if (activeSlug) {
+      var card = findCardBySlug(activeSlug);
+      if (card) placePanelUnderCard(card);
+      markActiveCard(activeSlug);
     }
   }
 
@@ -22927,16 +22969,13 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   var observer = new MutationObserver(function () {
     if (!isRoute()) return;
-    if (isLoadingSection || isLoadingSummary || isBooting) return;
+    if (isLoadingSection || isLoadingSummary) return;
 
     clearTimeout(observerTimer);
     observerTimer = setTimeout(function () {
       if (!isRoute()) return;
-      if (!document.querySelector(".goodos-dbmgmt-v91")) return;
-
-      ensurePanel();
+      removeOldBottomPanels();
       wireCards();
-      markActiveCard(activeSlug);
     }, 250);
   });
 
