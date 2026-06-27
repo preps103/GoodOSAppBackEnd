@@ -3920,14 +3920,13 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
-
-<style id="goodos-table-editor-force-v87">
-.goodos-te-v87 {
+<style id="goodos-table-editor-upgrade-v88">
+.goodos-te-v88 {
   width: 100%;
   max-width: 100%;
 }
 
-.goodos-te-shell-v87 {
+.goodos-te-shell-v88 {
   border-radius: 28px;
   border: 1px solid rgba(148,163,184,.18);
   background:
@@ -3937,20 +3936,20 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-shadow: 0 24px 70px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-.goodos-te-hero-v87 {
+.goodos-te-hero-v88 {
   border-radius: 24px;
-  border: 1px solid rgba(148,163,184,.14);
+  border: 1px solid rgba(34,211,238,.20);
   background:
     radial-gradient(circle at top right, rgba(45,212,191,.14), transparent 38%),
-    linear-gradient(135deg, rgba(15,23,42,.92), rgba(12,22,39,.92));
+    linear-gradient(135deg, rgba(15,23,42,.94), rgba(12,22,39,.94));
   padding: 34px;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
 }
 
-.goodos-te-eyebrow-v87 {
+.goodos-te-eyebrow-v88 {
   font-size: 12px;
   font-weight: 950;
   letter-spacing: .34em;
@@ -3959,36 +3958,36 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   margin-bottom: 14px;
 }
 
-.goodos-te-title-v87 {
+.goodos-te-title-v88 {
   font-size: clamp(42px, 4vw, 68px);
   line-height: .98;
   font-weight: 950;
   letter-spacing: -.06em;
   color: #f8fafc;
-  margin: 0 0 16px;
+  margin: 0 0 14px;
 }
 
-.goodos-te-copy-v87 {
-  max-width: 900px;
+.goodos-te-copy-v88 {
+  max-width: 760px;
   color: rgba(203,213,225,.84);
   font-size: 17px;
   line-height: 1.65;
   margin: 0;
 }
 
-.goodos-te-actions-v87 {
+.goodos-te-actions-v88 {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   justify-content: flex-end;
   align-content: flex-start;
-  max-width: 520px;
+  max-width: 560px;
 }
 
-.goodos-te-btn-v87 {
-  border: 1px solid rgba(148,163,184,.18);
-  background: rgba(15,23,42,.64);
-  color: #dbeafe;
+.goodos-te-btn-v88 {
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(15,23,42,.70);
+  color: #e0f2fe;
   border-radius: 999px;
   padding: 12px 18px;
   font-size: 12px;
@@ -3996,121 +3995,212 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   letter-spacing: .16em;
   text-transform: uppercase;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
 
-.goodos-te-btn-v87:hover {
-  border-color: rgba(34,211,238,.45);
+.goodos-te-btn-v88:hover {
+  border-color: rgba(34,211,238,.55);
 }
 
-.goodos-te-kpis-v87 {
+.goodos-te-kpis-v88 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
-.goodos-te-kpi-v87 {
-  min-height: 132px;
-  border-radius: 20px;
-  border: 1px solid rgba(148,163,184,.15);
+.goodos-te-kpi-v88 {
+  min-height: 258px;
+  border-radius: 22px;
+  border: 1px solid rgba(148,163,184,.16);
   background:
     radial-gradient(circle at top right, rgba(34,211,238,.10), transparent 42%),
     linear-gradient(180deg, rgba(30,41,59,.88), rgba(15,23,42,.92));
   padding: 20px;
+  position: relative;
+  overflow: hidden;
 }
 
-.goodos-te-kpi-label-v87 {
+.goodos-te-kpi-icon-v88 {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 54px;
+  height: 54px;
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(34,211,238,.28), rgba(124,58,237,.20));
+  border: 1px solid rgba(56,189,248,.26);
+  box-shadow: 0 0 28px rgba(34,211,238,.12);
+}
+
+.goodos-te-kpi-v88:nth-child(1) .goodos-te-kpi-icon-v88 {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(168,85,247,.38), rgba(124,58,237,.24));
+  border-color: rgba(168,85,247,.36);
+}
+
+.goodos-te-kpi-v88:nth-child(2) .goodos-te-kpi-icon-v88 {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(59,130,246,.40), rgba(14,165,233,.22));
+  border-color: rgba(59,130,246,.40);
+}
+
+.goodos-te-kpi-v88:nth-child(3) .goodos-te-kpi-icon-v88 {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(34,197,94,.38), rgba(16,185,129,.22));
+  border-color: rgba(34,197,94,.40);
+}
+
+.goodos-te-kpi-v88:nth-child(4) .goodos-te-kpi-icon-v88 {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(236,72,153,.38), rgba(217,70,239,.22));
+  border-color: rgba(236,72,153,.40);
+}
+
+.goodos-te-kpi-label-v88 {
   color: rgba(148,163,184,.78);
   font-size: 12px;
   font-weight: 950;
   letter-spacing: .24em;
   text-transform: uppercase;
   margin-bottom: 14px;
+  padding-right: 68px;
 }
 
-.goodos-te-kpi-value-v87 {
+.goodos-te-kpi-value-v88 {
   color: #f8fafc;
   font-size: 38px;
   line-height: 1;
   font-weight: 950;
   letter-spacing: -.04em;
+  padding-right: 68px;
 }
 
-.goodos-te-kpi-copy-v87 {
-  color: rgba(203,213,225,.62);
+.goodos-te-kpi-copy-v88 {
+  color: rgba(203,213,225,.66);
   font-size: 13px;
   margin-top: 8px;
+  margin-bottom: 14px;
 }
 
-.goodos-te-layout-v87 {
+.goodos-te-chart-v88 {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  height: 102px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,211,238,.10), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64));
+  border: 1px solid rgba(148,163,184,.12);
+  padding: 10px;
+}
+
+.goodos-te-chart-v88 svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.goodos-te-layout-v88 {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-columns: 390px minmax(0, 1fr);
   gap: 18px;
 }
 
-.goodos-te-panel-v87 {
+.goodos-te-panel-v88 {
   border-radius: 22px;
   border: 1px solid rgba(148,163,184,.14);
-  background: rgba(15,23,42,.50);
-  padding: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.08), transparent 36%),
+    rgba(15,23,42,.56);
+  padding: 22px;
   overflow: hidden;
 }
 
-.goodos-te-panel-title-v87 {
+.goodos-te-panel-title-v88 {
   color: #f8fafc;
-  font-size: 18px;
+  font-size: 34px;
+  line-height: .95;
   font-weight: 950;
-  margin: 0 0 14px;
+  letter-spacing: -.05em;
+  margin: 0 0 18px;
 }
 
-.goodos-te-control-v87,
-.goodos-te-search-v87 {
+.goodos-te-control-v88,
+.goodos-te-search-v88 {
   width: 100%;
   border: 1px solid rgba(148,163,184,.18);
-  background: rgba(2,6,23,.42);
+  background: rgba(2,6,23,.55);
   color: #e2e8f0;
   border-radius: 12px;
-  padding: 12px;
+  padding: 13px 14px;
   outline: none;
   margin-bottom: 12px;
   box-sizing: border-box;
 }
 
-.goodos-te-list-v87 {
+.goodos-te-list-v88 {
   display: grid;
-  gap: 8px;
-  max-height: 620px;
+  gap: 0;
+  max-height: 560px;
   overflow: auto;
-  padding-right: 4px;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,.12);
+  background: rgba(2,6,23,.22);
 }
 
-.goodos-te-item-v87 {
-  border: 1px solid rgba(148,163,184,.12);
-  background: rgba(15,23,42,.58);
-  border-radius: 14px;
-  padding: 12px;
+.goodos-te-item-v88 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid rgba(148,163,184,.10);
+  padding: 13px 14px;
   color: #dbeafe;
   cursor: pointer;
 }
 
-.goodos-te-item-v87.is-active-v87 {
-  border-color: rgba(34,211,238,.58);
-  background: linear-gradient(90deg, rgba(79,70,229,.48), rgba(34,211,238,.22));
+.goodos-te-item-v88:last-child {
+  border-bottom: 0;
 }
 
-.goodos-te-item-title-v87 {
+.goodos-te-item-v88.is-active-v88 {
+  background: linear-gradient(90deg, rgba(79,70,229,.78), rgba(34,211,238,.38));
+}
+
+.goodos-te-item-title-v88 {
   font-weight: 950;
   color: #f8fafc;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.goodos-te-item-meta-v87 {
-  margin-top: 5px;
-  color: rgba(203,213,225,.64);
-  font-size: 12px;
+.goodos-te-item-pill-v88 {
+  color: rgba(219,234,254,.86);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
-.goodos-te-toolbar-v87 {
+.goodos-te-item-meta-v88 {
+  color: rgba(203,213,225,.70);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.goodos-te-toolbar-v88 {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -4119,39 +4209,42 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   margin-bottom: 14px;
 }
 
-.goodos-te-toolbar-left-v87,
-.goodos-te-toolbar-right-v87 {
+.goodos-te-toolbar-left-v88,
+.goodos-te-toolbar-right-v88 {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
 }
 
-.goodos-te-search-v87 {
-  width: 340px;
-  max-width: 100%;
+.goodos-te-toolbar-right-v88 {
+  justify-content: flex-end;
+}
+
+.goodos-te-search-v88 {
+  width: min(480px, 100%);
   border-radius: 999px;
   margin-bottom: 0;
 }
 
-.goodos-te-table-wrap-v87 {
+.goodos-te-table-wrap-v88 {
   overflow: auto;
   border-radius: 18px;
   border: 1px solid rgba(148,163,184,.14);
   background: rgba(2,6,23,.28);
-  max-height: 640px;
+  max-height: 610px;
 }
 
-.goodos-te-table-v87 {
+.goodos-te-table-v88 {
   width: 100%;
-  min-width: 850px;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
-.goodos-te-table-v87 th,
-.goodos-te-table-v87 td {
+.goodos-te-table-v88 th,
+.goodos-te-table-v88 td {
   border-bottom: 1px solid rgba(148,163,184,.10);
-  padding: 12px;
+  padding: 13px 12px;
   text-align: left;
   color: #e2e8f0;
   font-size: 13px;
@@ -4159,7 +4252,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   max-width: 300px;
 }
 
-.goodos-te-table-v87 th {
+.goodos-te-table-v88 th {
   color: rgba(203,213,225,.78);
   font-size: 11px;
   font-weight: 950;
@@ -4171,7 +4264,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   z-index: 4;
 }
 
-.goodos-te-input-v87 {
+.goodos-te-input-v88 {
   width: 100%;
   min-width: 120px;
   border: 1px solid rgba(148,163,184,.13);
@@ -4183,12 +4276,53 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-sizing: border-box;
 }
 
-.goodos-te-input-v87:disabled {
+.goodos-te-input-v88:disabled {
   opacity: .55;
   cursor: not-allowed;
 }
 
-.goodos-te-status-v87 {
+.goodos-te-badge-v88 {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: lowercase;
+  background: rgba(34,197,94,.13);
+  color: #86efac;
+  border: 1px solid rgba(34,197,94,.24);
+}
+
+.goodos-te-badge-v88.is-danger-v88 {
+  background: rgba(244,63,94,.12);
+  color: #fb7185;
+  border-color: rgba(244,63,94,.24);
+}
+
+.goodos-te-row-actions-v88 {
+  display: flex;
+  gap: 7px;
+}
+
+.goodos-te-icon-btn-v88 {
+  border: 1px solid rgba(56,189,248,.28);
+  color: #38bdf8;
+  background: rgba(14,165,233,.10);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-weight: 950;
+}
+
+.goodos-te-icon-btn-v88.is-delete-v88 {
+  border-color: rgba(244,63,94,.28);
+  color: #fb7185;
+  background: rgba(244,63,94,.10);
+}
+
+.goodos-te-status-v88 {
   margin-top: 12px;
   border-radius: 14px;
   border: 1px solid rgba(148,163,184,.13);
@@ -4199,29 +4333,41 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   font-weight: 800;
 }
 
-.goodos-te-empty-v87 {
+.goodos-te-footer-v88 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  color: rgba(203,213,225,.76);
+  font-size: 13px;
+  border-top: 1px solid rgba(148,163,184,.10);
+  background: rgba(15,23,42,.52);
+}
+
+.goodos-te-empty-v88 {
   color: rgba(203,213,225,.66);
   padding: 28px;
   text-align: center;
 }
 
-@media (max-width: 1250px) {
-  .goodos-te-layout-v87,
-  .goodos-te-hero-v87 {
+@media (max-width: 1350px) {
+  .goodos-te-kpis-v88 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .goodos-te-layout-v88,
+  .goodos-te-hero-v88 {
     grid-template-columns: 1fr;
   }
 
-  .goodos-te-actions-v87 {
+  .goodos-te-actions-v88 {
     justify-content: flex-start;
-  }
-
-  .goodos-te-kpis-v87 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
-  .goodos-te-kpis-v87 {
+  .goodos-te-kpis-v88 {
     grid-template-columns: 1fr;
   }
 }
@@ -20022,11 +20168,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-table-editor-force-v87-js">
+<script id="goodos-table-editor-upgrade-v88-js">
 (function () {
-  if (window.__goodosTableEditorForceV87) return;
-  window.__goodosTableEditorForceV87 = true;
+  if (window.__goodosTableEditorUpgradeV88) return;
+  window.__goodosTableEditorUpgradeV88 = true;
 
   var active = false;
   var loading = false;
@@ -20064,13 +20209,20 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       .replaceAll("'", "&#039;");
   }
 
+  function compact(value) {
+    var n = Number(value || 0);
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(".0", "") + "M";
+    if (n >= 1000) return n.toLocaleString();
+    return String(n);
+  }
+
   function setText(selector, value) {
     var el = document.querySelector(selector);
     if (el) el.textContent = value;
   }
 
   function setStatus(value) {
-    setText("[data-te-status-v87]", value);
+    setText("[data-te-status-v88]", value);
   }
 
   function api(path, options) {
@@ -20098,6 +20250,278 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         return json;
       });
     });
+  }
+
+  function chartSvg(kind, colorA, colorB, values, maxLabel, midLabel) {
+    var id = "te88" + Math.random().toString(16).slice(2);
+    var width = 320;
+    var height = 90;
+    var left = 28;
+    var top = 20;
+    var bottom = 78;
+    var max = Math.max.apply(null, values.concat([1]));
+
+    function x(i) {
+      return left + i * ((width - left - 8) / Math.max(values.length - 1, 1));
+    }
+
+    function y(v) {
+      return bottom - (v / max) * (bottom - top);
+    }
+
+    var pts = values.map(function (v, i) {
+      return [x(i), y(v)];
+    });
+
+    var path = pts.map(function (pt, i) {
+      return (i === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+
+    var last = pts[pts.length - 1];
+
+    if (kind === "bar") {
+      return '' +
+        '<svg viewBox="0 0 330 100" aria-hidden="true">' +
+          '<defs><linearGradient id="' + id + 'b" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient></defs>' +
+          '<text x="0" y="12" fill="rgba(203,213,225,.80)" font-size="9" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<line x1="28" y1="28" x2="322" y2="28" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+          '<line x1="28" y1="52" x2="322" y2="52" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+          '<line x1="28" y1="78" x2="322" y2="78" stroke="rgba(148,163,184,.15)"></line>' +
+          values.map(function (v, i) {
+            var bw = 12;
+            var bx = x(i) - bw / 2;
+            var by = y(v);
+            var bh = bottom - by;
+            return '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw + '" height="' + bh.toFixed(1) + '" rx="3" fill="url(#' + id + 'b)" opacity=".92"></rect>';
+          }).join("") +
+        '</svg>';
+    }
+
+    return '' +
+      '<svg viewBox="0 0 330 100" aria-hidden="true">' +
+        '<defs>' +
+          '<linearGradient id="' + id + 'l" x1="0" x2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient>' +
+          '<linearGradient id="' + id + 'f" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="' + colorB + '" stop-opacity=".28"></stop><stop offset="100%" stop-color="' + colorB + '" stop-opacity="0"></stop></linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="12" fill="rgba(203,213,225,.80)" font-size="9" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+        '<text x="0" y="32" fill="rgba(203,213,225,.70)" font-size="9" font-weight="800">' + esc(maxLabel) + '</text>' +
+        '<text x="0" y="56" fill="rgba(203,213,225,.70)" font-size="9" font-weight="800">' + esc(midLabel) + '</text>' +
+        '<text x="0" y="81" fill="rgba(203,213,225,.70)" font-size="9" font-weight="800">0</text>' +
+        '<line x1="28" y1="28" x2="322" y2="28" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+        '<line x1="28" y1="52" x2="322" y2="52" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+        '<line x1="28" y1="78" x2="322" y2="78" stroke="rgba(148,163,184,.15)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 78 L28 78 Z" fill="url(#' + id + 'f)"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#' + id + 'l)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        pts.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === pts.length - 1 ? 4.4 : 2.6) + '" fill="' + colorA + '" stroke="rgba(255,255,255,.18)" stroke-width="1"></circle>';
+        }).join("") +
+      '</svg>';
+  }
+
+  function kpi(id, label, value, copy, colorA, colorB, values, kind) {
+    return '' +
+      '<div class="goodos-te-kpi-v88" data-te-kpi-card="' + id + '">' +
+        '<div class="goodos-te-kpi-icon-v88"></div>' +
+        '<div class="goodos-te-kpi-label-v88">' + esc(label) + '</div>' +
+        '<div class="goodos-te-kpi-value-v88" data-te-kpi-value="' + id + '">' + esc(value) + '</div>' +
+        '<div class="goodos-te-kpi-copy-v88" data-te-kpi-copy="' + id + '">' + esc(copy) + '</div>' +
+        '<div class="goodos-te-chart-v88">' + chartSvg(kind || "line", colorA, colorB, values, "40", "20") + '</div>' +
+      '</div>';
+  }
+
+  function paint() {
+    getRoot().innerHTML = '' +
+      '<div class="goodos-te-v88">' +
+        '<section class="goodos-te-shell-v88">' +
+          '<div class="goodos-te-hero-v88">' +
+            '<div>' +
+              '<div class="goodos-te-eyebrow-v88">GOODOS CLOUD DATABASE</div>' +
+              '<h1 class="goodos-te-title-v88">Table Editor</h1>' +
+              '<p class="goodos-te-copy-v88">Browse schemas, inspect tables, load rows, search records, edit cells, insert rows, create tables, and manage database records from one working table editor.</p>' +
+            '</div>' +
+            '<div class="goodos-te-actions-v88">' +
+              '<button class="goodos-te-btn-v88" data-te-refresh-v88>↻ Refresh</button>' +
+              '<button class="goodos-te-btn-v88" data-te-create-table-v88>⊕ Create Table</button>' +
+              '<button class="goodos-te-btn-v88" data-te-add-row-v88>⊕ Add Row</button>' +
+              '<button class="goodos-te-btn-v88" data-te-save-v88>▣ Save Edits</button>' +
+              '<button class="goodos-te-btn-v88" data-te-nav-v88="database">▤ Database</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="goodos-te-kpis-v88">' +
+            kpi("schemas", "Schemas", "0", "Available namespaces", "#a855f7", "#7c3aed", [3,4,5,5,7,8,12,9,11,13,10,12,11,14,16,15,17,16], "line") +
+            kpi("tables", "Tables", "0", "In selected schema", "#38bdf8", "#2563eb", [24,28,30,34,29,35,31,36,30,34,27,48,36,35,32,40,56,52], "line") +
+            kpi("rows", "Rows", "0", "In current table", "#22c55e", "#16a34a", [5000,8200,9800,7800,10000,9400,12000,14500,11800,10300,12400,15500,12200,11100,9200,11800,13000,12000], "line") +
+            kpi("columns", "Columns", "0", "Editable fields", "#ec4899", "#db2777", [36,38,40,42,28,27,29,31,30,25,20,23,18,17,9,12,15,14], "line") +
+          '</div>' +
+
+          '<div class="goodos-te-layout-v88">' +
+            '<aside class="goodos-te-panel-v88">' +
+              '<h2 class="goodos-te-panel-title-v88">Schema Browser</h2>' +
+              '<select class="goodos-te-control-v88" data-te-schema-v88></select>' +
+              '<input class="goodos-te-control-v88" data-te-table-filter-v88 placeholder="Filter tables..." />' +
+              '<div class="goodos-te-list-v88" data-te-table-list-v88><div class="goodos-te-empty-v88">Loading tables...</div></div>' +
+            '</aside>' +
+
+            '<section class="goodos-te-panel-v88">' +
+              '<div class="goodos-te-toolbar-v88">' +
+                '<div class="goodos-te-toolbar-left-v88">' +
+                  '<h2 class="goodos-te-panel-title-v88" data-te-current-title-v88>Table Rows</h2>' +
+                '</div>' +
+                '<div class="goodos-te-toolbar-right-v88">' +
+                  '<input class="goodos-te-search-v88" data-te-search-v88 placeholder="Search rows..." />' +
+                  '<button class="goodos-te-btn-v88" data-te-search-btn-v88>Search</button>' +
+                  '<button class="goodos-te-btn-v88" data-te-prev-v88>Prev</button>' +
+                  '<button class="goodos-te-btn-v88" data-te-next-v88>Next</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="goodos-te-table-wrap-v88" data-te-rows-wrap-v88><div class="goodos-te-empty-v88">Select a table to inspect rows.</div></div>' +
+              '<div class="goodos-te-status-v88" data-te-status-v88>Ready.</div>' +
+            '</section>' +
+          '</div>' +
+        '</section>' +
+      '</div>';
+
+    bind();
+    loadAll();
+  }
+
+  function bind() {
+    document.querySelector("[data-te-refresh-v88]").addEventListener("click", loadAll);
+    document.querySelector("[data-te-create-table-v88]").addEventListener("click", createTable);
+    document.querySelector("[data-te-add-row-v88]").addEventListener("click", addRow);
+    document.querySelector("[data-te-save-v88]").addEventListener("click", saveEdits);
+
+    document.querySelector("[data-te-search-btn-v88]").addEventListener("click", function () {
+      state.q = document.querySelector("[data-te-search-v88]").value.trim();
+      state.offset = 0;
+      loadRows();
+    });
+
+    document.querySelector("[data-te-search-v88]").addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        state.q = event.target.value.trim();
+        state.offset = 0;
+        loadRows();
+      }
+    });
+
+    document.querySelector("[data-te-prev-v88]").addEventListener("click", function () {
+      state.offset = Math.max(0, state.offset - state.limit);
+      loadRows();
+    });
+
+    document.querySelector("[data-te-next-v88]").addEventListener("click", function () {
+      if (state.offset + state.limit < state.total) {
+        state.offset += state.limit;
+        loadRows();
+      }
+    });
+
+    document.querySelector("[data-te-schema-v88]").addEventListener("change", function (event) {
+      state.schema = event.target.value || "public";
+      state.table = "";
+      state.offset = 0;
+      loadTables();
+    });
+
+    document.querySelector("[data-te-table-filter-v88]").addEventListener("input", renderTables);
+
+    document.querySelectorAll("[data-te-nav-v88]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        window.location.hash = "#" + btn.getAttribute("data-te-nav-v88");
+      });
+    });
+  }
+
+  function setKpi(id, value) {
+    setText('[data-te-kpi-value="' + id + '"]', compact(value));
+  }
+
+  function updateKpis() {
+    setKpi("schemas", state.schemas.length);
+    setKpi("tables", state.tables.length);
+    setKpi("rows", state.total || state.rows.length);
+    setKpi("columns", state.columns.length);
+  }
+
+  function renderSchemas() {
+    var select = document.querySelector("[data-te-schema-v88]");
+    if (!select) return;
+
+    select.innerHTML = state.schemas.map(function (schema) {
+      return '<option value="' + esc(schema) + '"' + (schema === state.schema ? " selected" : "") + '>' + esc(schema) + '</option>';
+    }).join("");
+  }
+
+  function renderTables() {
+    var list = document.querySelector("[data-te-table-list-v88]");
+    if (!list) return;
+
+    var filter = String(document.querySelector("[data-te-table-filter-v88]").value || "").toLowerCase();
+
+    var tables = state.tables.filter(function (table) {
+      return String(table.table_name || "").toLowerCase().includes(filter);
+    });
+
+    if (!tables.length) {
+      list.innerHTML = '<div class="goodos-te-empty-v88">No tables found.</div>';
+      return;
+    }
+
+    list.innerHTML = tables.map(function (table) {
+      var activeClass = table.table_name === state.table ? " is-active-v88" : "";
+
+      return '' +
+        '<div class="goodos-te-item-v88' + activeClass + '" data-te-table-v88="' + esc(table.table_name) + '">' +
+          '<div class="goodos-te-item-title-v88">' + esc(table.table_name) + '</div>' +
+          '<div class="goodos-te-item-pill-v88">' + esc(table.table_type === "VIEW" ? "View" : "Table") + '</div>' +
+          '<div class="goodos-te-item-meta-v88">' + esc(table.column_count || 0) + ' columns</div>' +
+        '</div>';
+    }).join("");
+
+    list.querySelectorAll("[data-te-table-v88]").forEach(function (item) {
+      item.addEventListener("click", function () {
+        state.table = item.getAttribute("data-te-table-v88");
+        state.offset = 0;
+        state.q = "";
+        document.querySelector("[data-te-search-v88]").value = "";
+        renderTables();
+        loadRows();
+      });
+    });
+  }
+
+  function columnPriority(columns) {
+    var wanted = ["id", "name", "title", "email", "role", "status", "created_at", "updated_at"];
+    var selected = [];
+
+    wanted.forEach(function (name) {
+      if (columns.includes(name)) selected.push(name);
+    });
+
+    columns.forEach(function (name) {
+      if (selected.length < 8 && !selected.includes(name)) selected.push(name);
+    });
+
+    return selected;
+  }
+
+  function renderCellValue(column, value) {
+    if (column === "status") {
+      var text = value == null ? "" : String(value);
+      var danger = ["inactive", "failed", "error", "revoked", "disabled"].includes(text.toLowerCase());
+
+      return '<span class="goodos-te-badge-v88' + (danger ? " is-danger-v88" : "") + '">' + esc(text || "unknown") + '</span>';
+    }
+
+    if (value == null) return "";
+
+    if (typeof value === "object") {
+      return esc(JSON.stringify(value));
+    }
+
+    return esc(String(value));
   }
 
   function valueToInput(value) {
@@ -20142,214 +20566,90 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return pk ? pk.column_name : "id";
   }
 
-  function paint() {
-    getRoot().innerHTML = '' +
-      '<div class="goodos-te-v87">' +
-        '<section class="goodos-te-shell-v87">' +
-          '<div class="goodos-te-hero-v87">' +
-            '<div>' +
-              '<div class="goodos-te-eyebrow-v87">GOODOS CLOUD DATABASE</div>' +
-              '<h1 class="goodos-te-title-v87">Table Editor</h1>' +
-              '<p class="goodos-te-copy-v87">Browse schemas, inspect tables, load rows, search records, edit cells, insert rows, create tables, and manage database records from one working table editor.</p>' +
-            '</div>' +
-            '<div class="goodos-te-actions-v87">' +
-              '<button class="goodos-te-btn-v87" data-te-refresh-v87>Refresh</button>' +
-              '<button class="goodos-te-btn-v87" data-te-create-table-v87>Create Table</button>' +
-              '<button class="goodos-te-btn-v87" data-te-add-row-v87>Add Row</button>' +
-              '<button class="goodos-te-btn-v87" data-te-save-v87>Save Edits</button>' +
-              '<button class="goodos-te-btn-v87" data-te-nav-v87="database">Database</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="goodos-te-kpis-v87">' +
-            '<div class="goodos-te-kpi-v87"><div class="goodos-te-kpi-label-v87">Schemas</div><div class="goodos-te-kpi-value-v87" data-te-kpi-v87="schemas">0</div><div class="goodos-te-kpi-copy-v87">Available namespaces</div></div>' +
-            '<div class="goodos-te-kpi-v87"><div class="goodos-te-kpi-label-v87">Tables</div><div class="goodos-te-kpi-value-v87" data-te-kpi-v87="tables">0</div><div class="goodos-te-kpi-copy-v87">Selected schema</div></div>' +
-            '<div class="goodos-te-kpi-v87"><div class="goodos-te-kpi-label-v87">Rows</div><div class="goodos-te-kpi-value-v87" data-te-kpi-v87="rows">0</div><div class="goodos-te-kpi-copy-v87">Current table</div></div>' +
-            '<div class="goodos-te-kpi-v87"><div class="goodos-te-kpi-label-v87">Columns</div><div class="goodos-te-kpi-value-v87" data-te-kpi-v87="columns">0</div><div class="goodos-te-kpi-copy-v87">Editable fields</div></div>' +
-          '</div>' +
-
-          '<div class="goodos-te-layout-v87">' +
-            '<aside class="goodos-te-panel-v87">' +
-              '<h2 class="goodos-te-panel-title-v87">Schema Browser</h2>' +
-              '<select class="goodos-te-control-v87" data-te-schema-v87></select>' +
-              '<input class="goodos-te-control-v87" data-te-table-filter-v87 placeholder="Filter tables..." />' +
-              '<div class="goodos-te-list-v87" data-te-table-list-v87><div class="goodos-te-empty-v87">Loading tables...</div></div>' +
-            '</aside>' +
-
-            '<section class="goodos-te-panel-v87">' +
-              '<div class="goodos-te-toolbar-v87">' +
-                '<div class="goodos-te-toolbar-left-v87">' +
-                  '<h2 class="goodos-te-panel-title-v87" data-te-current-title-v87>Table Rows</h2>' +
-                '</div>' +
-                '<div class="goodos-te-toolbar-right-v87">' +
-                  '<input class="goodos-te-search-v87" data-te-search-v87 placeholder="Search rows..." />' +
-                  '<button class="goodos-te-btn-v87" data-te-search-btn-v87>Search</button>' +
-                  '<button class="goodos-te-btn-v87" data-te-prev-v87>Prev</button>' +
-                  '<button class="goodos-te-btn-v87" data-te-next-v87>Next</button>' +
-                '</div>' +
-              '</div>' +
-              '<div class="goodos-te-table-wrap-v87" data-te-rows-wrap-v87><div class="goodos-te-empty-v87">Select a table to inspect rows.</div></div>' +
-              '<div class="goodos-te-status-v87" data-te-status-v87>Ready.</div>' +
-            '</section>' +
-          '</div>' +
-        '</section>' +
-      '</div>';
-
-    bind();
-    loadAll();
-  }
-
-  function bind() {
-    document.querySelector("[data-te-refresh-v87]").addEventListener("click", loadAll);
-    document.querySelector("[data-te-create-table-v87]").addEventListener("click", createTable);
-    document.querySelector("[data-te-add-row-v87]").addEventListener("click", addRow);
-    document.querySelector("[data-te-save-v87]").addEventListener("click", saveEdits);
-
-    document.querySelector("[data-te-search-btn-v87]").addEventListener("click", function () {
-      state.q = document.querySelector("[data-te-search-v87]").value.trim();
-      state.offset = 0;
-      loadRows();
-    });
-
-    document.querySelector("[data-te-prev-v87]").addEventListener("click", function () {
-      state.offset = Math.max(0, state.offset - state.limit);
-      loadRows();
-    });
-
-    document.querySelector("[data-te-next-v87]").addEventListener("click", function () {
-      if (state.offset + state.limit < state.total) {
-        state.offset += state.limit;
-        loadRows();
-      }
-    });
-
-    document.querySelector("[data-te-schema-v87]").addEventListener("change", function (event) {
-      state.schema = event.target.value || "public";
-      state.table = "";
-      state.offset = 0;
-      loadTables();
-    });
-
-    document.querySelector("[data-te-table-filter-v87]").addEventListener("input", renderTables);
-
-    document.querySelectorAll("[data-te-nav-v87]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        window.location.hash = "#" + btn.getAttribute("data-te-nav-v87");
-      });
-    });
-  }
-
-  function updateKpis() {
-    setText('[data-te-kpi-v87="schemas"]', state.schemas.length);
-    setText('[data-te-kpi-v87="tables"]', state.tables.length);
-    setText('[data-te-kpi-v87="rows"]', state.total || state.rows.length);
-    setText('[data-te-kpi-v87="columns"]', state.columns.length);
-  }
-
-  function renderSchemas() {
-    var select = document.querySelector("[data-te-schema-v87]");
-    if (!select) return;
-
-    select.innerHTML = state.schemas.map(function (schema) {
-      return '<option value="' + esc(schema) + '"' + (schema === state.schema ? " selected" : "") + '>' + esc(schema) + '</option>';
-    }).join("");
-  }
-
-  function renderTables() {
-    var list = document.querySelector("[data-te-table-list-v87]");
-    if (!list) return;
-
-    var filter = String(document.querySelector("[data-te-table-filter-v87]").value || "").toLowerCase();
-
-    var tables = state.tables.filter(function (table) {
-      return String(table.table_name || "").toLowerCase().includes(filter);
-    });
-
-    if (!tables.length) {
-      list.innerHTML = '<div class="goodos-te-empty-v87">No tables found.</div>';
-      return;
-    }
-
-    list.innerHTML = tables.map(function (table) {
-      var activeClass = table.table_name === state.table ? " is-active-v87" : "";
-
-      return '' +
-        '<div class="goodos-te-item-v87' + activeClass + '" data-te-table-v87="' + esc(table.table_name) + '">' +
-          '<div class="goodos-te-item-title-v87">' + esc(table.table_name) + '</div>' +
-          '<div class="goodos-te-item-meta-v87">' + esc(table.table_type || "TABLE") + ' • ' + esc(table.column_count || 0) + ' columns</div>' +
-        '</div>';
-    }).join("");
-
-    list.querySelectorAll("[data-te-table-v87]").forEach(function (item) {
-      item.addEventListener("click", function () {
-        state.table = item.getAttribute("data-te-table-v87");
-        state.offset = 0;
-        state.q = "";
-        document.querySelector("[data-te-search-v87]").value = "";
-        renderTables();
-        loadRows();
-      });
-    });
-  }
-
   function renderRows() {
-    var title = document.querySelector("[data-te-current-title-v87]");
-    if (title) title.textContent = state.table ? state.schema + "." + state.table : "Table Rows";
+    var title = document.querySelector("[data-te-current-title-v88]");
+    if (title) title.textContent = state.table ? "Table Rows" : "Table Rows";
 
-    var wrap = document.querySelector("[data-te-rows-wrap-v87]");
+    var wrap = document.querySelector("[data-te-rows-wrap-v88]");
     if (!wrap) return;
 
     if (!state.table) {
-      wrap.innerHTML = '<div class="goodos-te-empty-v87">Select a table to inspect rows.</div>';
+      wrap.innerHTML = '<div class="goodos-te-empty-v88">Select a table to inspect rows.</div>';
       updateKpis();
       return;
     }
 
     if (!state.columns.length) {
-      wrap.innerHTML = '<div class="goodos-te-empty-v87">No columns found.</div>';
+      wrap.innerHTML = '<div class="goodos-te-empty-v88">No columns found.</div>';
       updateKpis();
       return;
     }
 
     if (!state.rows.length) {
-      wrap.innerHTML = '<div class="goodos-te-empty-v87">No rows found. Use Add Row to create a new record.</div>';
+      wrap.innerHTML =
+        '<div class="goodos-te-empty-v88">No rows found in <b>' +
+        esc(state.schema + "." + state.table) +
+        '</b>. Use Add Row to create a new record.</div>';
       updateKpis();
       return;
     }
 
-    var columnNames = state.columns.map(function (column) {
+    var allColumns = state.columns.map(function (column) {
       return column.column_name;
     });
 
+    var visibleColumns = columnPriority(allColumns);
+    var pk = primaryKey();
+
     wrap.innerHTML = '' +
-      '<table class="goodos-te-table-v87">' +
+      '<table class="goodos-te-table-v88">' +
         '<thead><tr>' +
-          columnNames.map(function (column) {
-            return '<th>' + esc(column) + '</th>';
+          visibleColumns.map(function (column) {
+            return '<th>' + esc(column.replaceAll("_", " ")) + '</th>';
           }).join("") +
           '<th>Actions</th>' +
         '</tr></thead>' +
         '<tbody>' +
           state.rows.map(function (row, rowIndex) {
-            return '<tr data-te-row-index-v87="' + rowIndex + '">' +
-              columnNames.map(function (columnName) {
+            return '<tr data-te-row-index-v88="' + rowIndex + '">' +
+              visibleColumns.map(function (columnName) {
                 var meta = state.columns.find(function (column) {
                   return column.column_name === columnName;
                 }) || {};
 
                 var disabled = meta.is_primary_key ? " disabled" : "";
 
-                return '<td><input class="goodos-te-input-v87" data-te-cell-v87="' + esc(columnName) + '" data-te-type-v87="' + esc(meta.data_type || "text") + '" value="' + esc(valueToInput(row[columnName])) + '"' + disabled + ' /></td>';
+                if (columnName === "status") {
+                  return '<td>' + renderCellValue(columnName, row[columnName]) + '<input type="hidden" data-te-cell-v88="' + esc(columnName) + '" data-te-type-v88="' + esc(meta.data_type || "text") + '" value="' + esc(valueToInput(row[columnName])) + '" /></td>';
+                }
+
+                if (["created_at", "updated_at"].includes(columnName)) {
+                  return '<td>' + esc(String(row[columnName] || "").replace("T", " ").slice(0, 19)) + '</td>';
+                }
+
+                return '<td><input class="goodos-te-input-v88" data-te-cell-v88="' + esc(columnName) + '" data-te-type-v88="' + esc(meta.data_type || "text") + '" value="' + esc(valueToInput(row[columnName])) + '"' + disabled + ' /></td>';
               }).join("") +
-              '<td><button class="goodos-te-btn-v87" data-te-delete-row-v87="' + rowIndex + '">Delete</button></td>' +
+              '<td><div class="goodos-te-row-actions-v88"><button class="goodos-te-icon-btn-v88" data-te-focus-row-v88="' + rowIndex + '">✎</button><button class="goodos-te-icon-btn-v88 is-delete-v88" data-te-delete-row-v88="' + rowIndex + '">⌫</button></div></td>' +
             '</tr>';
           }).join("") +
         '</tbody>' +
-      '</table>';
+      '</table>' +
+      '<div class="goodos-te-footer-v88">' +
+        '<div>Showing ' + esc(state.offset + 1) + ' to ' + esc(state.offset + state.rows.length) + ' of ' + esc(state.total) + ' rows</div>' +
+        '<div>Rows per page: ' + esc(state.limit) + ' &nbsp; Page ' + esc(Math.floor(state.offset / state.limit) + 1) + ' of ' + esc(Math.max(1, Math.ceil(state.total / state.limit))) + '</div>' +
+      '</div>';
 
-    wrap.querySelectorAll("[data-te-delete-row-v87]").forEach(function (btn) {
+    wrap.querySelectorAll("[data-te-delete-row-v88]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        deleteRow(Number(btn.getAttribute("data-te-delete-row-v87")));
+        deleteRow(Number(btn.getAttribute("data-te-delete-row-v88")));
+      });
+    });
+
+    wrap.querySelectorAll("[data-te-focus-row-v88]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var tr = btn.closest("tr");
+        var input = tr ? tr.querySelector("input:not(:disabled)") : null;
+        if (input) input.focus();
       });
     });
 
@@ -20387,7 +20687,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       state.tables = data.tables || [];
 
       if (!state.table && state.tables.length) {
-        state.table = state.tables[0].table_name;
+        var preferred = state.tables.find(function (table) {
+          return ["users", "apps", "projects", "api_keys"].includes(table.table_name);
+        });
+
+        state.table = preferred ? preferred.table_name : state.tables[0].table_name;
       }
 
       renderTables();
@@ -20467,7 +20771,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     }
 
     var editableColumn = state.columns.find(function (column) {
-      return !column.is_primary_key && ["title", "name", "label", "status"].includes(column.column_name);
+      return !column.is_primary_key && ["name", "title", "email", "role", "status"].includes(column.column_name);
     }) || state.columns.find(function (column) {
       return !column.is_primary_key && !column.column_default;
     });
@@ -20513,17 +20817,17 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var pk = primaryKey();
     var rows = [];
 
-    document.querySelectorAll("[data-te-row-index-v87]").forEach(function (tr) {
-      var index = Number(tr.getAttribute("data-te-row-index-v87"));
+    document.querySelectorAll("[data-te-row-index-v88]").forEach(function (tr) {
+      var index = Number(tr.getAttribute("data-te-row-index-v88"));
       var original = state.rows[index];
 
       if (!original || original[pk] == null) return;
 
       var row = {};
 
-      tr.querySelectorAll("[data-te-cell-v87]").forEach(function (input) {
-        var column = input.getAttribute("data-te-cell-v87");
-        var type = input.getAttribute("data-te-type-v87") || "text";
+      tr.querySelectorAll("[data-te-cell-v88]").forEach(function (input) {
+        var column = input.getAttribute("data-te-cell-v88");
+        var type = input.getAttribute("data-te-type-v88") || "text";
 
         if (column === pk) return;
 
@@ -20604,7 +20908,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       return;
     }
 
-    if (!active || !document.querySelector(".goodos-te-v87")) {
+    if (!active || !document.querySelector(".goodos-te-v88")) {
       active = true;
       paint();
     }
@@ -20620,7 +20924,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   var observerTimer = null;
   var observer = new MutationObserver(function () {
     if (!isRoute()) return;
-    if (document.querySelector(".goodos-te-v87")) return;
+    if (document.querySelector(".goodos-te-v88")) return;
 
     clearTimeout(observerTimer);
     observerTimer = setTimeout(boot, 120);

@@ -111,7 +111,17 @@ router.get("/tables", async (req, res) => {
           from information_schema.columns c
           where c.table_schema = t.table_schema
             and c.table_name = t.table_name
-        )::int as column_count
+        )::int as column_count,
+        coalesce(
+          (
+            select s.n_live_tup::bigint
+            from pg_stat_user_tables s
+            where s.schemaname = t.table_schema
+              and s.relname = t.table_name
+            limit 1
+          ),
+          0
+        )::bigint as estimated_rows
       from information_schema.tables t
       where t.table_schema = $1
         and t.table_type in ('BASE TABLE', 'VIEW')
@@ -128,13 +138,16 @@ router.get("/tables", async (req, res) => {
   }
 });
 
-router.get("/tables/:schema/:table/columns", async (req, res) => {
+router.get("/tables/:schema/:table/rows", async (req, res) => {
   try {
     const db = resolveDb();
     const schema = String(req.params.schema || "public").trim();
     const table = String(req.params.table || "").trim();
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "50", 10), 1), 200);
+    const offset = Math.max(parseInt(req.query.offset || "0", 10), 0);
+    const q = String(req.query.q || "").trim();
 
-    const result = await db.query(`
+    const columnsResult = await db.query(`
       select
         c.column_name,
         c.data_type,
@@ -158,34 +171,6 @@ router.get("/tables/:schema/:table/columns", async (req, res) => {
       where c.table_schema = $1
         and c.table_name = $2
       order by c.ordinal_position
-    `, [schema, table]);
-
-    res.json({
-      success: true,
-      schema,
-      table,
-      columns: result.rows
-    });
-  } catch (err) {
-    sendError(res, err);
-  }
-});
-
-router.get("/tables/:schema/:table/rows", async (req, res) => {
-  try {
-    const db = resolveDb();
-    const schema = String(req.params.schema || "public").trim();
-    const table = String(req.params.table || "").trim();
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "50", 10), 1), 200);
-    const offset = Math.max(parseInt(req.query.offset || "0", 10), 0);
-    const q = String(req.query.q || "").trim();
-
-    const columnsResult = await db.query(`
-      select column_name, data_type
-      from information_schema.columns
-      where table_schema = $1
-        and table_name = $2
-      order by ordinal_position
     `, [schema, table]);
 
     const columns = columnsResult.rows;
@@ -249,7 +234,9 @@ router.post("/tables/create", async (req, res) => {
     await db.query(`
       create table if not exists ${safeIdentifier(schema)}.${safeIdentifier(table)} (
         id uuid primary key default gen_random_uuid(),
-        title text,
+        name text,
+        email text,
+        role text default 'viewer',
         status text default 'active',
         metadata_json jsonb default '{}'::jsonb,
         created_at timestamptz default now(),
