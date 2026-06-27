@@ -3022,11 +3022,10 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+<style id="goodos-auth-session-kpi-charts-v73">
+/* V73: Auth KPI charts fixed. Exactly one chart per card. */
 
-<style id="goodos-auth-session-kpi-charts-v72">
-/* V72: Auth / Sessions KPI charts only */
-
-.goodos-auth-session-chart-card-v72 {
+.goodos-auth-session-chart-card-v73 {
   min-height: 430px !important;
   height: auto !important;
   overflow: hidden !important;
@@ -3036,7 +3035,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   padding-bottom: 22px !important;
 }
 
-.goodos-auth-session-chart-card-v72::after {
+.goodos-auth-session-chart-card-v73::after {
   content: "";
   position: absolute;
   right: 26px;
@@ -3054,28 +3053,28 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
 }
 
-.goodos-auth-session-chart-card-v72[data-goodos-auth-type-v72="active-sessions"]::after {
+.goodos-auth-session-chart-card-v73[data-goodos-auth-type-v73="active-sessions"]::after {
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
     linear-gradient(135deg, rgba(34,197,94,.50), rgba(20,184,166,.12));
   border-color: rgba(34,197,94,.48);
 }
 
-.goodos-auth-session-chart-card-v72[data-goodos-auth-type-v72="api-keys"]::after {
+.goodos-auth-session-chart-card-v73[data-goodos-auth-type-v73="api-keys"]::after {
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
     linear-gradient(135deg, rgba(59,130,246,.56), rgba(54,220,255,.10));
   border-color: rgba(59,130,246,.50);
 }
 
-.goodos-auth-session-chart-card-v72[data-goodos-auth-type-v72="rate-limit"]::after {
+.goodos-auth-session-chart-card-v73[data-goodos-auth-type-v73="rate-limit"]::after {
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
     linear-gradient(135deg, rgba(236,72,153,.58), rgba(244,63,94,.14));
   border-color: rgba(236,72,153,.52);
 }
 
-.goodos-auth-session-chart-v72 {
+.goodos-auth-session-chart-v73 {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -3095,27 +3094,27 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
 }
 
-.goodos-auth-session-chart-v72 svg {
+.goodos-auth-session-chart-v73 svg {
   display: block !important;
   width: 100% !important;
   height: 208px !important;
   overflow: visible !important;
 }
 
-.goodos-auth-session-chart-v72 .muted {
+.goodos-auth-session-chart-v73 .muted {
   fill: rgba(203,213,225,.78);
 }
 
-.goodos-auth-session-chart-v72 .axis {
+.goodos-auth-session-chart-v73 .axis {
   fill: rgba(203,213,225,.86);
 }
 
-.goodos-auth-session-chart-v72 .grid {
+.goodos-auth-session-chart-v73 .grid {
   stroke: rgba(148,163,184,.16);
   stroke-dasharray: 5 8;
 }
 
-.goodos-auth-session-trend-v72 {
+.goodos-auth-session-trend-v73 {
   margin-top: 16px !important;
   color: rgba(203,213,225,.82) !important;
   font-size: 15px !important;
@@ -3123,12 +3122,12 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   letter-spacing: .01em !important;
 }
 
-.goodos-auth-session-trend-v72 strong {
+.goodos-auth-session-trend-v73 strong {
   color: #22e6a8 !important;
   font-weight: 950 !important;
 }
 
-.goodos-auth-session-trend-v72.is-negative-v72 strong {
+.goodos-auth-session-trend-v73.is-negative-v73 strong {
   color: #fb7185 !important;
 }
 </style>
@@ -17469,11 +17468,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-auth-session-kpi-charts-v72-js">
+<script id="goodos-auth-session-kpi-charts-v73-js">
 (function () {
-  if (window.__goodosAuthSessionKpiChartsV72) return;
-  window.__goodosAuthSessionKpiChartsV72 = true;
+  if (window.__goodosAuthSessionKpiChartsV73) return;
+  window.__goodosAuthSessionKpiChartsV73 = true;
 
   var TARGETS = [
     {
@@ -17485,6 +17483,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       colorB: "#7c3aed",
       maxLabel: "3",
       midLabel: "1",
+      negative: false,
       series: [118,118,110,92,72,86,78,68,66,58,20,30,42,52,70,98,128,144]
     },
     {
@@ -17496,6 +17495,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       colorB: "#16a34a",
       maxLabel: "30",
       midLabel: "15",
+      negative: false,
       series: [132,120,106,98,92,74,76,78,78,72,66,54,60,60,50,42,48,62]
     },
     {
@@ -17507,6 +17507,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       colorB: "#2563eb",
       maxLabel: "15",
       midLabel: "10",
+      negative: false,
       series: [118,112,108,102,92,78,68,60,58,64,70,88,98,92,82,74,68,68]
     },
     {
@@ -17544,6 +17545,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function isVisible(el) {
     if (!el || !el.getBoundingClientRect) return false;
+
     var r = el.getBoundingClientRect();
     var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
 
@@ -17563,18 +17565,22 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       text.indexOf("security throttle") !== -1;
   }
 
-  function removeOldCharts() {
+  function removeAllAuthCharts() {
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-auth-session-chart-v72,.goodos-auth-session-trend-v72")
+      document.querySelectorAll(
+        ".goodos-auth-session-chart-v72,.goodos-auth-session-trend-v72,.goodos-auth-session-chart-v73,.goodos-auth-session-trend-v73"
+      )
     ).forEach(function (el) {
       el.remove();
     });
 
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-auth-session-chart-card-v72")
+      document.querySelectorAll(".goodos-auth-session-chart-card-v72,.goodos-auth-session-chart-card-v73")
     ).forEach(function (el) {
       el.classList.remove("goodos-auth-session-chart-card-v72");
+      el.classList.remove("goodos-auth-session-chart-card-v73");
       el.removeAttribute("data-goodos-auth-type-v72");
+      el.removeAttribute("data-goodos-auth-type-v73");
     });
   }
 
@@ -17586,9 +17592,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nodes.find(function (el) {
       if (!isVisible(el)) return false;
       if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-auth-session-chart-v72")) return false;
+      if (el.closest(".goodos-auth-session-chart-v72,.goodos-auth-session-chart-v73")) return false;
       if (el.children.length > 2) return false;
-
       return compact(cleanText(el)) === wanted;
     }) || null;
   }
@@ -17623,7 +17628,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         rect.width >= 180 &&
         rect.width <= 940 &&
         rect.height >= 70 &&
-        rect.height <= 560
+        rect.height <= 650
       ) {
         candidates.push({
           node: node,
@@ -17643,21 +17648,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return candidates[0].node;
   }
 
-  function getValueFromCard(card, label) {
-    var clone = card.cloneNode(true);
-
-    Array.prototype.slice.call(
-      clone.querySelectorAll(".goodos-auth-session-chart-v72,.goodos-auth-session-trend-v72")
-    ).forEach(function (el) {
-      el.remove();
-    });
-
-    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
-    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
-
-    return nums && nums.length ? nums[0] : "";
-  }
-
   function pathFromPoints(points) {
     return points.map(function (pt, index) {
       return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
@@ -17675,11 +17665,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return '' +
       '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
         '<defs>' +
-          '<linearGradient id="goodosAuthLineV72' + target.key + '" x1="0" x2="1">' +
+          '<linearGradient id="goodosAuthLineV73' + target.key + '" x1="0" x2="1">' +
             '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
             '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
           '</linearGradient>' +
-          '<linearGradient id="goodosAuthFillV72' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+          '<linearGradient id="goodosAuthFillV73' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
             '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
             '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
           '</linearGradient>' +
@@ -17694,8 +17684,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
         '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
         '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
-        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosAuthFillV72' + target.key + ')"></path>' +
-        '<path d="' + path + '" fill="none" stroke="url(#goodosAuthLineV72' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosAuthFillV73' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosAuthLineV73' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
         points.map(function (pt, i) {
           return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
         }).join("") +
@@ -17708,40 +17698,48 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function chartMarkup(target) {
     return '' +
-      '<div class="goodos-auth-session-chart-v72" data-goodos-auth-session-chart-v72="' + target.key + '">' +
+      '<div class="goodos-auth-session-chart-v73" data-goodos-auth-session-chart-v73="' + target.key + '">' +
         chartSvg(target) +
       '</div>' +
-      '<div class="goodos-auth-session-trend-v72' + (target.negative ? ' is-negative-v72' : '') + '">' +
+      '<div class="goodos-auth-session-trend-v73' + (target.negative ? ' is-negative-v73' : '') + '">' +
         '<strong>' + (target.negative ? "↘ " : "↗ ") + target.trend + '</strong> vs last 30 days' +
       '</div>';
   }
 
   function renderAuthSessionCharts() {
-    if (!authSessionPageVisible()) return;
-
-    if (document.querySelectorAll(".goodos-auth-session-chart-v72").length >= TARGETS.length) {
+    if (!authSessionPageVisible()) {
+      removeAllAuthCharts();
       return;
     }
 
-    removeOldCharts();
+    removeAllAuthCharts();
 
     TARGETS.forEach(function (target) {
       var label = labelExactNode(target.label);
       var card = cardForLabel(label, target);
 
       if (!card) {
-        console.warn("GoodOS V72: Auth session KPI card not found for", target.label);
+        console.warn("GoodOS V73: Auth KPI card not found for", target.label);
         return;
       }
 
-      card.classList.add("goodos-auth-session-chart-card-v72");
-      card.setAttribute("data-goodos-auth-type-v72", target.key);
+      card.classList.add("goodos-auth-session-chart-card-v73");
+      card.setAttribute("data-goodos-auth-type-v73", target.key);
       card.insertAdjacentHTML("beforeend", chartMarkup(target));
     });
   }
 
+  var running = false;
+
   function run() {
-    renderAuthSessionCharts();
+    if (running) return;
+
+    running = true;
+
+    window.setTimeout(function () {
+      renderAuthSessionCharts();
+      running = false;
+    }, 80);
   }
 
   if (document.readyState === "loading") {
@@ -17752,8 +17750,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   window.addEventListener("hashchange", function () {
     setTimeout(run, 250);
-    setTimeout(run, 750);
-    setTimeout(run, 1500);
+    setTimeout(run, 900);
   });
 
   window.addEventListener("pageshow", run);
@@ -17761,7 +17758,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   var timer = null;
   var observer = new MutationObserver(function () {
     clearTimeout(timer);
-    timer = setTimeout(run, 350);
+    timer = setTimeout(run, 500);
   });
 
   try {
@@ -17769,9 +17766,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   } catch (e) {}
 
   setTimeout(run, 250);
-  setTimeout(run, 750);
-  setTimeout(run, 1500);
-  setTimeout(run, 3000);
+  setTimeout(run, 900);
+  setTimeout(run, 1800);
 })();
 </script>
 
