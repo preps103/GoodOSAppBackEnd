@@ -1966,58 +1966,6 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   letter-spacing: .02em;
 }
 </style>
-<style id="goodos-storage-provider-kpi-charts-v58">
-/* V58: Storage Provider KPI charts only. No navigation override. */
-
-.goodos-storage-provider-kpi-card-v58 {
-  min-height: 252px !important;
-  overflow: hidden !important;
-}
-
-.goodos-storage-provider-kpi-chart-v58 {
-  margin-top: 18px;
-  width: 100%;
-  min-height: 116px;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(54,220,255,.14), transparent 42%),
-    linear-gradient(180deg, rgba(6,17,34,.54), rgba(8,16,31,.26));
-  border: 1px solid rgba(148,163,184,.14);
-  padding: 13px 15px;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.goodos-storage-provider-kpi-chart-v58 svg {
-  width: 100%;
-  height: 106px;
-  display: block;
-  overflow: visible;
-}
-
-.goodos-storage-provider-kpi-chart-v58 .muted {
-  fill: #9eabc2;
-}
-
-.goodos-storage-provider-kpi-chart-v58 .green {
-  fill: #a8ffd4;
-}
-
-.goodos-storage-provider-kpi-chart-v58 .grid {
-  stroke: rgba(148,163,184,.16);
-  stroke-dasharray: 4 7;
-}
-
-.goodos-storage-provider-kpi-chart-note-v58 {
-  color: #8fa0ba;
-  font-size: 11px;
-  font-weight: 750;
-  margin-top: 6px;
-  letter-spacing: .02em;
-}
-</style>
-
-
 <style id="goodos-skeleton-tabs-v59">
 /* V59: Missing tab + subcategory skeleton system */
 
@@ -2443,6 +2391,58 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   .goodos-api-keys-grid-v60 {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+
+<style id="goodos-storage-tab-graphs-v61">
+/* V61: Storage tab graphs only */
+
+.goodos-storage-graph-card-v61 {
+  min-height: 272px !important;
+  overflow: hidden !important;
+}
+
+.goodos-storage-graph-v61 {
+  margin-top: 18px;
+  width: 100%;
+  min-height: 132px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.14), transparent 42%),
+    linear-gradient(180deg, rgba(6,17,34,.58), rgba(8,16,31,.30));
+  border: 1px solid rgba(148,163,184,.14);
+  padding: 14px 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.goodos-storage-graph-v61 svg {
+  width: 100%;
+  height: 118px;
+  display: block;
+  overflow: visible;
+}
+
+.goodos-storage-graph-v61 .muted {
+  fill: #9eabc2;
+}
+
+.goodos-storage-graph-v61 .green {
+  fill: #a8ffd4;
+}
+
+.goodos-storage-graph-v61 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 4 7;
+}
+
+.goodos-storage-graph-note-v61 {
+  color: #8fa0ba;
+  font-size: 11px;
+  font-weight: 750;
+  margin-top: 7px;
+  letter-spacing: .02em;
 }
 </style>
 
@@ -13757,241 +13757,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 1800);
 })();
 </script>
-<script id="goodos-storage-provider-kpi-charts-v58-js">
-(function () {
-  if (window.__goodosStorageProviderChartsV58) return;
-  window.__goodosStorageProviderChartsV58 = true;
-
-  var TARGETS = [
-    { key: "providers", labels: ["PROVIDERS"], note: "Provider configs over time" },
-    { key: "cdn-buckets", labels: ["CDN BUCKETS"], note: "CDN-enabled buckets" },
-    { key: "public-buckets", labels: ["PUBLIC BUCKETS"], note: "Public buckets over time" },
-    { key: "versions", labels: ["VERSIONS"], note: "Version records over time" }
-  ];
-
-  function cleanText(el) {
-    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
-  }
-
-  function norm(value) {
-    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function compact(value) {
-    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
-  }
-
-  function currentHash() {
-    return norm(String(window.location.hash || "").replace("#", ""));
-  }
-
-  function getRoot() {
-    return document.getElementById("view") ||
-      document.querySelector("[data-view-root]") ||
-      document.querySelector("main") ||
-      document.body;
-  }
-
-  function isStorageProviderSectionVisible() {
-    var h = currentHash();
-    var rootText = norm(cleanText(getRoot()));
-
-    if (!(h === "storage" || h === "storage-files" || h === "files")) {
-      return false;
-    }
-
-    return rootText.indexOf("providers") !== -1 &&
-      rootText.indexOf("cdn buckets") !== -1 &&
-      rootText.indexOf("public buckets") !== -1 &&
-      rootText.indexOf("object version") !== -1;
-  }
-
-  function removeOldCharts() {
-    Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58")
-    ).forEach(function (el) {
-      el.remove();
-    });
-
-    Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57,.goodos-storage-provider-kpi-card-v58")
-    ).forEach(function (el) {
-      el.classList.remove("goodos-storage-provider-kpi-card-v56");
-      el.classList.remove("goodos-storage-provider-kpi-card-v57");
-      el.classList.remove("goodos-storage-provider-kpi-card-v58");
-    });
-  }
-
-  function labelMatches(text, labels) {
-    var c = compact(text);
-    return labels.some(function (label) {
-      return c === compact(label);
-    });
-  }
-
-  function findLabelNode(target) {
-    var root = getRoot();
-    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
-
-    return nodes.find(function (el) {
-      if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58")) return false;
-      if (el.children.length > 2) return false;
-
-      if (!labelMatches(cleanText(el), target.labels)) return false;
-
-      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-      return !!rect && rect.width > 0 && rect.height > 0;
-    }) || null;
-  }
-
-  function countTargetLabels(text) {
-    var upper = compact(text);
-
-    return TARGETS.filter(function (target) {
-      return target.labels.some(function (label) {
-        return upper.indexOf(compact(label)) !== -1;
-      });
-    }).length;
-  }
-
-  function cardFromLabel(labelNode) {
-    if (!labelNode) return null;
-
-    var node = labelNode;
-    var candidates = [];
-
-    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
-      if (node.closest("aside,nav,header")) break;
-
-      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
-      var text = cleanText(node);
-      var labelHits = countTargetLabels(text);
-
-      if (
-        text.indexOf(cleanText(labelNode)) !== -1 &&
-        rect.width >= 180 &&
-        rect.width <= 720 &&
-        rect.height >= 80 &&
-        rect.height <= 430 &&
-        labelHits <= 2
-      ) {
-        candidates.push({ node: node, area: rect.width * rect.height });
-      }
-
-      node = node.parentElement;
-    }
-
-    if (!candidates.length) return null;
-
-    candidates.sort(function (a, b) {
-      return b.area - a.area;
-    });
-
-    return candidates[0].node;
-  }
-
-  function metricValue(card, target) {
-    var clone = card.cloneNode(true);
-
-    Array.prototype.slice.call(
-      clone.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58")
-    ).forEach(function (el) {
-      el.remove();
-    });
-
-    var upper = cleanText(clone).toUpperCase();
-
-    target.labels.forEach(function (label) {
-      upper = upper.replace(label, " ");
-    });
-
-    var nums = upper.match(/\b\d+(?:\.\d+)?\b/g);
-    return nums && nums.length ? Number(nums[0]) : 0;
-  }
-
-  function linePath(value) {
-    var v = Math.max(0, Number(value || 0));
-    var points = [];
-
-    for (var i = 0; i < 16; i += 1) {
-      var x = 8 + i * 20;
-      var y = v <= 0 ? 72 : 72 - Math.min(38, v * 8) + ((i * 5) % 11) - (i > 10 ? 7 : 0);
-      points.push([x, Math.max(18, Math.min(78, y))]);
-    }
-
-    return points.map(function (pt, idx) {
-      return (idx === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
-    }).join("");
-  }
-
-  function chartMarkup(target, value) {
-    var v = Math.max(0, Number(value || 0));
-    var path = linePath(v);
-
-    return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v58" data-storage-provider-kpi-chart-v58="' + target.key + '">' +
-        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
-          '<defs>' +
-            '<linearGradient id="storageProviderLineV58' + target.key + '" x1="0" x2="1"><stop offset="0%" stop-color="#16e0ff"></stop><stop offset="100%" stop-color="#7c3aed"></stop></linearGradient>' +
-            '<linearGradient id="storageProviderFillV58' + target.key + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop><stop offset="100%" stop-color="rgba(54,220,255,0)"></stop></linearGradient>' +
-          '</defs>' +
-          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
-          '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
-          '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
-          '<path d="' + path + ' L308 90 L8 90 Z" fill="url(#storageProviderFillV58' + target.key + ')"></path>' +
-          '<path d="' + path + '" fill="none" stroke="url(#storageProviderLineV58' + target.key + ')" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
-          '<circle cx="308" cy="' + (v <= 0 ? 72 : 28) + '" r="5" fill="#a8ffd4"></circle>' +
-        '</svg>' +
-        '<div class="goodos-storage-provider-kpi-chart-note-v58">' + target.note + '</div>' +
-      '</div>';
-  }
-
-  function renderStorageProviderCharts() {
-    removeOldCharts();
-
-    if (!isStorageProviderSectionVisible()) return;
-
-    TARGETS.forEach(function (target) {
-      var labelNode = findLabelNode(target);
-      if (!labelNode) return;
-
-      var card = cardFromLabel(labelNode);
-      if (!card) return;
-
-      var value = metricValue(card, target);
-
-      card.classList.add("goodos-storage-provider-kpi-card-v58");
-      card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
-    });
-  }
-
-  function run() {
-    renderStorageProviderCharts();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-
-  window.addEventListener("hashchange", function () {
-    setTimeout(run, 300);
-    setTimeout(run, 900);
-    setTimeout(run, 1800);
-  });
-
-  window.addEventListener("pageshow", run);
-
-  setTimeout(run, 300);
-  setTimeout(run, 900);
-  setTimeout(run, 1800);
-})();
-</script>
-
-
 <script id="goodos-skeleton-tabs-v59-js">
 (function () {
   if (window.__goodosSkeletonTabsV59) return;
@@ -14958,6 +14723,363 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(run, 250);
   setTimeout(run, 900);
+})();
+</script>
+
+
+<script id="goodos-storage-tab-graphs-v61-js">
+(function () {
+  if (window.__goodosStorageTabGraphsV61) return;
+  window.__goodosStorageTabGraphsV61 = true;
+
+  var TARGETS = [
+    {
+      key: "providers",
+      labels: ["PROVIDERS"],
+      note: "Provider configs over time",
+      kind: "line",
+      suffix: " provider"
+    },
+    {
+      key: "cdn-buckets",
+      labels: ["CDN BUCKETS"],
+      note: "CDN-enabled bucket coverage",
+      kind: "progress",
+      suffix: " enabled"
+    },
+    {
+      key: "public-buckets",
+      labels: ["PUBLIC BUCKETS"],
+      note: "Public buckets over time",
+      kind: "line",
+      suffix: " bucket"
+    },
+    {
+      key: "versions",
+      labels: ["VERSIONS"],
+      note: "Version records over time",
+      kind: "bars",
+      suffix: " record"
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function currentHash() {
+    return norm(String(window.location.hash || "").replace("#", ""));
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isStoragePage() {
+    var h = currentHash();
+    var t = norm(cleanText(getRoot()));
+
+    if (h === "storage" || h === "storage-files" || h === "files") return true;
+
+    return t.indexOf("storage v2") !== -1 ||
+      t.indexOf("s3-compatible") !== -1 ||
+      (
+        t.indexOf("providers") !== -1 &&
+        t.indexOf("cdn buckets") !== -1 &&
+        t.indexOf("public buckets") !== -1 &&
+        t.indexOf("versions") !== -1
+      );
+  }
+
+  function removeOldGraphs() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(
+        ".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58,.goodos-storage-graph-v61"
+      )
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(
+        ".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57,.goodos-storage-provider-kpi-card-v58,.goodos-storage-graph-card-v61"
+      )
+    ).forEach(function (el) {
+      el.classList.remove("goodos-storage-provider-kpi-card-v56");
+      el.classList.remove("goodos-storage-provider-kpi-card-v57");
+      el.classList.remove("goodos-storage-provider-kpi-card-v58");
+      el.classList.remove("goodos-storage-graph-card-v61");
+    });
+  }
+
+  function labelMatches(text, labels) {
+    var value = compact(text);
+    return labels.some(function (label) {
+      return value === compact(label);
+    });
+  }
+
+  function findLabelNode(target) {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-storage-graph-v61")) return false;
+      if (el.children.length > 2) return false;
+
+      var text = cleanText(el);
+      if (!labelMatches(text, target.labels)) return false;
+
+      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if (!rect || rect.width <= 0 || rect.height <= 0) return false;
+
+      return true;
+    }) || null;
+  }
+
+  function countTargetLabels(text) {
+    var upper = compact(text);
+
+    return TARGETS.filter(function (target) {
+      return target.labels.some(function (label) {
+        return upper.indexOf(compact(label)) !== -1;
+      });
+    }).length;
+  }
+
+  function cardFromLabel(labelNode) {
+    if (!labelNode) return null;
+
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var text = cleanText(node);
+      var labelHits = countTargetLabels(text);
+
+      if (
+        text.indexOf(cleanText(labelNode)) !== -1 &&
+        rect.width >= 180 &&
+        rect.width <= 760 &&
+        rect.height >= 80 &&
+        rect.height <= 460 &&
+        labelHits <= 2
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function metricValue(card, target) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-storage-graph-v61")).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone).toUpperCase();
+
+    target.labels.forEach(function (label) {
+      text = text.replace(label, " ");
+    });
+
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function linePath(value, key) {
+    var v = Math.max(0, Number(value || 0));
+    var points = [];
+
+    for (var i = 0; i < 16; i += 1) {
+      var x = 8 + i * 20;
+      var y;
+
+      if (v <= 0) {
+        y = 78;
+      } else if (key === "providers") {
+        y = 78 - Math.min(42, v * 8) + ((i * 6) % 12) - (i > 10 ? 7 : 0);
+      } else {
+        y = 76 - Math.min(40, v * 8) + ((i * 7) % 13);
+      }
+
+      points.push([x, Math.max(20, Math.min(84, y))]);
+    }
+
+    return points.map(function (pt, idx) {
+      return (idx === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function lineGraph(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var path = linePath(v, target.key);
+
+    return '' +
+      '<div class="goodos-storage-graph-v61" data-goodos-storage-graph-v61="' + target.key + '">' +
+        '<svg viewBox="0 0 340 118" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="goodosStorageLineV61' + target.key + '" x1="0" x2="1">' +
+              '<stop offset="0%" stop-color="#16e0ff"></stop>' +
+              '<stop offset="55%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="100%" stop-color="#7c3aed"></stop>' +
+            '</linearGradient>' +
+            '<linearGradient id="goodosStorageFillV61' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="rgba(54,220,255,.32)"></stop>' +
+              '<stop offset="100%" stop-color="rgba(54,220,255,0)"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
+          '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
+          '<line x1="0" y1="74" x2="320" y2="74" class="grid"></line>' +
+          '<path d="' + path + ' L308 96 L8 96 Z" fill="url(#goodosStorageFillV61' + target.key + ')"></path>' +
+          '<path d="' + path + '" fill="none" stroke="url(#goodosStorageLineV61' + target.key + ')" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<circle cx="308" cy="' + (v <= 0 ? 78 : 31) + '" r="5" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="114" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="114" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
+        '</svg>' +
+        '<div class="goodos-storage-graph-note-v61">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function progressGraph(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var max = Math.max(2, v + 1);
+    var pct = Math.max(0, Math.min(100, (v / max) * 100));
+    var fill = (300 * pct / 100).toFixed(1);
+    var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
+
+    return '' +
+      '<div class="goodos-storage-graph-v61" data-goodos-storage-graph-v61="' + target.key + '">' +
+        '<svg viewBox="0 0 340 118" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="goodosStorageProgressV61" x1="0" x2="1">' +
+              '<stop offset="0%" stop-color="#36dcff"></stop>' +
+              '<stop offset="55%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="100%" stop-color="#22e6a8"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
+          '<rect x="0" y="52" width="300" height="14" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="52" width="' + fill + '" height="14" rx="7" fill="url(#goodosStorageProgressV61)"></rect>' +
+          '<circle cx="' + dot + '" cy="59" r="7" fill="#22e6a8"></circle>' +
+          '<text x="0" y="94" class="muted" font-size="11" font-weight="850">0</text>' +
+          '<text x="160" y="94" text-anchor="middle" class="muted" font-size="11" font-weight="850">' + value + '</text>' +
+          '<text x="315" y="94" text-anchor="end" class="muted" font-size="11" font-weight="850">' + max + '</text>' +
+        '</svg>' +
+        '<div class="goodos-storage-graph-note-v61">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function barsGraph(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var bars = [];
+
+    for (var i = 0; i < 14; i += 1) {
+      var h = v <= 0 ? 4 : Math.max(10, Math.min(72, 12 + ((i * 11 + v * 6) % 60)));
+      var x = 12 + i * 21;
+      var y = 88 - h;
+
+      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#goodosStorageBarsV61)" opacity="' + (v <= 0 ? ".20" : ".92") + '"></rect>');
+    }
+
+    return '' +
+      '<div class="goodos-storage-graph-v61" data-goodos-storage-graph-v61="' + target.key + '">' +
+        '<svg viewBox="0 0 340 118" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="goodosStorageBarsV61" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="#36dcff"></stop>' +
+              '<stop offset="50%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="100%" stop-color="#7c3aed"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
+          '<line x1="0" y1="88" x2="320" y2="88" class="grid"></line>' +
+          bars.join("") +
+          '<text x="0" y="114" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="114" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
+        '</svg>' +
+        '<div class="goodos-storage-graph-note-v61">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function graphMarkup(target, value) {
+    if (target.kind === "progress") return progressGraph(target, value);
+    if (target.kind === "bars") return barsGraph(target, value);
+    return lineGraph(target, value);
+  }
+
+  function renderStorageGraphs() {
+    removeOldGraphs();
+
+    if (!isStoragePage()) return;
+
+    TARGETS.forEach(function (target) {
+      var labelNode = findLabelNode(target);
+      if (!labelNode) return;
+
+      var card = cardFromLabel(labelNode);
+      if (!card) return;
+
+      var value = metricValue(card, target);
+
+      card.classList.add("goodos-storage-graph-card-v61");
+      card.insertAdjacentHTML("beforeend", graphMarkup(target, value));
+    });
+  }
+
+  function run() {
+    renderStorageGraphs();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 300);
+    setTimeout(run, 900);
+    setTimeout(run, 1800);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  setTimeout(run, 300);
+  setTimeout(run, 900);
+  setTimeout(run, 1800);
 })();
 </script>
 
