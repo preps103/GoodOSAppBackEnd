@@ -1106,6 +1106,33 @@ main [class*="badge"],
 }
 </style>
 
+
+<style id="goodos-module-scope-chart-v36">
+.goodos-module-scope-chart-v36 {
+  margin-top: 16px;
+  width: 100%;
+  height: 74px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.10), transparent 42%),
+    rgba(7,16,31,.30);
+  border: 1px solid rgba(148,163,184,.11);
+  padding: 10px 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.goodos-module-scope-chart-v36 svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.goodos-module-scope-card-v36 {
+  min-height: 176px !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -9908,6 +9935,159 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   window.addEventListener("hashchange", function () {
     setTimeout(renderCharts, 500);
+  });
+})();
+</script>
+
+
+<script id="goodos-module-scope-chart-v36-js">
+(function () {
+  if (window.__goodosModuleScopeChartV36) return;
+  window.__goodosModuleScopeChartV36 = true;
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function stripModuleChartText(card) {
+    var clone = card.cloneNode(true);
+    Array.prototype.slice.call(clone.querySelectorAll(
+      ".goodos-module-scope-chart-v36, .goodos-kpi-chart-v35[data-kpi-chart='module-scope'], .goodos-kpi-visual-v34[data-kpi-chart='module-scope'], .goodos-kpi-meter-v33[data-kpi='MODULE SCOPE'], .goodos-kpi-chart-v32, .goodos-kpi-chart-v31"
+    )).forEach(function (el) {
+      el.remove();
+    });
+    return cleanText(clone);
+  }
+
+  function findModuleScopeCard() {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    var labelNodes = nodes.filter(function (el) {
+      if (el.closest("aside, nav, header")) return false;
+      if (el.closest(".goodos-module-scope-chart-v36")) return false;
+      return cleanText(el).toUpperCase() === "MODULE SCOPE";
+    });
+
+    if (!labelNodes.length) {
+      labelNodes = nodes.filter(function (el) {
+        if (el.closest("aside, nav, header")) return false;
+        if (el.closest(".goodos-module-scope-chart-v36")) return false;
+        return cleanText(el).toUpperCase().indexOf("MODULE SCOPE") !== -1;
+      });
+    }
+
+    var candidates = [];
+
+    labelNodes.forEach(function (labelNode) {
+      var node = labelNode;
+
+      for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+        if (node.closest && node.closest("aside, nav, header")) break;
+        if (node.querySelector && node.querySelector("table")) {
+          node = node.parentElement;
+          continue;
+        }
+
+        var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+        var text = stripModuleChartText(node).toUpperCase();
+
+        if (
+          text.indexOf("MODULE SCOPE") !== -1 &&
+          /\d+(?:\.\d+)?\s*%/.test(text) &&
+          rect.width >= 180 &&
+          rect.width <= 760 &&
+          rect.height >= 80 &&
+          rect.height <= 360
+        ) {
+          candidates.push({
+            node: node,
+            area: rect.width * rect.height
+          });
+        }
+
+        node = node.parentElement;
+      }
+    });
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function getPercent(card) {
+    var text = stripModuleChartText(card);
+    var match = text.match(/(\d+(?:\.\d+)?)\s*%/);
+    return match ? Number(match[1]) : 0;
+  }
+
+  function chartHtml(percent) {
+    percent = Math.max(0, Math.min(100, Number(percent || 0)));
+
+    var trackWidth = 320;
+    var fillWidth = (trackWidth * percent / 100).toFixed(1);
+    var dotX = Math.max(6, Math.min(trackWidth - 6, trackWidth * percent / 100)).toFixed(1);
+
+    return '' +
+      '<div class="goodos-module-scope-chart-v36" data-kpi-chart="module-scope">' +
+        '<svg viewBox="0 0 340 74" aria-label="Module scope live chart">' +
+          '<defs>' +
+            '<linearGradient id="moduleScopeGradV36" x1="0" x2="1" y1="0" y2="0">' +
+              '<stop offset="0%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="55%" stop-color="#36dcff"></stop>' +
+              '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="13" fill="#9eabc2" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="320" y="13" text-anchor="end" fill="#a8ffd4" font-size="12" font-weight="950">' + Math.round(percent) + '%</text>' +
+          '<rect x="0" y="36" width="' + trackWidth + '" height="12" rx="6" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="36" width="' + fillWidth + '" height="12" rx="6" fill="url(#moduleScopeGradV36)"></rect>' +
+          '<circle cx="' + dotX + '" cy="42" r="5" fill="#a8ffd4"></circle>' +
+        '</svg>' +
+      '</div>';
+  }
+
+  function renderModuleScopeChart() {
+    var card = findModuleScopeCard();
+    if (!card) return;
+
+    Array.prototype.slice.call(card.querySelectorAll(
+      ".goodos-module-scope-chart-v36, .goodos-kpi-chart-v35[data-kpi-chart='module-scope'], .goodos-kpi-visual-v34[data-kpi-chart='module-scope'], .goodos-kpi-meter-v33[data-kpi='MODULE SCOPE']"
+    )).forEach(function (old) {
+      old.remove();
+    });
+
+    var percent = getPercent(card);
+    card.classList.add("goodos-module-scope-card-v36");
+    card.insertAdjacentHTML("beforeend", chartHtml(percent));
+  }
+
+  function start() {
+    renderModuleScopeChart();
+    setTimeout(renderModuleScopeChart, 700);
+    setTimeout(renderModuleScopeChart, 1600);
+    setTimeout(renderModuleScopeChart, 2600);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(renderModuleScopeChart, 500);
   });
 })();
 </script>
