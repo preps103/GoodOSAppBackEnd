@@ -1966,15 +1966,6 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   letter-spacing: .02em;
 }
 </style>
-
-<style id="goodos-api-keys-nav-fix-v58">
-/* V58: API Keys navigation fix only */
-
-body.goodos-api-nav-v58-ready [data-goodos-route-v58="api-keys"] {
-  cursor: pointer !important;
-}
-</style>
-
 <style id="goodos-storage-provider-kpi-charts-v58">
 /* V58: Storage Provider KPI charts only. No navigation override. */
 
@@ -2258,6 +2249,200 @@ body.goodos-api-nav-v58-ready [data-goodos-route-v58="api-keys"] {
 
   .goodos-skeleton-page-v59 {
     padding: 18px;
+  }
+}
+</style>
+
+
+<style id="goodos-api-keys-route-fix-v60">
+/* V60: API Keys route fix only */
+
+.goodos-api-keys-page-v60 {
+  padding: 26px 30px 60px;
+}
+
+.goodos-api-keys-hero-v60 {
+  border: 1px solid rgba(148,163,184,.16);
+  border-radius: 28px;
+  padding: 34px 36px;
+  background:
+    radial-gradient(circle at 100% 10%, rgba(54,220,255,.16), transparent 34%),
+    linear-gradient(135deg, rgba(30,41,59,.92), rgba(15,23,42,.88));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 24px 70px rgba(0,0,0,.18);
+  margin-bottom: 24px;
+}
+
+.goodos-api-keys-hero-v60 h1 {
+  color: #f8fafc;
+  font-size: clamp(38px, 4vw, 58px);
+  line-height: .98;
+  font-weight: 950;
+  margin: 0 0 14px;
+}
+
+.goodos-api-keys-hero-v60 p {
+  color: rgba(203,213,225,.82);
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 900px;
+  margin: 0;
+}
+
+.goodos-api-keys-section-head-v60 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 24px 0 12px;
+}
+
+.goodos-api-keys-section-head-v60 h2 {
+  color: #f8fafc;
+  font-size: 18px;
+  margin: 0;
+  font-weight: 950;
+}
+
+.goodos-api-keys-actions-v60 {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.goodos-api-keys-btn-v60 {
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(15,23,42,.58);
+  color: #e5e7eb;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-api-keys-btn-v60:hover {
+  border-color: rgba(54,220,255,.35);
+  color: #fff;
+}
+
+.goodos-api-keys-grid-v60 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.goodos-api-keys-kpi-v60 {
+  min-height: 138px;
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 22px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.12), transparent 42%),
+    linear-gradient(180deg, rgba(30,41,59,.78), rgba(15,23,42,.72));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.goodos-api-keys-kpi-v60 small {
+  display: block;
+  color: rgba(174,185,205,.64);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.goodos-api-keys-kpi-v60 strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 950;
+  margin-bottom: 10px;
+}
+
+.goodos-api-keys-kpi-v60 span {
+  display: block;
+  color: rgba(203,213,225,.72);
+  font-size: 13px;
+}
+
+.goodos-api-keys-panel-v60 {
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.10), transparent 42%),
+    linear-gradient(180deg, rgba(30,41,59,.74), rgba(15,23,42,.70));
+  padding: 20px;
+  overflow: hidden;
+}
+
+.goodos-api-keys-table-v60 {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.goodos-api-keys-table-v60 th {
+  color: rgba(174,185,205,.68);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .22em;
+  text-align: left;
+  text-transform: uppercase;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(148,163,184,.14);
+}
+
+.goodos-api-keys-table-v60 td {
+  color: #e5e7eb;
+  padding: 15px 12px;
+  border-bottom: 1px solid rgba(148,163,184,.08);
+  vertical-align: top;
+  font-size: 13px;
+}
+
+.goodos-api-keys-pill-v60 {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: rgba(22,101,52,.26);
+  border: 1px solid rgba(72,187,120,.22);
+  color: #9fffc4;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.goodos-api-keys-muted-v60 {
+  color: rgba(203,213,225,.68);
+}
+
+.goodos-api-keys-error-v60 {
+  border: 1px solid rgba(248,113,113,.25);
+  background: rgba(127,29,29,.18);
+  color: #fecaca;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+@media (max-width: 1100px) {
+  .goodos-api-keys-grid-v60 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .goodos-api-keys-page-v60 {
+    padding: 18px;
+  }
+
+  .goodos-api-keys-grid-v60 {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -13573,308 +13758,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 1800);
 })();
 </script>
-
-<script id="goodos-api-keys-nav-fix-v58-js">
-(function () {
-  if (window.__goodosApiKeysNavigationFixV58) return;
-  window.__goodosApiKeysNavigationFixV58 = true;
-
-  function cleanText(el) {
-    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
-  }
-
-  function norm(value) {
-    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function currentHash() {
-    return norm(String(window.location.hash || "").replace("#", ""));
-  }
-
-  function getRoot() {
-    return document.getElementById("view") ||
-      document.querySelector("[data-view-root]") ||
-      document.querySelector("main") ||
-      document.body;
-  }
-
-  function getSidebar() {
-    var candidates = Array.prototype.slice.call(
-      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
-    );
-
-    return candidates.find(function (el) {
-      var text = norm(cleanText(el));
-      return text.indexOf("overview") !== -1 &&
-        text.indexOf("api keys") !== -1 &&
-        text.indexOf("storage") !== -1 &&
-        text.indexOf("settings") !== -1;
-    }) || null;
-  }
-
-  function getApiKeysRow() {
-    var sidebar = getSidebar();
-    if (!sidebar) return null;
-
-    var nodes = Array.prototype.slice.call(
-      sidebar.querySelectorAll("a,button,[role='button'],div,span")
-    );
-
-    var label = nodes.find(function (el) {
-      if (el.closest("header")) return false;
-      return norm(cleanText(el)) === "api keys";
-    });
-
-    if (!label) return null;
-
-    return label.closest("a,button,[role='button']") || label;
-  }
-
-  function getStorageRow() {
-    var sidebar = getSidebar();
-    if (!sidebar) return null;
-
-    var nodes = Array.prototype.slice.call(
-      sidebar.querySelectorAll("a,button,[role='button'],div,span")
-    );
-
-    var label = nodes.find(function (el) {
-      if (el.closest("header")) return false;
-      return norm(cleanText(el)) === "storage";
-    });
-
-    if (!label) return null;
-
-    return label.closest("a,button,[role='button']") || label;
-  }
-
-  function rootLooksLikeStorage() {
-    var text = norm(cleanText(getRoot()));
-
-    return text.indexOf("storage") !== -1 &&
-      (
-        text.indexOf("storage v2") !== -1 ||
-        text.indexOf("cdn buckets") !== -1 ||
-        text.indexOf("public buckets") !== -1 ||
-        text.indexOf("create provider") !== -1 ||
-        text.indexOf("storage buckets") !== -1
-      );
-  }
-
-  function rootLooksLikeApiKeys() {
-    var text = norm(cleanText(getRoot()));
-
-    return text.indexOf("api keys") !== -1 &&
-      (
-        text.indexOf("key registry") !== -1 ||
-        text.indexOf("restricted keys") !== -1 ||
-        text.indexOf("create key") !== -1 ||
-        text.indexOf("api key") !== -1
-      );
-  }
-
-  function removeWrongActiveStates() {
-    var sidebar = getSidebar();
-    if (!sidebar) return;
-
-    var rows = Array.prototype.slice.call(
-      sidebar.querySelectorAll("a,button,[role='button'],div")
-    );
-
-    rows.forEach(function (row) {
-      var text = norm(cleanText(row));
-      if (text !== "api keys" && text !== "storage") return;
-
-      row.removeAttribute("data-goodos-active-v42");
-      row.removeAttribute("data-goodos-active-v43");
-      row.removeAttribute("data-goodos-active-v44");
-      row.removeAttribute("data-goodos-active-v45");
-      row.removeAttribute("data-goodos-active-v48");
-      row.removeAttribute("data-goodos-active-v49");
-      row.removeAttribute("data-goodos-active-v50");
-      row.removeAttribute("data-goodos-active-menu");
-      row.removeAttribute("data-goodos-active-tab");
-      row.removeAttribute("data-active");
-      row.removeAttribute("aria-current");
-      row.classList.remove("active");
-      row.classList.remove("goodos-v43-is-active");
-      row.classList.remove("goodos-sidebar-active-v41");
-    });
-  }
-
-  function markSidebarActive(key) {
-    var api = getApiKeysRow();
-    var storage = getStorageRow();
-
-    removeWrongActiveStates();
-
-    if (api) {
-      api.setAttribute("data-goodos-route-v58", "api-keys");
-      api.setAttribute("href", "#api-keys");
-    }
-
-    if (storage) {
-      storage.setAttribute("data-goodos-route-v58", "storage");
-      storage.setAttribute("href", "#storage");
-    }
-
-    var target = key === "api-keys" ? api : storage;
-
-    if (target) {
-      target.classList.add("goodos-sidebar-active-v41");
-      target.setAttribute("aria-current", "page");
-
-      if (key === "api-keys") {
-        target.setAttribute("data-goodos-active-v50", "true");
-      }
-    }
-  }
-
-  function callKnownApiKeysRenderers() {
-    var names = [
-      "renderApiKeys",
-      "renderApiKeysView",
-      "renderApiKeysPage",
-      "apiKeysView",
-      "showApiKeys",
-      "loadApiKeys",
-      "showView",
-      "navigateTo"
-    ];
-
-    names.forEach(function (name) {
-      try {
-        if (typeof window[name] !== "function") return;
-
-        if (name === "showView" || name === "navigateTo") {
-          window[name]("api-keys");
-        } else {
-          window[name]();
-        }
-      } catch (e) {}
-    });
-  }
-
-  function forceApiKeys() {
-    markSidebarActive("api-keys");
-
-    if (currentHash() !== "api-keys") {
-      history.replaceState(null, "", window.location.pathname + window.location.search + "#api-keys");
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-    }
-
-    callKnownApiKeysRenderers();
-
-    setTimeout(function () {
-      if (!rootLooksLikeApiKeys()) {
-        callKnownApiKeysRenderers();
-      }
-      markSidebarActive("api-keys");
-    }, 150);
-
-    setTimeout(function () {
-      if (!rootLooksLikeApiKeys()) {
-        callKnownApiKeysRenderers();
-      }
-      markSidebarActive("api-keys");
-    }, 600);
-
-    setTimeout(function () {
-      if (rootLooksLikeStorage() && !rootLooksLikeApiKeys()) {
-        console.warn("GoodOS V58: API Keys hash is active but Storage view is still rendered. The native router function for API Keys is likely missing or not exposed.");
-      }
-      markSidebarActive("api-keys");
-    }, 1200);
-  }
-
-  function forceStorage() {
-    markSidebarActive("storage");
-
-    if (currentHash() !== "storage") {
-      history.replaceState(null, "", window.location.pathname + window.location.search + "#storage");
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-    }
-  }
-
-  function attachClicks() {
-    var sidebar = getSidebar();
-    if (!sidebar || sidebar.__goodosV58ApiKeysClickAttached) return;
-
-    sidebar.__goodosV58ApiKeysClickAttached = true;
-
-    sidebar.addEventListener("click", function (event) {
-      var node = event.target;
-
-      for (var i = 0; node && node !== sidebar && node !== document.body && i < 10; i += 1) {
-        var text = norm(cleanText(node));
-
-        if (text === "api keys") {
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
-          forceApiKeys();
-          return false;
-        }
-
-        if (text === "storage") {
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
-          forceStorage();
-          return false;
-        }
-
-        node = node.parentElement;
-      }
-    }, true);
-  }
-
-  function normalizeRoutes() {
-    document.body.classList.add("goodos-api-nav-v58-ready");
-
-    var api = getApiKeysRow();
-    var storage = getStorageRow();
-
-    if (api) {
-      api.setAttribute("data-goodos-route-v58", "api-keys");
-      api.setAttribute("href", "#api-keys");
-    }
-
-    if (storage) {
-      storage.setAttribute("data-goodos-route-v58", "storage");
-      storage.setAttribute("href", "#storage");
-    }
-
-    if (currentHash() === "api-keys" || currentHash() === "apikeys" || currentHash() === "keys") {
-      forceApiKeys();
-    } else if (currentHash() === "storage" || currentHash() === "storage-files" || currentHash() === "files") {
-      markSidebarActive("storage");
-    }
-  }
-
-  function run() {
-    attachClicks();
-    normalizeRoutes();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-
-  window.addEventListener("hashchange", function () {
-    setTimeout(run, 40);
-    setTimeout(run, 300);
-  });
-
-  window.addEventListener("pageshow", run);
-
-  setTimeout(run, 300);
-  setTimeout(run, 900);
-})();
-</script>
-
 <script id="goodos-storage-provider-kpi-charts-v58-js">
 (function () {
   if (window.__goodosStorageProviderChartsV58) return;
@@ -14693,6 +14576,389 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   window.addEventListener("pageshow", run);
 
   setTimeout(run, 300);
+  setTimeout(run, 900);
+})();
+</script>
+
+
+<script id="goodos-api-keys-route-fix-v60-js">
+(function () {
+  if (window.__goodosApiKeysRouteFixV60) return;
+  window.__goodosApiKeysRouteFixV60 = true;
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function currentHash() {
+    return norm(String(window.location.hash || "").replace("#", ""));
+  }
+
+  function isApiKeysHash() {
+    var h = currentHash();
+    return h === "api-keys" || h === "apikeys" || h === "keys" || h === "api_key" || h === "api-keys-tab";
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function getSidebar() {
+    var candidates = Array.prototype.slice.call(
+      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
+    );
+
+    return candidates.find(function (el) {
+      var text = norm(cleanText(el));
+      return text.indexOf("overview") !== -1 &&
+        text.indexOf("api keys") !== -1 &&
+        text.indexOf("storage") !== -1 &&
+        text.indexOf("settings") !== -1;
+    }) || null;
+  }
+
+  function findSidebarRow(labelText) {
+    var sidebar = getSidebar();
+    if (!sidebar) return null;
+
+    var wanted = norm(labelText);
+
+    var nodes = Array.prototype.slice.call(
+      sidebar.querySelectorAll("a,button,[role='button'],div,span")
+    );
+
+    var label = nodes.find(function (el) {
+      if (el.closest("header")) return false;
+      return norm(cleanText(el)) === wanted;
+    });
+
+    if (!label) return null;
+
+    return label.closest("a,button,[role='button']") || label;
+  }
+
+  function clearSidebarActive() {
+    var sidebar = getSidebar();
+    if (!sidebar) return;
+
+    Array.prototype.slice.call(sidebar.querySelectorAll("a,button,[role='button'],div")).forEach(function (el) {
+      var text = norm(cleanText(el));
+
+      if (
+        text === "overview" ||
+        text === "auth" ||
+        text === "projects" ||
+        text === "database" ||
+        text === "storage" ||
+        text === "api keys" ||
+        text === "webhooks" ||
+        text === "realtime" ||
+        text === "functions" ||
+        text === "logs" ||
+        text === "alerts" ||
+        text === "backups" ||
+        text === "settings"
+      ) {
+        el.classList.remove("active");
+        el.classList.remove("is-active");
+        el.classList.remove("goodos-sidebar-active-v41");
+        el.classList.remove("is-active-v59");
+        el.removeAttribute("aria-current");
+        el.removeAttribute("data-active");
+        el.removeAttribute("data-goodos-active-v50");
+      }
+    });
+  }
+
+  function markApiKeysActive() {
+    clearSidebarActive();
+
+    var api = findSidebarRow("API Keys");
+    if (!api) return;
+
+    api.classList.add("goodos-sidebar-active-v41");
+    api.setAttribute("aria-current", "page");
+    api.setAttribute("data-goodos-active-v50", "true");
+    api.setAttribute("href", "#api-keys");
+  }
+
+  function lockApiKeysRow() {
+    var api = findSidebarRow("API Keys");
+    if (!api || api.__goodosV60Locked) return;
+
+    api.__goodosV60Locked = true;
+    api.setAttribute("href", "#api-keys");
+    api.setAttribute("data-goodos-route-fixed-v60", "api-keys");
+
+    api.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      history.replaceState(null, "", window.location.pathname + window.location.search + "#api-keys");
+      renderApiKeysPage();
+
+      return false;
+    }, true);
+  }
+
+  async function fetchApiKeysData() {
+    var endpoints = [
+      "/api/admin/api-keys-page-data",
+      "/api/admin/api-keys",
+      "/api/v1/api-keys"
+    ];
+
+    var errors = [];
+
+    for (var i = 0; i < endpoints.length; i += 1) {
+      var url = endpoints[i];
+
+      try {
+        var res = await fetch(url, {
+          credentials: "include",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
+        var text = await res.text();
+        var json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (e) {
+          json = { raw: text };
+        }
+
+        if (res.ok) {
+          return {
+            endpoint: url,
+            status: res.status,
+            data: json || {}
+          };
+        }
+
+        errors.push(url + " returned " + res.status);
+      } catch (e) {
+        errors.push(url + " failed: " + e.message);
+      }
+    }
+
+    return {
+      endpoint: null,
+      status: 0,
+      error: errors.join(" | "),
+      data: {}
+    };
+  }
+
+  function flattenKeys(data) {
+    var buckets = [
+      data.apiKeys,
+      data.keys,
+      data.records,
+      data.items,
+      data.data && data.data.apiKeys,
+      data.data && data.data.keys,
+      data.data && data.data.records,
+      data.result && data.result.apiKeys,
+      data.result && data.result.keys
+    ];
+
+    for (var i = 0; i < buckets.length; i += 1) {
+      if (Array.isArray(buckets[i])) return buckets[i];
+    }
+
+    return [];
+  }
+
+  function countRestricted(keys) {
+    return keys.filter(function (key) {
+      var text = JSON.stringify(key || {}).toLowerCase();
+      return text.indexOf("restricted") !== -1 ||
+        text.indexOf("scoped") !== -1 ||
+        text.indexOf("scope") !== -1;
+    }).length;
+  }
+
+  function keyName(key, index) {
+    return key.name ||
+      key.label ||
+      key.title ||
+      key.key_name ||
+      key.slug ||
+      key.id ||
+      "API Key " + (index + 1);
+  }
+
+  function keyStatus(key) {
+    return key.status ||
+      (key.is_active === false ? "inactive" : "active");
+  }
+
+  function keyScope(key) {
+    if (Array.isArray(key.scopes)) return key.scopes.join(", ");
+    if (Array.isArray(key.permissions)) return key.permissions.join(", ");
+
+    return key.scope ||
+      key.permission ||
+      key.type ||
+      key.environment ||
+      "scoped";
+  }
+
+  function keyCreated(key) {
+    return key.created_at ||
+      key.createdAt ||
+      key.updated_at ||
+      key.updatedAt ||
+      "";
+  }
+
+  function renderRows(keys) {
+    if (!keys.length) {
+      return '' +
+        '<tr>' +
+          '<td colspan="5" class="goodos-api-keys-muted-v60">No API keys were returned from the live API key endpoint.</td>' +
+        '</tr>';
+    }
+
+    return keys.map(function (key, index) {
+      return '' +
+        '<tr>' +
+          '<td><strong>' + escapeHtml(keyName(key, index)) + '</strong><div class="goodos-api-keys-muted-v60">' + escapeHtml(key.id || key.key_id || "") + '</div></td>' +
+          '<td><span class="goodos-api-keys-pill-v60">' + escapeHtml(keyStatus(key)) + '</span></td>' +
+          '<td>' + escapeHtml(keyScope(key)) + '</td>' +
+          '<td>' + escapeHtml(keyCreated(key)) + '</td>' +
+          '<td><button class="goodos-api-keys-btn-v60" type="button">Details</button></td>' +
+        '</tr>';
+    }).join("");
+  }
+
+  function renderLoading() {
+    markApiKeysActive();
+
+    getRoot().innerHTML = '' +
+      '<section class="goodos-api-keys-page-v60">' +
+        '<div class="goodos-api-keys-hero-v60">' +
+          '<h1>API Keys</h1>' +
+          '<p>Loading live API key data...</p>' +
+        '</div>' +
+      '</section>';
+  }
+
+  async function renderApiKeysPage() {
+    markApiKeysActive();
+    renderLoading();
+
+    var result = await fetchApiKeysData();
+    var data = result.data || {};
+    var keys = flattenKeys(data);
+
+    var total = keys.length ||
+      data.total ||
+      data.count ||
+      data.api_key_count ||
+      0;
+
+    var active = keys.filter(function (key) {
+      return String(keyStatus(key)).toLowerCase() !== "inactive" &&
+        String(keyStatus(key)).toLowerCase() !== "disabled" &&
+        String(keyStatus(key)).toLowerCase() !== "revoked";
+    }).length;
+
+    var restricted = countRestricted(keys);
+
+    var scopes = new Set();
+    keys.forEach(function (key) {
+      scopes.add(keyScope(key));
+    });
+
+    if (!keys.length && data.summary) {
+      total = data.summary.total || data.summary.keys || total;
+      active = data.summary.active || active;
+      restricted = data.summary.restricted || restricted;
+    }
+
+    var errorHtml = result.error ? '<div class="goodos-api-keys-error-v60">Live API key data could not be loaded: ' + escapeHtml(result.error) + '</div>' : "";
+
+    getRoot().innerHTML = '' +
+      '<section class="goodos-api-keys-page-v60" data-goodos-real-api-keys-page-v60="true">' +
+        '<div class="goodos-api-keys-hero-v60">' +
+          '<h1>API Keys</h1>' +
+          '<p>Manage GoodOS API keys, scoped access, restrictions, environments, and key audit readiness from one place.</p>' +
+        '</div>' +
+
+        '<div class="goodos-api-keys-section-head-v60">' +
+          '<h2>API Key Control Center</h2>' +
+          '<div class="goodos-api-keys-actions-v60">' +
+            '<button class="goodos-api-keys-btn-v60" type="button" onclick="location.reload()">Refresh Data</button>' +
+            '<button class="goodos-api-keys-btn-v60" type="button">Create Key</button>' +
+          '</div>' +
+        '</div>' +
+
+        errorHtml +
+
+        '<div class="goodos-api-keys-grid-v60">' +
+          '<article class="goodos-api-keys-kpi-v60"><small>API Keys</small><strong>' + escapeHtml(total) + '</strong><span>Live key records</span></article>' +
+          '<article class="goodos-api-keys-kpi-v60"><small>Active Keys</small><strong>' + escapeHtml(active) + '</strong><span>Currently usable keys</span></article>' +
+          '<article class="goodos-api-keys-kpi-v60"><small>Restricted Keys</small><strong>' + escapeHtml(restricted) + '</strong><span>Scoped or limited keys</span></article>' +
+          '<article class="goodos-api-keys-kpi-v60"><small>Scopes</small><strong>' + escapeHtml(scopes.size || 0) + '</strong><span>Detected permission groups</span></article>' +
+        '</div>' +
+
+        '<div class="goodos-api-keys-section-head-v60">' +
+          '<h2>Key Registry</h2>' +
+          '<span class="goodos-api-keys-pill-v60">Endpoint: ' + escapeHtml(result.endpoint || "none") + '</span>' +
+        '</div>' +
+
+        '<div class="goodos-api-keys-panel-v60">' +
+          '<table class="goodos-api-keys-table-v60">' +
+            '<thead><tr><th>Key</th><th>Status</th><th>Scope</th><th>Updated</th><th>Action</th></tr></thead>' +
+            '<tbody>' + renderRows(keys) + '</tbody>' +
+          '</table>' +
+        '</div>' +
+      '</section>';
+
+    markApiKeysActive();
+  }
+
+  function run() {
+    lockApiKeysRow();
+
+    if (isApiKeysHash()) {
+      renderApiKeysPage();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 20);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  setTimeout(run, 250);
   setTimeout(run, 900);
 })();
 </script>
