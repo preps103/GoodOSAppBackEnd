@@ -1579,65 +1579,41 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-help-v41 {
 }
 </style>
 
-<style id="goodos-sidebar-active-clean-controller-v48">
-/* V48: single source of truth for sidebar active highlight */
+<style id="goodos-auth-charts-stable-menu-v50">
+/* V50: one stable sidebar active state + restored Auth charts */
 
-body.goodos-menu-v48-ready .goodos-menu-v48-row {
+body.goodos-v50-ready .goodos-menu-row-v50 {
   position: relative !important;
   outline: none !important;
 }
 
-/* Force every managed sidebar row inactive unless V48 marks it active */
-body.goodos-menu-v48-ready .goodos-menu-v48-row:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row.active:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-sidebar-active-v41:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-v43-is-active:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[aria-current="page"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-active="true"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-tab="true"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-menu="true"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v42="true"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v43="true"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v44="true"]:not([data-goodos-active-v48="true"]),
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v45="true"]:not([data-goodos-active-v48="true"]) {
+/* Reset all managed menu rows */
+body.goodos-v50-ready .goodos-menu-row-v50 {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
   color: #dce8f7 !important;
 }
 
-/* Remove old inactive dots */
-body.goodos-menu-v48-ready .goodos-menu-v48-row:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row.active:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-sidebar-active-v41:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-v43-is-active:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[aria-current="page"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-active="true"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-tab="true"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-menu="true"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v42="true"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v43="true"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v44="true"]:not([data-goodos-active-v48="true"])::after,
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v45="true"]:not([data-goodos-active-v48="true"])::after {
+body.goodos-v50-ready .goodos-menu-row-v50::after {
   content: none !important;
   display: none !important;
   opacity: 0 !important;
 }
 
-/* Active tab */
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v48="true"] {
+/* One active tab only */
+body.goodos-v50-ready .goodos-menu-row-v50[data-goodos-active-v50="true"] {
   color: #ffffff !important;
   background:
-    radial-gradient(circle at 100% 50%, rgba(54,220,255,.38), transparent 34%),
-    linear-gradient(135deg, rgba(79,140,255,.43), rgba(139,92,246,.35) 55%, rgba(34,211,238,.29)) !important;
-  border-color: rgba(95,213,255,.44) !important;
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.36), transparent 34%),
+    linear-gradient(135deg, rgba(79,140,255,.42), rgba(139,92,246,.34) 55%, rgba(34,211,238,.28)) !important;
+  border-color: rgba(95,213,255,.42) !important;
   box-shadow:
     0 14px 34px rgba(79,140,255,.18),
     inset 0 1px 0 rgba(255,255,255,.10) !important;
 }
 
-/* Active right dot */
-body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v48="true"]::after {
+body.goodos-v50-ready .goodos-menu-row-v50[data-goodos-active-v50="true"]::after {
   content: "" !important;
   display: block !important;
   opacity: 1 !important;
@@ -1652,12 +1628,58 @@ body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v48="true"]::
   box-shadow: 0 0 16px rgba(103,245,255,.78) !important;
 }
 
-/* Prevent focus outline from looking like a second active tab */
-body.goodos-menu-v48-ready .goodos-menu-v48-row:focus,
-body.goodos-menu-v48-ready .goodos-menu-v48-row:focus-visible,
-body.goodos-menu-v48-ready .goodos-menu-v48-row *:focus,
-body.goodos-menu-v48-ready .goodos-menu-v48-row *:focus-visible {
+body.goodos-v50-ready .goodos-menu-row-v50:focus,
+body.goodos-v50-ready .goodos-menu-row-v50:focus-visible,
+body.goodos-v50-ready .goodos-menu-row-v50 *:focus,
+body.goodos-v50-ready .goodos-menu-row-v50 *:focus-visible {
   outline: none !important;
+}
+
+/* Auth metric chart cards */
+.goodos-auth-chart-card-v50 {
+  min-height: 252px !important;
+  overflow: hidden !important;
+}
+
+.goodos-auth-chart-v50 {
+  margin-top: 18px;
+  width: 100%;
+  min-height: 128px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.12), transparent 42%),
+    rgba(7,16,31,.38);
+  border: 1px solid rgba(148,163,184,.13);
+  padding: 14px 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.goodos-auth-chart-v50 svg {
+  width: 100%;
+  height: 118px;
+  display: block;
+  overflow: visible;
+}
+
+.goodos-auth-chart-v50 .muted {
+  fill: #9eabc2;
+}
+
+.goodos-auth-chart-v50 .green {
+  fill: #a8ffd4;
+}
+
+.goodos-auth-chart-v50 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 4 6;
+}
+
+.goodos-auth-chart-note-v50 {
+  color: #8fa0ba;
+  font-size: 11px;
+  font-weight: 750;
+  margin-top: 7px;
 }
 </style>
 
@@ -11139,29 +11161,28 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-<script id="goodos-sidebar-active-clean-controller-v48-js">
+<script id="goodos-auth-charts-stable-menu-v50-js">
 (function () {
-  if (window.__goodosSidebarActiveCleanControllerV48) return;
-  window.__goodosSidebarActiveCleanControllerV48 = true;
+  if (window.__goodosV50StableMenuAuthCharts) return;
+  window.__goodosV50StableMenuAuthCharts = true;
 
   var MENU = [
-    { key: "overview", label: "overview", hashes: ["", "dashboard", "overview"], titles: ["backend console", "dashboard", "overview"] },
-    { key: "auth", label: "auth", hashes: ["auth", "auth-users", "users"], titles: ["auth", "auth / users"] },
-    { key: "projects", label: "projects", hashes: ["projects", "app-registry", "apps"], titles: ["projects", "app registry"] },
-    { key: "database", label: "database", hashes: ["database", "database-browser", "db"], titles: ["database", "database browser"] },
-    { key: "storage", label: "storage", hashes: ["storage", "storage-files", "files"], titles: ["storage", "storage / files"] },
-    { key: "api-keys", label: "api keys", hashes: ["api-keys", "api keys"], titles: ["api keys"] },
-    { key: "webhooks", label: "webhooks", hashes: ["webhooks"], titles: ["webhooks"] },
-    { key: "realtime", label: "realtime", hashes: ["realtime", "realtime-events"], titles: ["realtime", "realtime events"] },
-    { key: "functions", label: "functions", hashes: ["functions", "edge-functions"], titles: ["functions", "edge functions"] },
-    { key: "logs", label: "logs", hashes: ["logs", "logs-monitoring", "monitoring"], titles: ["logs", "logs & monitoring"] },
-    { key: "alerts", label: "alerts", hashes: ["alerts", "security-rules", "rules"], titles: ["alerts", "security rules", "rules engine"] },
-    { key: "backups", label: "backups", hashes: ["backups"], titles: ["backups"] },
-    { key: "settings", label: "settings", hashes: ["settings"], titles: ["settings"] }
+    { key: "dashboard", label: "overview", hashes: ["", "dashboard", "overview"] },
+    { key: "auth", label: "auth", hashes: ["auth", "auth-users", "users"] },
+    { key: "projects", label: "projects", hashes: ["projects", "app-registry", "apps"] },
+    { key: "database", label: "database", hashes: ["database", "database-browser", "db"] },
+    { key: "storage", label: "storage", hashes: ["storage", "storage-files", "files"] },
+    { key: "api-keys", label: "api keys", hashes: ["api-keys", "api keys"] },
+    { key: "webhooks", label: "webhooks", hashes: ["webhooks"] },
+    { key: "realtime", label: "realtime", hashes: ["realtime", "realtime-events"] },
+    { key: "functions", label: "functions", hashes: ["functions", "edge-functions"] },
+    { key: "logs", label: "logs", hashes: ["logs", "logs-monitoring", "monitoring"] },
+    { key: "alerts", label: "alerts", hashes: ["alerts", "security-rules", "rules"] },
+    { key: "backups", label: "backups", hashes: ["backups"] },
+    { key: "settings", label: "settings", hashes: ["settings"] }
   ];
 
-  var activeKey = "";
-  var clickLockUntil = 0;
+  var AUTH_LABELS = ["ROLES", "PERMISSIONS", "MFA ENABLED", "ACTIVE SESSIONS"];
 
   function cleanText(el) {
     return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
@@ -11171,12 +11192,35 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
 
-  function sameLabel(a, b) {
-    return norm(a).replace(/\s+/g, "") === norm(b).replace(/\s+/g, "");
+  function compact(value) {
+    return norm(value).replace(/\s+/g, "");
   }
 
-  function getHash() {
+  function currentHash() {
     return norm(String(window.location.hash || "").replace("#", ""));
+  }
+
+  function keyFromHash() {
+    var hash = currentHash();
+
+    for (var i = 0; i < MENU.length; i += 1) {
+      if (MENU[i].hashes.indexOf(hash) !== -1) return MENU[i].key;
+    }
+
+    return "dashboard";
+  }
+
+  function getSidebar() {
+    var candidates = Array.prototype.slice.call(
+      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
+    );
+
+    return candidates.find(function (el) {
+      var txt = norm(cleanText(el));
+      return txt.indexOf("goodos cloud") !== -1 &&
+        txt.indexOf("overview") !== -1 &&
+        txt.indexOf("settings") !== -1;
+    }) || document.querySelector(".goodos-sidebar-v41") || null;
   }
 
   function getRoot() {
@@ -11186,93 +11230,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       document.body;
   }
 
-  function getSidebar() {
-    var candidates = Array.prototype.slice.call(
-      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
-    );
-
-    return candidates.find(function (el) {
-      var text = norm(cleanText(el));
-      return text.indexOf("goodos cloud") !== -1 &&
-        text.indexOf("overview") !== -1 &&
-        text.indexOf("settings") !== -1;
-    }) || document.querySelector(".goodos-sidebar-v41") || null;
+  function isExactLabel(text, label) {
+    return compact(text) === compact(label);
   }
 
-  function menuFromHash() {
-    var hash = getHash();
-
-    for (var i = 0; i < MENU.length; i += 1) {
-      if (MENU[i].hashes.indexOf(hash) !== -1) return MENU[i];
-    }
-
-    return null;
-  }
-
-  function menuFromTitle() {
-    var root = getRoot();
-    var nodes = Array.prototype.slice.call(
-      root.querySelectorAll("h1,h2,.page-title,.hero-title,[class*='title'],[class*='Title']")
-    );
-
-    var titles = nodes.filter(function (el) {
-      if (el.closest("aside,nav,header")) return false;
-
-      var text = norm(cleanText(el));
-      if (!text || text.length > 90) return false;
-
-      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
-      return rect.width > 50 && rect.height > 14;
-    }).map(function (el) {
-      return norm(cleanText(el));
-    });
-
-    for (var i = 0; i < MENU.length; i += 1) {
-      var item = MENU[i];
-
-      for (var t = 0; t < titles.length; t += 1) {
-        var title = titles[t];
-
-        for (var a = 0; a < item.titles.length; a += 1) {
-          var allowed = item.titles[a];
-
-          if (title === allowed || title.indexOf(allowed + " ") === 0) {
-            return item;
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
-  function getStoredKey() {
-    try {
-      return norm(sessionStorage.getItem("goodos-sidebar-active-key-v48") || "");
-    } catch (e) {
-      return "";
-    }
-  }
-
-  function setStoredKey(key) {
-    try {
-      sessionStorage.setItem("goodos-sidebar-active-key-v48", key);
-    } catch (e) {}
-  }
-
-  function resolveActiveKey() {
-    if (activeKey && Date.now() < clickLockUntil) return activeKey;
-
-    var fromHash = menuFromHash();
-    if (fromHash) return fromHash.key;
-
-    var fromTitle = menuFromTitle();
-    if (fromTitle) return fromTitle.key;
-
-    return getStoredKey() || "overview";
-  }
-
-  function findLabel(sidebar, label) {
+  function findSidebarLabel(sidebar, label) {
     var nodes = Array.prototype.slice.call(
       sidebar.querySelectorAll("button,a,[role='button'],div,span")
     );
@@ -11280,32 +11242,30 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nodes.find(function (el) {
       if (el.closest(".goodos-sidebar-brand-v41")) return false;
       if (el.closest(".goodos-sidebar-section-v41")) return false;
-
-      var text = norm(cleanText(el));
-      return sameLabel(text, label);
+      return isExactLabel(cleanText(el), label);
     }) || null;
   }
 
-  function rowForLabelNode(node, sidebar) {
-    if (!node || !sidebar) return null;
+  function sidebarRowFromLabel(labelNode, sidebar) {
+    if (!labelNode || !sidebar) return null;
 
-    var clickable = node.closest("button,a,[role='button']");
+    var clickable = labelNode.closest("button,a,[role='button']");
     if (clickable && sidebar.contains(clickable)) return clickable;
 
-    var current = node;
-    var best = node;
-    var sidebarWidth = sidebar.getBoundingClientRect ? sidebar.getBoundingClientRect().width : 320;
+    var current = labelNode;
+    var best = labelNode;
+    var sidebarWidth = sidebar.getBoundingClientRect ? sidebar.getBoundingClientRect().width : 360;
 
     for (var i = 0; current && current !== sidebar && current !== document.body && i < 8; i += 1) {
       var rect = current.getBoundingClientRect ? current.getBoundingClientRect() : { width: 0, height: 0 };
-      var text = norm(cleanText(current));
+      var txt = cleanText(current);
 
       if (
-        text &&
+        txt &&
         rect.width >= 120 &&
-        rect.width <= sidebarWidth + 40 &&
+        rect.width <= sidebarWidth + 50 &&
         rect.height >= 28 &&
-        rect.height <= 96
+        rect.height <= 100
       ) {
         best = current;
       }
@@ -11316,21 +11276,17 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return best;
   }
 
-  function getRows(sidebar) {
+  function getSidebarRows(sidebar) {
     return MENU.map(function (item) {
-      var labelNode = findLabel(sidebar, item.label);
-      var row = rowForLabelNode(labelNode, sidebar);
-
-      return {
-        item: item,
-        row: row
-      };
+      var labelNode = findSidebarLabel(sidebar, item.label);
+      var row = sidebarRowFromLabel(labelNode, sidebar);
+      return { item: item, row: row };
     }).filter(function (entry) {
       return !!entry.row;
     });
   }
 
-  function resetRow(row) {
+  function clearMenuState(row) {
     row.classList.remove("active");
     row.classList.remove("goodos-sidebar-active-v41");
     row.classList.remove("goodos-v43-is-active");
@@ -11343,45 +11299,45 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     row.removeAttribute("data-goodos-active-v43");
     row.removeAttribute("data-goodos-active-v44");
     row.removeAttribute("data-goodos-active-v45");
+    row.removeAttribute("data-goodos-active-v48");
+    row.removeAttribute("data-goodos-active-v49");
 
-    row.setAttribute("data-goodos-active-v48", "false");
+    row.setAttribute("data-goodos-active-v50", "false");
   }
 
-  function applyActive(forceKey) {
-    document.body.classList.add("goodos-menu-v48-ready");
+  function applyMenuState() {
+    document.body.classList.add("goodos-v50-ready");
 
     var sidebar = getSidebar();
     if (!sidebar) return;
 
-    var key = forceKey || resolveActiveKey();
-    var rows = getRows(sidebar);
+    var activeKey = keyFromHash();
+    var rows = getSidebarRows(sidebar);
 
     rows.forEach(function (entry) {
-      var row = entry.row;
-      row.classList.add("goodos-menu-v48-row");
-      row.classList.add("goodos-sidebar-nav-item-v41");
-      row.setAttribute("data-goodos-menu-key-v48", entry.item.key);
-      resetRow(row);
+      entry.row.classList.add("goodos-menu-row-v50");
+      entry.row.classList.add("goodos-sidebar-nav-item-v41");
+      entry.row.setAttribute("data-goodos-menu-key-v50", entry.item.key);
+      clearMenuState(entry.row);
     });
 
     rows.forEach(function (entry) {
-      if (entry.item.key !== key) return;
+      if (entry.item.key !== activeKey) return;
 
-      var row = entry.row;
-      row.setAttribute("data-goodos-active-v48", "true");
-      row.classList.add("goodos-sidebar-active-v41");
-      row.setAttribute("aria-current", "page");
+      entry.row.setAttribute("data-goodos-active-v50", "true");
+      entry.row.classList.add("goodos-sidebar-active-v41");
+      entry.row.setAttribute("aria-current", "page");
     });
   }
 
-  function keyFromClick(target, sidebar) {
+  function clickedMenuKey(target, sidebar) {
     var node = target;
 
     for (var depth = 0; node && node !== sidebar && node !== document.body && depth < 10; depth += 1) {
-      var text = norm(cleanText(node));
+      var txt = cleanText(node);
 
       for (var i = 0; i < MENU.length; i += 1) {
-        if (sameLabel(text, MENU[i].label)) return MENU[i].key;
+        if (isExactLabel(txt, MENU[i].label)) return MENU[i].key;
       }
 
       node = node.parentElement;
@@ -11390,36 +11346,240 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return "";
   }
 
-  function attachClick() {
+  function attachMenuClick() {
     var sidebar = getSidebar();
-    if (!sidebar || sidebar.__goodosV48ClickAttached) return;
+    if (!sidebar || sidebar.__goodosV50ClickAttached) return;
 
-    sidebar.__goodosV48ClickAttached = true;
+    sidebar.__goodosV50ClickAttached = true;
 
     sidebar.addEventListener("click", function (event) {
-      var key = keyFromClick(event.target, sidebar);
+      var key = clickedMenuKey(event.target, sidebar);
       if (!key) return;
 
-      activeKey = key;
-      clickLockUntil = Date.now() + 1400;
-      setStoredKey(key);
+      if (currentHash() !== key) {
+        window.location.hash = key;
+      }
 
-      applyActive(key);
-
-      window.requestAnimationFrame(function () {
-        applyActive(key);
-      });
-
-      setTimeout(function () {
-        activeKey = "";
-        applyActive();
-      }, 1500);
+      window.requestAnimationFrame(applyMenuState);
     }, true);
   }
 
+  function isAuthPage() {
+    var hash = currentHash();
+    if (hash === "auth" || hash === "auth-users" || hash === "users") return true;
+
+    var rootText = norm(cleanText(getRoot()));
+    return rootText.indexOf("auth v2") !== -1 ||
+      rootText.indexOf("sessions / roles / mfa") !== -1 ||
+      rootText.indexOf("mfa enabled") !== -1;
+  }
+
+  function stripChartText(card) {
+    var clone = card.cloneNode(true);
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-auth-chart-v50,.goodos-auth-chart-v43,.goodos-auth-chart-v42")).forEach(function (el) {
+      el.remove();
+    });
+    return cleanText(clone);
+  }
+
+  function findMetricLabel(label) {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-auth-chart-v50,.goodos-auth-chart-v43,.goodos-auth-chart-v42")) return false;
+      if (el.children.length > 2) return false;
+      return cleanText(el).toUpperCase() === label;
+    }) || null;
+  }
+
+  function findMetricCard(label) {
+    var labelNode = findMetricLabel(label);
+    if (!labelNode) return null;
+
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var txt = stripChartText(node).toUpperCase();
+
+      var metricCount = AUTH_LABELS.filter(function (name) {
+        return txt.indexOf(name) !== -1;
+      }).length;
+
+      if (
+        txt.indexOf(label) !== -1 &&
+        metricCount === 1 &&
+        rect.width >= 170 &&
+        rect.width <= 900 &&
+        rect.height >= 70 &&
+        rect.height <= 500
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function metricValue(card, label) {
+    var txt = stripChartText(card).toUpperCase();
+
+    if (label === "MFA ENABLED") {
+      var pct = txt.match(/(\d+(?:\.\d+)?)\s*%/);
+      if (pct) return Number(pct[1]);
+    }
+
+    txt = txt.replace(label, " ");
+    var nums = txt.match(/\b\d+(?:\.\d+)?\b/g);
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function linePath(value, mode) {
+    var v = Math.max(0, Number(value || 0));
+    var points = [];
+
+    for (var i = 0; i < 16; i += 1) {
+      var x = 10 + i * 20;
+      var y;
+
+      if (v <= 0) {
+        y = 72;
+      } else if (mode === "sessions") {
+        y = 40 + ((i * 11) % 19) - (i > 9 ? 4 : 0);
+      } else {
+        y = 72 - (i * 2.7) - ((i * 7) % 9);
+      }
+
+      points.push([x, Math.max(18, Math.min(76, y))]);
+    }
+
+    return points.map(function (pt, idx) {
+      return (idx === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function chartMarkup(label, value) {
+    var v = Math.max(0, Number(value || 0));
+
+    if (label === "ROLES") {
+      var path = linePath(v, "roles");
+      return '' +
+        '<div class="goodos-auth-chart-v50" data-auth-chart-v50="roles">' +
+          '<svg viewBox="0 0 340 118" aria-label="Roles live chart">' +
+            '<defs>' +
+              '<linearGradient id="rolesLineV50" x1="0" x2="1"><stop offset="0%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient>' +
+              '<linearGradient id="rolesFillV50" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(139,92,246,.34)"></stop><stop offset="100%" stop-color="rgba(139,92,246,0)"></stop></linearGradient>' +
+            '</defs>' +
+            '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' roles</text>' +
+            '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
+            '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
+            '<path d="' + path + ' L310 90 L10 90 Z" fill="url(#rolesFillV50)"></path>' +
+            '<path d="' + path + '" fill="none" stroke="url(#rolesLineV50)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+            '<circle cx="310" cy="' + (v <= 0 ? 72 : 28) + '" r="5" fill="#a78bfa"></circle>' +
+          '</svg>' +
+          '<div class="goodos-auth-chart-note-v50">' + (v === 0 ? 'No roles found yet.' : 'Role matrix connected.') + '</div>' +
+        '</div>';
+    }
+
+    if (label === "PERMISSIONS") {
+      var bars = [];
+      for (var i = 0; i < 14; i += 1) {
+        var h = v <= 0 ? 4 : Math.max(10, Math.min(72, 14 + ((i * 11 + v * 3) % 58)));
+        var x = 12 + i * 21;
+        var y = 88 - h;
+        bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#permGradV50)" opacity="' + (v <= 0 ? ".20" : ".9") + '"></rect>');
+      }
+
+      return '' +
+        '<div class="goodos-auth-chart-v50" data-auth-chart-v50="permissions">' +
+          '<svg viewBox="0 0 340 118" aria-label="Permissions live chart">' +
+            '<defs><linearGradient id="permGradV50" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="55%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>' +
+            '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' permissions</text>' +
+            '<line x1="0" y1="88" x2="320" y2="88" class="grid"></line>' +
+            bars.join("") +
+          '</svg>' +
+          '<div class="goodos-auth-chart-note-v50">' + (v === 0 ? 'No permissions found yet.' : 'Permission catalog connected.') + '</div>' +
+        '</div>';
+    }
+
+    if (label === "MFA ENABLED") {
+      var pct = Math.max(0, Math.min(100, v));
+      var fill = (300 * pct / 100).toFixed(1);
+      var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
+
+      return '' +
+        '<div class="goodos-auth-chart-v50" data-auth-chart-v50="mfa">' +
+          '<svg viewBox="0 0 340 118" aria-label="MFA coverage chart">' +
+            '<defs><linearGradient id="mfaGradV50" x1="0" x2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="100%" stop-color="#38ef7d"></stop></linearGradient></defs>' +
+            '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + Math.round(pct) + '%</text>' +
+            '<rect x="0" y="54" width="300" height="13" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
+            '<rect x="0" y="54" width="' + fill + '" height="13" rx="7" fill="url(#mfaGradV50)"></rect>' +
+            '<circle cx="' + dot + '" cy="60.5" r="5" fill="#a8ffd4"></circle>' +
+            '<text x="0" y="100" class="muted" font-size="11" font-weight="850">Protected account coverage</text>' +
+          '</svg>' +
+        '</div>';
+    }
+
+    var sessionPath = linePath(v, "sessions");
+    return '' +
+      '<div class="goodos-auth-chart-v50" data-auth-chart-v50="sessions">' +
+        '<svg viewBox="0 0 340 118" aria-label="Active sessions live chart">' +
+          '<defs>' +
+            '<linearGradient id="sessionLineV50" x1="0" x2="1"><stop offset="0%" stop-color="#8b5cf6"></stop><stop offset="100%" stop-color="#fb71d9"></stop></linearGradient>' +
+            '<linearGradient id="sessionFillV50" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(251,113,217,.32)"></stop><stop offset="100%" stop-color="rgba(251,113,217,0)"></stop></linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' active</text>' +
+          '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
+          '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
+          '<path d="' + sessionPath + ' L310 90 L10 90 Z" fill="url(#sessionFillV50)"></path>' +
+          '<path d="' + sessionPath + '" fill="none" stroke="url(#sessionLineV50)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<circle cx="310" cy="' + (v <= 0 ? 72 : 36) + '" r="5" fill="#fb71d9"></circle>' +
+        '</svg>' +
+        '<div class="goodos-auth-chart-note-v50">' + (v === 0 ? 'No active sessions found.' : 'Live session activity connected.') + '</div>' +
+      '</div>';
+  }
+
+  function renderAuthCharts() {
+    if (!isAuthPage()) return;
+
+    AUTH_LABELS.forEach(function (label) {
+      var card = findMetricCard(label);
+      if (!card) return;
+
+      Array.prototype.slice.call(card.querySelectorAll(".goodos-auth-chart-v50,.goodos-auth-chart-v43,.goodos-auth-chart-v42")).forEach(function (old) {
+        old.remove();
+      });
+
+      var value = metricValue(card, label);
+      card.classList.add("goodos-auth-chart-card-v50");
+      card.insertAdjacentHTML("beforeend", chartMarkup(label, value));
+    });
+  }
+
   function run() {
-    attachClick();
-    applyActive();
+    attachMenuClick();
+    applyMenuState();
+    renderAuthCharts();
   }
 
   if (document.readyState === "loading") {
@@ -11429,22 +11589,19 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   window.addEventListener("hashchange", function () {
-    activeKey = "";
-    setTimeout(run, 40);
-    setTimeout(run, 250);
-  });
-
-  window.addEventListener("popstate", function () {
-    activeKey = "";
-    setTimeout(run, 40);
-    setTimeout(run, 250);
+    window.requestAnimationFrame(function () {
+      applyMenuState();
+      setTimeout(renderAuthCharts, 350);
+      setTimeout(renderAuthCharts, 900);
+      setTimeout(renderAuthCharts, 1800);
+    });
   });
 
   window.addEventListener("pageshow", run);
 
-  /* No MutationObserver. No repeating loop. */
   setTimeout(run, 250);
   setTimeout(run, 900);
+  setTimeout(renderAuthCharts, 1800);
 })();
 </script>
 
