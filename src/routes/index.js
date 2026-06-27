@@ -14,6 +14,7 @@ const storageRoutes = require("./storage.routes");
 const webhookTestRoutes = require("./webhook-test.routes");
 const tableEditorRoutes = require("./table-editor.routes");
 const sqlEditorRoutes = require("./sql-editor.routes");
+const databaseManagementRoutes = require("./database-management.routes");
 
 
 const router = express.Router();
@@ -99,5 +100,7 @@ router.get("/console.html", (req, res) => {
 router.use("/admin/table-editor", tableEditorRoutes);
 
 router.use("/admin/sql-editor", sqlEditorRoutes);
+
+router.use("/admin/database-management", databaseManagementRoutes);
 
 module.exports = router;
