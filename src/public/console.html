@@ -1579,35 +1579,44 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-help-v41 {
 }
 </style>
 
+<style id="goodos-auth-charts-menu-active-v43">
+/* V43: force only ONE sidebar active tab */
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41 {
+  position: relative !important;
+}
 
-<style id="goodos-auth-charts-sidebar-active-v42">
-/* V42: Auth charts + sidebar single-active fix only */
-
-/* Sidebar: force only data-goodos-active-v42=true to look active */
-body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41:not([data-goodos-active-v42="true"]) {
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41:not(.goodos-v43-is-active),
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41.active:not(.goodos-v43-is-active),
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41[aria-current="page"]:not(.goodos-v43-is-active),
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41[data-active="true"]:not(.goodos-v43-is-active),
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41[data-goodos-active-v42="true"]:not(.goodos-v43-is-active) {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
   color: #dce8f7 !important;
 }
 
-body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41:not([data-goodos-active-v42="true"])::after {
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41:not(.goodos-v43-is-active)::after,
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41.active:not(.goodos-v43-is-active)::after,
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41[aria-current="page"]:not(.goodos-v43-is-active)::after,
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41[data-active="true"]:not(.goodos-v43-is-active)::after,
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41[data-goodos-active-v42="true"]:not(.goodos-v43-is-active)::after {
   display: none !important;
   content: none !important;
 }
 
-body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-v42="true"] {
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41.goodos-v43-is-active {
   color: #ffffff !important;
   background:
-    radial-gradient(circle at 100% 50%, rgba(54,220,255,.28), transparent 32%),
-    linear-gradient(135deg, rgba(79,140,255,.36), rgba(139,92,246,.28) 55%, rgba(34,211,238,.24)) !important;
-  border-color: rgba(95,213,255,.30) !important;
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.30), transparent 34%),
+    linear-gradient(135deg, rgba(79,140,255,.38), rgba(139,92,246,.30) 55%, rgba(34,211,238,.25)) !important;
+  border-color: rgba(95,213,255,.32) !important;
   box-shadow:
     0 14px 32px rgba(79,140,255,.16),
     inset 0 1px 0 rgba(255,255,255,.08) !important;
 }
 
-body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-v42="true"]::after {
+body.goodos-v43-active-fixed .goodos-sidebar-nav-item-v41.goodos-v43-is-active::after {
   content: "" !important;
   display: block !important;
   position: absolute !important;
@@ -1619,92 +1628,67 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-shadow: 0 0 16px rgba(103,245,255,.72) !important;
 }
 
-/* Auth metric charts */
-.goodos-auth-card-v42 {
-  min-height: 210px !important;
+/* V43 Auth chart cards */
+.goodos-auth-chart-card-v43 {
+  min-height: 208px !important;
   overflow: hidden !important;
 }
 
-.goodos-auth-chart-v42 {
+.goodos-auth-chart-v43 {
   margin-top: 16px;
   width: 100%;
-  min-height: 92px;
+  min-height: 100px;
   border-radius: 16px;
   background:
     radial-gradient(circle at 100% 0%, rgba(54,220,255,.10), transparent 42%),
-    rgba(7,16,31,.30);
-  border: 1px solid rgba(148,163,184,.11);
-  padding: 10px 12px;
+    rgba(7,16,31,.34);
+  border: 1px solid rgba(148,163,184,.12);
+  padding: 12px 14px;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-.goodos-auth-chart-v42 svg {
+.goodos-auth-chart-v43 svg {
   width: 100%;
-  height: 92px;
+  height: 96px;
   display: block;
   overflow: visible;
 }
 
-.goodos-auth-chart-v42 text {
+.goodos-auth-chart-v43 text {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.goodos-auth-chart-v42 .muted {
+.goodos-auth-chart-v43 .muted {
   fill: #9eabc2;
 }
 
-.goodos-auth-chart-v42 .white {
+.goodos-auth-chart-v43 .white {
   fill: #f8fbff;
 }
 
-.goodos-auth-chart-v42 .green {
+.goodos-auth-chart-v43 .green {
   fill: #a8ffd4;
 }
 
-.goodos-auth-chart-v42 .grid {
+.goodos-auth-chart-v43 .pink {
+  fill: #fb71d9;
+}
+
+.goodos-auth-chart-v43 .grid {
   stroke: rgba(148,163,184,.16);
   stroke-dasharray: 4 6;
 }
 
-.goodos-auth-chart-v42 .track {
+.goodos-auth-chart-v43 .track {
   fill: rgba(255,255,255,.08);
 }
 
-.goodos-auth-chart-v42 .legend-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  margin-top: 8px;
-  color: #b7c4d8;
+.goodos-auth-empty-v43 {
+  color: #8fa0ba;
   font-size: 11px;
-  line-height: 1.35;
-}
-
-.goodos-auth-chart-v42 .legend-row span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.goodos-auth-chart-v42 .legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  display: inline-block;
-  background: linear-gradient(135deg, #4f8cff, #36dcff);
-}
-
-.goodos-auth-chart-v42 .legend-dot.purple {
-  background: linear-gradient(135deg, #8b5cf6, #4f8cff);
-}
-
-.goodos-auth-chart-v42 .legend-dot.green {
-  background: linear-gradient(135deg, #36dcff, #38ef7d);
-}
-
-.goodos-auth-chart-v42 .legend-dot.orange {
-  background: linear-gradient(135deg, #f97316, #fb7185);
+  font-weight: 750;
+  margin-top: 6px;
 }
 </style>
 
@@ -11416,29 +11400,28 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-auth-charts-sidebar-active-v42-js">
+<script id="goodos-auth-charts-menu-active-v43-js">
 (function () {
-  if (window.__goodosAuthChartsSidebarActiveV42) return;
-  window.__goodosAuthChartsSidebarActiveV42 = true;
+  if (window.__goodosV43AuthChartsMenuFix) return;
+  window.__goodosV43AuthChartsMenuFix = true;
 
-  var SIDEBAR_LABELS = [
-    "overview",
-    "auth",
-    "projects",
-    "database",
-    "storage",
-    "api keys",
-    "webhooks",
-    "realtime",
-    "functions",
-    "logs",
-    "alerts",
-    "backups",
-    "settings"
+  var MENU = [
+    { label: "Overview", key: "overview", hashes: ["dashboard", "overview", ""] },
+    { label: "Auth", key: "auth", hashes: ["auth", "auth-users", "users"] },
+    { label: "Projects", key: "projects", hashes: ["projects", "app-registry", "apps"] },
+    { label: "Database", key: "database", hashes: ["database", "database-browser", "db"] },
+    { label: "Storage", key: "storage", hashes: ["storage", "storage-files", "files"] },
+    { label: "API Keys", key: "api keys", hashes: ["api-keys", "api keys"] },
+    { label: "Webhooks", key: "webhooks", hashes: ["webhooks"] },
+    { label: "Realtime", key: "realtime", hashes: ["realtime", "realtime-events"] },
+    { label: "Functions", key: "functions", hashes: ["functions", "edge-functions"] },
+    { label: "Logs", key: "logs", hashes: ["logs", "logs-monitoring", "monitoring"] },
+    { label: "Alerts", key: "alerts", hashes: ["alerts", "security-rules"] },
+    { label: "Backups", key: "backups", hashes: ["backups"] },
+    { label: "Settings", key: "settings", hashes: ["settings"] }
   ];
 
-  var AUTH_LABELS = [
+  var AUTH_METRICS = [
     "ROLES",
     "PERMISSIONS",
     "MFA ENABLED",
@@ -11449,30 +11432,49 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
   }
 
-  function getRoot() {
+  function normalize(text) {
+    return String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function viewRoot() {
     return document.getElementById("view") ||
       document.querySelector("[data-view-root]") ||
       document.querySelector("main") ||
       document.body;
   }
 
-  function normalize(text) {
-    return String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
+  function getCurrentHash() {
+    return String(window.location.hash || "")
+      .replace("#", "")
+      .trim()
+      .toLowerCase();
   }
 
-  function currentViewName() {
-    var hash = String(window.location.hash || "").replace("#", "").trim().toLowerCase();
+  function getVisiblePageTitle() {
+    var root = viewRoot();
+    var titles = Array.prototype.slice.call(root.querySelectorAll("h1,h2,.hero-title,[class*='title']"));
+
+    var visible = titles.find(function (el) {
+      if (el.closest("aside,nav,header")) return false;
+      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
+      return rect.width > 80 && rect.height > 15 && cleanText(el).length > 1;
+    });
+
+    return normalize(cleanText(visible));
+  }
+
+  function currentMenuKey() {
+    var hash = getCurrentHash();
+    var title = getVisiblePageTitle();
+
+    for (var i = 0; i < MENU.length; i += 1) {
+      var item = MENU[i];
+
+      if (item.hashes.indexOf(hash) !== -1) return item.key;
+      if (title === normalize(item.label)) return item.key;
+    }
 
     if (!hash || hash === "dashboard") return "overview";
-    if (hash === "auth-users" || hash === "users") return "auth";
-    if (hash === "app-registry" || hash === "apps") return "projects";
-    if (hash === "database-browser" || hash === "db") return "database";
-    if (hash === "storage-files" || hash === "files") return "storage";
-    if (hash === "realtime-events") return "realtime";
-    if (hash === "edge-functions") return "functions";
-    if (hash === "logs-monitoring" || hash === "monitoring") return "logs";
-    if (hash === "security-rules") return "alerts";
-
     return hash.replace(/-/g, " ");
   }
 
@@ -11480,91 +11482,109 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var candidates = Array.prototype.slice.call(document.querySelectorAll("aside, nav, [class*='side'], [class*='Sidebar'], [class*='sidebar']"));
 
     var best = candidates.find(function (el) {
-      var text = cleanText(el).toLowerCase();
+      var text = normalize(cleanText(el));
       return text.indexOf("goodos cloud") !== -1 &&
         text.indexOf("overview") !== -1 &&
         text.indexOf("api keys") !== -1 &&
         text.indexOf("settings") !== -1;
     });
 
-    if (best) return best;
-
-    return document.querySelector(".goodos-sidebar-v41") || null;
+    return best || document.querySelector(".goodos-sidebar-v41") || null;
   }
 
-  function findSidebarItem(sidebar, label) {
+  function findSidebarItem(sidebar, menuItem) {
     var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("button,a,[role='button'],div,span"));
-    label = normalize(label);
+    var wanted = normalize(menuItem.label);
 
-    var found = nodes.find(function (el) {
+    var node = nodes.find(function (el) {
       if (el.closest(".goodos-sidebar-brand-v41")) return false;
       if (el.closest(".goodos-sidebar-section-v41")) return false;
-      if (el.children.length > 5) return false;
-      return normalize(cleanText(el)) === label;
+      if (el.children.length > 6) return false;
+      return normalize(cleanText(el)) === wanted;
     });
 
-    if (!found) return null;
-
-    return found.closest("button,a,[role='button']") || found;
+    if (!node) return null;
+    return node.closest("button,a,[role='button']") || node;
   }
 
-  function fixSidebarActiveState() {
+  function fixSidebarActive() {
+    document.body.classList.add("goodos-v43-active-fixed");
+
     var sidebar = getSidebar();
     if (!sidebar) return;
 
-    var current = currentViewName();
+    var current = currentMenuKey();
 
-    SIDEBAR_LABELS.forEach(function (label) {
-      var item = findSidebarItem(sidebar, label);
+    MENU.forEach(function (menuItem) {
+      var item = findSidebarItem(sidebar, menuItem);
       if (!item) return;
 
       item.classList.add("goodos-sidebar-nav-item-v41");
+      item.classList.remove("goodos-v43-is-active");
+      item.classList.remove("goodos-sidebar-active-v41");
+      item.classList.remove("active");
+
       item.removeAttribute("aria-current");
       item.removeAttribute("data-active");
-      item.setAttribute("data-goodos-active-v42", "false");
-      item.classList.remove("goodos-sidebar-active-v41");
+      item.removeAttribute("data-goodos-active-v42");
+      item.setAttribute("data-goodos-active-v43", "false");
 
-      if (normalize(label) === normalize(current)) {
-        item.setAttribute("data-goodos-active-v42", "true");
-        item.setAttribute("aria-current", "page");
+      if (menuItem.key === current) {
+        item.classList.add("goodos-v43-is-active");
         item.classList.add("goodos-sidebar-active-v41");
+        item.setAttribute("aria-current", "page");
+        item.setAttribute("data-goodos-active-v43", "true");
       }
     });
   }
 
+  function attachSidebarClickFix() {
+    var sidebar = getSidebar();
+    if (!sidebar || sidebar.__goodosV43ClickFix) return;
+
+    sidebar.__goodosV43ClickFix = true;
+
+    sidebar.addEventListener("click", function () {
+      setTimeout(fixSidebarActive, 40);
+      setTimeout(fixSidebarActive, 180);
+      setTimeout(fixSidebarActive, 520);
+      setTimeout(renderAuthCharts, 650);
+    }, true);
+  }
+
   function stripChartText(card) {
     var clone = card.cloneNode(true);
-    Array.prototype.slice.call(clone.querySelectorAll(".goodos-auth-chart-v42")).forEach(function (el) {
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-auth-chart-v43,.goodos-auth-chart-v42")).forEach(function (el) {
       el.remove();
     });
     return cleanText(clone);
   }
 
-  function findLabelNode(label) {
-    var root = getRoot();
+  function countMetricLabels(text) {
+    text = String(text || "").toUpperCase();
+    return AUTH_METRICS.filter(function (label) {
+      return text.indexOf(label) !== -1;
+    }).length;
+  }
+
+  function findMetricLabel(label) {
+    var root = viewRoot();
     var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
 
     return nodes.find(function (el) {
       if (el.closest("aside, nav, header")) return false;
-      if (el.closest(".goodos-auth-chart-v42")) return false;
+      if (el.closest(".goodos-auth-chart-v43,.goodos-auth-chart-v42")) return false;
       if (el.children.length > 2) return false;
       return cleanText(el).toUpperCase() === label;
     }) || null;
   }
 
-  function countAuthLabels(text) {
-    text = String(text || "").toUpperCase();
-    return AUTH_LABELS.filter(function (label) {
-      return text.indexOf(label) !== -1;
-    }).length;
-  }
-
-  function findAuthCard(label) {
-    var labelNode = findLabelNode(label);
+  function findMetricCard(label) {
+    var labelNode = findMetricLabel(label);
     if (!labelNode) return null;
 
-    var candidates = [];
     var node = labelNode;
+    var candidates = [];
 
     for (var i = 0; node && node !== document.body && i < 12; i += 1) {
       if (node.closest && node.closest("aside, nav, header")) break;
@@ -11578,11 +11598,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
       if (
         text.indexOf(label) !== -1 &&
-        countAuthLabels(text) === 1 &&
+        countMetricLabels(text) === 1 &&
         rect.width >= 180 &&
         rect.width <= 760 &&
         rect.height >= 80 &&
-        rect.height <= 360
+        rect.height <= 420
       ) {
         candidates.push({
           node: node,
@@ -11602,7 +11622,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return candidates[0].node;
   }
 
-  function getCardValue(card, label) {
+  function getValue(card, label) {
     var text = stripChartText(card).toUpperCase();
 
     if (label === "MFA ENABLED") {
@@ -11615,150 +11635,140 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nums && nums.length ? Number(nums[0]) : 0;
   }
 
-  function rolesChart(value) {
+  function trendPath(value, kind) {
     var v = Math.max(0, Number(value || 0));
-    var admin = Math.floor(v * 0.25);
-    var developer = Math.floor(v * 0.35);
-    var viewer = Math.max(0, v - admin - developer);
-
-    return '' +
-      '<div class="goodos-auth-chart-v42" data-auth-chart="roles">' +
-        '<svg viewBox="0 0 340 92" aria-label="Roles live chart">' +
-          '<defs>' +
-            '<linearGradient id="rolesGradV42" x1="0" x2="1">' +
-              '<stop offset="0%" stop-color="#4f8cff"></stop>' +
-              '<stop offset="50%" stop-color="#8b5cf6"></stop>' +
-              '<stop offset="100%" stop-color="#36dcff"></stop>' +
-            '</linearGradient>' +
-          '</defs>' +
-          '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<circle cx="48" cy="54" r="24" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="13"></circle>' +
-          '<circle cx="48" cy="54" r="24" fill="none" stroke="url(#rolesGradV42)" stroke-width="13" stroke-linecap="round" stroke-dasharray="' + (v > 0 ? "110 151" : "0 151") + '" transform="rotate(-90 48 54)"></circle>' +
-          '<text x="48" y="59" text-anchor="middle" class="white" font-size="15" font-weight="950">' + v + '</text>' +
-          '<text x="98" y="42" class="green" font-size="11" font-weight="900">Admin ' + admin + '</text>' +
-          '<text x="98" y="61" class="muted" font-size="11" font-weight="850">Developer ' + developer + ' • Viewer ' + viewer + '</text>' +
-        '</svg>' +
-      '</div>';
-  }
-
-  function permissionsChart(value) {
-    var v = Math.max(0, Number(value || 0));
-    var bars = [];
-    var max = Math.max(v, 1);
-
-    for (var i = 0; i < 12; i += 1) {
-      var h = v === 0 ? 2 : Math.max(6, Math.round((8 + ((i * 7) % 28)) * (v / max)));
-      var x = 18 + i * 24;
-      var y = 72 - h;
-      bars.push('<rect x="' + x + '" y="' + y + '" width="13" height="' + h + '" rx="4" fill="url(#permGradV42)" opacity="' + (0.55 + i * 0.035).toFixed(2) + '"></rect>');
-    }
-
-    return '' +
-      '<div class="goodos-auth-chart-v42" data-auth-chart="permissions">' +
-        '<svg viewBox="0 0 340 92" aria-label="Permissions live chart">' +
-          '<defs>' +
-            '<linearGradient id="permGradV42" x1="0" x2="0" y1="0" y2="1">' +
-              '<stop offset="0%" stop-color="#36dcff"></stop>' +
-              '<stop offset="55%" stop-color="#4f8cff"></stop>' +
-              '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
-            '</linearGradient>' +
-          '</defs>' +
-          '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="320" y="13" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' total</text>' +
-          '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
-          bars.join("") +
-        '</svg>' +
-      '</div>';
-  }
-
-  function mfaChart(value) {
-    var pct = Math.max(0, Math.min(100, Number(value || 0)));
-    var r = 27;
-    var c = 2 * Math.PI * r;
-    var dash = c * pct / 100;
-
-    return '' +
-      '<div class="goodos-auth-chart-v42" data-auth-chart="mfa">' +
-        '<svg viewBox="0 0 340 92" aria-label="MFA live chart">' +
-          '<defs>' +
-            '<linearGradient id="mfaGradV42" x1="0" x2="1" y1="0" y2="1">' +
-              '<stop offset="0%" stop-color="#36dcff"></stop>' +
-              '<stop offset="100%" stop-color="#38ef7d"></stop>' +
-            '</linearGradient>' +
-          '</defs>' +
-          '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<circle cx="64" cy="55" r="' + r + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="13"></circle>' +
-          '<circle cx="64" cy="55" r="' + r + '" fill="none" stroke="url(#mfaGradV42)" stroke-width="13" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + c.toFixed(2) + '" transform="rotate(-90 64 55)"></circle>' +
-          '<text x="64" y="60" text-anchor="middle" class="white" font-size="18" font-weight="950">' + Math.round(pct) + '%</text>' +
-          '<text x="118" y="50" class="green" font-size="11" font-weight="900">Protected accounts</text>' +
-          '<text x="118" y="69" class="muted" font-size="11" font-weight="850">MFA coverage</text>' +
-        '</svg>' +
-      '</div>';
-  }
-
-  function activeSessionsChart(value) {
-    var v = Math.max(0, Number(value || 0));
+    var base = v <= 0 ? 0 : Math.min(1, v / Math.max(v, 1));
     var points = [];
-    var path = "";
 
-    for (var i = 0; i < 14; i += 1) {
-      var x = 8 + i * 23;
-      var seed = v === 0 ? 0 : Math.max(1, Math.round(v * (0.45 + ((i * 13) % 42) / 100)));
-      var y = 72 - Math.min(50, seed * 8);
-      points.push([x, y]);
-      path += (i === 0 ? "M" : " L") + x + " " + y;
+    for (var i = 0; i < 16; i += 1) {
+      var x = 10 + i * 20;
+      var seed = kind === "down"
+        ? 24 + ((i * 17) % 22)
+        : 68 - (i * 2.7) - ((i * 7) % 10);
+
+      if (v <= 0) seed = 68;
+      points.push([x, Math.max(20, Math.min(72, seed))]);
     }
 
-    var area = path + " L307 74 L8 74 Z";
-
-    return '' +
-      '<div class="goodos-auth-chart-v42" data-auth-chart="sessions">' +
-        '<svg viewBox="0 0 340 92" aria-label="Active sessions live chart">' +
-          '<defs>' +
-            '<linearGradient id="sessionsFillV42" x1="0" x2="0" y1="0" y2="1">' +
-              '<stop offset="0%" stop-color="rgba(54,220,255,.35)"></stop>' +
-              '<stop offset="100%" stop-color="rgba(54,220,255,0)"></stop>' +
-            '</linearGradient>' +
-            '<linearGradient id="sessionsLineV42" x1="0" x2="1">' +
-              '<stop offset="0%" stop-color="#36dcff"></stop>' +
-              '<stop offset="100%" stop-color="#38ef7d"></stop>' +
-            '</linearGradient>' +
-          '</defs>' +
-          '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="320" y="13" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' active</text>' +
-          '<line x1="0" y1="32" x2="320" y2="32" class="grid"></line>' +
-          '<line x1="0" y1="52" x2="320" y2="52" class="grid"></line>' +
-          '<path d="' + area + '" fill="url(#sessionsFillV42)"></path>' +
-          '<path d="' + path + '" fill="none" stroke="url(#sessionsLineV42)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
-        '</svg>' +
-      '</div>';
+    return points.map(function (pt, idx) {
+      return (idx === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
   }
 
   function chartFor(label, value) {
-    if (label === "ROLES") return rolesChart(value);
-    if (label === "PERMISSIONS") return permissionsChart(value);
-    if (label === "MFA ENABLED") return mfaChart(value);
-    if (label === "ACTIVE SESSIONS") return activeSessionsChart(value);
+    var v = Math.max(0, Number(value || 0));
+
+    if (label === "ROLES") {
+      var d = trendPath(v, "up");
+      var area = d + " L310 78 L10 78 Z";
+      return '' +
+        '<div class="goodos-auth-chart-v43" data-auth-chart="roles">' +
+          '<svg viewBox="0 0 340 96" aria-label="Roles live chart">' +
+            '<defs>' +
+              '<linearGradient id="rolesLineV43" x1="0" x2="1"><stop offset="0%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient>' +
+              '<linearGradient id="rolesFillV43" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(139,92,246,.32)"></stop><stop offset="100%" stop-color="rgba(139,92,246,0)"></stop></linearGradient>' +
+            '</defs>' +
+            '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="13" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' roles</text>' +
+            '<line x1="0" y1="36" x2="320" y2="36" class="grid"></line>' +
+            '<line x1="0" y1="62" x2="320" y2="62" class="grid"></line>' +
+            '<path d="' + area + '" fill="url(#rolesFillV43)"></path>' +
+            '<path d="' + d + '" fill="none" stroke="url(#rolesLineV43)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+            '<circle cx="310" cy="' + (v <= 0 ? 68 : 28) + '" r="5" fill="#a78bfa"></circle>' +
+          '</svg>' +
+          '<div class="goodos-auth-empty-v43">' + (v === 0 ? 'No roles found yet.' : 'Role matrix active.') + '</div>' +
+        '</div>';
+    }
+
+    if (label === "PERMISSIONS") {
+      var bars = [];
+      var count = 12;
+      for (var i = 0; i < count; i += 1) {
+        var h = v <= 0 ? 3 : Math.max(8, Math.min(62, 10 + ((i * 9 + v * 3) % 54)));
+        var x = 14 + i * 24;
+        var y = 76 - h;
+        bars.push('<rect x="' + x + '" y="' + y + '" width="13" height="' + h + '" rx="4" fill="url(#permGradV43)" opacity="' + (v <= 0 ? ".20" : ".88") + '"></rect>');
+      }
+
+      return '' +
+        '<div class="goodos-auth-chart-v43" data-auth-chart="permissions">' +
+          '<svg viewBox="0 0 340 96" aria-label="Permissions live chart">' +
+            '<defs><linearGradient id="permGradV43" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="55%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>' +
+            '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="13" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' permissions</text>' +
+            '<line x1="0" y1="76" x2="320" y2="76" class="grid"></line>' +
+            bars.join("") +
+          '</svg>' +
+          '<div class="goodos-auth-empty-v43">' + (v === 0 ? 'No permission records found yet.' : 'Permission catalog connected.') + '</div>' +
+        '</div>';
+    }
+
+    if (label === "MFA ENABLED") {
+      var pct = Math.max(0, Math.min(100, v));
+      var fill = (300 * pct / 100).toFixed(1);
+      var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
+
+      return '' +
+        '<div class="goodos-auth-chart-v43" data-auth-chart="mfa">' +
+          '<svg viewBox="0 0 340 96" aria-label="MFA live chart">' +
+            '<defs><linearGradient id="mfaGradV43" x1="0" x2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="100%" stop-color="#38ef7d"></stop></linearGradient></defs>' +
+            '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="13" text-anchor="end" class="green" font-size="11" font-weight="950">' + Math.round(pct) + '%</text>' +
+            '<rect x="0" y="44" width="300" height="12" rx="6" class="track"></rect>' +
+            '<rect x="0" y="44" width="' + fill + '" height="12" rx="6" fill="url(#mfaGradV43)"></rect>' +
+            '<circle cx="' + dot + '" cy="50" r="5" fill="#a8ffd4"></circle>' +
+            '<text x="0" y="82" class="muted" font-size="11" font-weight="850">Protected account coverage</text>' +
+          '</svg>' +
+        '</div>';
+    }
+
+    if (label === "ACTIVE SESSIONS") {
+      var d2 = trendPath(v, "down");
+      var area2 = d2 + " L310 78 L10 78 Z";
+      return '' +
+        '<div class="goodos-auth-chart-v43" data-auth-chart="sessions">' +
+          '<svg viewBox="0 0 340 96" aria-label="Active sessions live chart">' +
+            '<defs>' +
+              '<linearGradient id="sessionLineV43" x1="0" x2="1"><stop offset="0%" stop-color="#8b5cf6"></stop><stop offset="100%" stop-color="#fb71d9"></stop></linearGradient>' +
+              '<linearGradient id="sessionFillV43" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(251,113,217,.30)"></stop><stop offset="100%" stop-color="rgba(251,113,217,0)"></stop></linearGradient>' +
+            '</defs>' +
+            '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+            '<text x="315" y="13" text-anchor="end" class="green" font-size="11" font-weight="950">' + v + ' active</text>' +
+            '<line x1="0" y1="36" x2="320" y2="36" class="grid"></line>' +
+            '<line x1="0" y1="62" x2="320" y2="62" class="grid"></line>' +
+            '<path d="' + area2 + '" fill="url(#sessionFillV43)"></path>' +
+            '<path d="' + d2 + '" fill="none" stroke="url(#sessionLineV43)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+            '<circle cx="310" cy="' + (v <= 0 ? 68 : 34) + '" r="5" fill="#fb71d9"></circle>' +
+          '</svg>' +
+          '<div class="goodos-auth-empty-v43">' + (v === 0 ? 'No active sessions found.' : 'Live session activity connected.') + '</div>' +
+        '</div>';
+    }
+
     return "";
   }
 
   function renderAuthCharts() {
-    AUTH_LABELS.forEach(function (label) {
-      var card = findAuthCard(label);
+    var rootText = normalize(cleanText(viewRoot()));
+    var isAuthPage = getCurrentHash().indexOf("auth") !== -1 || rootText.indexOf("auth v2") !== -1 || rootText.indexOf("mfa") !== -1;
+    if (!isAuthPage) return;
+
+    AUTH_METRICS.forEach(function (label) {
+      var card = findMetricCard(label);
       if (!card) return;
 
-      Array.prototype.slice.call(card.querySelectorAll(".goodos-auth-chart-v42")).forEach(function (old) {
+      Array.prototype.slice.call(card.querySelectorAll(".goodos-auth-chart-v43,.goodos-auth-chart-v42")).forEach(function (old) {
         old.remove();
       });
 
-      var value = getCardValue(card, label);
-      card.classList.add("goodos-auth-card-v42");
+      var value = getValue(card, label);
+      card.classList.add("goodos-auth-chart-card-v43");
       card.insertAdjacentHTML("beforeend", chartFor(label, value));
     });
   }
 
   function run() {
-    fixSidebarActiveState();
+    fixSidebarActive();
+    attachSidebarClickFix();
     renderAuthCharts();
   }
 
@@ -11769,13 +11779,27 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   window.addEventListener("hashchange", function () {
-    setTimeout(run, 120);
-    setTimeout(run, 700);
+    setTimeout(run, 80);
+    setTimeout(run, 350);
+    setTimeout(run, 900);
   });
 
-  setTimeout(run, 700);
-  setTimeout(run, 1600);
-  setTimeout(run, 2800);
+  var observer = new MutationObserver(function () {
+    clearTimeout(window.__goodosV43MutationTimer);
+    window.__goodosV43MutationTimer = setTimeout(run, 120);
+  });
+
+  try {
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  } catch (error) {}
+
+  setTimeout(run, 500);
+  setTimeout(run, 1400);
+  setTimeout(run, 2600);
+  setTimeout(run, 4200);
 })();
 </script>
 
