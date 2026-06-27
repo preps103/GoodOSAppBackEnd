@@ -3128,11 +3128,8 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
-
-<style id="goodos-backups-kpi-charts-v74">
-/* V74: Backups KPI charts only */
-
-.goodos-backups-chart-card-v74 {
+<style id="goodos-backups-kpi-charts-v75">
+.goodos-backups-chart-card-v75 {
   min-height: 430px !important;
   height: auto !important;
   overflow: hidden !important;
@@ -3142,7 +3139,7 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   padding-bottom: 22px !important;
 }
 
-.goodos-backups-chart-card-v74::after {
+.goodos-backups-chart-card-v75::after {
   content: "";
   position: absolute;
   right: 26px;
@@ -3160,28 +3157,28 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
 }
 
-.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="completed"]::after {
+.goodos-backups-chart-card-v75[data-goodos-backups-type-v75="completed"]::after {
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
     linear-gradient(135deg, rgba(34,197,94,.52), rgba(20,184,166,.12));
   border-color: rgba(34,197,94,.48);
 }
 
-.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="failed"]::after {
+.goodos-backups-chart-card-v75[data-goodos-backups-type-v75="failed"]::after {
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
     linear-gradient(135deg, rgba(251,113,133,.58), rgba(236,72,153,.14));
   border-color: rgba(251,113,133,.52);
 }
 
-.goodos-backups-chart-card-v74[data-goodos-backups-type-v74="retention"]::after {
+.goodos-backups-chart-card-v75[data-goodos-backups-type-v75="retention"]::after {
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
     linear-gradient(135deg, rgba(168,85,247,.56), rgba(124,58,237,.14));
   border-color: rgba(168,85,247,.52);
 }
 
-.goodos-backups-chart-v74 {
+.goodos-backups-chart-v75 {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -3201,27 +3198,27 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
 }
 
-.goodos-backups-chart-v74 svg {
+.goodos-backups-chart-v75 svg {
   display: block !important;
   width: 100% !important;
   height: 208px !important;
   overflow: visible !important;
 }
 
-.goodos-backups-chart-v74 .muted {
+.goodos-backups-chart-v75 .muted {
   fill: rgba(203,213,225,.78);
 }
 
-.goodos-backups-chart-v74 .axis {
+.goodos-backups-chart-v75 .axis {
   fill: rgba(203,213,225,.86);
 }
 
-.goodos-backups-chart-v74 .grid {
+.goodos-backups-chart-v75 .grid {
   stroke: rgba(148,163,184,.16);
   stroke-dasharray: 5 8;
 }
 
-.goodos-backups-trend-v74 {
+.goodos-backups-trend-v75 {
   margin-top: 16px !important;
   color: rgba(203,213,225,.82) !important;
   font-size: 15px !important;
@@ -3229,12 +3226,12 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   letter-spacing: .01em !important;
 }
 
-.goodos-backups-trend-v74 strong {
+.goodos-backups-trend-v75 strong {
   color: #22e6a8 !important;
   font-weight: 950 !important;
 }
 
-.goodos-backups-trend-v74.is-negative-v74 strong {
+.goodos-backups-trend-v75.is-negative-v75 strong {
   color: #fb7185 !important;
 }
 </style>
@@ -17874,11 +17871,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-backups-kpi-charts-v74-js">
+<script id="goodos-backups-kpi-charts-v75-js">
 (function () {
-  if (window.__goodosBackupsKpiChartsV74) return;
-  window.__goodosBackupsKpiChartsV74 = true;
+  if (window.__goodosBackupsKpiChartsV75) return;
+  window.__goodosBackupsKpiChartsV75 = true;
 
   var TARGETS = [
     {
@@ -17890,7 +17886,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       colorB: "#2563eb",
       maxLabel: "6",
       midLabel: "3",
-      series: [154,154,154,148,140,136,126,118,106,106,106,92,82,82,78,66,54,42]
+      series: [154,154,148,140,132,124,116,108,96,84,74,64,58,52,48,44,42,40]
     },
     {
       key: "completed",
@@ -17901,7 +17897,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       colorB: "#22c55e",
       maxLabel: "4",
       midLabel: "2",
-      series: [160,160,160,132,120,116,108,92,86,74,66,52,46,36,32,24,16,8]
+      series: [160,160,148,132,120,108,96,84,72,60,52,44,36,30,24,18,12,8]
     },
     {
       key: "failed",
@@ -17961,7 +17957,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   function backupsPageVisible() {
     var text = norm(cleanText(getRoot()));
 
-    return text.indexOf("backups") !== -1 &&
+    return text.indexOf("backup registry") !== -1 &&
       text.indexOf("total backup records") !== -1 &&
       text.indexOf("ready restore points") !== -1 &&
       text.indexOf("failed backup records") !== -1 &&
@@ -17970,82 +17966,74 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function removeOldCharts() {
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-backups-chart-v74,.goodos-backups-trend-v74")
+      document.querySelectorAll(
+        ".goodos-backups-chart-v74,.goodos-backups-trend-v74,.goodos-backups-chart-v75,.goodos-backups-trend-v75"
+      )
     ).forEach(function (el) {
       el.remove();
     });
 
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-backups-chart-card-v74")
+      document.querySelectorAll(".goodos-backups-chart-card-v74,.goodos-backups-chart-card-v75")
     ).forEach(function (el) {
       el.classList.remove("goodos-backups-chart-card-v74");
+      el.classList.remove("goodos-backups-chart-card-v75");
       el.removeAttribute("data-goodos-backups-type-v74");
+      el.removeAttribute("data-goodos-backups-type-v75");
     });
   }
 
-  function labelExactNode(label) {
+  function findSectionHeading() {
     var root = getRoot();
-    var wanted = compact(label);
     var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
 
     return nodes.find(function (el) {
       if (!isVisible(el)) return false;
       if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-backups-chart-v74")) return false;
-      if (el.children.length > 2) return false;
-
-      return compact(cleanText(el)) === wanted;
+      return norm(cleanText(el)) === "backup registry";
     }) || null;
   }
 
-  function labelsInside(el) {
-    var text = compact(cleanText(el));
+  function findCardForTarget(target) {
+    var root = getRoot();
+    var section = findSectionHeading();
+    var sectionTop = section && section.getBoundingClientRect ? section.getBoundingClientRect().top : 0;
+    var wantedLabel = compact(target.label);
+    var wantedDescription = norm(target.description);
 
-    return TARGETS.filter(function (target) {
-      return text.indexOf(compact(target.label)) !== -1;
-    }).length;
-  }
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*")).filter(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-backups-chart-v74,.goodos-backups-chart-v75")) return false;
 
-  function cardForLabel(labelNode, target) {
-    if (!labelNode) return null;
+      var rect = el.getBoundingClientRect();
+      var text = cleanText(el);
+      var textCompact = compact(text);
+      var textNorm = norm(text);
 
-    var label = cleanText(labelNode);
-    var desc = norm(target.description);
-    var node = labelNode;
-    var candidates = [];
+      if (rect.top < sectionTop - 20) return false;
 
-    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
-      if (node.closest("aside,nav,header")) break;
-
-      var text = cleanText(node);
-      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
-      var hitCount = labelsInside(node);
-
-      if (
-        text.indexOf(label) !== -1 &&
-        norm(text).indexOf(desc) !== -1 &&
-        hitCount === 1 &&
-        rect.width >= 180 &&
-        rect.width <= 980 &&
-        rect.height >= 70 &&
-        rect.height <= 620
-      ) {
-        candidates.push({
-          node: node,
-          area: rect.width * rect.height
-        });
-      }
-
-      node = node.parentElement;
-    }
-
-    if (!candidates.length) return null;
-
-    candidates.sort(function (a, b) {
-      return b.area - a.area;
+      return textCompact.indexOf(wantedLabel) !== -1 &&
+        textNorm.indexOf(wantedDescription) !== -1 &&
+        rect.width >= 200 &&
+        rect.width <= 700 &&
+        rect.height >= 90 &&
+        rect.height <= 520;
     });
 
-    return candidates[0].node;
+    if (!nodes.length) return null;
+
+    nodes.sort(function (a, b) {
+      var ar = a.getBoundingClientRect();
+      var br = b.getBoundingClientRect();
+
+      var aArea = ar.width * ar.height;
+      var bArea = br.width * br.height;
+
+      return bArea - aArea;
+    });
+
+    return nodes[0];
   }
 
   function pathFromPoints(points, stepped) {
@@ -18085,11 +18073,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return '' +
       '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
         '<defs>' +
-          '<linearGradient id="goodosBackupsLineV74' + target.key + '" x1="0" x2="1">' +
+          '<linearGradient id="goodosBackupsLineV75' + target.key + '" x1="0" x2="1">' +
             '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
             '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
           '</linearGradient>' +
-          '<linearGradient id="goodosBackupsFillV74' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+          '<linearGradient id="goodosBackupsFillV75' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
             '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
             '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
           '</linearGradient>' +
@@ -18102,8 +18090,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
         '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
         '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
-        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosBackupsFillV74' + target.key + ')"></path>' +
-        '<path d="' + path + '" fill="none" stroke="url(#goodosBackupsLineV74' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosBackupsFillV75' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosBackupsLineV75' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
         points.map(function (pt, i) {
           return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
         }).join("") +
@@ -18116,40 +18104,47 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function chartMarkup(target) {
     return '' +
-      '<div class="goodos-backups-chart-v74" data-goodos-backups-chart-v74="' + target.key + '">' +
+      '<div class="goodos-backups-chart-v75" data-goodos-backups-chart-v75="' + target.key + '">' +
         chartSvg(target) +
       '</div>' +
-      '<div class="goodos-backups-trend-v74' + (target.negative ? ' is-negative-v74' : '') + '">' +
+      '<div class="goodos-backups-trend-v75' + (target.negative ? ' is-negative-v75' : '') + '">' +
         '<strong>' + (target.negative ? "↘ " : "↗ ") + target.trend + '</strong> vs last 30 days' +
       '</div>';
   }
 
   function renderBackupsCharts() {
-    if (!backupsPageVisible()) return;
-
-    if (document.querySelectorAll(".goodos-backups-chart-v74").length >= TARGETS.length) {
+    if (!backupsPageVisible()) {
+      removeOldCharts();
       return;
     }
 
     removeOldCharts();
 
     TARGETS.forEach(function (target) {
-      var label = labelExactNode(target.label);
-      var card = cardForLabel(label, target);
+      var card = findCardForTarget(target);
 
       if (!card) {
-        console.warn("GoodOS V74: Backups KPI card not found for", target.label);
+        console.warn("GoodOS V75: Backups KPI card not found for", target.label);
         return;
       }
 
-      card.classList.add("goodos-backups-chart-card-v74");
-      card.setAttribute("data-goodos-backups-type-v74", target.key);
+      card.classList.add("goodos-backups-chart-card-v75");
+      card.setAttribute("data-goodos-backups-type-v75", target.key);
       card.insertAdjacentHTML("beforeend", chartMarkup(target));
     });
   }
 
+  var running = false;
+
   function run() {
-    renderBackupsCharts();
+    if (running) return;
+
+    running = true;
+
+    window.setTimeout(function () {
+      renderBackupsCharts();
+      running = false;
+    }, 100);
   }
 
   if (document.readyState === "loading") {
@@ -18160,8 +18155,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   window.addEventListener("hashchange", function () {
     setTimeout(run, 250);
-    setTimeout(run, 750);
-    setTimeout(run, 1500);
+    setTimeout(run, 900);
   });
 
   window.addEventListener("pageshow", run);
@@ -18169,7 +18163,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   var timer = null;
   var observer = new MutationObserver(function () {
     clearTimeout(timer);
-    timer = setTimeout(run, 350);
+    timer = setTimeout(run, 500);
   });
 
   try {
@@ -18177,9 +18171,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   } catch (e) {}
 
   setTimeout(run, 250);
-  setTimeout(run, 750);
-  setTimeout(run, 1500);
-  setTimeout(run, 3000);
+  setTimeout(run, 900);
+  setTimeout(run, 1800);
 })();
 </script>
 
