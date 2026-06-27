@@ -103,4 +103,6 @@ router.use("/admin/sql-editor", sqlEditorRoutes);
 
 router.use("/admin/database-management", databaseManagementRoutes);
 
+router.use("/api/admin/database-management", databaseManagementRoutes);
+
 module.exports = router;

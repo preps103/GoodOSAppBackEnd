@@ -22631,27 +22631,43 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   function api(path) {
-    return fetch("/api/admin/database-management" + path, {
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    }).then(function (res) {
-      return res.text().then(function (body) {
-        var json = null;
+    var bases = [
+      "/api/admin/database-management",
+      "/admin/database-management",
+      "/api/database-management"
+    ];
 
-        try {
-          json = body ? JSON.parse(body) : null;
-        } catch (err) {
-          json = { raw: body };
-        }
+    function tryBase(index) {
+      var base = bases[index];
 
-        if (!res.ok || !json || json.success === false) {
-          throw new Error((json && json.error) || ("Request failed: " + res.status));
-        }
+      return fetch(base + path, {
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      }).then(function (res) {
+        return res.text().then(function (body) {
+          var json = null;
 
-        return json;
+          try {
+            json = body ? JSON.parse(body) : null;
+          } catch (err) {
+            json = { raw: body };
+          }
+
+          if (res.status === 404 && index < bases.length - 1) {
+            return tryBase(index + 1);
+          }
+
+          if (!res.ok || !json || json.success === false) {
+            throw new Error((json && json.error) || ("Request failed: " + res.status));
+          }
+
+          return json;
+        });
       });
-    });
+    }
+
+    return tryBase(0);
   }
 
   function ensurePanel() {

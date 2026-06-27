@@ -97,4 +97,18 @@ app.get("/console", (req, res) => {
   res.sendFile(require("path").join(__dirname, "public/console.html"));
 });
 
+
+// GOODOS V94 DATABASE MANAGEMENT DIRECT API MOUNT START
+try {
+  const databaseManagementRoutes = require("./routes/database-management.routes");
+
+  if (app && typeof app.use === "function") {
+    app.use("/api/admin/database-management", databaseManagementRoutes);
+    console.log("GoodOS Database Management API mounted at /api/admin/database-management");
+  }
+} catch (err) {
+  console.error("GoodOS Database Management API mount failed:", err && err.message ? err.message : err);
+}
+// GOODOS V94 DATABASE MANAGEMENT DIRECT API MOUNT END
+
 module.exports = app;
