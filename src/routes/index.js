@@ -65,7 +65,8 @@ router.get("/favicon.ico", (req, res) => res.status(204).end());
 router.use("/", consoleRoutes);
 
 
-// GoodOS landing route 26A
+
+// GoodOS public homepage and console routes - safe route fix 26B
 router.get("/", (req, res) => {
   res.sendFile(require("path").join(__dirname, "../public/landing.html"));
 });
@@ -74,14 +75,8 @@ router.get("/console", (req, res) => {
   res.sendFile(require("path").join(__dirname, "../public/console.html"));
 });
 
-
-// GoodOS SaaS homepage route 26A
-router.get("/", (req, res) => {
-  res.sendFile(require("path").join(__dirname, "../public/landing.html"));
-});
-
-router.get("/console", (req, res) => {
-  res.sendFile(require("path").join(__dirname, "../public/console.html"));
+router.get("/console.html", (req, res) => {
+  res.redirect("/console");
 });
 
 module.exports = router;
