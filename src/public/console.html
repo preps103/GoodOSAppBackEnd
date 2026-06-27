@@ -725,152 +725,299 @@ textarea:focus {
 }
 </style>
 
-
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="goodos-cache-version" content="20260627024022">
+<meta name="goodos-cache-version" content="20260627025509">
 
 
-<style id="goodos-css-only-premium-polish-final">
-/* CSS ONLY — no fake numbers, no HTML replacement, no route replacement. */
+<style id="goodos-real-ui-premium-v27">
+/* GOODOS REAL UI UPGRADE
+   This is styling + class tagging only.
+   It does not create dashboard data.
+   It does not replace dashboard HTML.
+   It does not inject sample KPI numbers.
+*/
+
 :root {
-  --go-bg:#030914;
-  --go-panel:rgba(18,29,53,.72);
-  --go-border:rgba(148,163,184,.14);
-  --go-text:#f8fbff;
-  --go-muted:#9eabc2;
-  --go-blue:#4f8cff;
-  --go-cyan:#36dcff;
-  --go-purple:#8b5cf6;
-  --go-green:#48e59b;
+  --goodos-bg: #030914;
+  --goodos-bg-soft: #07101f;
+  --goodos-sidebar: rgba(4, 11, 21, .98);
+  --goodos-panel: rgba(18, 29, 53, .72);
+  --goodos-panel-strong: rgba(18, 29, 53, .90);
+  --goodos-border: rgba(148, 163, 184, .15);
+  --goodos-border-strong: rgba(148, 163, 184, .22);
+  --goodos-text: #f8fbff;
+  --goodos-muted: #9eabc2;
+  --goodos-muted-2: #7d8ca5;
+  --goodos-blue: #4f8cff;
+  --goodos-cyan: #36dcff;
+  --goodos-purple: #8b5cf6;
+  --goodos-green: #48e59b;
+  --goodos-red: #fb7185;
+  --goodos-shadow: 0 24px 80px rgba(0, 0, 0, .28);
 }
 
+html,
 body {
+  min-height: 100%;
   background:
-    radial-gradient(circle at 15% 0%, rgba(79,140,255,.13), transparent 30%),
-    radial-gradient(circle at 84% 4%, rgba(54,220,255,.10), transparent 31%),
-    linear-gradient(145deg,#030914 0%,#07101f 50%,#050813 100%) !important;
-  color:var(--go-text) !important;
+    radial-gradient(circle at 13% 0%, rgba(79, 140, 255, .18), transparent 29%),
+    radial-gradient(circle at 88% 5%, rgba(54, 220, 255, .13), transparent 32%),
+    linear-gradient(145deg, #030914 0%, #07101f 48%, #050813 100%) !important;
+  color: var(--goodos-text) !important;
 }
 
-body, button, input, select, textarea {
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
-aside, nav, .sidebar, [class*="sidebar"] {
-  background:rgba(4,11,21,.98) !important;
-  border-right:1px solid rgba(148,163,184,.14) !important;
+aside,
+nav,
+.sidebar,
+[class*="sidebar"] {
+  background: var(--goodos-sidebar) !important;
+  border-right: 1px solid rgba(148, 163, 184, .13) !important;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .02) !important;
 }
 
-header, .topbar, [class*="topbar"], [class*="header"] {
-  background:rgba(4,10,20,.84) !important;
-  border-bottom:1px solid rgba(148,163,184,.12) !important;
-  backdrop-filter:blur(20px) saturate(150%) !important;
+header,
+.topbar,
+[class*="topbar"],
+[class*="header"] {
+  background: rgba(4, 10, 20, .84) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, .12) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
 }
 
-main, .content, #view, [data-view-root] {
+main,
+.content,
+#view,
+[data-view-root] {
+  color: var(--goodos-text) !important;
   background:
-    radial-gradient(circle at 70% 0%, rgba(54,220,255,.06), transparent 35%),
-    linear-gradient(145deg, rgba(7,16,31,.96), rgba(5,8,19,.98)) !important;
-  color:var(--go-text) !important;
+    radial-gradient(circle at 78% 0%, rgba(54, 220, 255, .075), transparent 35%),
+    linear-gradient(145deg, rgba(7, 16, 31, .97), rgba(5, 8, 19, .985)) !important;
 }
 
-aside button, nav button {
-  border-radius:999px !important;
-  min-height:35px !important;
-  background:transparent !important;
-  border:0 !important;
-  color:#dce8f7 !important;
-  font-weight:760 !important;
+#view,
+[data-view-root],
+main {
+  padding-top: 28px !important;
+}
+
+aside button,
+nav button {
+  border-radius: 999px !important;
+  min-height: 38px !important;
+  color: #dce8f7 !important;
+  font-weight: 760 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+aside button:hover,
+nav button:hover {
+  background: rgba(79, 140, 255, .13) !important;
 }
 
 aside button.active,
 nav button.active,
 aside button[aria-current="page"],
 nav button[aria-current="page"] {
-  background:linear-gradient(135deg,rgba(79,140,255,.36),rgba(139,92,246,.26)) !important;
-  color:#fff !important;
+  background: linear-gradient(135deg, rgba(79, 140, 255, .40), rgba(139, 92, 246, .30)) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05) !important;
 }
 
-input, select, textarea {
-  background:rgba(7,16,31,.55) !important;
-  border:1px solid rgba(148,163,184,.16) !important;
-  color:#f8fbff !important;
-  border-radius:14px !important;
+input,
+select,
+textarea {
+  background: rgba(7, 16, 31, .62) !important;
+  border: 1px solid rgba(148, 163, 184, .17) !important;
+  color: #f8fbff !important;
+  border-radius: 14px !important;
+}
+
+#view h1,
+#view h2,
+#view h3,
+main h1,
+main h2,
+main h3,
+[data-view-root] h1,
+[data-view-root] h2,
+[data-view-root] h3 {
+  color: #f8fbff !important;
+  letter-spacing: -.045em !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .24) !important;
+}
+
+#view p,
+#view small,
+#view .muted,
+main p,
+main small,
+main .muted,
+[data-view-root] p,
+[data-view-root] small,
+[data-view-root] .muted {
+  color: var(--goodos-muted) !important;
 }
 
 #view .card,
 #view .panel,
 #view [class*="card"],
 #view [class*="panel"],
-#view section,
 main .card,
 main .panel,
 main [class*="card"],
 main [class*="panel"],
-main section,
 [data-view-root] .card,
 [data-view-root] .panel,
 [data-view-root] [class*="card"],
 [data-view-root] [class*="panel"],
-[data-view-root] section {
+.goodos-v27-card,
+.goodos-v27-panel {
   background:
-    radial-gradient(circle at top right,rgba(54,220,255,.075),transparent 40%),
-    linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.028)),
-    rgba(18,29,53,.72) !important;
-  border:1px solid rgba(148,163,184,.15) !important;
-  border-radius:18px !important;
-  box-shadow:0 20px 64px rgba(0,0,0,.24) !important;
+    radial-gradient(circle at top right, rgba(54, 220, 255, .085), transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, .068), rgba(255, 255, 255, .030)),
+    rgba(18, 29, 53, .74) !important;
+  border: 1px solid var(--goodos-border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--goodos-shadow) !important;
 }
 
-#view h1, #view h2, #view h3,
-main h1, main h2, main h3,
-[data-view-root] h1, [data-view-root] h2, [data-view-root] h3 {
-  color:#f8fbff !important;
-  letter-spacing:-.045em !important;
+.goodos-v27-hero {
+  position: relative !important;
+  overflow: hidden !important;
+  min-height: 170px !important;
+  padding: 34px 36px !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 82% 22%, rgba(54, 220, 255, .18), transparent 30%),
+    radial-gradient(circle at 64% 4%, rgba(139, 92, 246, .22), transparent 29%),
+    linear-gradient(135deg, rgba(22, 36, 66, .92), rgba(9, 18, 36, .90)) !important;
 }
 
-#view p, #view small, #view .muted,
-main p, main small, main .muted,
-[data-view-root] p, [data-view-root] small, [data-view-root] .muted {
-  color:#9eabc2 !important;
+.goodos-v27-hero h1,
+.goodos-v27-hero h2 {
+  max-width: 760px !important;
+  font-size: clamp(30px, 3vw, 48px) !important;
+  line-height: 1.03 !important;
+  letter-spacing: -.065em !important;
+}
+
+.goodos-v27-hero p {
+  max-width: 700px !important;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+.goodos-v27-hero-art {
+  position: absolute;
+  right: 70px;
+  top: 28px;
+  width: 390px;
+  height: 120px;
+  pointer-events: none;
+  opacity: .94;
+}
+
+.goodos-v27-hero-art::before {
+  content: "";
+  position: absolute;
+  inset: 28px 0 8px;
+  border: 1px solid rgba(54, 220, 255, .24);
+  transform: skewY(-13deg);
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(54, 220, 255, .065), rgba(139, 92, 246, .055));
+}
+
+.goodos-v27-hero-art i {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  box-shadow: 0 22px 58px rgba(79, 140, 255, .32);
+}
+
+.goodos-v27-hero-art i:nth-child(1) {
+  left: 56px;
+  top: 56px;
+  background: linear-gradient(135deg, #f59e0b, #8b5cf6);
+}
+
+.goodos-v27-hero-art i:nth-child(2) {
+  left: 150px;
+  top: 18px;
+  background: linear-gradient(135deg, #8b5cf6, #36dcff);
+}
+
+.goodos-v27-hero-art i:nth-child(3) {
+  right: 42px;
+  top: 58px;
+  background: linear-gradient(135deg, #36dcff, #20c997);
+}
+
+.goodos-v27-stat-row,
+.goodos-v27-card-row {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.goodos-v27-stat-row > *,
+.goodos-v27-card-row > * {
+  min-height: 120px !important;
 }
 
 #view table,
 main table,
 [data-view-root] table {
-  width:100%;
-  border-collapse:collapse;
-  background:rgba(7,16,31,.22) !important;
-  border-radius:14px !important;
-  overflow:hidden !important;
+  width: 100%;
+  border-collapse: collapse !important;
+  background: rgba(7, 16, 31, .24) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
 }
 
 #view th,
 main th,
 [data-view-root] th {
-  color:#8fa0ba !important;
-  font-size:11px !important;
-  letter-spacing:.16em !important;
-  text-transform:uppercase !important;
-  border-bottom:1px solid rgba(148,163,184,.14) !important;
+  color: #8fa0ba !important;
+  font-size: 11px !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid rgba(148, 163, 184, .14) !important;
 }
 
 #view td,
 main td,
 [data-view-root] td {
-  border-bottom:1px solid rgba(148,163,184,.08) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, .08) !important;
 }
 
 #view button,
 main button,
 [data-view-root] button {
-  border-radius:999px !important;
-  border:1px solid rgba(148,163,184,.18) !important;
-  background:rgba(22,36,66,.72) !important;
-  color:#dce9fb !important;
-  font-weight:850 !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148, 163, 184, .19) !important;
+  background: rgba(22, 36, 66, .74) !important;
+  color: #dce9fb !important;
+  font-weight: 850 !important;
+}
+
+#view button:hover,
+main button:hover,
+[data-view-root] button:hover {
+  border-color: rgba(54, 220, 255, .40) !important;
+  background: rgba(79, 140, 255, .17) !important;
 }
 
 #view .badge,
@@ -879,10 +1026,33 @@ main .badge,
 main [class*="badge"],
 [data-view-root] .badge,
 [data-view-root] [class*="badge"] {
-  background:rgba(72,229,155,.12) !important;
-  color:#a8ffd4 !important;
-  border-radius:999px !important;
-  border:1px solid rgba(72,229,155,.14) !important;
+  background: rgba(72, 229, 155, .12) !important;
+  color: #a8ffd4 !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(72, 229, 155, .14) !important;
+}
+
+.goodos-v27-section-title {
+  margin-top: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+@media (max-width: 1200px) {
+  .goodos-v27-stat-row,
+  .goodos-v27-card-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .goodos-v27-hero-art {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .goodos-v27-stat-row,
+  .goodos-v27-card-row {
+    grid-template-columns: 1fr !important;
+  }
 }
 </style>
 
@@ -9294,5 +9464,145 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 }
 
 </script>
+
+<script id="goodos-real-ui-premium-v27-js">
+(function () {
+  if (window.__goodosRealUIPremiumV27) return;
+  window.__goodosRealUIPremiumV27 = true;
+
+  function textOf(el) {
+    return String(el && el.textContent || "").replace(/\s+/g, " ").trim();
+  }
+
+  function closestBlock(el) {
+    let node = el;
+    for (let i = 0; node && i < 8; i += 1, node = node.parentElement) {
+      if (!node || node === document.body) break;
+      const cls = String(node.className || "");
+      if (
+        node.tagName === "SECTION" ||
+        cls.includes("card") ||
+        cls.includes("panel") ||
+        node.getAttribute("role") === "region"
+      ) {
+        return node;
+      }
+    }
+    return el ? el.parentElement : null;
+  }
+
+  function findHeading(text) {
+    const headings = Array.from(document.querySelectorAll("h1,h2,h3,h4,strong"));
+    return headings.find((el) => textOf(el).toLowerCase().includes(text.toLowerCase()));
+  }
+
+  function tagCards() {
+    const view = document.querySelector("#view") || document.querySelector("[data-view-root]") || document.querySelector("main");
+    if (!view) return;
+
+    document.body.classList.add("goodos-v27-active");
+
+    const heroHeading = findHeading("Backend Console");
+    const hero = closestBlock(heroHeading);
+    if (hero && !hero.classList.contains("goodos-v27-hero")) {
+      hero.classList.add("goodos-v27-hero");
+      const art = document.createElement("div");
+      art.className = "goodos-v27-hero-art";
+      art.setAttribute("aria-hidden", "true");
+      art.innerHTML = "<i></i><i></i><i></i>";
+      hero.appendChild(art);
+    }
+
+    [
+      "Activity Center",
+      "Project Control Center",
+      "Projects",
+      "Environments",
+      "Module Environment Mapping",
+      "Storage",
+      "Auth",
+      "Realtime",
+      "Functions",
+      "Jobs",
+      "Notifications",
+      "Billing",
+      "Secrets"
+    ].forEach((label) => {
+      const h = findHeading(label);
+      const block = closestBlock(h);
+      if (block) block.classList.add("goodos-v27-panel");
+      if (h) h.classList.add("goodos-v27-section-title");
+    });
+
+    const allBlocks = Array.from(view.querySelectorAll("section, .card, .panel, [class*='card'], [class*='panel']"));
+    allBlocks.forEach((block) => {
+      if (block.closest("aside,nav,header")) return;
+      block.classList.add("goodos-v27-card");
+    });
+
+    const statLabels = ["ORGANIZATIONS", "PROJECTS", "ENVIRONMENTS", "MODULE SCOPE"];
+    const statBlocks = statLabels.map((label) => {
+      const match = Array.from(view.querySelectorAll("*")).find((el) => {
+        if (el.children.length > 2) return false;
+        return textOf(el).toUpperCase() === label;
+      });
+      return closestBlock(match);
+    }).filter(Boolean);
+
+    const parentCounts = new Map();
+    statBlocks.forEach((block) => {
+      const parent = block.parentElement;
+      if (!parent) return;
+      parentCounts.set(parent, (parentCounts.get(parent) || 0) + 1);
+    });
+
+    parentCounts.forEach((count, parent) => {
+      if (count >= 3) parent.classList.add("goodos-v27-stat-row");
+    });
+  }
+
+  function renameShellOnly() {
+    const map = {
+      "GoodAppBackEnd": "GoodOS Cloud",
+      "Self-hosted backend console": "Backend hosting console",
+      "Dashboard": "Overview",
+      "App Registry": "Projects",
+      "Database Browser": "Database",
+      "Auth / Users": "Auth",
+      "Storage / Files": "Storage",
+      "Realtime Events": "Realtime",
+      "Edge Functions": "Functions",
+      "Logs & Monitoring": "Logs",
+      "Security Rules": "Alerts"
+    };
+
+    Array.from(document.querySelectorAll("strong, span, small, h1, h2, h3, div, button"))
+      .slice(0, 600)
+      .forEach((el) => {
+        if (el.children.length) return;
+        const text = textOf(el);
+        if (map[text]) el.textContent = map[text];
+      });
+  }
+
+  function run() {
+    renameShellOnly();
+    tagCards();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 100);
+  });
+
+  setInterval(run, 1200);
+})();
+</script>
+
 </body>
 </html>
