@@ -74,4 +74,14 @@ router.get("/console", (req, res) => {
   res.sendFile(require("path").join(__dirname, "../public/console.html"));
 });
 
+
+// GoodOS SaaS homepage route 26A
+router.get("/", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/landing.html"));
+});
+
+router.get("/console", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/console.html"));
+});
+
 module.exports = router;

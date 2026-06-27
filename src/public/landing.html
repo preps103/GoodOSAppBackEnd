@@ -3,110 +3,103 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GoodOS — Build, Run, and Scale Your App Suite</title>
-  <meta name="description" content="GoodOS is a premium backend operating system for apps, APIs, auth, storage, realtime, jobs, billing, notifications, and secure secrets." />
+  <title>GoodOS — Backend Hosting for Modern App Suites</title>
+  <meta name="description" content="GoodOS is a backend hosting platform for apps, APIs, auth, storage, realtime, jobs, billing, notifications, and secure secrets." />
   <style>
     :root {
-      --bg: #060814;
-      --ink: #f8fbff;
-      --muted: #aab8d1;
-      --panel: rgba(255,255,255,.075);
-      --panel2: rgba(255,255,255,.115);
-      --line: rgba(255,255,255,.14);
-      --blue: #4f8cff;
-      --cyan: #39d8ff;
-      --violet: #9b6cff;
-      --green: #54e6a1;
-      --gold: #f7c768;
-      --orange: #ff8a1f;
-      --danger: #ff617a;
-      --radius: 28px;
-      --shadow: 0 34px 110px rgba(0,0,0,.42);
+      --bg: #fbfcff;
+      --ink: #10131a;
+      --muted: #5d6472;
+      --line: #e4e8f0;
+      --soft: #f4f7fb;
+      --dark: #080b12;
+      --dark2: #101827;
+      --blue: #3d7cff;
+      --cyan: #15c8ff;
+      --green: #38d996;
+      --violet: #895cff;
+      --gold: #ffbd4a;
+      --orange: #ff7a1a;
+      --radius: 24px;
+      --shadow: 0 24px 80px rgba(15, 23, 42, .10);
     }
 
     * { box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
       color: var(--ink);
-      background:
-        radial-gradient(circle at 8% 0%, rgba(79,140,255,.28), transparent 30%),
-        radial-gradient(circle at 88% 8%, rgba(155,108,255,.24), transparent 30%),
-        radial-gradient(circle at 55% 90%, rgba(57,216,255,.12), transparent 35%),
-        linear-gradient(145deg, #050713 0%, #091326 48%, #080712 100%);
-      overflow-x: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: -.01em;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
-      background-size: 44px 44px;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 76%);
-      z-index: 0;
+    a { color: inherit; text-decoration: none; }
+
+    .topline {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #090d16;
+      color: #dbeafe;
+      font-size: 13px;
+      font-weight: 700;
     }
 
-    .page { position: relative; z-index: 1; }
+    .topline span {
+      color: #7ee7ff;
+      margin-left: 8px;
+    }
 
     .nav {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      height: 72px;
+      height: 76px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 clamp(20px, 5vw, 72px);
-      background: rgba(6, 10, 22, .72);
-      backdrop-filter: blur(22px) saturate(140%);
-      border-bottom: 1px solid rgba(255,255,255,.1);
+      padding: 0 clamp(20px, 5vw, 76px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(251,252,255,.86);
+      backdrop-filter: blur(18px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-weight: 900;
-      letter-spacing: -.04em;
-      font-size: 23px;
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -.05em;
     }
 
     .mark {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
       background:
-        radial-gradient(circle at 30% 25%, #fff 0 9%, transparent 10%),
+        radial-gradient(circle at 28% 22%, #fff 0 8%, transparent 9%),
         linear-gradient(135deg, var(--blue), var(--cyan) 45%, var(--violet));
-      box-shadow: 0 14px 34px rgba(79,140,255,.35);
+      box-shadow: 0 14px 34px rgba(61,124,255,.28);
     }
 
     .navlinks {
       display: flex;
-      gap: 22px;
       align-items: center;
-      color: var(--muted);
-      font-weight: 700;
+      gap: 26px;
+      color: #202633;
       font-size: 14px;
+      font-weight: 800;
     }
 
-    .navlinks a {
-      color: var(--muted);
-      text-decoration: none;
-    }
+    .navlinks a:hover { color: var(--blue); }
 
-    .navlinks a:hover { color: var(--ink); }
-
-    .actions {
+    .nav-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
     }
 
@@ -114,741 +107,749 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
-      padding: 0 20px;
+      min-height: 42px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.18);
+      background: #fff;
       color: var(--ink);
-      text-decoration: none;
-      font-weight: 850;
-      letter-spacing: -.02em;
-      background: rgba(255,255,255,.07);
-      box-shadow: 0 14px 36px rgba(0,0,0,.22);
-      transition: .18s ease;
-      cursor: pointer;
+      font-size: 14px;
+      font-weight: 900;
+      box-shadow: 0 10px 28px rgba(15,23,42,.06);
+      transition: .16s ease;
       white-space: nowrap;
     }
 
     .btn:hover {
-      transform: translateY(-2px);
-      border-color: rgba(57,216,255,.55);
-      box-shadow: 0 20px 52px rgba(57,216,255,.16);
+      transform: translateY(-1px);
+      border-color: rgba(61,124,255,.45);
+      box-shadow: 0 18px 42px rgba(61,124,255,.12);
     }
 
     .btn.primary {
       border: none;
       color: #06111f;
-      background: linear-gradient(135deg, #5ee1ff, #7aa2ff 45%, #c59bff);
+      background: linear-gradient(135deg, #6ee7ff, #7ba2ff 48%, #c6a0ff);
     }
 
-    .btn.orange {
+    .btn.green {
       border: none;
-      color: #1d0d00;
-      background: linear-gradient(135deg, #ffd36b, #ff8a1f);
+      color: #052114;
+      background: linear-gradient(135deg, #63efb0, #38d996);
     }
 
     .hero {
-      padding: clamp(62px, 9vw, 130px) clamp(20px, 5vw, 72px) 64px;
-      max-width: 1540px;
+      max-width: 1240px;
       margin: 0 auto;
-    }
-
-    .credit {
-      width: min(100%, 1040px);
-      margin: 0 auto 80px;
-      border: 1px solid rgba(247,199,104,.22);
-      background: linear-gradient(135deg, rgba(247,199,104,.12), rgba(255,138,31,.08));
-      border-radius: 26px;
-      padding: 22px 26px;
-      display: flex;
-      justify-content: space-between;
-      gap: 22px;
-      align-items: center;
-      box-shadow: 0 24px 70px rgba(0,0,0,.24);
-    }
-
-    .credit strong { font-size: 20px; letter-spacing: -.03em; }
-    .credit p { margin: 7px 0 0; color: var(--muted); line-height: 1.5; }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
-      gap: 46px;
-      align-items: center;
+      padding: clamp(72px, 8vw, 130px) 20px 70px;
+      text-align: center;
     }
 
     .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #384154;
       font-size: 13px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: #bcd7ff;
       font-weight: 900;
-      margin-bottom: 18px;
+      box-shadow: 0 12px 34px rgba(15,23,42,.05);
+      margin-bottom: 28px;
+    }
+
+    .spark {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(56,217,150,.12);
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(48px, 7.4vw, 108px);
-      line-height: .95;
-      letter-spacing: -.075em;
-      max-width: 980px;
+      font-size: clamp(56px, 8.5vw, 118px);
+      line-height: .93;
+      letter-spacing: -.085em;
+      font-weight: 950;
     }
 
-    .gradient-text {
-      background: linear-gradient(90deg, #fff, #bdeeff 45%, #d9c2ff 80%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+    .green-text {
+      display: block;
+      color: #39c98f;
     }
 
     .lead {
-      margin: 34px 0 0;
-      max-width: 760px;
-      color: #d8e4f6;
-      font-size: clamp(18px, 2.1vw, 28px);
-      line-height: 1.5;
-      letter-spacing: -.03em;
+      max-width: 850px;
+      margin: 28px auto 0;
+      color: #303745;
+      font-size: clamp(18px, 2.2vw, 27px);
+      line-height: 1.55;
+      letter-spacing: -.035em;
     }
 
     .hero-actions {
       display: flex;
+      justify-content: center;
       flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 36px;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-top: 44px;
-      max-width: 780px;
+      margin-top: 34px;
     }
 
-    .stat {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      border-radius: 22px;
-      padding: 20px;
-    }
-
-    .stat b {
-      display: block;
-      font-size: 28px;
-      letter-spacing: -.055em;
-    }
-
-    .stat span {
-      color: var(--muted);
-      font-weight: 700;
+    .trusted {
+      margin-top: 66px;
+      color: #777f8e;
       font-size: 13px;
+      font-weight: 800;
     }
 
-    .visual {
-      position: relative;
-      min-height: 520px;
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 34px;
-      background:
-        radial-gradient(circle at 20% 10%, rgba(57,216,255,.22), transparent 34%),
-        radial-gradient(circle at 90% 0%, rgba(155,108,255,.24), transparent 34%),
-        linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.045));
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      padding: 24px;
-    }
-
-    .console-card {
-      position: absolute;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(8,13,28,.76);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      box-shadow: 0 24px 70px rgba(0,0,0,.34);
-      padding: 20px;
-    }
-
-    .console-card.main {
-      inset: 36px 34px auto 34px;
-      height: 250px;
-    }
-
-    .console-card.side {
-      left: 34px;
-      right: 46%;
-      bottom: 38px;
-      height: 160px;
-    }
-
-    .console-card.float {
-      right: 34px;
-      bottom: 72px;
-      width: 41%;
-      height: 210px;
-      background: linear-gradient(145deg, rgba(79,140,255,.22), rgba(155,108,255,.18)), rgba(8,13,28,.84);
-    }
-
-    .card-head {
+    .logo-row {
+      margin: 22px auto 0;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 34px;
+      color: #8a91a0;
+      font-size: 18px;
+      font-weight: 950;
+      opacity: .75;
+    }
+
+    .showcase {
+      max-width: 1160px;
+      margin: 24px auto 0;
+      padding: 0 20px 90px;
+    }
+
+    .dashboard-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 34px 120px rgba(15,23,42,.14);
+    }
+
+    .window-bar {
+      height: 46px;
+      display: flex;
       align-items: center;
+      gap: 8px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcff;
+    }
+
+    .window-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d5dae4;
+    }
+
+    .dashboard-body {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 520px;
+    }
+
+    .side {
+      border-right: 1px solid var(--line);
+      background: #f8fafc;
+      padding: 22px;
+    }
+
+    .side-title {
+      font-weight: 950;
       margin-bottom: 18px;
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 8px 11px;
-      background: rgba(255,255,255,.075);
-      border: 1px solid rgba(255,255,255,.12);
-      color: #dbeafe;
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 20px rgba(84,230,161,.8);
-    }
-
-    .bars {
-      display: grid;
-      gap: 10px;
-    }
-
-    .bar {
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      overflow: hidden;
-    }
-
-    .bar span {
-      display: block;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--cyan), var(--violet));
-    }
-
-    .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .mini {
-      min-height: 62px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.075);
-      border: 1px solid rgba(255,255,255,.12);
-      padding: 13px;
-      color: var(--muted);
+    .side-item {
+      padding: 12px 14px;
+      border-radius: 13px;
+      color: #4b5565;
       font-weight: 800;
-      font-size: 12px;
+      font-size: 14px;
+      margin-bottom: 6px;
     }
 
-    .mini strong {
+    .side-item.active {
+      color: #052114;
+      background: #dffbed;
+    }
+
+    .dash-main {
+      padding: 26px;
+      background:
+        radial-gradient(circle at top right, rgba(61,124,255,.08), transparent 38%),
+        #fff;
+    }
+
+    .dash-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+
+    .dash-head h2 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      letter-spacing: -.06em;
+    }
+
+    .dash-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .status-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #e8fff4;
+      color: #097344;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .metric b {
       display: block;
-      color: var(--ink);
-      font-size: 18px;
-      margin-top: 7px;
+      margin-top: 8px;
+      font-size: 24px;
+      letter-spacing: -.055em;
+    }
+
+    .table-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr .75fr;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      color: #4b5565;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .table-row.head {
+      background: #f8fafc;
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
     }
 
     .section {
-      padding: 84px clamp(20px, 5vw, 72px);
-      max-width: 1540px;
+      max-width: 1240px;
       margin: 0 auto;
+      padding: 88px 20px;
     }
 
     .section-title {
-      max-width: 860px;
-      margin-bottom: 34px;
+      max-width: 850px;
+      margin-bottom: 36px;
+    }
+
+    .section-title.center {
+      text-align: center;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .section-title h2 {
       margin: 0;
-      font-size: clamp(38px, 5vw, 74px);
+      font-size: clamp(38px, 5vw, 72px);
       line-height: 1;
-      letter-spacing: -.065em;
+      letter-spacing: -.075em;
     }
 
     .section-title p {
       color: var(--muted);
       font-size: 19px;
       line-height: 1.6;
-      margin: 22px 0 0;
+      margin: 18px 0 0;
     }
 
-    .products {
+    .cards {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 18px;
     }
 
-    .product {
-      min-height: 260px;
+    .card {
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background:
-        radial-gradient(circle at top right, rgba(79,140,255,.18), transparent 38%),
-        linear-gradient(180deg, rgba(255,255,255,.095), rgba(255,255,255,.045));
+      background: #fff;
       padding: 26px;
-      box-shadow: 0 20px 70px rgba(0,0,0,.22);
-      transition: .18s ease;
+      min-height: 245px;
+      box-shadow: var(--shadow);
+      transition: .16s ease;
     }
 
-    .product:hover {
-      transform: translateY(-5px);
-      border-color: rgba(57,216,255,.45);
-      box-shadow: 0 30px 90px rgba(0,0,0,.34);
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 34px 90px rgba(15,23,42,.13);
     }
 
     .icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 18px;
+      width: 46px;
+      height: 46px;
+      border-radius: 15px;
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, rgba(57,216,255,.95), rgba(155,108,255,.95));
       color: #06111f;
-      font-weight: 1000;
-      margin-bottom: 20px;
+      background: linear-gradient(135deg, #6ee7ff, #c6a0ff);
+      font-weight: 950;
+      margin-bottom: 18px;
     }
 
-    .product h3 {
+    .card h3 {
       margin: 0;
-      font-size: 26px;
-      letter-spacing: -.045em;
+      font-size: 24px;
+      letter-spacing: -.05em;
     }
 
-    .product p {
-      margin: 14px 0 22px;
+    .card p {
       color: var(--muted);
       line-height: 1.6;
+      margin: 13px 0 0;
     }
 
-    .product a {
-      color: #bdeeff;
-      text-decoration: none;
-      font-weight: 900;
+    .dark-band {
+      background: #080b12;
+      color: #f8fbff;
+      margin-top: 40px;
+    }
+
+    .dark-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 96px 20px;
     }
 
     .split {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      border: 1px solid var(--line);
-      border-radius: 34px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 32px;
       overflow: hidden;
-      background: rgba(255,255,255,.055);
-      box-shadow: var(--shadow);
+      background: rgba(255,255,255,.045);
     }
 
     .split-panel {
-      padding: clamp(30px, 4vw, 58px);
-      min-height: 500px;
+      padding: clamp(30px, 4vw, 56px);
+      min-height: 440px;
     }
 
     .split-panel + .split-panel {
-      border-left: 1px solid var(--line);
+      border-left: 1px solid rgba(255,255,255,.13);
     }
 
-    .split-panel h3 {
-      font-size: clamp(34px, 4vw, 54px);
+    .split-panel h2 {
+      margin: 0;
+      font-size: clamp(36px, 4.8vw, 68px);
+      letter-spacing: -.075em;
       line-height: 1;
-      letter-spacing: -.06em;
-      margin: 12px 0 18px;
     }
 
-    .feature-list {
-      display: grid;
-      gap: 12px;
-      margin-top: 34px;
+    .split-panel p {
+      color: #aab8d1;
+      font-size: 18px;
+      line-height: 1.6;
     }
 
     .feature-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 17px 0;
-      border-bottom: 1px solid rgba(255,255,255,.12);
-      color: #e7efff;
+      gap: 18px;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(255,255,255,.13);
+      color: #e9f0ff;
       font-weight: 850;
     }
 
-    .integrations {
-      background: #f8fafc;
-      color: #08111f;
-      max-width: none;
-      padding: 96px clamp(20px, 5vw, 72px);
-      margin-top: 70px;
-    }
-
-    .integrations-inner {
-      max-width: 1360px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .integrations h2 {
-      margin: 0;
-      font-size: clamp(36px, 4.8vw, 68px);
-      letter-spacing: -.06em;
-      line-height: 1;
-    }
-
-    .integrations p {
-      color: #526174;
-      font-size: 19px;
-      line-height: 1.6;
-      max-width: 830px;
-      margin: 20px auto 48px;
-    }
-
-    .logo-grid {
+    .templates {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .template {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .template-art {
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(56,217,150,.2), transparent 32%),
+        linear-gradient(135deg, #f8fafc, #eef4ff);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .template-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: #111827;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      opacity: .72;
+    }
+
+    .template-body {
+      padding: 22px;
+    }
+
+    .template-body h3 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -.04em;
+    }
+
+    .template-body p {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
     }
 
-    .logo-card {
-      border: 1px solid #dbe4f0;
+    .price {
+      border: 1px solid var(--line);
+      border-radius: 24px;
       background: #fff;
-      border-radius: 22px;
-      min-height: 108px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .price.featured {
+      border-color: rgba(56,217,150,.55);
+      box-shadow: 0 34px 90px rgba(56,217,150,.13);
+    }
+
+    .price h3 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .price b {
+      display: block;
+      font-size: 38px;
+      letter-spacing: -.06em;
+      margin-bottom: 12px;
+    }
+
+    .price ul {
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
       display: grid;
-      place-items: center;
-      box-shadow: 0 18px 50px rgba(15,23,42,.08);
-      font-weight: 1000;
-      color: #1f2a44;
-    }
-
-    .code-section {
-      padding: 90px clamp(20px, 5vw, 72px);
-      max-width: 1360px;
-      margin: 0 auto;
-    }
-
-    .code-box {
-      border-radius: 34px;
-      background: #02050c;
-      border: 1px solid rgba(255,255,255,.14);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .code-head {
-      display: flex;
       gap: 10px;
-      padding: 18px 22px;
-      border-bottom: 1px solid rgba(255,255,255,.1);
-      background: rgba(255,255,255,.05);
-    }
-
-    .tab {
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 999px;
-      padding: 8px 13px;
       color: var(--muted);
-      font-weight: 900;
-      font-size: 13px;
+      font-size: 14px;
     }
 
-    .tab.active {
-      background: var(--orange);
-      color: #150900;
-      border: none;
+    .price li::before {
+      content: "✓";
+      color: #19a66a;
+      font-weight: 950;
+      margin-right: 8px;
     }
 
-    pre {
-      margin: 0;
-      padding: clamp(24px, 4vw, 46px);
-      color: #dbeafe;
-      overflow-x: auto;
-      font-size: 15px;
-      line-height: 1.8;
-    }
-
-    .cta {
-      padding: 110px clamp(20px, 5vw, 72px);
+    .final-cta {
       text-align: center;
-    }
-
-    .cta-box {
-      max-width: 1050px;
-      margin: 0 auto;
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 40px;
-      padding: clamp(42px, 7vw, 86px);
+      padding: 110px 20px;
       background:
-        radial-gradient(circle at top left, rgba(247,199,104,.18), transparent 40%),
-        radial-gradient(circle at top right, rgba(79,140,255,.22), transparent 38%),
-        linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.045));
-      box-shadow: var(--shadow);
+        radial-gradient(circle at 20% 10%, rgba(61,124,255,.13), transparent 35%),
+        radial-gradient(circle at 80% 20%, rgba(56,217,150,.16), transparent 34%),
+        #f8fafc;
     }
 
-    .cta h2 {
+    .final-cta h2 {
       margin: 0;
-      font-size: clamp(44px, 6vw, 86px);
-      line-height: .95;
-      letter-spacing: -.075em;
+      font-size: clamp(42px, 6vw, 86px);
+      line-height: 1;
+      letter-spacing: -.08em;
     }
 
-    .cta p {
+    .final-cta p {
+      max-width: 750px;
+      margin: 20px auto 30px;
       color: var(--muted);
       font-size: 20px;
       line-height: 1.6;
-      max-width: 760px;
-      margin: 24px auto 34px;
     }
 
     footer {
-      padding: 34px clamp(20px, 5vw, 72px);
-      border-top: 1px solid rgba(255,255,255,.1);
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
+      border-top: 1px solid var(--line);
+      padding: 58px clamp(20px, 5vw, 76px);
+      background: #fff;
     }
 
-    @media (max-width: 1050px) {
-      .hero-grid,
-      .split {
-        grid-template-columns: 1fr;
-      }
+    .footer-grid {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.5fr repeat(4, 1fr);
+      gap: 28px;
+      color: var(--muted);
+      font-size: 14px;
+    }
 
-      .visual { min-height: 520px; }
-      .products { grid-template-columns: repeat(2, 1fr); }
-      .logo-grid { grid-template-columns: repeat(3, 1fr); }
+    .footer-grid h4 {
+      color: var(--ink);
+      margin: 0 0 14px;
+    }
+
+    .footer-grid a {
+      display: block;
+      margin: 10px 0;
+    }
+
+    @media (max-width: 1000px) {
       .navlinks { display: none; }
+      .dashboard-body { grid-template-columns: 1fr; }
+      .side { display: none; }
+      .metric-grid, .cards, .templates, .pricing { grid-template-columns: repeat(2, 1fr); }
+      .split { grid-template-columns: 1fr; }
+      .split-panel + .split-panel { border-left: none; border-top: 1px solid rgba(255,255,255,.13); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 680px) {
-      .credit { flex-direction: column; align-items: flex-start; }
-      .hero-stats { grid-template-columns: 1fr; }
-      .products { grid-template-columns: 1fr; }
-      .logo-grid { grid-template-columns: repeat(2, 1fr); }
-      .visual { display: none; }
-      .actions .btn:not(.primary) { display: none; }
+      .nav-actions .btn:not(.primary) { display: none; }
+      .metric-grid, .cards, .templates, .pricing { grid-template-columns: 1fr; }
+      .table-row { grid-template-columns: 1fr; }
+      .logo-row { gap: 18px; font-size: 15px; }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <nav class="nav">
-      <div class="brand"><div class="mark"></div><span>GoodOS</span></div>
-      <div class="navlinks">
-        <a href="#build">Build</a>
-        <a href="#run">Run</a>
-        <a href="#integrations">Integrations</a>
-        <a href="#developers">Developers</a>
-        <a href="/docs">Docs</a>
+  <div class="topline">GoodOS Cloud is being built for internal apps and customer backend hosting. <span>Start with one project, scale to many.</span></div>
+
+  <nav class="nav">
+    <a class="brand" href="/">
+      <span class="mark"></span>
+      <span>GoodOS</span>
+    </a>
+
+    <div class="navlinks">
+      <a href="#product">Product</a>
+      <a href="#solutions">Solutions</a>
+      <a href="#templates">Templates</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/docs">Docs</a>
+    </div>
+
+    <div class="nav-actions">
+      <a class="btn" href="/docs">Docs</a>
+      <a class="btn primary" href="/console">Start your project</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span class="spark"></span> Backend hosting for builders, brands, and app suites</div>
+      <h1>Build in a weekend <span class="green-text">Scale into a platform</span></h1>
+      <p class="lead">GoodOS is the backend operating system for launching apps with auth, database APIs, storage, realtime, jobs, billing, notifications, and encrypted secrets from one premium control center.</p>
+
+      <div class="hero-actions">
+        <a class="btn green" href="/console">Start your project</a>
+        <a class="btn" href="#templates">View templates</a>
+        <a class="btn" href="/docs">Read docs</a>
       </div>
-      <div class="actions">
-        <a class="btn" href="/docs">Docs</a>
-        <a class="btn primary" href="/console">Go to console</a>
+
+      <div class="trusted">Designed for GoodOS apps first. Built to become a sellable backend hosting platform.</div>
+      <div class="logo-row">
+        <span>GoodFleet</span>
+        <span>GoodQR</span>
+        <span>GoodScan</span>
+        <span>GoodTrusts</span>
+        <span>GoodAds</span>
+        <span>GoodEditor</span>
       </div>
-    </nav>
+    </section>
 
-    <main>
-      <section class="hero">
-        <div class="credit">
-          <div>
-            <strong>Launch your backend like a premium product.</strong>
-            <p>Apps, auth, API keys, storage, realtime, jobs, billing, notifications, and secure secrets in one GoodOS control layer.</p>
-          </div>
-          <a class="btn orange" href="/console">Get Started</a>
+    <section class="showcase">
+      <div class="dashboard-card">
+        <div class="window-bar">
+          <span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span>
         </div>
-
-        <div class="hero-grid">
-          <div>
-            <div class="eyebrow">Backend operating system for modern app suites</div>
-            <h1><span class="gradient-text">Make your app suite feel bigger, faster, and easier to run.</span></h1>
-            <p class="lead">GoodOS gives builders a polished command center for shipping real products without juggling disconnected tools, hidden credentials, manual jobs, and scattered dashboards.</p>
-            <div class="hero-actions">
-              <a class="btn primary" href="/console">Open GoodOS Console</a>
-              <a class="btn" href="#build">Explore Platform</a>
-            </div>
-            <div class="hero-stats">
-              <div class="stat"><b>25+</b><span>Backend foundations</span></div>
-              <div class="stat"><b>1</b><span>Unified console</span></div>
-              <div class="stat"><b>Secure</b><span>Secrets + policies</span></div>
-            </div>
-          </div>
-
-          <div class="visual" aria-label="GoodOS product console preview">
-            <div class="console-card main">
-              <div class="card-head">
-                <span class="pill"><span class="dot"></span> Production Online</span>
-                <span class="pill">GoodOS Cloud</span>
+        <div class="dashboard-body">
+          <aside class="side">
+            <div class="side-title">GoodOS Console</div>
+            <div class="side-item active">Project Overview</div>
+            <div class="side-item">Database APIs</div>
+            <div class="side-item">Authentication</div>
+            <div class="side-item">Storage</div>
+            <div class="side-item">Realtime</div>
+            <div class="side-item">Jobs</div>
+            <div class="side-item">Billing</div>
+            <div class="side-item">Secrets</div>
+          </aside>
+          <div class="dash-main">
+            <div class="dash-head">
+              <div>
+                <h2>GoodFleet Production</h2>
+                <p>Unified backend hosting, API keys, usage tracking, jobs, email queues, and secrets for one app.</p>
               </div>
-              <div class="bars">
-                <div class="bar"><span style="width: 92%"></span></div>
-                <div class="bar"><span style="width: 78%"></span></div>
-                <div class="bar"><span style="width: 64%"></span></div>
-                <div class="bar"><span style="width: 86%"></span></div>
-              </div>
+              <span class="status-pill">Production healthy</span>
             </div>
 
-            <div class="console-card side">
-              <div class="mini-grid">
-                <div class="mini">API Usage<strong>Healthy</strong></div>
-                <div class="mini">Jobs<strong>Running</strong></div>
-                <div class="mini">Secrets<strong>Encrypted</strong></div>
-                <div class="mini">Billing<strong>Ready</strong></div>
-              </div>
+            <div class="metric-grid">
+              <div class="metric"><span>API Calls</span><b>18.4K</b></div>
+              <div class="metric"><span>Storage</span><b>2.8 GB</b></div>
+              <div class="metric"><span>Jobs</span><b>6 active</b></div>
+              <div class="metric"><span>Secrets</span><b>Encrypted</b></div>
             </div>
 
-            <div class="console-card float">
-              <div class="card-head">
-                <span class="pill">Realtime</span>
-                <span class="pill">Auth V2</span>
-              </div>
-              <div class="bars">
-                <div class="bar"><span style="width: 72%"></span></div>
-                <div class="bar"><span style="width: 95%"></span></div>
-                <div class="bar"><span style="width: 58%"></span></div>
-              </div>
+            <div class="table-card">
+              <div class="table-row head"><span>Service</span><span>Status</span><span>Usage</span><span>Action</span></div>
+              <div class="table-row"><span>Auth V2</span><span>Online</span><span>Roles + MFA ready</span><span>Manage</span></div>
+              <div class="table-row"><span>Database API</span><span>Online</span><span>Rules enforced</span><span>Open</span></div>
+              <div class="table-row"><span>Realtime</span><span>Online</span><span>Channels active</span><span>View</span></div>
+              <div class="table-row"><span>Billing</span><span>Ready</span><span>Plans + quotas</span><span>Configure</span></div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="section" id="build">
-        <div class="section-title">
-          <div class="eyebrow">Build</div>
-          <h2>Get to market faster with everything your app needs behind the scenes.</h2>
-          <p>GoodOS keeps the complicated backend work organized so every app in the suite can plug into the same trusted foundation.</p>
-        </div>
+    <section class="section" id="product">
+      <div class="section-title center">
+        <h2>Everything customers expect from a backend hosting platform.</h2>
+        <p>GoodOS needs to host your internal apps today and become a polished backend solution that other businesses can buy tomorrow.</p>
+      </div>
 
-        <div class="products">
-          <article class="product">
-            <div class="icon">A</div>
-            <h3>Auth & Roles</h3>
-            <p>Sessions, roles, permissions, MFA foundation, password reset, and owner/admin controls.</p>
-            <a href="/docs">View docs →</a>
-          </article>
-          <article class="product">
-            <div class="icon">D</div>
-            <h3>Database APIs</h3>
-            <p>Turn approved tables into controlled API endpoints with policy rules and API key usage metering.</p>
-            <a href="/docs">View docs →</a>
-          </article>
-          <article class="product">
-            <div class="icon">S</div>
-            <h3>Storage V2</h3>
-            <p>Local and S3-compatible storage metadata, CDN routing, provider configs, and version tracking.</p>
-            <a href="/docs">View docs →</a>
-          </article>
-          <article class="product">
-            <div class="icon">R</div>
-            <h3>Realtime</h3>
-            <p>Channels, events, streams, websocket foundation, presence, subscriptions, and message delivery.</p>
-            <a href="/docs">View docs →</a>
-          </article>
-          <article class="product">
-            <div class="icon">J</div>
-            <h3>Jobs & Workers</h3>
-            <p>Scheduled jobs, queue runners, worker heartbeats, locks, run history, and operations tooling.</p>
-            <a href="/docs">View docs →</a>
-          </article>
-          <article class="product">
-            <div class="icon">🔐</div>
-            <h3>Secrets V2</h3>
-            <p>Encrypted secret refs, version history, provider credentials, rotation, and SMTP-ready fallback.</p>
-            <a href="/docs">View docs →</a>
-          </article>
-        </div>
-      </section>
+      <div class="cards">
+        <article class="card"><div class="icon">DB</div><h3>Database APIs</h3><p>Expose approved tables through safe REST APIs with rules, API keys, and usage metering.</p></article>
+        <article class="card"><div class="icon">AU</div><h3>Auth & Users</h3><p>Sessions, roles, permissions, MFA, password resets, invite workflows, and user management.</p></article>
+        <article class="card"><div class="icon">ST</div><h3>Storage Hosting</h3><p>Local and S3-compatible storage, public file routes, provider configs, and metadata tracking.</p></article>
+        <article class="card"><div class="icon">RT</div><h3>Realtime</h3><p>Channels, events, websocket foundation, presence, streams, and app-level subscriptions.</p></article>
+        <article class="card"><div class="icon">JB</div><h3>Jobs & Queues</h3><p>Scheduled jobs, queue workers, retries, locks, worker heartbeats, and job run history.</p></article>
+        <article class="card"><div class="icon">SC</div><h3>Secrets Vault</h3><p>Encrypted secrets, version history, provider credentials, rotation, and SMTP-ready fallback.</p></article>
+      </div>
+    </section>
 
-      <section class="section" id="run">
+    <section class="dark-band" id="solutions">
+      <div class="dark-inner">
         <div class="split">
           <div class="split-panel">
-            <div class="eyebrow">Run</div>
-            <h3>Operate your app suite with confidence.</h3>
-            <p class="lead" style="font-size:20px;margin-top:0;">Monitor usage, billing, jobs, notifications, API keys, and policies from one place.</p>
-            <div class="feature-list">
-              <div class="feature-row"><span>Billing plans and usage meters</span><span>→</span></div>
-              <div class="feature-row"><span>Notifications and email queue</span><span>→</span></div>
-              <div class="feature-row"><span>Admin audit and policy rules</span><span>→</span></div>
-            </div>
+            <div class="eyebrow" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:#dbeafe;">For your app suite</div>
+            <h2>Run every GoodOS app from one backend.</h2>
+            <p>GoodFleet, GoodQR, GoodScan, GoodTrusts, GoodAds, and future apps can share auth, billing, storage, API keys, jobs, notifications, and secrets.</p>
+            <div class="feature-row"><span>One account system</span><span>→</span></div>
+            <div class="feature-row"><span>One billing and usage layer</span><span>→</span></div>
+            <div class="feature-row"><span>One operations console</span><span>→</span></div>
           </div>
           <div class="split-panel">
-            <div class="eyebrow">Extend</div>
-            <h3>Designed for every GoodOS app you add next.</h3>
-            <p class="lead" style="font-size:20px;margin-top:0;">GoodFleet, GoodQR, GoodScan, GoodTrusts, GoodAds, GoodEditor, and every future app can share the same backend foundation.</p>
-            <div class="feature-list">
-              <div class="feature-row"><span>Multi-app backend layer</span><span>→</span></div>
-              <div class="feature-row"><span>Developer docs and SDK</span><span>→</span></div>
-              <div class="feature-row"><span>Postman collection and OpenAPI</span><span>→</span></div>
-            </div>
+            <div class="eyebrow" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:#dbeafe;">For customers</div>
+            <h2>Sell backend hosting as a product.</h2>
+            <p>The platform must support self-serve projects, pricing tiers, API keys, quotas, docs, templates, onboarding, support, and secure customer separation.</p>
+            <div class="feature-row"><span>Organizations and projects</span><span>→</span></div>
+            <div class="feature-row"><span>Plans, quotas, and invoices</span><span>→</span></div>
+            <div class="feature-row"><span>Developer docs and templates</span><span>→</span></div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="integrations" id="integrations">
-        <div class="integrations-inner">
-          <div class="eyebrow" style="color:#526174;">Integrations</div>
-          <h2>Connect the services your business already uses.</h2>
-          <p>GoodOS is being built to plug into email, payments, storage, AI, maps, analytics, and app-specific tools without spreading credentials across every project.</p>
-          <div class="logo-grid">
-            <div class="logo-card">Stripe</div>
-            <div class="logo-card">SMTP</div>
-            <div class="logo-card">S3</div>
-            <div class="logo-card">OpenAI</div>
-            <div class="logo-card">Maps</div>
-            <div class="logo-card">Postman</div>
-          </div>
-        </div>
-      </section>
+    <section class="section" id="templates">
+      <div class="section-title center">
+        <h2>Start building in seconds.</h2>
+        <p>Templates are how this becomes easier to sell. Customers should be able to launch a backend project without starting from scratch.</p>
+      </div>
 
-      <section class="code-section" id="developers">
-        <div class="section-title">
-          <div class="eyebrow">Developers</div>
-          <h2>Clean APIs for the apps you build next.</h2>
-          <p>Use one GoodOS API layer to authenticate, store data, send notifications, track usage, and operate background jobs.</p>
-        </div>
-        <div class="code-box">
-          <div class="code-head">
-            <span class="tab active">JavaScript</span>
-            <span class="tab">REST</span>
-            <span class="tab">Postman</span>
-          </div>
-<pre><code>const goodos = new GoodOS({
-  apiKey: process.env.GOODOS_API_KEY
-});
+      <div class="templates">
+        <article class="template">
+          <div class="template-art"><span class="template-logo">S</span><span class="template-logo">AI</span><span class="template-logo">▲</span></div>
+          <div class="template-body"><h3>AI SaaS Starter</h3><p>Auth, users, billing, API keys, usage quotas, and secure AI provider secrets.</p><a href="/console">Use template →</a></div>
+        </article>
+        <article class="template">
+          <div class="template-art"><span class="template-logo">F</span><span class="template-logo">DB</span><span class="template-logo">RT</span></div>
+          <div class="template-body"><h3>Fleet Platform Starter</h3><p>Drivers, vehicles, schedules, realtime updates, storage, jobs, and notifications.</p><a href="/console">Use template →</a></div>
+        </article>
+        <article class="template">
+          <div class="template-art"><span class="template-logo">QR</span><span class="template-logo">ST</span><span class="template-logo">API</span></div>
+          <div class="template-body"><h3>API + Storage Starter</h3><p>Database APIs, file storage, public routes, API keys, and usage tracking.</p><a href="/console">Use template →</a></div>
+        </article>
+      </div>
+    </section>
 
-await goodos.db.createRow("demo_items", {
-  title: "Launch a new app",
-  status: "ready"
-});
+    <section class="section" id="pricing">
+      <div class="section-title center">
+        <h2>Simple pricing for builders and businesses.</h2>
+        <p>The backend already has plan and quota foundations. The public site should make those plans understandable.</p>
+      </div>
 
-await goodos.notifications.create({
-  title: "App deployed",
-  message: "Your GoodOS app is live."
-});</code></pre>
-        </div>
-      </section>
+      <div class="pricing">
+        <article class="price"><h3>Free</h3><b>$0</b><p>Test and prototype.</p><ul><li>1 project</li><li>Starter quotas</li><li>Community docs</li></ul></article>
+        <article class="price featured"><h3>Starter</h3><b>$19</b><p>Launch your first app.</p><ul><li>More API calls</li><li>Storage + jobs</li><li>Email queue</li></ul></article>
+        <article class="price"><h3>Business</h3><b>$79</b><p>Run real operations.</p><ul><li>Multiple projects</li><li>Team access</li><li>Priority support</li></ul></article>
+        <article class="price"><h3>Enterprise</h3><b>Custom</b><p>Scale the platform.</p><ul><li>Custom limits</li><li>Dedicated setup</li><li>Advanced security</li></ul></article>
+      </div>
+    </section>
 
-      <section class="cta">
-        <div class="cta-box">
-          <div class="mark" style="margin:0 auto 28px;width:64px;height:64px;border-radius:22px;"></div>
-          <h2>Build the backend platform your brands deserve.</h2>
-          <p>GoodOS should feel powerful enough for developers, but clean enough for business owners to understand what is happening.</p>
-          <a class="btn primary" href="/console">Go to GoodOS Console</a>
-        </div>
-      </section>
-    </main>
+    <section class="final-cta">
+      <h2>GoodOS should feel like the platform behind the business.</h2>
+      <p>We are building the backend hosting product that can power your own apps first, then become something other builders and businesses can trust.</p>
+      <a class="btn green" href="/console">Go to GoodOS Console</a>
+    </section>
+  </main>
 
-    <footer>
-      <div><strong>GoodOS</strong> — Premium backend operating system.</div>
-      <div>Docs · Console · API · Security · Billing</div>
-    </footer>
-  </div>
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="/"><span class="mark"></span><span>GoodOS</span></a>
+        <p style="color:var(--muted);line-height:1.6;max-width:320px;">Backend hosting for modern app suites, businesses, and builders.</p>
+      </div>
+      <div><h4>Product</h4><a>Database</a><a>Auth</a><a>Storage</a><a>Realtime</a><a>Jobs</a></div>
+      <div><h4>Platform</h4><a>Billing</a><a>Usage</a><a>Secrets</a><a>Policies</a><a>Notifications</a></div>
+      <div><h4>Resources</h4><a href="/docs">Docs</a><a href="/api-docs">API Docs</a><a href="/openapi.json">OpenAPI</a><a href="/postman/goodos-postman-collection.json">Postman</a></div>
+      <div><h4>Company</h4><a>Pricing</a><a>Security</a><a>Support</a><a>Contact</a></div>
+    </div>
+  </footer>
 </body>
 </html>
