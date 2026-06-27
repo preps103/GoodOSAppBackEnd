@@ -2026,6 +2026,242 @@ body.goodos-api-nav-v58-ready [data-goodos-route-v58="api-keys"] {
 }
 </style>
 
+
+<style id="goodos-skeleton-tabs-v59">
+/* V59: Missing tab + subcategory skeleton system */
+
+.goodos-skeleton-nav-v59 {
+  margin-top: 26px;
+  padding: 0 14px 18px;
+}
+
+.goodos-skeleton-nav-heading-v59 {
+  margin: 22px 10px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(174,185,205,.62);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+}
+
+.goodos-skeleton-nav-heading-v59::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(148,163,184,.22), rgba(148,163,184,0));
+}
+
+.goodos-skeleton-nav-item-v59 {
+  width: 100%;
+  margin: 7px 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(148,163,184,.10);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: rgba(226,232,240,.88);
+  text-decoration: none;
+  font-weight: 850;
+  font-size: 13px;
+  background: rgba(15,23,42,.10);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.goodos-skeleton-nav-item-v59:hover {
+  border-color: rgba(54,220,255,.28);
+  background:
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.13), transparent 36%),
+    rgba(30,41,59,.25);
+  color: #f8fbff;
+}
+
+.goodos-skeleton-nav-item-v59.is-active-v59 {
+  border-color: rgba(54,220,255,.45);
+  background:
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.22), transparent 34%),
+    linear-gradient(90deg, rgba(93,74,222,.52), rgba(30,160,180,.28));
+  box-shadow: inset 0 0 0 1px rgba(125,211,252,.08), 0 14px 40px rgba(37,99,235,.13);
+  color: #fff;
+}
+
+.goodos-skeleton-nav-icon-v59 {
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(54,220,255,.08);
+  border: 1px solid rgba(148,163,184,.14);
+  color: #a8f4ff;
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+
+.goodos-skeleton-page-v59 {
+  padding: 26px 30px 56px;
+}
+
+.goodos-skeleton-hero-v59 {
+  border: 1px solid rgba(148,163,184,.16);
+  border-radius: 28px;
+  padding: 34px 36px;
+  background:
+    radial-gradient(circle at 100% 10%, rgba(54,220,255,.16), transparent 34%),
+    linear-gradient(135deg, rgba(30,41,59,.92), rgba(15,23,42,.88));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 24px 70px rgba(0,0,0,.18);
+  margin-bottom: 24px;
+}
+
+.goodos-skeleton-eyebrow-v59 {
+  color: #a78bfa;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.goodos-skeleton-title-v59 {
+  color: #f8fafc;
+  font-size: clamp(34px, 4vw, 56px);
+  line-height: .98;
+  font-weight: 950;
+  margin: 0 0 14px;
+}
+
+.goodos-skeleton-subtitle-v59 {
+  color: rgba(203,213,225,.82);
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 880px;
+  margin: 0;
+}
+
+.goodos-skeleton-section-head-v59 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 26px 0 12px;
+}
+
+.goodos-skeleton-section-head-v59 h2 {
+  color: #f8fafc;
+  font-size: 18px;
+  margin: 0;
+  font-weight: 950;
+}
+
+.goodos-skeleton-pill-v59 {
+  color: #9fffc4;
+  border: 1px solid rgba(72,187,120,.22);
+  background: rgba(22,101,52,.22);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.goodos-skeleton-grid-v59 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.goodos-skeleton-card-v59 {
+  min-height: 150px;
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 22px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.12), transparent 42%),
+    linear-gradient(180deg, rgba(30,41,59,.78), rgba(15,23,42,.72));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.goodos-skeleton-card-v59 h3 {
+  margin: 0 0 8px;
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.goodos-skeleton-card-v59 p {
+  margin: 0 0 14px;
+  color: rgba(203,213,225,.72);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.goodos-skeleton-card-v59 button {
+  border: 1px solid rgba(148,163,184,.18);
+  background: rgba(15,23,42,.50);
+  color: #e5e7eb;
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-skeleton-card-v59 button:hover {
+  border-color: rgba(54,220,255,.35);
+  color: #fff;
+}
+
+.goodos-skeleton-status-v59 {
+  margin-top: 14px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  overflow: hidden;
+}
+
+.goodos-skeleton-status-v59 span {
+  display: block;
+  height: 100%;
+  width: 38%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4f8cff, #36dcff, #a78bfa);
+}
+
+.goodos-skeleton-note-v59 {
+  margin-top: 22px;
+  border: 1px dashed rgba(148,163,184,.20);
+  border-radius: 20px;
+  padding: 16px 18px;
+  color: rgba(203,213,225,.78);
+  background: rgba(15,23,42,.36);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1200px) {
+  .goodos-skeleton-grid-v59 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .goodos-skeleton-grid-v59 {
+    grid-template-columns: 1fr;
+  }
+
+  .goodos-skeleton-page-v59 {
+    padding: 18px;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -13870,6 +14106,594 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 300);
   setTimeout(run, 900);
   setTimeout(run, 1800);
+})();
+</script>
+
+
+<script id="goodos-skeleton-tabs-v59-js">
+(function () {
+  if (window.__goodosSkeletonTabsV59) return;
+  window.__goodosSkeletonTabsV59 = true;
+
+  var MODULES = [
+    {
+      group: "Project",
+      title: "Project Overview",
+      route: "project-overview",
+      icon: "⌂",
+      description: "Project health, database compute, connection status, setup flow, API requests, recent activity, and launch checklist.",
+      sections: [
+        {
+          title: "Overview",
+          items: [
+            ["Project Health", "Status, compute, backups, migrations, and branch state."],
+            ["Connection Details", "API URL, project reference, region, and copy actions."],
+            ["Launch Checklist", "Framework, server API, direct connection, ORM, and MCP onboarding."],
+            ["Usage Requests", "Requests, auth requests, storage requests, realtime requests, and function runs."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Project",
+      title: "Table Editor",
+      route: "table-editor",
+      icon: "▦",
+      description: "Browse schemas, create tables, inspect rows, queue row edits, filter data, and manage recent database items.",
+      sections: [
+        {
+          title: "Table Editor",
+          items: [
+            ["Schema Browser", "Public schema selector and table list."],
+            ["Create Table", "New table creation shell."],
+            ["Recent Items", "Recently opened tables and records."],
+            ["Queued Row Edits", "Batch row editing workflow skeleton."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Project",
+      title: "SQL Editor",
+      route: "sql-editor",
+      icon: "⌘",
+      description: "Write SQL, save queries, organize shared/favorite/private scripts, and run queries against selected roles.",
+      sections: [
+        {
+          title: "SQL Editor",
+          items: [
+            ["Editor Workspace", "SQL command editor and query tabs."],
+            ["Shared Queries", "Team-visible query folder."],
+            ["Favorites", "Pinned query shortcuts."],
+            ["Private Queries", "User-owned saved queries."],
+            ["Reference", "Templates, examples, and helper snippets."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Database",
+      title: "Database Management",
+      route: "database-management",
+      icon: "▤",
+      description: "Full Postgres management skeleton matching the database screens: schema visualizer, tables, functions, policies, backups, migrations, wrappers, and webhooks.",
+      sections: [
+        {
+          title: "Database Management",
+          items: [
+            ["Schema Visualizer", "Visual database diagram and relationships."],
+            ["Tables", "Table catalog and row counts."],
+            ["Functions", "Postgres function registry."],
+            ["Triggers", "Trigger registry and event hooks."],
+            ["Enumerated Types", "Enum catalog."],
+            ["Extensions", "Postgres extension manager."],
+            ["Indexes", "Index inventory and health."],
+            ["Publications", "Replication publication skeleton."]
+          ]
+        },
+        {
+          title: "Configuration",
+          items: [
+            ["Roles", "Database role configuration shell."],
+            ["Policies", "RLS policy registry shell."],
+            ["Settings", "Database settings shell."]
+          ]
+        },
+        {
+          title: "Platform",
+          items: [
+            ["Replication", "Replication status shell."],
+            ["Backups", "Backup history and restore shell."],
+            ["Migrations", "Migration timeline shell."],
+            ["Wrappers", "Foreign data wrapper shell."],
+            ["Database Webhooks", "Database event webhook shell."]
+          ]
+        },
+        {
+          title: "Tools",
+          items: [
+            ["Security Advisor", "Database security recommendation shell."],
+            ["Performance Advisor", "Performance recommendation shell."],
+            ["Query Performance", "Slow query and index insight shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Auth",
+      title: "Authentication Console",
+      route: "authentication-console",
+      icon: "◇",
+      description: "User management, OAuth apps, email templates, policies, providers, passkeys, sessions, MFA, rate limits, hooks, audit logs, and auth performance.",
+      sections: [
+        {
+          title: "Manage",
+          items: [
+            ["Users", "User table and account management shell."],
+            ["OAuth Apps", "OAuth application registry shell."]
+          ]
+        },
+        {
+          title: "Notifications",
+          items: [
+            ["Emails", "Auth email template and delivery shell."]
+          ]
+        },
+        {
+          title: "Configuration",
+          items: [
+            ["Policies", "Auth policy shell."],
+            ["Sign In / Providers", "Identity provider configuration shell."],
+            ["Passkeys", "WebAuthn/passkey shell."],
+            ["OAuth Server", "OAuth server settings shell."],
+            ["Sessions", "Session state and revocation shell."],
+            ["Rate Limits", "Rate limit configuration shell."],
+            ["Multi-Factor", "MFA factors and enforcement shell."],
+            ["URL Configuration", "Redirect and site URL shell."],
+            ["Attack Protection", "Bot/abuse protection shell."],
+            ["Auth Hooks", "Auth webhook and hook shell."],
+            ["Audit Logs", "Auth audit log shell."],
+            ["Performance", "Auth performance shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Storage",
+      title: "Storage Console",
+      route: "storage-console",
+      icon: "▰",
+      description: "Files, buckets, analytics, vectors, S3 configuration, providers, CDN buckets, public routing, and object versions.",
+      sections: [
+        {
+          title: "Manage",
+          items: [
+            ["Files", "Bucket browser and upload shell."],
+            ["Analytics", "Storage analytics shell."],
+            ["Vectors", "Vector storage shell."]
+          ]
+        },
+        {
+          title: "Configuration",
+          items: [
+            ["S3", "S3-compatible access shell."],
+            ["Providers", "Local and S3 provider configuration shell."],
+            ["CDN Buckets", "CDN routing shell."],
+            ["Public Buckets", "Public object routing shell."],
+            ["Versions", "Object version record shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Build",
+      title: "Edge Functions Console",
+      route: "edge-functions-console",
+      icon: "ƒ",
+      description: "Function deployment, templates, editor, AI assistant, CLI workflow, secrets, runtime versions, deployments, and execution logs.",
+      sections: [
+        {
+          title: "Manage",
+          items: [
+            ["Functions", "Server-side function registry shell."],
+            ["Secrets", "Function secret manager shell."],
+            ["Templates", "Starter templates shell."],
+            ["Deployments", "Function deployment history shell."],
+            ["Executions", "Function run history shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Build",
+      title: "Realtime Console",
+      route: "realtime-console",
+      icon: "◌",
+      description: "Realtime inspector, channels, subscriptions, messages, policies, settings, presence, and live listener tooling.",
+      sections: [
+        {
+          title: "Tools",
+          items: [
+            ["Inspector", "Realtime channel inspector shell."],
+            ["Channels", "Channel registry shell."],
+            ["Messages", "Realtime message stream shell."],
+            ["Presence", "Presence state shell."]
+          ]
+        },
+        {
+          title: "Configuration",
+          items: [
+            ["Policies", "Realtime policy shell."],
+            ["Settings", "Realtime settings shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Operate",
+      title: "Advisors",
+      route: "advisors",
+      icon: "!",
+      description: "Security advisor, performance advisor, query performance, lint recommendations, and reset/rerun advisor workflow.",
+      sections: [
+        {
+          title: "Advisors",
+          items: [
+            ["Security Advisor", "Security issue and suggestion shell."],
+            ["Performance Advisor", "Performance issue and suggestion shell."],
+            ["Query Performance", "Query performance report shell."],
+            ["Reset Suggestions", "Rerun advisor/linter workflow shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Operate",
+      title: "Observability",
+      route: "observability",
+      icon: "◬",
+      description: "Service health, database metrics, API gateway requests, auth, edge functions, storage, realtime, and custom report shells.",
+      sections: [
+        {
+          title: "General",
+          items: [
+            ["Overview", "Observability overview shell."],
+            ["Query Performance", "Query performance metrics shell."],
+            ["API Gateway", "Gateway latency and request shell."]
+          ]
+        },
+        {
+          title: "Product",
+          items: [
+            ["Database", "Database observability shell."],
+            ["Data API", "Data API observability shell."],
+            ["Auth", "Auth observability shell."],
+            ["Edge Functions", "Function observability shell."],
+            ["Storage", "Storage observability shell."],
+            ["Realtime", "Realtime observability shell."]
+          ]
+        },
+        {
+          title: "Custom Reports",
+          items: [
+            ["New Custom Report", "Saved custom report builder shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Operate",
+      title: "Logs Center",
+      route: "logs-center",
+      icon: "≡",
+      description: "Unified log search, live tail, filters, service logs, request timelines, and log export/drain skeletons.",
+      sections: [
+        {
+          title: "Logs",
+          items: [
+            ["Unified Logs", "Cross-service searchable logs shell."],
+            ["Live Tail", "Streaming log viewer shell."],
+            ["Database Logs", "Postgres log shell."],
+            ["PostgREST Logs", "Data API log shell."],
+            ["Auth Logs", "Auth log shell."],
+            ["Storage Logs", "Storage log shell."],
+            ["Edge Function Logs", "Function log shell."],
+            ["Realtime Logs", "Realtime log shell."],
+            ["Log Drains", "External log drain shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Operate",
+      title: "Integrations",
+      route: "integrations",
+      icon: "▧",
+      description: "Explore wrappers, Postgres modules, installed integrations, Data API, Vault, external tools, and integration cards.",
+      sections: [
+        {
+          title: "Explore",
+          items: [
+            ["All", "All integrations catalog shell."],
+            ["Wrappers", "Foreign data wrapper catalog shell."],
+            ["Postgres Modules", "Postgres module catalog shell."]
+          ]
+        },
+        {
+          title: "Installed",
+          items: [
+            ["Data API", "Installed Data API shell."],
+            ["Vault", "Vault encryption shell."],
+            ["Cron", "Cron job integration shell."],
+            ["Queues", "Queue integration shell."],
+            ["Stripe Sync Engine", "Payment sync shell."]
+          ]
+        }
+      ]
+    },
+    {
+      group: "Settings",
+      title: "Project Settings",
+      route: "project-settings",
+      icon: "⚙",
+      description: "General settings, compute, infrastructure, integrations, API keys, JWT keys, log drains, add-ons, subscription, and usage shells.",
+      sections: [
+        {
+          title: "Configuration",
+          items: [
+            ["General", "Project name, ID, region, and lifecycle shell."],
+            ["Compute and Disk", "Compute sizing and disk controls shell."],
+            ["Infrastructure", "Project infrastructure shell."],
+            ["Integrations", "Project integration settings shell."],
+            ["API Keys", "Project API key settings shell."],
+            ["JWT Keys", "JWT key settings shell."],
+            ["Log Drains", "External log drain settings shell."],
+            ["Add-ons", "Project add-on settings shell."]
+          ]
+        },
+        {
+          title: "Integrations",
+          items: [
+            ["Data API", "Data API integration settings shell."],
+            ["Vault", "Vault settings shell."]
+          ]
+        },
+        {
+          title: "Billing",
+          items: [
+            ["Subscription", "Subscription settings shell."],
+            ["Usage", "Usage and billing metrics shell."]
+          ]
+        }
+      ]
+    }
+  ];
+
+  var ROUTE_MAP = {};
+  MODULES.forEach(function (module) {
+    ROUTE_MAP[module.route] = module;
+  });
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function currentHash() {
+    return norm(String(window.location.hash || "").replace("#", ""));
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function getSidebar() {
+    var candidates = Array.prototype.slice.call(
+      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
+    );
+
+    return candidates.find(function (el) {
+      var text = norm(cleanText(el));
+      return text.indexOf("overview") !== -1 &&
+        text.indexOf("database") !== -1 &&
+        text.indexOf("storage") !== -1 &&
+        text.indexOf("settings") !== -1;
+    }) || null;
+  }
+
+  function groupModules() {
+    var groups = [];
+
+    MODULES.forEach(function (module) {
+      var group = groups.find(function (g) {
+        return g.name === module.group;
+      });
+
+      if (!group) {
+        group = { name: module.group, modules: [] };
+        groups.push(group);
+      }
+
+      group.modules.push(module);
+    });
+
+    return groups;
+  }
+
+  function labelAlreadyExists(sidebar, title) {
+    var wanted = norm(title);
+
+    return Array.prototype.slice.call(sidebar.querySelectorAll("a,button,[role='button'],div,span")).some(function (el) {
+      return norm(cleanText(el)) === wanted;
+    });
+  }
+
+  function createNavItem(module) {
+    var item = document.createElement("a");
+    item.className = "goodos-skeleton-nav-item-v59";
+    item.href = "#" + module.route;
+    item.setAttribute("data-goodos-skeleton-route-v59", module.route);
+
+    item.innerHTML =
+      '<span class="goodos-skeleton-nav-icon-v59">' + module.icon + '</span>' +
+      '<span>' + module.title + '</span>';
+
+    return item;
+  }
+
+  function installMissingNav() {
+    var sidebar = getSidebar();
+    if (!sidebar) return;
+
+    if (sidebar.querySelector(".goodos-skeleton-nav-v59")) return;
+
+    var wrapper = document.createElement("div");
+    wrapper.className = "goodos-skeleton-nav-v59";
+
+    groupModules().forEach(function (group) {
+      var heading = document.createElement("div");
+      heading.className = "goodos-skeleton-nav-heading-v59";
+      heading.textContent = group.name;
+      wrapper.appendChild(heading);
+
+      group.modules.forEach(function (module) {
+        if (!labelAlreadyExists(sidebar, module.title)) {
+          wrapper.appendChild(createNavItem(module));
+        }
+      });
+    });
+
+    sidebar.appendChild(wrapper);
+  }
+
+  function clearSkeletonActive() {
+    Array.prototype.slice.call(document.querySelectorAll(".goodos-skeleton-nav-item-v59")).forEach(function (el) {
+      el.classList.remove("is-active-v59");
+      el.removeAttribute("aria-current");
+    });
+  }
+
+  function markActive(route) {
+    clearSkeletonActive();
+
+    var active = document.querySelector('[data-goodos-skeleton-route-v59="' + route + '"]');
+    if (active) {
+      active.classList.add("is-active-v59");
+      active.setAttribute("aria-current", "page");
+    }
+  }
+
+  function buttonForSubcategory(moduleTitle, sectionTitle, itemTitle) {
+    var slug = [moduleTitle, sectionTitle, itemTitle]
+      .join("-")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    return '<button type="button" data-goodos-skeleton-feature-v59="' + slug + '">Skeleton only</button>';
+  }
+
+  function renderSkeletonPage(module) {
+    var root = getRoot();
+
+    var sectionsHtml = module.sections.map(function (section) {
+      var cards = section.items.map(function (item, index) {
+        var title = item[0];
+        var desc = item[1];
+        var width = 24 + ((index * 17 + title.length * 3) % 58);
+
+        return '' +
+          '<article class="goodos-skeleton-card-v59">' +
+            '<h3>' + title + '</h3>' +
+            '<p>' + desc + '</p>' +
+            buttonForSubcategory(module.title, section.title, title) +
+            '<div class="goodos-skeleton-status-v59"><span style="width:' + width + '%"></span></div>' +
+          '</article>';
+      }).join("");
+
+      return '' +
+        '<div class="goodos-skeleton-section-head-v59">' +
+          '<h2>' + section.title + '</h2>' +
+          '<span class="goodos-skeleton-pill-v59">' + section.items.length + ' skeletons</span>' +
+        '</div>' +
+        '<div class="goodos-skeleton-grid-v59">' + cards + '</div>';
+    }).join("");
+
+    root.innerHTML = '' +
+      '<section class="goodos-skeleton-page-v59" data-goodos-skeleton-page-v59="' + module.route + '">' +
+        '<div class="goodos-skeleton-hero-v59">' +
+          '<div class="goodos-skeleton-eyebrow-v59">GoodOS Cloud Skeleton</div>' +
+          '<h1 class="goodos-skeleton-title-v59">' + module.title + '</h1>' +
+          '<p class="goodos-skeleton-subtitle-v59">' + module.description + '</p>' +
+        '</div>' +
+        sectionsHtml +
+        '<div class="goodos-skeleton-note-v59">' +
+          '<strong>Skeleton status:</strong> these tabs and subcategories are now mapped into the application shell. The buttons and cards are placeholders only; live backend functionality can be connected phase by phase without losing this navigation structure.' +
+        '</div>' +
+      '</section>';
+  }
+
+  function routeIfSkeleton() {
+    installMissingNav();
+
+    var route = currentHash();
+    var module = ROUTE_MAP[route];
+
+    if (!module) {
+      clearSkeletonActive();
+      return;
+    }
+
+    markActive(route);
+    renderSkeletonPage(module);
+  }
+
+  function attachClicks() {
+    if (document.__goodosSkeletonClicksV59) return;
+    document.__goodosSkeletonClicksV59 = true;
+
+    document.addEventListener("click", function (event) {
+      var link = event.target.closest && event.target.closest("[data-goodos-skeleton-route-v59]");
+      if (!link) return;
+
+      var route = link.getAttribute("data-goodos-skeleton-route-v59");
+      if (!route || !ROUTE_MAP[route]) return;
+
+      event.preventDefault();
+      window.location.hash = route;
+
+      setTimeout(routeIfSkeleton, 20);
+      setTimeout(routeIfSkeleton, 120);
+    }, true);
+  }
+
+  function run() {
+    installMissingNav();
+    attachClicks();
+    routeIfSkeleton();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 30);
+    setTimeout(run, 250);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  setTimeout(run, 300);
+  setTimeout(run, 900);
 })();
 </script>
 
