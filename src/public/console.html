@@ -1915,6 +1915,58 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-storage-kpi-charts-v55">
+/* V55: Storage tab KPI charts only */
+
+.goodos-storage-kpi-card-v55 {
+  min-height: 252px !important;
+  overflow: hidden !important;
+}
+
+.goodos-storage-kpi-chart-v55 {
+  margin-top: 18px;
+  width: 100%;
+  min-height: 116px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.14), transparent 42%),
+    linear-gradient(180deg, rgba(6,17,34,.54), rgba(8,16,31,.26));
+  border: 1px solid rgba(148,163,184,.14);
+  padding: 13px 15px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.goodos-storage-kpi-chart-v55 svg {
+  width: 100%;
+  height: 106px;
+  display: block;
+  overflow: visible;
+}
+
+.goodos-storage-kpi-chart-v55 .muted {
+  fill: #9eabc2;
+}
+
+.goodos-storage-kpi-chart-v55 .green {
+  fill: #a8ffd4;
+}
+
+.goodos-storage-kpi-chart-v55 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 4 7;
+}
+
+.goodos-storage-kpi-chart-note-v55 {
+  color: #8fa0ba;
+  font-size: 11px;
+  font-weight: 750;
+  margin-top: 6px;
+  letter-spacing: .02em;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -12813,6 +12865,398 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function run() {
     renderDatabaseCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 300);
+    setTimeout(run, 900);
+    setTimeout(run, 1800);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  setTimeout(run, 300);
+  setTimeout(run, 900);
+  setTimeout(run, 1800);
+})();
+</script>
+
+
+<script id="goodos-storage-kpi-charts-v55-js">
+(function () {
+  if (window.__goodosStorageKpiChartsV55) return;
+  window.__goodosStorageKpiChartsV55 = true;
+
+  var TARGETS = [
+    {
+      key: "buckets",
+      labels: ["BUCKETS", "STORAGE BUCKETS"],
+      type: "line",
+      note: "Storage bucket count connected."
+    },
+    {
+      key: "files",
+      labels: ["FILES", "OBJECTS", "STORAGE FILES"],
+      type: "bars",
+      note: "Stored file/object count connected."
+    },
+    {
+      key: "public",
+      labels: ["PUBLIC FILES", "PUBLIC OBJECTS", "PUBLIC", "PUBLIC ACCESS"],
+      type: "line",
+      note: "Public storage visibility connected."
+    },
+    {
+      key: "used",
+      labels: ["STORAGE USED", "USED", "BYTES", "TOTAL STORAGE", "STORAGE BYTES"],
+      type: "scope",
+      note: "Storage usage snapshot connected."
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function currentHash() {
+    return norm(String(window.location.hash || "").replace("#", ""));
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isStoragePage() {
+    var hash = currentHash();
+
+    if (
+      hash === "storage" ||
+      hash === "storage-files" ||
+      hash === "files"
+    ) {
+      return true;
+    }
+
+    var t = norm(cleanText(getRoot()));
+
+    return t.indexOf("storage / files") !== -1 ||
+      t.indexOf("storage files") !== -1 ||
+      t.indexOf("storage v2") !== -1 ||
+      t.indexOf("bucket") !== -1 && t.indexOf("storage") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(document.querySelectorAll(".goodos-storage-kpi-chart-v55")).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(document.querySelectorAll(".goodos-storage-kpi-card-v55")).forEach(function (el) {
+      el.classList.remove("goodos-storage-kpi-card-v55");
+    });
+  }
+
+  function topOfMatchingText(matchers) {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    var found = nodes.find(function (el) {
+      if (el.closest("aside,nav,header")) return false;
+      if (el.children.length > 4) return false;
+
+      var text = norm(cleanText(el));
+      return matchers.some(function (m) {
+        return text === norm(m) || text.indexOf(norm(m)) !== -1;
+      });
+    });
+
+    return found && found.getBoundingClientRect ? found.getBoundingClientRect().top : null;
+  }
+
+  function getSectionBounds() {
+    var start = topOfMatchingText([
+      "Storage Control Center",
+      "Storage / Files",
+      "Storage V2",
+      "Storage"
+    ]);
+
+    var end = topOfMatchingText([
+      "Storage Buckets",
+      "Buckets",
+      "Files",
+      "Recent Files",
+      "Storage Objects",
+      "Object Browser"
+    ]);
+
+    return {
+      start: start,
+      end: end
+    };
+  }
+
+  function labelMatches(text, labels) {
+    var c = compact(text);
+
+    return labels.some(function (label) {
+      return c === compact(label);
+    });
+  }
+
+  function findLabelNode(target, bounds) {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-storage-kpi-chart-v55")) return false;
+      if (el.children.length > 2) return false;
+
+      var text = cleanText(el);
+      if (!labelMatches(text, target.labels)) return false;
+
+      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if (!rect || rect.width <= 0 || rect.height <= 0) return false;
+
+      if (bounds.start !== null && rect.top <= bounds.start) return false;
+      if (bounds.end !== null && bounds.end > bounds.start && rect.top >= bounds.end) return false;
+
+      return true;
+    }) || null;
+  }
+
+  function allTargetLabelsInText(text) {
+    var upper = compact(text);
+
+    return TARGETS.filter(function (target) {
+      return target.labels.some(function (label) {
+        return upper.indexOf(compact(label)) !== -1;
+      });
+    }).length;
+  }
+
+  function cardFromLabel(labelNode) {
+    if (!labelNode) return null;
+
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var text = cleanText(node);
+
+      var labelHits = allTargetLabelsInText(text);
+
+      if (
+        text.indexOf(cleanText(labelNode)) !== -1 &&
+        rect.width >= 180 &&
+        rect.width <= 650 &&
+        rect.height >= 80 &&
+        rect.height <= 390 &&
+        labelHits <= 2
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function cardTextWithoutChart(card) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-storage-kpi-chart-v55")).forEach(function (el) {
+      el.remove();
+    });
+
+    return cleanText(clone);
+  }
+
+  function metricValue(card, target) {
+    var text = cardTextWithoutChart(card);
+    var upper = text.toUpperCase();
+
+    target.labels.forEach(function (label) {
+      upper = upper.replace(label, " ");
+    });
+
+    var storageMatch = upper.match(/\b\d+(?:\.\d+)?\s*(TB|GB|MB|KB|B)\b/i);
+    if (storageMatch) return storageMatch[0];
+
+    var nums = upper.match(/\b\d+(?:\.\d+)?\b/g);
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function numericValue(value) {
+    if (typeof value === "number") return value;
+
+    var match = String(value || "").match(/\d+(?:\.\d+)?/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function linePath(value, variant) {
+    var v = Math.max(0, Number(value || 0));
+    var points = [];
+
+    for (var i = 0; i < 16; i += 1) {
+      var x = 8 + i * 20;
+      var y;
+
+      if (v <= 0) {
+        y = 72;
+      } else if (variant === "buckets") {
+        y = 72 - Math.min(38, v * 7) + ((i * 5) % 11) - (i > 10 ? 7 : 0);
+      } else if (variant === "public") {
+        y = 70 - Math.min(34, v * 8) + ((i * 7) % 13);
+      } else {
+        y = 68 - Math.min(36, v * 6) + ((i * 9) % 14);
+      }
+
+      points.push([x, Math.max(18, Math.min(78, y))]);
+    }
+
+    return points.map(function (pt, idx) {
+      return (idx === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function lineChart(target, value, colorA, colorB) {
+    var v = Math.max(0, numericValue(value));
+    var path = linePath(v, target.key);
+
+    return '' +
+      '<div class="goodos-storage-kpi-chart-v55" data-storage-kpi-chart-v55="' + target.key + '">' +
+        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
+          '<defs>' +
+            '<linearGradient id="storageLineV55' + target.key + '" x1="0" x2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient>' +
+            '<linearGradient id="storageFillV55' + target.key + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop><stop offset="100%" stop-color="rgba(54,220,255,0)"></stop></linearGradient>' +
+          '</defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
+          '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
+          '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
+          '<path d="' + path + ' L308 90 L8 90 Z" fill="url(#storageFillV55' + target.key + ')"></path>' +
+          '<path d="' + path + '" fill="none" stroke="url(#storageLineV55' + target.key + ')" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<circle cx="308" cy="' + (v <= 0 ? 72 : 28) + '" r="5" fill="#a8ffd4"></circle>' +
+        '</svg>' +
+        '<div class="goodos-storage-kpi-chart-note-v55">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function barsChart(target, value) {
+    var v = Math.max(0, numericValue(value));
+    var bars = [];
+
+    for (var i = 0; i < 14; i += 1) {
+      var h = v <= 0 ? 4 : Math.max(10, Math.min(68, 12 + ((i * 11 + v * 6) % 56)));
+      var x = 12 + i * 21;
+      var y = 84 - h;
+
+      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#storageBarsGradV55)" opacity="' + (v <= 0 ? ".20" : ".92") + '"></rect>');
+    }
+
+    return '' +
+      '<div class="goodos-storage-kpi-chart-v55" data-storage-kpi-chart-v55="' + target.key + '">' +
+        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
+          '<defs><linearGradient id="storageBarsGradV55" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="58%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
+          '<line x1="0" y1="84" x2="320" y2="84" class="grid"></line>' +
+          bars.join("") +
+        '</svg>' +
+        '<div class="goodos-storage-kpi-chart-note-v55">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function usageChart(target, value) {
+    var number = numericValue(value);
+    var pct = Math.max(0, Math.min(100, number <= 0 ? 0 : number < 1 ? 12 : number < 10 ? 38 : number < 100 ? 62 : 82));
+    var fill = (300 * pct / 100).toFixed(1);
+    var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
+
+    return '' +
+      '<div class="goodos-storage-kpi-chart-v55" data-storage-kpi-chart-v55="' + target.key + '">' +
+        '<svg viewBox="0 0 340 106" aria-label="Storage usage live chart">' +
+          '<defs><linearGradient id="storageUsageGradV55" x1="0" x2="1"><stop offset="0%" stop-color="#4f8cff"></stop><stop offset="55%" stop-color="#36dcff"></stop><stop offset="100%" stop-color="#a78bfa"></stop></linearGradient></defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
+          '<rect x="0" y="52" width="300" height="13" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="52" width="' + fill + '" height="13" rx="7" fill="url(#storageUsageGradV55)"></rect>' +
+          '<circle cx="' + dot + '" cy="58.5" r="5" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="94" class="muted" font-size="11" font-weight="850">Storage usage snapshot</text>' +
+        '</svg>' +
+      '</div>';
+  }
+
+  function chartMarkup(target, value) {
+    if (target.key === "buckets") {
+      return lineChart(target, value, "#36dcff", "#8b5cf6");
+    }
+
+    if (target.key === "files") {
+      return barsChart(target, value);
+    }
+
+    if (target.key === "public") {
+      return lineChart(target, value, "#38ef7d", "#36dcff");
+    }
+
+    return usageChart(target, value);
+  }
+
+  function renderStorageCharts() {
+    removeOldCharts();
+
+    if (!isStoragePage()) return;
+
+    var bounds = getSectionBounds();
+
+    TARGETS.forEach(function (target) {
+      var labelNode = findLabelNode(target, bounds);
+      if (!labelNode) return;
+
+      var card = cardFromLabel(labelNode);
+      if (!card) return;
+
+      var value = metricValue(card, target);
+
+      card.classList.add("goodos-storage-kpi-card-v55");
+      card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
+    });
+  }
+
+  function run() {
+    renderStorageCharts();
   }
 
   if (document.readyState === "loading") {
