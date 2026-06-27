@@ -964,6 +964,121 @@
           }
         }
       }
+    },
+    "/api/admin/secrets-v2-page-data": {
+      "get": {
+        "summary": "Secrets V2 page data",
+        "tags": [
+          "Admin",
+          "Secrets V2"
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret metadata snapshot"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
+      }
+    },
+    "/api/admin/secrets/create-safe": {
+      "post": {
+        "summary": "Create or rotate secret",
+        "tags": [
+          "Admin",
+          "Secrets V2"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "secretKey": {
+                    "type": "string"
+                  },
+                  "secretValue": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Encrypted secret reference created or rotated"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
+      }
+    },
+    "/api/admin/secrets/{key}/rotate-safe": {
+      "post": {
+        "summary": "Rotate secret by key",
+        "tags": [
+          "Admin",
+          "Secrets V2"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret rotated"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
+      }
+    },
+    "/api/admin/secrets/{key}/resolve-test-safe": {
+      "post": {
+        "summary": "Resolve secret test",
+        "tags": [
+          "Admin",
+          "Secrets V2"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret resolution test without raw value"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
+      }
     }
   }
 }

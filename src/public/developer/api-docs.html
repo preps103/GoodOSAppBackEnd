@@ -168,6 +168,19 @@
   -H "Cookie: goodos_session=YOUR_SESSION"</code></pre>
     </div>
 
-  </main>
+  
+    <h2>Secrets V2 / Provider Credentials</h2>
+    <p>Secrets V2 adds encrypted secret references, version history, provider credential mappings, safe rotation, and metadata-only admin visibility. Raw values are encrypted and are not returned through the console.</p>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/admin/secrets-v2-page-data</code></td><td>View secret vaults, secret metadata, provider credential mappings, and counts.</td></tr>
+        <tr><td><code>POST /api/admin/secrets/create-safe</code></td><td>Create or rotate an encrypted secret reference.</td></tr>
+        <tr><td><code>POST /api/admin/secrets/{key}/rotate-safe</code></td><td>Rotate an existing secret by key.</td></tr>
+        <tr><td><code>POST /api/admin/secrets/{key}/resolve-test-safe</code></td><td>Confirm a secret can resolve without returning the raw value.</td></tr>
+      </tbody>
+    </table>
+
+</main>
 </body>
 </html>

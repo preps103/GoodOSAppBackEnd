@@ -303,6 +303,42 @@
         },
         "url": "https://backend.goodos.app/api/admin/jobs/run-due-safe"
       }
+    },
+    {
+      "name": "Secrets V2",
+      "item": [
+        {
+          "name": "Secrets V2 Page Data",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/secrets-v2-page-data"
+          }
+        },
+        {
+          "name": "Create Secret Safe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"secretKey\": \"SMTP_HOST\",\n  \"secretValue\": \"smtp.example.com\",\n  \"category\": \"email\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/secrets/create-safe"
+          }
+        },
+        {
+          "name": "Resolve Secret Test Safe",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/secrets/SMTP_HOST/resolve-test-safe"
+          }
+        }
+      ]
     }
   ]
 }
