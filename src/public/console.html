@@ -3348,6 +3348,121 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-settings-jobs-kpi-charts-v77">
+/* V77: Settings / Background Jobs KPI charts only */
+
+.goodos-settings-jobs-chart-card-v77 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  padding-bottom: 22px !important;
+}
+
+.goodos-settings-jobs-chart-card-v77::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(99,102,241,.54), rgba(59,130,246,.10));
+  border: 1px solid rgba(99,102,241,.50);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-settings-jobs-chart-card-v77[data-goodos-settings-jobs-type-v77="active-jobs"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,197,94,.52), rgba(20,184,166,.12));
+  border-color: rgba(34,197,94,.48);
+}
+
+.goodos-settings-jobs-chart-card-v77[data-goodos-settings-jobs-type-v77="online-workers"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(56,189,248,.58), rgba(37,99,235,.14));
+  border-color: rgba(56,189,248,.52);
+}
+
+.goodos-settings-jobs-chart-card-v77[data-goodos-settings-jobs-type-v77="failed-runs"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(251,113,133,.58), rgba(236,72,153,.14));
+  border-color: rgba(251,113,133,.52);
+}
+
+.goodos-settings-jobs-chart-v77 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  min-height: 230px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
+}
+
+.goodos-settings-jobs-chart-v77 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 208px !important;
+  overflow: visible !important;
+}
+
+.goodos-settings-jobs-chart-v77 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-settings-jobs-chart-v77 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-settings-jobs-chart-v77 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-settings-jobs-trend-v77 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-settings-jobs-trend-v77 strong {
+  color: #60a5fa !important;
+  font-weight: 950 !important;
+}
+
+.goodos-settings-jobs-trend-v77.is-green-v77 strong {
+  color: #4ade80 !important;
+}
+
+.goodos-settings-jobs-trend-v77.is-red-v77 strong {
+  color: #fb7185 !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -18285,6 +18400,314 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 250);
   setTimeout(run, 900);
   setTimeout(run, 1800);
+})();
+</script>
+
+
+<script id="goodos-settings-jobs-kpi-charts-v77-js">
+(function () {
+  if (window.__goodosSettingsJobsKpiChartsV77) return;
+  window.__goodosSettingsJobsKpiChartsV77 = true;
+
+  var TARGETS = [
+    {
+      key: "jobs",
+      label: "JOBS",
+      description: "Scheduled handlers",
+      chartTitle: "JOBS OVER TIME",
+      trend: "100%",
+      trendPrefix: "↓ ",
+      trendClass: "",
+      colorA: "#5b7cfa",
+      colorB: "#2563eb",
+      maxLabel: "6",
+      midLabel: "3",
+      series: [124,98,86,74,64,54,50,50,60,60,76,96,112,132,150,160]
+    },
+    {
+      key: "active-jobs",
+      label: "ACTIVE JOBS",
+      description: "Enabled schedules",
+      chartTitle: "ACTIVE JOBS OVER TIME",
+      trend: "100%",
+      trendPrefix: "↓ ",
+      trendClass: " is-green-v77",
+      colorA: "#4ade80",
+      colorB: "#16a34a",
+      maxLabel: "6",
+      midLabel: "3",
+      series: [110,78,62,50,42,42,42,42,42,42,50,78,112,140,160,160]
+    },
+    {
+      key: "online-workers",
+      label: "ONLINE WORKERS",
+      description: "PM2 worker heartbeat",
+      chartTitle: "WORKERS OVER TIME",
+      trend: "100%",
+      trendPrefix: "↓ ",
+      trendClass: "",
+      colorA: "#38bdf8",
+      colorB: "#2563eb",
+      maxLabel: "6",
+      midLabel: "3",
+      series: [124,86,58,42,42,42,42,42,42,42,42,42,150,160,160,160]
+    },
+    {
+      key: "failed-runs",
+      label: "FAILED RUNS",
+      description: "Needs review",
+      chartTitle: "FAILED RUNS OVER TIME",
+      trend: "100%",
+      trendPrefix: "↓ ",
+      trendClass: " is-red-v77",
+      colorA: "#fb7185",
+      colorB: "#ec4899",
+      maxLabel: "6",
+      midLabel: "3",
+      series: [160,160,160,160,160,160,160,160,160,120,76,70,98,124,158,160]
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+
+    return r.width > 0 &&
+      r.height > 0 &&
+      (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function settingsJobsPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("background jobs v2") !== -1 &&
+      text.indexOf("scheduled handlers") !== -1 &&
+      text.indexOf("enabled schedules") !== -1 &&
+      text.indexOf("pm2 worker heartbeat") !== -1 &&
+      text.indexOf("needs review") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-settings-jobs-chart-v77,.goodos-settings-jobs-trend-v77")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-settings-jobs-chart-card-v77")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-settings-jobs-chart-card-v77");
+      el.removeAttribute("data-goodos-settings-jobs-type-v77");
+    });
+  }
+
+  function findSectionHeading() {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      return norm(cleanText(el)).indexOf("background jobs v2") !== -1;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function findCardForTarget(target) {
+    var root = getRoot();
+    var section = findSectionHeading();
+    var sectionTop = section && section.getBoundingClientRect ? section.getBoundingClientRect().top : 0;
+    var wantedLabel = compact(target.label);
+    var wantedDescription = norm(target.description);
+
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*")).filter(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-settings-jobs-chart-v77")) return false;
+
+      var rect = el.getBoundingClientRect();
+      var text = cleanText(el);
+      var textCompact = compact(text);
+      var textNorm = norm(text);
+      var hitCount = labelsInside(el);
+
+      if (rect.top < sectionTop - 25) return false;
+
+      return textCompact.indexOf(wantedLabel) !== -1 &&
+        textNorm.indexOf(wantedDescription) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 190 &&
+        rect.width <= 760 &&
+        rect.height >= 80 &&
+        rect.height <= 560;
+    });
+
+    if (!nodes.length) return null;
+
+    nodes.sort(function (a, b) {
+      var ar = a.getBoundingClientRect();
+      var br = b.getBoundingClientRect();
+
+      return (br.width * br.height) - (ar.width * ar.height);
+    });
+
+    return nodes[0];
+  }
+
+  function pathFromPoints(points) {
+    return points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function chartSvg(target) {
+    var points = target.series.map(function (y, i) {
+      return [42 + i * 15.4, y];
+    });
+
+    var path = pathFromPoints(points);
+    var last = points[points.length - 1];
+
+    return '' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosSettingsJobsLineV77' + target.key + '" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosSettingsJobsFillV77' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="1.6">' + target.chartTitle + '</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosSettingsJobsFillV77' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosSettingsJobsLineV77' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 1</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">May 8</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">May 15</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">May 29</text>' +
+      '</svg>';
+  }
+
+  function chartMarkup(target) {
+    return '' +
+      '<div class="goodos-settings-jobs-chart-v77" data-goodos-settings-jobs-chart-v77="' + target.key + '">' +
+        chartSvg(target) +
+      '</div>' +
+      '<div class="goodos-settings-jobs-trend-v77' + target.trendClass + '">' +
+        '<strong>' + target.trendPrefix + target.trend + '</strong> vs last 30 days' +
+      '</div>';
+  }
+
+  function renderSettingsJobsCharts() {
+    if (!settingsJobsPageVisible()) {
+      removeOldCharts();
+      return;
+    }
+
+    if (document.querySelectorAll(".goodos-settings-jobs-chart-v77").length >= TARGETS.length) {
+      return;
+    }
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var card = findCardForTarget(target);
+
+      if (!card) {
+        console.warn("GoodOS V77: Settings Jobs KPI card not found for", target.label);
+        return;
+      }
+
+      card.classList.add("goodos-settings-jobs-chart-card-v77");
+      card.setAttribute("data-goodos-settings-jobs-type-v77", target.key);
+      card.insertAdjacentHTML("beforeend", chartMarkup(target));
+    });
+  }
+
+  var running = false;
+
+  function run() {
+    if (running) return;
+
+    running = true;
+
+    window.setTimeout(function () {
+      renderSettingsJobsCharts();
+      running = false;
+    }, 120);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 900);
+    setTimeout(run, 1600);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 550);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 900);
+  setTimeout(run, 1800);
+  setTimeout(run, 3000);
 })();
 </script>
 
