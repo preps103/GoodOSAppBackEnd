@@ -8,6 +8,7 @@ const database = require("../config/database");
 const notificationService = require("../services/notification.service");
 const jobService = require("../services/job.service");
 const secretService = require("../services/secret.service");
+const goodosChartsDatabaseV28 = require("../config/database");
 
 const router = express.Router();
 
@@ -12303,5 +12304,248 @@ router.post("/auth-v2/password-resets/create-safe", async (req, res) => {
     return fail(res, "Failed to create password reset token", 500, error.message);
   }
 });
+
+
+// GoodOS live dashboard charts endpoint - additive only, no dashboard replacement
+function goodosChartsV28Query(sql, params = []) {
+  if (typeof goodosChartsDatabaseV28.query === "function") return goodosChartsDatabaseV28.query(sql, params);
+  if (goodosChartsDatabaseV28.pool && typeof goodosChartsDatabaseV28.pool.query === "function") return goodosChartsDatabaseV28.pool.query(sql, params);
+  if (typeof goodosChartsDatabaseV28.getPool === "function") return goodosChartsDatabaseV28.getPool().query(sql, params);
+  if (goodosChartsDatabaseV28.default && typeof goodosChartsDatabaseV28.default.query === "function") return goodosChartsDatabaseV28.default.query(sql, params);
+  throw new Error("Database query function not found");
+}
+
+function goodosChartsV28Ident(name) {
+  const value = String(name || "");
+  if (!/^[a-zA-Z0-9_]+$/.test(value)) throw new Error("Unsafe SQL identifier");
+  return value;
+}
+
+async function goodosChartsV28TableExists(tableName) {
+  const result = await goodosChartsV28Query("SELECT to_regclass($1) AS table_name", [tableName]);
+  return Boolean(result.rows[0] && result.rows[0].table_name);
+}
+
+async function goodosChartsV28ColumnExists(tableName, columnName) {
+  const result = await goodosChartsV28Query(
+    `
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = $1
+        AND column_name = $2
+      LIMIT 1
+    `,
+    [tableName, columnName]
+  );
+  return result.rows.length > 0;
+}
+
+async function goodosChartsV28FirstTable(tableNames = []) {
+  for (const table of tableNames) {
+    if (await goodosChartsV28TableExists(table)) return table;
+  }
+  return null;
+}
+
+async function goodosChartsV28Count(tableName, whereSql = "") {
+  const table = goodosChartsV28Ident(tableName);
+  if (!(await goodosChartsV28TableExists(table))) return 0;
+  const result = await goodosChartsV28Query(`SELECT COUNT(*)::int AS count FROM ${table} ${whereSql}`);
+  return Number(result.rows[0]?.count || 0);
+}
+
+async function goodosChartsV28CountFirst(tableNames = [], whereSql = "") {
+  for (const table of tableNames) {
+    if (await goodosChartsV28TableExists(table)) return goodosChartsV28Count(table, whereSql);
+  }
+  return 0;
+}
+
+async function goodosChartsV28SumFirst(tableNames = [], columnNames = [], whereSql = "") {
+  for (const tableName of tableNames) {
+    const table = goodosChartsV28Ident(tableName);
+    if (!(await goodosChartsV28TableExists(table))) continue;
+
+    for (const columnName of columnNames) {
+      const column = goodosChartsV28Ident(columnName);
+      if (!(await goodosChartsV28ColumnExists(table, column))) continue;
+
+      const result = await goodosChartsV28Query(`SELECT COALESCE(SUM(${column}), 0)::numeric AS total FROM ${table} ${whereSql}`);
+      return Number(result.rows[0]?.total || 0);
+    }
+  }
+
+  return 0;
+}
+
+async function goodosChartsV28DailyCounts(tableNames = [], preferredColumns = ["created_at"], days = 14) {
+  for (const tableName of tableNames) {
+    const table = goodosChartsV28Ident(tableName);
+    if (!(await goodosChartsV28TableExists(table))) continue;
+
+    for (const columnName of preferredColumns) {
+      const column = goodosChartsV28Ident(columnName);
+      if (!(await goodosChartsV28ColumnExists(table, column))) continue;
+
+      const result = await goodosChartsV28Query(
+        `
+          SELECT date_trunc('day', ${column})::date AS day, COUNT(*)::int AS count
+          FROM ${table}
+          WHERE ${column} >= NOW() - ($1::int || ' days')::interval
+          GROUP BY 1
+          ORDER BY 1 ASC
+        `,
+        [days]
+      );
+
+      return result.rows || [];
+    }
+  }
+
+  return [];
+}
+
+async function goodosChartsV28StatusBreakdown(tableNames = [], statusColumns = ["status"]) {
+  for (const tableName of tableNames) {
+    const table = goodosChartsV28Ident(tableName);
+    if (!(await goodosChartsV28TableExists(table))) continue;
+
+    for (const columnName of statusColumns) {
+      const column = goodosChartsV28Ident(columnName);
+      if (!(await goodosChartsV28ColumnExists(table, column))) continue;
+
+      const result = await goodosChartsV28Query(
+        `
+          SELECT COALESCE(${column}::text, 'unknown') AS label, COUNT(*)::int AS value
+          FROM ${table}
+          GROUP BY ${column}
+          ORDER BY value DESC, label ASC
+          LIMIT 12
+        `
+      );
+
+      return result.rows || [];
+    }
+  }
+
+  return [];
+}
+
+async function goodosChartsV28EnvironmentScoped(tableNames = []) {
+  for (const tableName of tableNames) {
+    const table = goodosChartsV28Ident(tableName);
+    if (!(await goodosChartsV28TableExists(table))) continue;
+    if (!(await goodosChartsV28ColumnExists(table, "environment_id"))) return 0;
+    return goodosChartsV28Count(table, "WHERE environment_id IS NOT NULL");
+  }
+  return 0;
+}
+
+router.get("/dashboard-live-charts-data", async (req, res) => {
+  try {
+    const modules = [
+      { key: "organizations", label: "Organizations", tables: ["backend_organizations", "organizations"] },
+      { key: "projects", label: "Projects", tables: ["backend_projects", "projects"] },
+      { key: "environments", label: "Environments", tables: ["backend_project_environments", "project_environments", "environments"] },
+      { key: "users", label: "Users", tables: ["users", "backend_users"] },
+      { key: "api_keys", label: "API Keys", tables: ["backend_api_keys", "api_keys"] },
+      { key: "webhooks", label: "Webhooks", tables: ["backend_webhooks", "webhooks"] },
+      { key: "storage", label: "Storage", tables: ["backend_storage_files", "backend_storage_objects", "storage_files"] },
+      { key: "functions", label: "Functions", tables: ["backend_edge_functions", "edge_functions"] },
+      { key: "realtime", label: "Realtime", tables: ["backend_realtime_channels", "backend_realtime_messages", "backend_realtime_events"] },
+      { key: "jobs", label: "Jobs", tables: ["backend_jobs", "backend_job_runs"] },
+      { key: "notifications", label: "Notifications", tables: ["backend_notifications", "backend_email_queue"] },
+      { key: "billing", label: "Billing", tables: ["backend_billing_plans", "backend_subscriptions", "backend_invoices"] },
+      { key: "secrets", label: "Secrets", tables: ["backend_secrets", "backend_secret_vaults", "backend_provider_credentials"] },
+      { key: "policies", label: "Policies", tables: ["backend_policy_rules"] },
+      { key: "backups", label: "Backups", tables: ["backend_db_backups", "backend_backups", "db_backups"] }
+    ];
+
+    const moduleCounts = [];
+    const environmentMapping = [];
+
+    for (const item of modules) {
+      const table = await goodosChartsV28FirstTable(item.tables);
+      const total = table ? await goodosChartsV28Count(table) : 0;
+      const scoped = table ? await goodosChartsV28EnvironmentScoped([table]) : 0;
+
+      moduleCounts.push({
+        key: item.key,
+        label: item.label,
+        table,
+        value: total
+      });
+
+      environmentMapping.push({
+        key: item.key,
+        label: item.label,
+        table,
+        total,
+        scoped,
+        percent: total > 0 ? Math.round((scoped / total) * 100) : 0
+      });
+    }
+
+    const projectStatus = await goodosChartsV28StatusBreakdown(["backend_projects", "projects"]);
+    const environmentStatus = await goodosChartsV28StatusBreakdown(["backend_project_environments", "project_environments", "environments"]);
+    const jobStatus = await goodosChartsV28StatusBreakdown(["backend_jobs"]);
+    const notificationStatus = await goodosChartsV28StatusBreakdown(["backend_notifications"]);
+    const emailQueueStatus = await goodosChartsV28StatusBreakdown(["backend_email_queue"]);
+    const providerStatus = await goodosChartsV28StatusBreakdown(["backend_provider_credentials"]);
+
+    const apiDaily = await goodosChartsV28DailyCounts(["backend_api_key_usage_logs", "api_key_usage_logs"], ["created_at"], 14);
+    const jobDaily = await goodosChartsV28DailyCounts(["backend_job_runs"], ["created_at", "started_at"], 14);
+    const notificationDaily = await goodosChartsV28DailyCounts(["backend_notifications"], ["created_at"], 14);
+    const webhookDaily = await goodosChartsV28DailyCounts(["backend_webhook_deliveries", "webhook_deliveries"], ["created_at"], 14);
+    const realtimeDaily = await goodosChartsV28DailyCounts(["backend_realtime_messages", "backend_realtime_events"], ["created_at", "sent_at"], 14);
+
+    const summary = {
+      apiKeys: await goodosChartsV28CountFirst(["backend_api_keys", "api_keys"]),
+      webhooks: await goodosChartsV28CountFirst(["backend_webhooks", "webhooks"]),
+      storageFiles: await goodosChartsV28CountFirst(["backend_storage_files", "backend_storage_objects", "storage_files"]),
+      storageBytes: await goodosChartsV28SumFirst(["backend_storage_files", "backend_storage_objects", "backend_storage_object_versions"], ["size_bytes", "bytes", "file_size"]),
+      functions: await goodosChartsV28CountFirst(["backend_edge_functions", "edge_functions"]),
+      realtimeChannels: await goodosChartsV28CountFirst(["backend_realtime_channels"]),
+      jobs: await goodosChartsV28CountFirst(["backend_jobs"]),
+      notifications: await goodosChartsV28CountFirst(["backend_notifications"]),
+      billingPlans: await goodosChartsV28CountFirst(["backend_billing_plans"]),
+      subscriptions: await goodosChartsV28CountFirst(["backend_subscriptions"]),
+      secrets: await goodosChartsV28CountFirst(["backend_secrets"]),
+      providers: await goodosChartsV28CountFirst(["backend_provider_credentials"]),
+      policies: await goodosChartsV28CountFirst(["backend_policy_rules"])
+    };
+
+    return res.json({
+      success: true,
+      data: {
+        generatedAt: new Date().toISOString(),
+        summary,
+        charts: {
+          moduleCounts,
+          environmentMapping,
+          projectStatus,
+          environmentStatus,
+          jobStatus,
+          notificationStatus,
+          emailQueueStatus,
+          providerStatus,
+          apiDaily,
+          jobDaily,
+          notificationDaily,
+          webhookDaily,
+          realtimeDaily
+        }
+      }
+    });
+  } catch (error) {
+    console.error("dashboard-live-charts-data failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Dashboard live charts data failed"
+    });
+  }
+});
+
 
 module.exports = router;

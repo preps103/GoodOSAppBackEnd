@@ -1056,6 +1056,166 @@ main [class*="badge"],
 }
 </style>
 
+
+<style id="goodos-live-charts-v28">
+.goodos-chart-v28-wrap {
+  margin: 18px 0 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.goodos-chart-v28-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr);
+  gap: 16px;
+}
+
+.goodos-chart-v28-triple {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.goodos-chart-v28-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, .15);
+  border-radius: 18px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(54,220,255,.075), transparent 40%),
+    linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.028)),
+    rgba(18,29,53,.72);
+  box-shadow: 0 20px 64px rgba(0,0,0,.24);
+}
+
+.goodos-chart-v28-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.goodos-chart-v28-head h3 {
+  margin: 0;
+  color: #f8fbff;
+  letter-spacing: -.045em;
+  font-size: 18px;
+}
+
+.goodos-chart-v28-head p {
+  margin: 5px 0 0;
+  color: #9eabc2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.goodos-chart-v28-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(72,229,155,.12);
+  color: #a8ffd4;
+  border: 1px solid rgba(72,229,155,.14);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.goodos-chart-v28-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #48e59b;
+  box-shadow: 0 0 14px rgba(72,229,155,.70);
+}
+
+.goodos-chart-v28-svg {
+  width: 100%;
+  height: 240px;
+  display: block;
+  overflow: visible;
+}
+
+.goodos-chart-v28-svg text {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.goodos-chart-v28-empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  color: #8fa0ba;
+  border: 1px dashed rgba(148,163,184,.18);
+  border-radius: 16px;
+  background: rgba(7,16,31,.22);
+  text-align: center;
+  padding: 20px;
+}
+
+.goodos-chart-v28-tooltip {
+  position: fixed;
+  z-index: 999999;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -110%);
+  background: rgba(4, 10, 20, .96);
+  color: #f8fbff;
+  border: 1px solid rgba(148,163,184,.22);
+  border-radius: 12px;
+  padding: 9px 11px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  font-size: 12px;
+  max-width: 260px;
+}
+
+.goodos-chart-v28-mini-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.goodos-chart-v28-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 90px;
+  gap: 10px;
+  align-items: center;
+  color: #dce9fb;
+  font-size: 13px;
+}
+
+.goodos-chart-v28-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+}
+
+.goodos-chart-v28-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4f8cff, #36dcff, #8b5cf6);
+}
+
+.goodos-chart-v28-embed {
+  margin-top: 14px;
+}
+
+@media (max-width: 1220px) {
+  .goodos-chart-v28-grid,
+  .goodos-chart-v28-triple {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -9601,6 +9761,332 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   });
 
   setInterval(run, 1200);
+})();
+</script>
+
+
+<script id="goodos-live-charts-v28-js">
+(function () {
+  if (window.__goodosLiveChartsV28) return;
+  window.__goodosLiveChartsV28 = true;
+
+  let liveChartData = null;
+  let liveChartLoading = false;
+  let liveChartError = "";
+
+  function isDashboard() {
+    const hash = String(location.hash || "#dashboard").replace("#", "").toLowerCase();
+    return !hash || hash === "dashboard" || hash === "overview" || hash === "home";
+  }
+
+  function root() {
+    return document.getElementById("view") || document.querySelector("[data-view-root]") || document.querySelector("main");
+  }
+
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (m) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m];
+    });
+  }
+
+  function n(value) {
+    return Number(value || 0);
+  }
+
+  function arr(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function fmt(value) {
+    value = n(value);
+    if (value >= 1000000000) return (value / 1000000000).toFixed(2) + "B";
+    if (value >= 1000000) return (value / 1000000).toFixed(2) + "M";
+    if (value >= 1000) return (value / 1000).toFixed(1) + "K";
+    return String(value);
+  }
+
+  function showTip(event, html) {
+    let tip = document.querySelector(".goodos-chart-v28-tooltip");
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.className = "goodos-chart-v28-tooltip";
+      document.body.appendChild(tip);
+    }
+    tip.innerHTML = html;
+    tip.style.left = event.clientX + "px";
+    tip.style.top = event.clientY + "px";
+    tip.style.opacity = "1";
+  }
+
+  function hideTip() {
+    const tip = document.querySelector(".goodos-chart-v28-tooltip");
+    if (tip) tip.style.opacity = "0";
+  }
+
+  function svgBarChart(items, opts) {
+    items = arr(items).filter(function (item) { return n(item.value) > 0; }).slice(0, opts.limit || 12);
+    if (!items.length) return '<div class="goodos-chart-v28-empty">No live records for this chart yet.</div>';
+
+    const width = 760;
+    const height = 240;
+    const padding = { top: 16, right: 18, bottom: 54, left: 42 };
+    const plotW = width - padding.left - padding.right;
+    const plotH = height - padding.top - padding.bottom;
+    const max = Math.max.apply(null, items.map(function (item) { return n(item.value); })) || 1;
+    const gap = 10;
+    const barW = Math.max(18, (plotW - gap * (items.length - 1)) / items.length);
+
+    const bars = items.map(function (item, index) {
+      const value = n(item.value);
+      const h = Math.max(3, Math.round((value / max) * plotH));
+      const x = padding.left + index * (barW + gap);
+      const y = padding.top + plotH - h;
+      const label = String(item.label || item.key || "Item");
+      const short = label.length > 12 ? label.slice(0, 11) + "…" : label;
+      return `
+        <g class="goodos-chart-v28-point" data-label="${esc(label)}" data-value="${esc(value)}">
+          <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="8" fill="url(#goodosBarGradV28)" opacity=".95"></rect>
+          <text x="${x + barW / 2}" y="${height - 24}" fill="#8fa0ba" font-size="11" text-anchor="middle">${esc(short)}</text>
+          <text x="${x + barW / 2}" y="${y - 7}" fill="#f8fbff" font-size="11" font-weight="800" text-anchor="middle">${esc(fmt(value))}</text>
+        </g>
+      `;
+    }).join("");
+
+    return `
+      <svg class="goodos-chart-v28-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.title || "Live bar chart")}">
+        <defs>
+          <linearGradient id="goodosBarGradV28" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#36dcff"></stop>
+            <stop offset="55%" stop-color="#4f8cff"></stop>
+            <stop offset="100%" stop-color="#8b5cf6"></stop>
+          </linearGradient>
+        </defs>
+        <line x1="${padding.left}" y1="${padding.top + plotH}" x2="${width - padding.right}" y2="${padding.top + plotH}" stroke="rgba(148,163,184,.16)"></line>
+        ${bars}
+      </svg>
+    `;
+  }
+
+  function svgLineChart(series, opts) {
+    series = arr(series);
+    const rows = series.flatMap(function (s) {
+      return arr(s.rows).map(function (row) {
+        return { label: row.day || row.label || "", value: n(row.count || row.value), series: s.label || "" };
+      });
+    });
+
+    if (!rows.length || rows.every(function (x) { return x.value === 0; })) {
+      return '<div class="goodos-chart-v28-empty">No live activity trend records yet.</div>';
+    }
+
+    const width = 760;
+    const height = 240;
+    const padding = { top: 16, right: 18, bottom: 36, left: 42 };
+    const plotW = width - padding.left - padding.right;
+    const plotH = height - padding.top - padding.bottom;
+    const max = Math.max.apply(null, rows.map(function (x) { return x.value; })) || 1;
+    const colors = ["#36dcff", "#8b5cf6", "#ff9f43", "#48e59b", "#4f8cff"];
+
+    const paths = series.map(function (s, sIndex) {
+      const points = arr(s.rows);
+      if (!points.length) return "";
+      const step = points.length > 1 ? plotW / (points.length - 1) : plotW;
+      const d = points.map(function (row, index) {
+        const x = padding.left + index * step;
+        const y = padding.top + plotH - ((n(row.count || row.value) / max) * plotH);
+        return (index === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+      }).join(" ");
+      const circles = points.map(function (row, index) {
+        const x = padding.left + index * step;
+        const y = padding.top + plotH - ((n(row.count || row.value) / max) * plotH);
+        const label = String(s.label || "Series") + " — " + String(row.day || row.label || "");
+        const value = n(row.count || row.value);
+        return `<circle class="goodos-chart-v28-point" data-label="${esc(label)}" data-value="${esc(value)}" cx="${x}" cy="${y}" r="4" fill="${colors[sIndex % colors.length]}"></circle>`;
+      }).join("");
+      return `<path d="${d}" fill="none" stroke="${colors[sIndex % colors.length]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>${circles}`;
+    }).join("");
+
+    const legend = series.map(function (s, index) {
+      return `<text x="${padding.left + index * 140}" y="${height - 8}" fill="${colors[index % colors.length]}" font-size="12" font-weight="800">${esc(s.label)}</text>`;
+    }).join("");
+
+    return `
+      <svg class="goodos-chart-v28-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.title || "Live line chart")}">
+        <line x1="${padding.left}" y1="${padding.top + plotH}" x2="${width - padding.right}" y2="${padding.top + plotH}" stroke="rgba(148,163,184,.16)"></line>
+        <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${padding.top + plotH}" stroke="rgba(148,163,184,.12)"></line>
+        ${paths}
+        ${legend}
+      </svg>
+    `;
+  }
+
+  function progressList(items, valueKey, totalKey) {
+    items = arr(items).slice(0, 12);
+    if (!items.length) return '<div class="goodos-chart-v28-empty">No live mapping records yet.</div>';
+
+    return `
+      <div class="goodos-chart-v28-mini-list">
+        ${items.map(function (item) {
+          const total = n(item[totalKey || "total"] || item.value);
+          const scoped = n(item[valueKey || "scoped"]);
+          const pct = total > 0 ? Math.round((scoped / total) * 100) : 0;
+          return `
+            <div class="goodos-chart-v28-row">
+              <div>
+                <strong>${esc(item.label || item.key)}</strong>
+                <div class="goodos-chart-v28-track"><span class="goodos-chart-v28-fill" style="width:${Math.max(0, Math.min(100, pct))}%"></span></div>
+              </div>
+              <span>${pct}%</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function panel(title, subtitle, body, pill) {
+    return `
+      <div class="goodos-chart-v28-panel">
+        <div class="goodos-chart-v28-head">
+          <div><h3>${esc(title)}</h3><p>${esc(subtitle || "")}</p></div>
+          <span class="goodos-chart-v28-pill">${esc(pill || "Live")}</span>
+        </div>
+        ${body}
+      </div>
+    `;
+  }
+
+  async function loadData() {
+    if (liveChartLoading) return;
+    liveChartLoading = true;
+    liveChartError = "";
+
+    try {
+      const res = await fetch("/api/admin/dashboard-live-charts-data?t=" + Date.now(), {
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+      const payload = await res.json().catch(function () { return {}; });
+      if (!res.ok || payload.success === false) throw new Error(payload.message || "Live charts failed with status " + res.status);
+      liveChartData = payload.data || payload;
+    } catch (error) {
+      liveChartError = error.message || "Live charts failed";
+      console.error("GoodOS live charts failed:", error);
+    } finally {
+      liveChartLoading = false;
+      renderCharts();
+    }
+  }
+
+  function renderCharts() {
+    if (!isDashboard()) return;
+    const host = root();
+    if (!host) return;
+
+    let wrap = document.getElementById("goodosLiveChartsV28");
+    if (!wrap) {
+      wrap = document.createElement("section");
+      wrap.id = "goodosLiveChartsV28";
+      wrap.className = "goodos-chart-v28-wrap";
+
+      const anchorText = Array.from(host.querySelectorAll("h1,h2,h3,strong")).find(function (el) {
+        return /Project Control Center/i.test(String(el.textContent || ""));
+      });
+
+      const anchor = anchorText ? anchorText.closest("section, .card, .panel, div") : null;
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+      } else {
+        host.appendChild(wrap);
+      }
+    }
+
+    if (liveChartError) {
+      wrap.innerHTML = panel("Live Visual Analytics", liveChartError, '<div class="goodos-chart-v28-empty">Charts will appear after the live endpoint responds.</div>', "Needs data");
+      return;
+    }
+
+    const data = liveChartData || {};
+    const charts = data.charts || {};
+
+    const activitySeries = [
+      { label: "API", rows: charts.apiDaily || [] },
+      { label: "Jobs", rows: charts.jobDaily || [] },
+      { label: "Notifications", rows: charts.notificationDaily || [] },
+      { label: "Webhooks", rows: charts.webhookDaily || [] },
+      { label: "Realtime", rows: charts.realtimeDaily || [] }
+    ];
+
+    wrap.innerHTML = `
+      <div class="goodos-chart-v28-grid">
+        ${panel(
+          "Live Activity Trend",
+          "Daily activity pulled from API usage, jobs, notifications, webhooks, and realtime tables.",
+          svgLineChart(activitySeries, { title: "Live Activity Trend" }),
+          "Live"
+        )}
+        ${panel(
+          "Module Record Distribution",
+          "Current live record totals by backend module.",
+          svgBarChart(charts.moduleCounts || [], { title: "Module Record Distribution", limit: 10 }),
+          "Live"
+        )}
+      </div>
+
+      <div class="goodos-chart-v28-triple">
+        ${panel(
+          "Environment Mapping",
+          "Live environment-scoped record coverage by module.",
+          progressList(charts.environmentMapping || [], "scoped", "total"),
+          "Scoped"
+        )}
+        ${panel(
+          "Project Status",
+          "Live project status breakdown.",
+          svgBarChart(charts.projectStatus || [], { title: "Project Status", limit: 8 }),
+          "Projects"
+        )}
+        ${panel(
+          "Operations Status",
+          "Live job, email, and provider status breakdowns.",
+          svgBarChart([]
+            .concat((charts.jobStatus || []).map(function (x) { return { label: "Jobs: " + x.label, value: x.value }; }))
+            .concat((charts.emailQueueStatus || []).map(function (x) { return { label: "Email: " + x.label, value: x.value }; }))
+            .concat((charts.providerStatus || []).map(function (x) { return { label: "Providers: " + x.label, value: x.value }; })),
+            { title: "Operations Status", limit: 8 }
+          ),
+          "Ops"
+        )}
+      </div>
+    `;
+
+    wrap.querySelectorAll(".goodos-chart-v28-point").forEach(function (node) {
+      node.addEventListener("mousemove", function (event) {
+        showTip(event, "<strong>" + esc(node.dataset.label || "") + "</strong><br>" + esc(fmt(node.dataset.value || 0)) + " live records");
+      });
+      node.addEventListener("mouseleave", hideTip);
+    });
+  }
+
+  function start() {
+    if (isDashboard()) loadData();
+    setInterval(function () {
+      if (isDashboard()) loadData();
+    }, 45000);
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(function () {
+      if (isDashboard()) {
+        renderCharts();
+        loadData();
+      }
+    }, 150);
+  });
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
 })();
 </script>
 
