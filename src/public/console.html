@@ -3022,6 +3022,117 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-auth-session-kpi-charts-v72">
+/* V72: Auth / Sessions KPI charts only */
+
+.goodos-auth-session-chart-card-v72 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  padding-bottom: 22px !important;
+}
+
+.goodos-auth-session-chart-card-v72::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(124,58,237,.50), rgba(54,220,255,.08));
+  border: 1px solid rgba(139,92,246,.50);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-auth-session-chart-card-v72[data-goodos-auth-type-v72="active-sessions"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,197,94,.50), rgba(20,184,166,.12));
+  border-color: rgba(34,197,94,.48);
+}
+
+.goodos-auth-session-chart-card-v72[data-goodos-auth-type-v72="api-keys"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(59,130,246,.56), rgba(54,220,255,.10));
+  border-color: rgba(59,130,246,.50);
+}
+
+.goodos-auth-session-chart-card-v72[data-goodos-auth-type-v72="rate-limit"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(236,72,153,.58), rgba(244,63,94,.14));
+  border-color: rgba(236,72,153,.52);
+}
+
+.goodos-auth-session-chart-v72 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  min-height: 230px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
+}
+
+.goodos-auth-session-chart-v72 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 208px !important;
+  overflow: visible !important;
+}
+
+.goodos-auth-session-chart-v72 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-auth-session-chart-v72 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-auth-session-chart-v72 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-auth-session-trend-v72 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-auth-session-trend-v72 strong {
+  color: #22e6a8 !important;
+  font-weight: 950 !important;
+}
+
+.goodos-auth-session-trend-v72.is-negative-v72 strong {
+  color: #fb7185 !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -17325,6 +17436,312 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function run() {
     renderLogsCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 750);
+    setTimeout(run, 1500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 350);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 750);
+  setTimeout(run, 1500);
+  setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-auth-session-kpi-charts-v72-js">
+(function () {
+  if (window.__goodosAuthSessionKpiChartsV72) return;
+  window.__goodosAuthSessionKpiChartsV72 = true;
+
+  var TARGETS = [
+    {
+      key: "cookie",
+      label: "COOKIE",
+      description: "SSO cookie",
+      trend: "+1",
+      colorA: "#8b5cf6",
+      colorB: "#7c3aed",
+      maxLabel: "3",
+      midLabel: "1",
+      series: [118,118,110,92,72,86,78,68,66,58,20,30,42,52,70,98,128,144]
+    },
+    {
+      key: "active-sessions",
+      label: "ACTIVE SESSIONS",
+      description: "Currently valid",
+      trend: "+5",
+      colorA: "#22c55e",
+      colorB: "#16a34a",
+      maxLabel: "30",
+      midLabel: "15",
+      series: [132,120,106,98,92,74,76,78,78,72,66,54,60,60,50,42,48,62]
+    },
+    {
+      key: "api-keys",
+      label: "API KEYS",
+      description: "Active API keys",
+      trend: "+2",
+      colorA: "#3b82f6",
+      colorB: "#2563eb",
+      maxLabel: "15",
+      midLabel: "10",
+      series: [118,112,108,102,92,78,68,60,58,64,70,88,98,92,82,74,68,68]
+    },
+    {
+      key: "rate-limit",
+      label: "RATE LIMIT",
+      description: "Security throttle",
+      trend: "-1",
+      colorA: "#ec4899",
+      colorB: "#db2777",
+      maxLabel: "3",
+      midLabel: "2",
+      negative: true,
+      series: [92,92,92,92,92,92,92,92,92,92,92,108,116,122,122,124,142,142]
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+
+    return r.width > 0 &&
+      r.height > 0 &&
+      (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function authSessionPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("cookie") !== -1 &&
+      text.indexOf("sso cookie") !== -1 &&
+      text.indexOf("active sessions") !== -1 &&
+      text.indexOf("currently valid") !== -1 &&
+      text.indexOf("active api keys") !== -1 &&
+      text.indexOf("security throttle") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-auth-session-chart-v72,.goodos-auth-session-trend-v72")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-auth-session-chart-card-v72")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-auth-session-chart-card-v72");
+      el.removeAttribute("data-goodos-auth-type-v72");
+    });
+  }
+
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-auth-session-chart-v72")) return false;
+      if (el.children.length > 2) return false;
+
+      return compact(cleanText(el)) === wanted;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function cardForLabel(labelNode, target) {
+    if (!labelNode) return null;
+
+    var label = cleanText(labelNode);
+    var desc = norm(target.description);
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        norm(text).indexOf(desc) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 940 &&
+        rect.height >= 70 &&
+        rect.height <= 560
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function getValueFromCard(card, label) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(
+      clone.querySelectorAll(".goodos-auth-session-chart-v72,.goodos-auth-session-trend-v72")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+
+    return nums && nums.length ? nums[0] : "";
+  }
+
+  function pathFromPoints(points) {
+    return points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function chartSvg(target) {
+    var points = target.series.map(function (y, i) {
+      return [42 + i * 15.4, y];
+    });
+
+    var path = pathFromPoints(points);
+    var last = points[points.length - 1];
+
+    return '' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosAuthLineV72' + target.key + '" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosAuthFillV72' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosAuthFillV72' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosAuthLineV72' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 28</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
+      '</svg>';
+  }
+
+  function chartMarkup(target) {
+    return '' +
+      '<div class="goodos-auth-session-chart-v72" data-goodos-auth-session-chart-v72="' + target.key + '">' +
+        chartSvg(target) +
+      '</div>' +
+      '<div class="goodos-auth-session-trend-v72' + (target.negative ? ' is-negative-v72' : '') + '">' +
+        '<strong>' + (target.negative ? "↘ " : "↗ ") + target.trend + '</strong> vs last 30 days' +
+      '</div>';
+  }
+
+  function renderAuthSessionCharts() {
+    if (!authSessionPageVisible()) return;
+
+    if (document.querySelectorAll(".goodos-auth-session-chart-v72").length >= TARGETS.length) {
+      return;
+    }
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label, target);
+
+      if (!card) {
+        console.warn("GoodOS V72: Auth session KPI card not found for", target.label);
+        return;
+      }
+
+      card.classList.add("goodos-auth-session-chart-card-v72");
+      card.setAttribute("data-goodos-auth-type-v72", target.key);
+      card.insertAdjacentHTML("beforeend", chartMarkup(target));
+    });
+  }
+
+  function run() {
+    renderAuthSessionCharts();
   }
 
   if (document.readyState === "loading") {
