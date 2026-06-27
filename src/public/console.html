@@ -2911,6 +2911,117 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-logs-kpi-charts-v71">
+/* V71: Logs KPI charts only */
+
+.goodos-logs-chart-card-v71 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  padding-bottom: 22px !important;
+}
+
+.goodos-logs-chart-card-v71::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(124,58,237,.42), rgba(54,220,255,.08));
+  border: 1px solid rgba(139,92,246,.48);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-logs-chart-card-v71[data-goodos-logs-type-v71="errors"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(236,72,153,.58), rgba(244,63,94,.15));
+  border-color: rgba(236,72,153,.52);
+}
+
+.goodos-logs-chart-card-v71[data-goodos-logs-type-v71="output"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(59,130,246,.55), rgba(54,220,255,.10));
+  border-color: rgba(59,130,246,.48);
+}
+
+.goodos-logs-chart-card-v71[data-goodos-logs-type-v71="database-logs"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,211,238,.48), rgba(20,184,166,.12));
+  border-color: rgba(34,211,238,.48);
+}
+
+.goodos-logs-chart-v71 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  min-height: 230px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
+}
+
+.goodos-logs-chart-v71 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 208px !important;
+  overflow: visible !important;
+}
+
+.goodos-logs-chart-v71 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-logs-chart-v71 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-logs-chart-v71 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-logs-trend-v71 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-logs-trend-v71 strong {
+  color: #22e6a8 !important;
+  font-weight: 950 !important;
+}
+
+.goodos-logs-trend-v71.is-negative-v71 strong {
+  color: #fb7185 !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -16887,6 +16998,333 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function run() {
     renderFunctionsCharts();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 750);
+    setTimeout(run, 1500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 350);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 750);
+  setTimeout(run, 1500);
+  setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-logs-kpi-charts-v71-js">
+(function () {
+  if (window.__goodosLogsKpiChartsV71) return;
+  window.__goodosLogsKpiChartsV71 = true;
+
+  var TARGETS = [
+    {
+      key: "log-files",
+      label: "LOG FILES",
+      description: "Detected PM2 log files",
+      type: "area",
+      trend: "+2",
+      colorA: "#8b5cf6",
+      colorB: "#7c3aed",
+      maxLabel: "3",
+      midLabel: "1"
+    },
+    {
+      key: "errors",
+      label: "ERRORS",
+      description: "Error streams",
+      type: "area",
+      trend: "+150",
+      colorA: "#fb7185",
+      colorB: "#ec4899",
+      maxLabel: "200",
+      midLabel: "100",
+      negative: true
+    },
+    {
+      key: "output",
+      label: "OUTPUT",
+      description: "Output streams",
+      type: "area",
+      trend: "+99",
+      colorA: "#38bdf8",
+      colorB: "#2563eb",
+      maxLabel: "125",
+      midLabel: "75"
+    },
+    {
+      key: "database-logs",
+      label: "DATABASE LOGS",
+      description: "Stored log records",
+      type: "area",
+      trend: "+1",
+      colorA: "#22d3ee",
+      colorB: "#0891b2",
+      maxLabel: "3",
+      midLabel: "1"
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+
+    return r.width > 0 &&
+      r.height > 0 &&
+      (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function logsPageVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("log files") !== -1 &&
+      text.indexOf("detected pm2 log files") !== -1 &&
+      text.indexOf("error streams") !== -1 &&
+      text.indexOf("output streams") !== -1 &&
+      text.indexOf("stored log records") !== -1;
+  }
+
+  function removeOldCharts() {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-logs-chart-v71,.goodos-logs-trend-v71")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-logs-chart-card-v71")
+    ).forEach(function (el) {
+      el.classList.remove("goodos-logs-chart-card-v71");
+      el.removeAttribute("data-goodos-logs-type-v71");
+    });
+  }
+
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-logs-chart-v71")) return false;
+      if (el.children.length > 2) return false;
+
+      return compact(cleanText(el)) === wanted;
+    }) || null;
+  }
+
+  function labelsInside(el) {
+    var text = compact(cleanText(el));
+
+    return TARGETS.filter(function (target) {
+      return text.indexOf(compact(target.label)) !== -1;
+    }).length;
+  }
+
+  function cardForLabel(labelNode, target) {
+    if (!labelNode) return null;
+
+    var label = cleanText(labelNode);
+    var desc = norm(target.description);
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        norm(text).indexOf(desc) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 920 &&
+        rect.height >= 70 &&
+        rect.height <= 560
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function getValueFromCard(card, label) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(
+      clone.querySelectorAll(".goodos-logs-chart-v71,.goodos-logs-trend-v71")
+    ).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
+    var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+
+    return nums && nums.length ? Number(nums[0]) : 0;
+  }
+
+  function makeSeries(target, value) {
+    var v = Math.max(0, Number(value || 0));
+
+    if (target.key === "log-files") {
+      return [160,154,148,136,120,116,118,110,104,100,92,82,64,42,42,42,42,42];
+    }
+
+    if (target.key === "errors") {
+      return [150,136,140,122,74,104,116,132,92,58,86,116,82,58,30,72,46,24];
+    }
+
+    if (target.key === "output") {
+      return [152,138,126,110,92,80,60,82,62,40,28,18,34,22,42,58,60,56];
+    }
+
+    return [132,130,128,126,124,126,128,126,126,124,118,124,122,122,110,108,108,106];
+  }
+
+  function pathFromPoints(points) {
+    return points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+  }
+
+  function chartSvg(target, value) {
+    var ys = makeSeries(target, value);
+    var points = ys.map(function (y, i) {
+      return [42 + i * 15.4, y];
+    });
+
+    var path = pathFromPoints(points);
+    var last = points[points.length - 1];
+
+    return '' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosLogsLineV71' + target.key + '" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosLogsFillV71' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".38"></stop>' +
+            '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">24H</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
+        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
+        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosLogsFillV71' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosLogsLineV71' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">00:00</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">06:00</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">12:00</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">24:00</text>' +
+      '</svg>';
+  }
+
+  function chartMarkup(target, value) {
+    return '' +
+      '<div class="goodos-logs-chart-v71" data-goodos-logs-chart-v71="' + target.key + '">' +
+        chartSvg(target, value) +
+      '</div>' +
+      '<div class="goodos-logs-trend-v71' + (target.negative ? ' is-negative-v71' : '') + '">' +
+        '<strong>' + (target.negative ? "↯ " : "↗ ") + target.trend + '</strong> last 24 hours' +
+      '</div>';
+  }
+
+  function renderLogsCharts() {
+    if (!logsPageVisible()) return;
+
+    if (document.querySelectorAll(".goodos-logs-chart-v71").length >= TARGETS.length) {
+      return;
+    }
+
+    removeOldCharts();
+
+    TARGETS.forEach(function (target) {
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label, target);
+
+      if (!card) {
+        console.warn("GoodOS V71: Logs KPI card not found for", target.label);
+        return;
+      }
+
+      var value = getValueFromCard(card, target.label);
+
+      card.classList.add("goodos-logs-chart-card-v71");
+      card.setAttribute("data-goodos-logs-type-v71", target.key);
+      card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
+    });
+  }
+
+  function run() {
+    renderLogsCharts();
   }
 
   if (document.readyState === "loading") {
