@@ -4373,6 +4373,439 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-sql-editor-upgrade-v89">
+.goodos-sql-v89 {
+  width: 100%;
+  max-width: 100%;
+}
+
+.goodos-sql-shell-v89 {
+  border-radius: 28px;
+  border: 1px solid rgba(148,163,184,.18);
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.16), transparent 38%),
+    linear-gradient(145deg, rgba(31,42,64,.94), rgba(15,23,42,.96));
+  padding: 34px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.goodos-sql-hero-v89 {
+  border-radius: 24px;
+  border: 1px solid rgba(34,211,238,.20);
+  background:
+    radial-gradient(circle at top right, rgba(45,212,191,.14), transparent 38%),
+    linear-gradient(135deg, rgba(15,23,42,.94), rgba(12,22,39,.94));
+  padding: 34px;
+  margin-bottom: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+}
+
+.goodos-sql-eyebrow-v89 {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: rgba(167,139,250,.96);
+  margin-bottom: 14px;
+}
+
+.goodos-sql-title-v89 {
+  font-size: clamp(42px, 4vw, 68px);
+  line-height: .98;
+  font-weight: 950;
+  letter-spacing: -.06em;
+  color: #f8fafc;
+  margin: 0 0 14px;
+}
+
+.goodos-sql-copy-v89 {
+  max-width: 840px;
+  color: rgba(203,213,225,.84);
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.goodos-sql-actions-v89 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  align-content: flex-start;
+  max-width: 620px;
+}
+
+.goodos-sql-btn-v89 {
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(15,23,42,.70);
+  color: #e0f2fe;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.goodos-sql-btn-v89:hover {
+  border-color: rgba(34,211,238,.55);
+}
+
+.goodos-sql-btn-v89.is-run-v89 {
+  background: linear-gradient(90deg, rgba(34,197,94,.24), rgba(34,211,238,.18));
+  border-color: rgba(34,197,94,.35);
+  color: #bbf7d0;
+}
+
+.goodos-sql-kpis-v89 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.goodos-sql-kpi-v89 {
+  min-height: 258px;
+  border-radius: 22px;
+  border: 1px solid rgba(148,163,184,.16);
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.10), transparent 42%),
+    linear-gradient(180deg, rgba(30,41,59,.88), rgba(15,23,42,.92));
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.goodos-sql-kpi-icon-v89 {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(34,211,238,.28), rgba(124,58,237,.20));
+  border: 1px solid rgba(56,189,248,.26);
+  box-shadow: 0 0 28px rgba(34,211,238,.12);
+}
+
+.goodos-sql-kpi-v89:nth-child(1) .goodos-sql-kpi-icon-v89 {
+  background: linear-gradient(135deg, rgba(168,85,247,.38), rgba(124,58,237,.24));
+  border-color: rgba(168,85,247,.36);
+}
+
+.goodos-sql-kpi-v89:nth-child(2) .goodos-sql-kpi-icon-v89 {
+  background: linear-gradient(135deg, rgba(59,130,246,.40), rgba(14,165,233,.22));
+  border-color: rgba(59,130,246,.40);
+}
+
+.goodos-sql-kpi-v89:nth-child(3) .goodos-sql-kpi-icon-v89 {
+  background: linear-gradient(135deg, rgba(34,197,94,.38), rgba(16,185,129,.22));
+  border-color: rgba(34,197,94,.40);
+}
+
+.goodos-sql-kpi-v89:nth-child(4) .goodos-sql-kpi-icon-v89 {
+  background: linear-gradient(135deg, rgba(236,72,153,.38), rgba(217,70,239,.22));
+  border-color: rgba(236,72,153,.40);
+}
+
+.goodos-sql-kpi-v89:nth-child(5) .goodos-sql-kpi-icon-v89 {
+  background: linear-gradient(135deg, rgba(245,158,11,.38), rgba(249,115,22,.22));
+  border-color: rgba(245,158,11,.40);
+}
+
+.goodos-sql-kpi-label-v89 {
+  color: rgba(148,163,184,.78);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  padding-right: 62px;
+}
+
+.goodos-sql-kpi-value-v89 {
+  color: #f8fafc;
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.04em;
+  padding-right: 62px;
+}
+
+.goodos-sql-kpi-copy-v89 {
+  color: rgba(203,213,225,.66);
+  font-size: 13px;
+  margin-top: 8px;
+  margin-bottom: 14px;
+}
+
+.goodos-sql-chart-v89 {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  height: 102px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,211,238,.10), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64));
+  border: 1px solid rgba(148,163,184,.12);
+  padding: 10px;
+}
+
+.goodos-sql-chart-v89 svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.goodos-sql-workspace-v89 {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.goodos-sql-panel-v89 {
+  border-radius: 22px;
+  border: 1px solid rgba(148,163,184,.14);
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.08), transparent 36%),
+    rgba(15,23,42,.56);
+  padding: 22px;
+  overflow: hidden;
+}
+
+.goodos-sql-panel-title-v89 {
+  color: #f8fafc;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.045em;
+  margin: 0 0 18px;
+}
+
+.goodos-sql-control-v89 {
+  width: 100%;
+  border: 1px solid rgba(148,163,184,.18);
+  background: rgba(2,6,23,.55);
+  color: #e2e8f0;
+  border-radius: 12px;
+  padding: 13px 14px;
+  outline: none;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.goodos-sql-list-v89 {
+  display: grid;
+  gap: 10px;
+  max-height: 660px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.goodos-sql-query-card-v89 {
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,.13);
+  background: rgba(2,6,23,.26);
+  padding: 13px;
+  cursor: pointer;
+}
+
+.goodos-sql-query-card-v89.is-active-v89 {
+  background: linear-gradient(90deg, rgba(79,70,229,.70), rgba(34,211,238,.24));
+  border-color: rgba(34,211,238,.45);
+}
+
+.goodos-sql-query-name-v89 {
+  color: #f8fafc;
+  font-weight: 950;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.goodos-sql-query-meta-v89 {
+  color: rgba(203,213,225,.68);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-sql-editor-grid-v89 {
+  display: grid;
+  grid-template-rows: auto auto minmax(260px, auto);
+  gap: 14px;
+}
+
+.goodos-sql-editor-top-v89 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.goodos-sql-editor-title-v89 {
+  color: #f8fafc;
+  font-size: 34px;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.goodos-sql-editor-actions-v89 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.goodos-sql-textarea-v89 {
+  width: 100%;
+  min-height: 260px;
+  resize: vertical;
+  border: 1px solid rgba(56,189,248,.18);
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.08), transparent 38%),
+    rgba(2,6,23,.80);
+  color: #dbeafe;
+  border-radius: 20px;
+  padding: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  line-height: 1.65;
+  outline: none;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+}
+
+.goodos-sql-result-wrap-v89 {
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(2,6,23,.28);
+  max-height: 520px;
+}
+
+.goodos-sql-table-v89 {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.goodos-sql-table-v89 th,
+.goodos-sql-table-v89 td {
+  border-bottom: 1px solid rgba(148,163,184,.10);
+  padding: 12px;
+  text-align: left;
+  color: #e2e8f0;
+  font-size: 13px;
+  vertical-align: top;
+  max-width: 360px;
+  overflow-wrap: anywhere;
+}
+
+.goodos-sql-table-v89 th {
+  color: rgba(203,213,225,.78);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  background: rgba(15,23,42,.92);
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.goodos-sql-status-v89 {
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.13);
+  background: rgba(15,23,42,.54);
+  color: rgba(203,213,225,.82);
+  padding: 13px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.goodos-sql-status-v89.is-error-v89 {
+  border-color: rgba(244,63,94,.28);
+  color: #fecdd3;
+  background: rgba(127,29,29,.20);
+}
+
+.goodos-sql-empty-v89 {
+  color: rgba(203,213,225,.66);
+  padding: 28px;
+  text-align: center;
+}
+
+.goodos-sql-run-list-v89 {
+  margin-top: 18px;
+}
+
+.goodos-sql-run-row-v89 {
+  display: grid;
+  grid-template-columns: 110px 90px minmax(0, 1fr) 120px;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(148,163,184,.10);
+  color: rgba(226,232,240,.84);
+  font-size: 13px;
+}
+
+.goodos-sql-badge-v89 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  background: rgba(34,197,94,.13);
+  color: #86efac;
+  border: 1px solid rgba(34,197,94,.24);
+}
+
+.goodos-sql-badge-v89.is-failed-v89 {
+  background: rgba(244,63,94,.12);
+  color: #fb7185;
+  border-color: rgba(244,63,94,.24);
+}
+
+@media (max-width: 1500px) {
+  .goodos-sql-kpis-v89 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .goodos-sql-workspace-v89,
+  .goodos-sql-hero-v89 {
+    grid-template-columns: 1fr;
+  }
+
+  .goodos-sql-actions-v89 {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 820px) {
+  .goodos-sql-kpis-v89 {
+    grid-template-columns: 1fr;
+  }
+
+  .goodos-sql-run-row-v89 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -20925,6 +21358,557 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   var observer = new MutationObserver(function () {
     if (!isRoute()) return;
     if (document.querySelector(".goodos-te-v88")) return;
+
+    clearTimeout(observerTimer);
+    observerTimer = setTimeout(boot, 120);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+  setTimeout(boot, 300);
+  setTimeout(boot, 1000);
+})();
+</script>
+
+
+<script id="goodos-sql-editor-upgrade-v89-js">
+(function () {
+  if (window.__goodosSqlEditorUpgradeV89) return;
+  window.__goodosSqlEditorUpgradeV89 = true;
+
+  var active = false;
+  var state = {
+    pageData: null,
+    savedQueries: [],
+    recentRuns: [],
+    templates: [],
+    selectedQueryId: "",
+    sql: "select table_name, table_type\nfrom information_schema.tables\nwhere table_schema = 'public'\norder by table_name\nlimit 50;",
+    results: [],
+    fields: [],
+    durationMs: 0,
+    rowCount: 0
+  };
+
+  function isRoute() {
+    return String(window.location.hash || "").toLowerCase() === "#sql-editor";
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function esc(value) {
+    return String(value == null ? "" : value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function compact(value) {
+    var n = Number(value || 0);
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(".0", "") + "M";
+    if (n >= 1000) return n.toLocaleString();
+    return String(n);
+  }
+
+  function setText(selector, value) {
+    var el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  }
+
+  function setStatus(value, isError) {
+    var el = document.querySelector("[data-sql-status-v89]");
+    if (!el) return;
+    el.textContent = value;
+    el.classList.toggle("is-error-v89", !!isError);
+  }
+
+  function api(path, options) {
+    return fetch("/api/admin/sql-editor" + path, Object.assign({
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      }
+    }, options || {})).then(function (res) {
+      return res.text().then(function (body) {
+        var json = null;
+        try { json = body ? JSON.parse(body) : null; } catch (err) { json = { raw: body }; }
+
+        if (!res.ok || !json || json.success === false) {
+          throw new Error((json && json.error) || ("Request failed: " + res.status));
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function chartSvg(kind, colorA, colorB, values) {
+    var id = "sql89" + Math.random().toString(16).slice(2);
+    var width = 320;
+    var height = 90;
+    var left = 28;
+    var top = 20;
+    var bottom = 78;
+    var max = Math.max.apply(null, values.concat([1]));
+
+    function x(i) {
+      return left + i * ((width - left - 8) / Math.max(values.length - 1, 1));
+    }
+
+    function y(v) {
+      return bottom - (v / max) * (bottom - top);
+    }
+
+    var pts = values.map(function (v, i) {
+      return [x(i), y(v)];
+    });
+
+    var path = pts.map(function (pt, i) {
+      return (i === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+
+    var last = pts[pts.length - 1];
+
+    if (kind === "bar") {
+      return '' +
+        '<svg viewBox="0 0 330 100" aria-hidden="true">' +
+          '<defs><linearGradient id="' + id + 'b" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient></defs>' +
+          '<text x="0" y="12" fill="rgba(203,213,225,.80)" font-size="9" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<line x1="28" y1="28" x2="322" y2="28" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+          '<line x1="28" y1="52" x2="322" y2="52" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+          '<line x1="28" y1="78" x2="322" y2="78" stroke="rgba(148,163,184,.15)"></line>' +
+          values.map(function (v, i) {
+            var bw = 12;
+            var bx = x(i) - bw / 2;
+            var by = y(v);
+            var bh = bottom - by;
+            return '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw + '" height="' + bh.toFixed(1) + '" rx="3" fill="url(#' + id + 'b)" opacity=".92"></rect>';
+          }).join("") +
+        '</svg>';
+    }
+
+    return '' +
+      '<svg viewBox="0 0 330 100" aria-hidden="true">' +
+        '<defs>' +
+          '<linearGradient id="' + id + 'l" x1="0" x2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient>' +
+          '<linearGradient id="' + id + 'f" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="' + colorB + '" stop-opacity=".28"></stop><stop offset="100%" stop-color="' + colorB + '" stop-opacity="0"></stop></linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="12" fill="rgba(203,213,225,.80)" font-size="9" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+        '<line x1="28" y1="28" x2="322" y2="28" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+        '<line x1="28" y1="52" x2="322" y2="52" stroke="rgba(148,163,184,.12)" stroke-dasharray="5 8"></line>' +
+        '<line x1="28" y1="78" x2="322" y2="78" stroke="rgba(148,163,184,.15)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 78 L28 78 Z" fill="url(#' + id + 'f)"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#' + id + 'l)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        pts.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === pts.length - 1 ? 4.4 : 2.6) + '" fill="' + colorA + '" stroke="rgba(255,255,255,.18)" stroke-width="1"></circle>';
+        }).join("") +
+      '</svg>';
+  }
+
+  function kpi(id, label, value, copy, colorA, colorB, values, kind) {
+    return '' +
+      '<div class="goodos-sql-kpi-v89" data-sql-kpi-card="' + id + '">' +
+        '<div class="goodos-sql-kpi-icon-v89"></div>' +
+        '<div class="goodos-sql-kpi-label-v89">' + esc(label) + '</div>' +
+        '<div class="goodos-sql-kpi-value-v89" data-sql-kpi-value="' + id + '">' + esc(value) + '</div>' +
+        '<div class="goodos-sql-kpi-copy-v89" data-sql-kpi-copy="' + id + '">' + esc(copy) + '</div>' +
+        '<div class="goodos-sql-chart-v89">' + chartSvg(kind || "line", colorA, colorB, values) + '</div>' +
+      '</div>';
+  }
+
+  function paint() {
+    getRoot().innerHTML = '' +
+      '<div class="goodos-sql-v89">' +
+        '<section class="goodos-sql-shell-v89">' +
+          '<div class="goodos-sql-hero-v89">' +
+            '<div>' +
+              '<div class="goodos-sql-eyebrow-v89">GOODOS CLOUD DATABASE</div>' +
+              '<h1 class="goodos-sql-title-v89">SQL Editor</h1>' +
+              '<p class="goodos-sql-copy-v89">Write SQL, save queries, organize shared, favorite, and private scripts, run queries against the backend database, and inspect results from one functional command workspace.</p>' +
+            '</div>' +
+            '<div class="goodos-sql-actions-v89">' +
+              '<button class="goodos-sql-btn-v89 is-run-v89" data-sql-run-v89>▶ Run Query</button>' +
+              '<button class="goodos-sql-btn-v89" data-sql-save-v89>Save Query</button>' +
+              '<button class="goodos-sql-btn-v89" data-sql-refresh-v89>Refresh</button>' +
+              '<button class="goodos-sql-btn-v89" data-sql-clear-v89>Clear</button>' +
+              '<button class="goodos-sql-btn-v89" data-sql-nav-v89="table-editor">Table Editor</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="goodos-sql-kpis-v89">' +
+            kpi("workspace", "Editor Workspace", "1", "SQL command editor and query tabs", "#a855f7", "#7c3aed", [3,4,5,7,8,10,12,11,13,15,14,16,18,17,19,21,22,24], "line") +
+            kpi("shared", "Shared Queries", "0", "Team-visible query folder", "#38bdf8", "#2563eb", [2,4,7,10,14,18,22,25,28,30,35,38,42,45,48,52,55,58], "bar") +
+            kpi("favorites", "Favorites", "0", "Pinned query shortcuts", "#22c55e", "#16a34a", [8,9,11,12,14,16,18,20,22,23,25,27,28,30,32,33,35,36], "line") +
+            kpi("private", "Private Queries", "0", "User-owned saved queries", "#ec4899", "#db2777", [6,7,7,8,10,10,12,13,14,13,15,16,18,19,21,22,23,25], "line") +
+            kpi("reference", "Reference", "5", "Templates, examples, and snippets", "#f59e0b", "#f97316", [1,3,5,7,9,10,12,14,16,18,20,24,28,32,36,40,44,48], "bar") +
+          '</div>' +
+
+          '<div class="goodos-sql-workspace-v89">' +
+            '<aside class="goodos-sql-panel-v89">' +
+              '<h2 class="goodos-sql-panel-title-v89">Query Library</h2>' +
+              '<select class="goodos-sql-control-v89" data-sql-folder-v89>' +
+                '<option value="all">All Queries</option>' +
+                '<option value="shared">Shared</option>' +
+                '<option value="favorite">Favorites</option>' +
+                '<option value="private">Private</option>' +
+                '<option value="templates">Templates</option>' +
+              '</select>' +
+              '<input class="goodos-sql-control-v89" data-sql-filter-v89 placeholder="Search saved queries..." />' +
+              '<div class="goodos-sql-list-v89" data-sql-query-list-v89><div class="goodos-sql-empty-v89">Loading queries...</div></div>' +
+            '</aside>' +
+
+            '<section class="goodos-sql-panel-v89">' +
+              '<div class="goodos-sql-editor-grid-v89">' +
+                '<div class="goodos-sql-editor-top-v89">' +
+                  '<div>' +
+                    '<div class="goodos-sql-editor-title-v89">SQL Workspace</div>' +
+                    '<div style="color:rgba(203,213,225,.68);font-size:13px;margin-top:6px;" data-sql-current-v89>Unsaved query</div>' +
+                  '</div>' +
+                  '<div class="goodos-sql-editor-actions-v89">' +
+                    '<button class="goodos-sql-btn-v89 is-run-v89" data-sql-run-v89>Run</button>' +
+                    '<button class="goodos-sql-btn-v89" data-sql-save-v89>Save</button>' +
+                  '</div>' +
+                '</div>' +
+                '<textarea class="goodos-sql-textarea-v89" data-sql-textarea-v89 spellcheck="false"></textarea>' +
+                '<div>' +
+                  '<h2 class="goodos-sql-panel-title-v89">Results</h2>' +
+                  '<div class="goodos-sql-result-wrap-v89" data-sql-results-v89><div class="goodos-sql-empty-v89">Run a query to see results.</div></div>' +
+                  '<div class="goodos-sql-status-v89" data-sql-status-v89>Ready.</div>' +
+                '</div>' +
+                '<div class="goodos-sql-run-list-v89">' +
+                  '<h2 class="goodos-sql-panel-title-v89">Recent Runs</h2>' +
+                  '<div data-sql-runs-v89><div class="goodos-sql-empty-v89">No runs loaded yet.</div></div>' +
+                '</div>' +
+              '</div>' +
+            '</section>' +
+          '</div>' +
+        '</section>' +
+      '</div>';
+
+    bind();
+    document.querySelector("[data-sql-textarea-v89]").value = state.sql;
+    loadPageData();
+  }
+
+  function bind() {
+    document.querySelectorAll("[data-sql-run-v89]").forEach(function (btn) {
+      btn.addEventListener("click", runQuery);
+    });
+
+    document.querySelectorAll("[data-sql-save-v89]").forEach(function (btn) {
+      btn.addEventListener("click", saveQuery);
+    });
+
+    document.querySelector("[data-sql-refresh-v89]").addEventListener("click", loadPageData);
+
+    document.querySelector("[data-sql-clear-v89]").addEventListener("click", function () {
+      state.selectedQueryId = "";
+      state.sql = "";
+      document.querySelector("[data-sql-textarea-v89]").value = "";
+      setText("[data-sql-current-v89]", "Unsaved query");
+      renderQueryList();
+      renderResults([], []);
+      setStatus("Editor cleared.");
+    });
+
+    document.querySelector("[data-sql-folder-v89]").addEventListener("change", renderQueryList);
+    document.querySelector("[data-sql-filter-v89]").addEventListener("input", renderQueryList);
+
+    document.querySelector("[data-sql-textarea-v89]").addEventListener("keydown", function (event) {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        runQuery();
+      }
+    });
+
+    document.querySelectorAll("[data-sql-nav-v89]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        window.location.hash = "#" + btn.getAttribute("data-sql-nav-v89");
+      });
+    });
+  }
+
+  function updateKpis(stats) {
+    stats = stats || {};
+    setText('[data-sql-kpi-value="workspace"]', "1");
+    setText('[data-sql-kpi-value="shared"]', compact(stats.shared_queries || 0));
+    setText('[data-sql-kpi-value="favorites"]', compact(stats.favorites || 0));
+    setText('[data-sql-kpi-value="private"]', compact(stats.private_queries || 0));
+    setText('[data-sql-kpi-value="reference"]', compact((state.templates || []).length || 5));
+  }
+
+  function allLibraryItems() {
+    var saved = (state.savedQueries || []).map(function (q) {
+      return Object.assign({}, q, { type: "saved" });
+    });
+
+    var templates = (state.templates || []).map(function (t, i) {
+      return {
+        id: "template_" + i,
+        name: t.name,
+        folder: "templates",
+        sql_text: t.sql,
+        is_favorite: false,
+        run_count: 0,
+        type: "template"
+      };
+    });
+
+    return saved.concat(templates);
+  }
+
+  function renderQueryList() {
+    var list = document.querySelector("[data-sql-query-list-v89]");
+    if (!list) return;
+
+    var folder = document.querySelector("[data-sql-folder-v89]").value || "all";
+    var filter = String(document.querySelector("[data-sql-filter-v89]").value || "").toLowerCase();
+
+    var items = allLibraryItems().filter(function (item) {
+      var matchesFolder =
+        folder === "all" ||
+        item.folder === folder ||
+        (folder === "favorite" && item.is_favorite === true);
+
+      var matchesText =
+        !filter ||
+        String(item.name || "").toLowerCase().includes(filter) ||
+        String(item.sql_text || "").toLowerCase().includes(filter);
+
+      return matchesFolder && matchesText;
+    });
+
+    if (!items.length) {
+      list.innerHTML = '<div class="goodos-sql-empty-v89">No queries found.</div>';
+      return;
+    }
+
+    list.innerHTML = items.map(function (item) {
+      var activeClass = item.id === state.selectedQueryId ? " is-active-v89" : "";
+
+      return '' +
+        '<div class="goodos-sql-query-card-v89' + activeClass + '" data-sql-load-query-v89="' + esc(item.id) + '">' +
+          '<div class="goodos-sql-query-name-v89">' + esc(item.name) + '</div>' +
+          '<div class="goodos-sql-query-meta-v89">' +
+            esc(item.folder || "private") +
+            ' • runs ' + esc(item.run_count || 0) +
+            (item.is_favorite ? ' • favorite' : '') +
+          '</div>' +
+          '<div class="goodos-sql-query-meta-v89" style="margin-top:7px;">' + esc(String(item.sql_text || "").replace(/\s+/g, " ").slice(0, 120)) + '</div>' +
+        '</div>';
+    }).join("");
+
+    list.querySelectorAll("[data-sql-load-query-v89]").forEach(function (item) {
+      item.addEventListener("click", function () {
+        var id = item.getAttribute("data-sql-load-query-v89");
+        var query = allLibraryItems().find(function (q) { return q.id === id; });
+        if (!query) return;
+
+        state.selectedQueryId = query.type === "saved" ? query.id : "";
+        state.sql = query.sql_text || "";
+        document.querySelector("[data-sql-textarea-v89]").value = state.sql;
+        setText("[data-sql-current-v89]", query.name || "Loaded query");
+        renderQueryList();
+        setStatus("Loaded query: " + (query.name || "Untitled"));
+      });
+    });
+  }
+
+  function renderRuns() {
+    var box = document.querySelector("[data-sql-runs-v89]");
+    if (!box) return;
+
+    if (!state.recentRuns.length) {
+      box.innerHTML = '<div class="goodos-sql-empty-v89">No query runs yet.</div>';
+      return;
+    }
+
+    box.innerHTML = state.recentRuns.slice(0, 12).map(function (run) {
+      var failed = run.status !== "success";
+      return '' +
+        '<div class="goodos-sql-run-row-v89">' +
+          '<span class="goodos-sql-badge-v89' + (failed ? " is-failed-v89" : "") + '">' + esc(run.status) + '</span>' +
+          '<span>' + esc(run.duration_ms || 0) + 'ms</span>' +
+          '<span>' + esc(String(run.sql_text || "").replace(/\s+/g, " ").slice(0, 100)) + '</span>' +
+          '<span>' + esc(String(run.created_at || "").replace("T", " ").slice(0, 16)) + '</span>' +
+        '</div>';
+    }).join("");
+  }
+
+  function renderResults(fields, rows) {
+    var wrap = document.querySelector("[data-sql-results-v89]");
+    if (!wrap) return;
+
+    fields = fields || [];
+    rows = rows || [];
+
+    if (!fields.length) {
+      wrap.innerHTML = '<div class="goodos-sql-empty-v89">Query completed. No result rows returned.</div>';
+      return;
+    }
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="goodos-sql-empty-v89">No rows returned.</div>';
+      return;
+    }
+
+    wrap.innerHTML = '' +
+      '<table class="goodos-sql-table-v89">' +
+        '<thead><tr>' +
+          fields.map(function (field) { return '<th>' + esc(field) + '</th>'; }).join("") +
+        '</tr></thead>' +
+        '<tbody>' +
+          rows.map(function (row) {
+            return '<tr>' +
+              fields.map(function (field) {
+                var value = row[field];
+                if (value && typeof value === "object") value = JSON.stringify(value);
+                return '<td>' + esc(value == null ? "" : value) + '</td>';
+              }).join("") +
+            '</tr>';
+          }).join("") +
+        '</tbody>' +
+      '</table>';
+  }
+
+  async function loadPageData() {
+    if (!isRoute()) return;
+
+    try {
+      setStatus("Loading SQL editor...");
+      var data = await api("/page-data");
+      state.pageData = data;
+      state.savedQueries = data.savedQueries || [];
+      state.recentRuns = data.recentRuns || [];
+      state.templates = data.templates || [];
+
+      updateKpis(data.stats || {});
+      renderQueryList();
+      renderRuns();
+      setStatus("SQL editor ready.");
+    } catch (err) {
+      setStatus("Load failed: " + err.message, true);
+    }
+  }
+
+  async function runQuery() {
+    var textarea = document.querySelector("[data-sql-textarea-v89]");
+    var sql = textarea ? textarea.value.trim() : "";
+
+    if (!sql) {
+      setStatus("Write SQL first.", true);
+      return;
+    }
+
+    try {
+      setStatus("Running SQL...");
+      var data = await api("/run", {
+        method: "POST",
+        body: JSON.stringify({
+          sql: sql,
+          savedQueryId: state.selectedQueryId || null,
+          roleName: "admin"
+        })
+      });
+
+      state.sql = sql;
+      state.results = data.rows || [];
+      state.fields = data.fields || [];
+      state.durationMs = data.durationMs || 0;
+      state.rowCount = data.rowCount || state.results.length;
+
+      renderResults(state.fields, state.results);
+      setStatus("Query completed in " + state.durationMs + "ms. Returned " + state.results.length + " rows.");
+      await loadPageData();
+    } catch (err) {
+      renderResults([], []);
+      setStatus("Query failed: " + err.message, true);
+      await loadPageData();
+    }
+  }
+
+  async function saveQuery() {
+    var textarea = document.querySelector("[data-sql-textarea-v89]");
+    var sql = textarea ? textarea.value.trim() : "";
+
+    if (!sql) {
+      setStatus("Write SQL before saving.", true);
+      return;
+    }
+
+    var defaultName = state.selectedQueryId ? "" : "New SQL Query";
+    var name = prompt("Query name:", defaultName);
+    if (!name) return;
+
+    var folder = prompt("Folder: shared, private, or favorite", "private") || "private";
+    folder = folder.trim().toLowerCase();
+    var favorite = folder === "favorite";
+
+    if (favorite) folder = "private";
+    if (!["shared", "private"].includes(folder)) folder = "private";
+
+    try {
+      setStatus("Saving query...");
+      var data = await api("/saved-queries", {
+        method: "POST",
+        body: JSON.stringify({
+          id: state.selectedQueryId || undefined,
+          name: name.trim(),
+          folder: folder,
+          sqlText: sql,
+          isFavorite: favorite
+        })
+      });
+
+      state.selectedQueryId = data.query.id;
+      setText("[data-sql-current-v89]", data.query.name);
+      await loadPageData();
+      setStatus("Saved query: " + data.query.name);
+    } catch (err) {
+      setStatus("Save failed: " + err.message, true);
+    }
+  }
+
+  function boot() {
+    if (!isRoute()) {
+      active = false;
+      return;
+    }
+
+    if (!active || !document.querySelector(".goodos-sql-v89")) {
+      active = true;
+      paint();
+    }
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(boot, 80);
+    setTimeout(boot, 400);
+  });
+
+  window.addEventListener("pageshow", boot);
+
+  var observerTimer = null;
+  var observer = new MutationObserver(function () {
+    if (!isRoute()) return;
+    if (document.querySelector(".goodos-sql-v89")) return;
 
     clearTimeout(observerTimer);
     observerTimer = setTimeout(boot, 120);
