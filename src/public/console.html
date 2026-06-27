@@ -1579,64 +1579,65 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-help-v41 {
 }
 </style>
 
-<style id="goodos-sidebar-active-noblink-v47">
-/* V47 MENU ACTIVE LOGIC ONLY */
-/* Stops blinking by using one data attribute only: data-goodos-active-tab="true" */
+<style id="goodos-sidebar-active-clean-controller-v48">
+/* V48: single source of truth for sidebar active highlight */
 
-body.goodos-menu-v47-ready .goodos-menu-item-v47 {
+body.goodos-menu-v48-ready .goodos-menu-v48-row {
   position: relative !important;
   outline: none !important;
 }
 
-/* Reset every menu row unless V47 marks it active */
-body.goodos-menu-v47-ready .goodos-menu-item-v47:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47.active:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47.goodos-sidebar-active-v41:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47.goodos-v43-is-active:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[aria-current="page"]:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-active="true"]:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v42="true"]:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v43="true"]:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v44="true"]:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v45="true"]:not([data-goodos-active-tab="true"]),
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-menu="true"]:not([data-goodos-active-tab="true"]) {
+/* Force every managed sidebar row inactive unless V48 marks it active */
+body.goodos-menu-v48-ready .goodos-menu-v48-row:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row.active:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-sidebar-active-v41:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-v43-is-active:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[aria-current="page"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-active="true"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-tab="true"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-menu="true"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v42="true"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v43="true"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v44="true"]:not([data-goodos-active-v48="true"]),
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v45="true"]:not([data-goodos-active-v48="true"]) {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
   color: #dce8f7 !important;
 }
 
-/* Kill all inactive dots */
-body.goodos-menu-v47-ready .goodos-menu-item-v47:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47.active:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47.goodos-sidebar-active-v41:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47.goodos-v43-is-active:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[aria-current="page"]:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-active="true"]:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v42="true"]:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v43="true"]:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v44="true"]:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-v45="true"]:not([data-goodos-active-tab="true"])::after,
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-menu="true"]:not([data-goodos-active-tab="true"])::after {
+/* Remove old inactive dots */
+body.goodos-menu-v48-ready .goodos-menu-v48-row:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row.active:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-sidebar-active-v41:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row.goodos-v43-is-active:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[aria-current="page"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-active="true"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-tab="true"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-menu="true"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v42="true"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v43="true"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v44="true"]:not([data-goodos-active-v48="true"])::after,
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v45="true"]:not([data-goodos-active-v48="true"])::after {
   content: none !important;
   display: none !important;
   opacity: 0 !important;
 }
 
 /* Active tab */
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-tab="true"] {
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v48="true"] {
   color: #ffffff !important;
   background:
-    radial-gradient(circle at 100% 50%, rgba(54,220,255,.36), transparent 34%),
-    linear-gradient(135deg, rgba(79,140,255,.42), rgba(139,92,246,.34) 55%, rgba(34,211,238,.28)) !important;
-  border-color: rgba(95,213,255,.42) !important;
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.38), transparent 34%),
+    linear-gradient(135deg, rgba(79,140,255,.43), rgba(139,92,246,.35) 55%, rgba(34,211,238,.29)) !important;
+  border-color: rgba(95,213,255,.44) !important;
   box-shadow:
     0 14px 34px rgba(79,140,255,.18),
     inset 0 1px 0 rgba(255,255,255,.10) !important;
 }
 
-/* Active dot */
-body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-tab="true"]::after {
+/* Active right dot */
+body.goodos-menu-v48-ready .goodos-menu-v48-row[data-goodos-active-v48="true"]::after {
   content: "" !important;
   display: block !important;
   opacity: 1 !important;
@@ -1651,13 +1652,12 @@ body.goodos-menu-v47-ready .goodos-menu-item-v47[data-goodos-active-tab="true"]:
   box-shadow: 0 0 16px rgba(103,245,255,.78) !important;
 }
 
-/* Stop the browser focus ring from looking like another selected tab */
-body.goodos-menu-v47-ready .goodos-menu-item-v47:focus,
-body.goodos-menu-v47-ready .goodos-menu-item-v47:focus-visible,
-body.goodos-menu-v47-ready .goodos-menu-item-v47 *:focus,
-body.goodos-menu-v47-ready .goodos-menu-item-v47 *:focus-visible {
+/* Prevent focus outline from looking like a second active tab */
+body.goodos-menu-v48-ready .goodos-menu-v48-row:focus,
+body.goodos-menu-v48-ready .goodos-menu-v48-row:focus-visible,
+body.goodos-menu-v48-ready .goodos-menu-v48-row *:focus,
+body.goodos-menu-v48-ready .goodos-menu-v48-row *:focus-visible {
   outline: none !important;
-  box-shadow: none !important;
 }
 </style>
 
@@ -11139,240 +11139,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-sidebar-premium-v41-js">
+<script id="goodos-sidebar-active-clean-controller-v48-js">
 (function () {
-  if (window.__goodosSidebarPremiumV41) return;
-  window.__goodosSidebarPremiumV41 = true;
-
-  var ICONS = {
-    "overview": "▦",
-    "auth": "◈",
-    "projects": "▱",
-    "database": "▤",
-    "storage": "▰",
-    "api keys": "⚿",
-    "webhooks": "⌘",
-    "realtime": "◌",
-    "functions": "⌁",
-    "logs": "☰",
-    "alerts": "△",
-    "backups": "⇣",
-    "settings": "⚙"
-  };
-
-  var LABELS = Object.keys(ICONS);
-
-  function cleanText(el) {
-    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
-  }
-
-  function getSidebar() {
-    var candidates = Array.prototype.slice.call(document.querySelectorAll("aside, nav, [class*='side'], [class*='Sidebar'], [class*='sidebar']"));
-
-    var best = candidates.find(function (el) {
-      var text = cleanText(el).toLowerCase();
-      return text.indexOf("goodos cloud") !== -1 &&
-        text.indexOf("overview") !== -1 &&
-        text.indexOf("api keys") !== -1 &&
-        text.indexOf("settings") !== -1;
-    });
-
-    if (best) return best;
-
-    var nodes = Array.prototype.slice.call(document.querySelectorAll("body *"));
-    var brand = nodes.find(function (el) {
-      return cleanText(el).toLowerCase() === "goodos cloud";
-    });
-
-    if (!brand) return null;
-
-    var node = brand;
-    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
-      var text = cleanText(node).toLowerCase();
-      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
-
-      if (
-        text.indexOf("overview") !== -1 &&
-        text.indexOf("settings") !== -1 &&
-        rect.width > 140 &&
-        rect.width < 420
-      ) {
-        return node;
-      }
-
-      node = node.parentElement;
-    }
-
-    return null;
-  }
-
-  function normalizeLabel(text) {
-    return String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function isMenuItem(el) {
-    var t = normalizeLabel(cleanText(el));
-    return LABELS.indexOf(t) !== -1;
-  }
-
-  function findMenuElement(sidebar, label) {
-    var all = Array.prototype.slice.call(sidebar.querySelectorAll("button,a,[role='button'],div,span"));
-    label = normalizeLabel(label);
-
-    var direct = all.find(function (el) {
-      if (el.closest(".goodos-sidebar-brand-v41")) return false;
-      if (el.closest(".goodos-sidebar-section-v41")) return false;
-      if (el.children.length > 4) return false;
-      return normalizeLabel(cleanText(el)) === label;
-    });
-
-    if (direct) {
-      var clickable = direct.closest("button,a,[role='button']");
-      return clickable || direct;
-    }
-
-    return null;
-  }
-
-  function applyBrand(sidebar) {
-    var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("*"));
-    var title = nodes.find(function (el) {
-      return cleanText(el).toLowerCase() === "goodos cloud";
-    });
-
-    if (!title) return;
-
-    var brand = title;
-    for (var i = 0; brand && brand.parentElement && i < 5; i += 1) {
-      var text = cleanText(brand.parentElement).toLowerCase();
-      if (text.indexOf("goodos cloud") !== -1 && text.indexOf("backend hosting console") !== -1) {
-        brand = brand.parentElement;
-      } else {
-        break;
-      }
-    }
-
-    brand.classList.add("goodos-sidebar-brand-v41");
-
-    var subtitle = nodes.find(function (el) {
-      return cleanText(el).toLowerCase() === "backend hosting console";
-    });
-
-    title.classList.add("goodos-sidebar-brand-title-v41");
-    if (subtitle) subtitle.classList.add("goodos-sidebar-brand-subtitle-v41");
-
-    var possibleIcon = Array.prototype.slice.call(brand.children).find(function (el) {
-      var txt = cleanText(el).toLowerCase();
-      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
-      return txt === "g" || (rect.width <= 80 && rect.height <= 80 && txt.length <= 2);
-    });
-
-    if (possibleIcon) {
-      possibleIcon.classList.add("goodos-sidebar-brand-icon-v41");
-    }
-  }
-
-  function applySections(sidebar) {
-    var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("*"));
-
-    ["CORE", "BUILD", "OPERATE"].forEach(function (label) {
-      var node = nodes.find(function (el) {
-        return cleanText(el).toUpperCase() === label;
-      });
-
-      if (node) {
-        node.classList.add("goodos-sidebar-section-v41");
-      }
-    });
-  }
-
-  function currentViewName() {
-    var hash = String(window.location.hash || "").replace("#", "").trim().toLowerCase();
-    if (hash === "dashboard") return "overview";
-    if (hash) return hash.replace(/-/g, " ");
-
-    var path = String(window.location.pathname || "").toLowerCase();
-    if (path.indexOf("dashboard") !== -1) return "overview";
-    return "overview";
-  }
-
-  function applyMenuItems(sidebar) {
-    LABELS.forEach(function (label) {
-      var item = findMenuElement(sidebar, label);
-      if (!item) return;
-
-      item.classList.add("goodos-sidebar-nav-item-v41");
-      item.setAttribute("data-goodos-nav-label", label);
-      item.setAttribute("data-goodos-icon", ICONS[label]);
-
-      var current = currentViewName();
-      var isActive = label === current || (current === "overview" && label === "overview");
-
-      if (isActive || item.classList.contains("active") || item.getAttribute("aria-current") === "page") {
-        item.classList.add("goodos-sidebar-active-v41");
-      } else {
-        item.classList.remove("goodos-sidebar-active-v41");
-      }
-    });
-  }
-
-  function applyHelpCard(sidebar) {
-    var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("*"));
-    var help = nodes.find(function (el) {
-      var text = cleanText(el).toLowerCase();
-      return text.indexOf("need help") !== -1 || text.indexOf("documentation") !== -1;
-    });
-
-    if (!help) return;
-
-    var node = help;
-    for (var i = 0; node && node.parentElement && i < 5; i += 1) {
-      var t = cleanText(node.parentElement).toLowerCase();
-      if (t.indexOf("need help") !== -1 || t.indexOf("documentation") !== -1) {
-        node = node.parentElement;
-      } else {
-        break;
-      }
-    }
-
-    node.classList.add("goodos-sidebar-help-v41");
-  }
-
-  function runSidebarUpgrade() {
-    document.body.classList.add("goodos-sidebar-premium-v41");
-
-    var sidebar = getSidebar();
-    if (!sidebar) return;
-
-    sidebar.classList.add("goodos-sidebar-v41");
-
-    applyBrand(sidebar);
-    applySections(sidebar);
-    applyMenuItems(sidebar);
-    applyHelpCard(sidebar);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", runSidebarUpgrade);
-  } else {
-    runSidebarUpgrade();
-  }
-
-  window.addEventListener("hashchange", function () {
-    setTimeout(runSidebarUpgrade, 120);
-  });
-
-  setTimeout(runSidebarUpgrade, 500);
-  setTimeout(runSidebarUpgrade, 1400);
-  setTimeout(runSidebarUpgrade, 2600);
-})();
-</script>
-
-<script id="goodos-sidebar-active-noblink-v47-js">
-(function () {
-  if (window.__goodosSidebarActiveNoBlinkV47) return;
-  window.__goodosSidebarActiveNoBlinkV47 = true;
+  if (window.__goodosSidebarActiveCleanControllerV48) return;
+  window.__goodosSidebarActiveCleanControllerV48 = true;
 
   var MENU = [
     { key: "overview", label: "overview", hashes: ["", "dashboard", "overview"], titles: ["backend console", "dashboard", "overview"] },
@@ -11390,15 +11160,19 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     { key: "settings", label: "settings", hashes: ["settings"], titles: ["settings"] }
   ];
 
-  var lockedKey = "";
-  var lockUntil = 0;
+  var activeKey = "";
+  var clickLockUntil = 0;
 
   function cleanText(el) {
     return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
   }
 
-  function norm(v) {
-    return String(v || "").replace(/\s+/g, " ").trim().toLowerCase();
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function sameLabel(a, b) {
+    return norm(a).replace(/\s+/g, "") === norm(b).replace(/\s+/g, "");
   }
 
   function getHash() {
@@ -11418,79 +11192,24 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     );
 
     return candidates.find(function (el) {
-      var t = norm(cleanText(el));
-      return t.indexOf("goodos cloud") !== -1 &&
-        t.indexOf("overview") !== -1 &&
-        t.indexOf("settings") !== -1;
+      var text = norm(cleanText(el));
+      return text.indexOf("goodos cloud") !== -1 &&
+        text.indexOf("overview") !== -1 &&
+        text.indexOf("settings") !== -1;
     }) || document.querySelector(".goodos-sidebar-v41") || null;
   }
 
-  function labelMatches(text, label) {
-    text = norm(text);
-    label = norm(label);
-    return text === label || text.replace(/\s+/g, "") === label.replace(/\s+/g, "");
-  }
-
-  function findLabelNode(side, label) {
-    var nodes = Array.prototype.slice.call(
-      side.querySelectorAll("button,a,[role='button'],div,span")
-    );
-
-    return nodes.find(function (el) {
-      if (el.closest(".goodos-sidebar-brand-v41")) return false;
-      if (el.closest(".goodos-sidebar-section-v41")) return false;
-
-      var t = norm(cleanText(el));
-      return labelMatches(t, label);
-    }) || null;
-  }
-
-  function climbToRow(node, side) {
-    if (!node || !side) return null;
-
-    var row = node.closest("button,a,[role='button']");
-    if (row) return row;
-
-    var current = node;
-    var best = node;
-    var sideRect = side.getBoundingClientRect ? side.getBoundingClientRect() : { width: 320 };
-
-    for (var i = 0; current && current !== side && current !== document.body && i < 8; i += 1) {
-      var rect = current.getBoundingClientRect ? current.getBoundingClientRect() : { width: 0, height: 0 };
-      var t = norm(cleanText(current));
-
-      if (
-        t &&
-        rect.width >= 120 &&
-        rect.width <= sideRect.width + 40 &&
-        rect.height >= 28 &&
-        rect.height <= 95
-      ) {
-        best = current;
-      }
-
-      current = current.parentElement;
-    }
-
-    return best;
-  }
-
-  function findRow(side, item) {
-    var labelNode = findLabelNode(side, item.label);
-    return labelNode ? climbToRow(labelNode, side) : null;
-  }
-
-  function keyFromHash() {
-    var h = getHash();
+  function menuFromHash() {
+    var hash = getHash();
 
     for (var i = 0; i < MENU.length; i += 1) {
-      if (MENU[i].hashes.indexOf(h) !== -1) return MENU[i].key;
+      if (MENU[i].hashes.indexOf(hash) !== -1) return MENU[i];
     }
 
-    return "";
+    return null;
   }
 
-  function keyFromTitle() {
+  function menuFromTitle() {
     var root = getRoot();
     var nodes = Array.prototype.slice.call(
       root.querySelectorAll("h1,h2,.page-title,.hero-title,[class*='title'],[class*='Title']")
@@ -11499,8 +11218,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var titles = nodes.filter(function (el) {
       if (el.closest("aside,nav,header")) return false;
 
-      var t = norm(cleanText(el));
-      if (!t || t.length > 90) return false;
+      var text = norm(cleanText(el));
+      if (!text || text.length > 90) return false;
 
       var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
       return rect.width > 50 && rect.height > 14;
@@ -11511,25 +11230,25 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     for (var i = 0; i < MENU.length; i += 1) {
       var item = MENU[i];
 
-      for (var a = 0; a < titles.length; a += 1) {
-        var title = titles[a];
+      for (var t = 0; t < titles.length; t += 1) {
+        var title = titles[t];
 
-        for (var b = 0; b < item.titles.length; b += 1) {
-          var allowed = item.titles[b];
+        for (var a = 0; a < item.titles.length; a += 1) {
+          var allowed = item.titles[a];
 
           if (title === allowed || title.indexOf(allowed + " ") === 0) {
-            return item.key;
+            return item;
           }
         }
       }
     }
 
-    return "";
+    return null;
   }
 
   function getStoredKey() {
     try {
-      return norm(sessionStorage.getItem("goodos-sidebar-key-v47") || "");
+      return norm(sessionStorage.getItem("goodos-sidebar-active-key-v48") || "");
     } catch (e) {
       return "";
     }
@@ -11537,75 +11256,132 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function setStoredKey(key) {
     try {
-      sessionStorage.setItem("goodos-sidebar-key-v47", key);
+      sessionStorage.setItem("goodos-sidebar-active-key-v48", key);
     } catch (e) {}
   }
 
-  function currentKey() {
-    if (lockedKey && Date.now() < lockUntil) return lockedKey;
-    return keyFromHash() || keyFromTitle() || getStoredKey() || "overview";
+  function resolveActiveKey() {
+    if (activeKey && Date.now() < clickLockUntil) return activeKey;
+
+    var fromHash = menuFromHash();
+    if (fromHash) return fromHash.key;
+
+    var fromTitle = menuFromTitle();
+    if (fromTitle) return fromTitle.key;
+
+    return getStoredKey() || "overview";
   }
 
-  function clearState(side) {
-    var rows = Array.prototype.slice.call(
-      side.querySelectorAll(".goodos-menu-item-v47,.goodos-sidebar-nav-item-v41,button,a,[role='button']")
+  function findLabel(sidebar, label) {
+    var nodes = Array.prototype.slice.call(
+      sidebar.querySelectorAll("button,a,[role='button'],div,span")
     );
 
-    rows.forEach(function (el) {
-      el.classList.remove("active");
-      el.classList.remove("goodos-sidebar-active-v41");
-      el.classList.remove("goodos-v43-is-active");
+    return nodes.find(function (el) {
+      if (el.closest(".goodos-sidebar-brand-v41")) return false;
+      if (el.closest(".goodos-sidebar-section-v41")) return false;
 
-      el.removeAttribute("aria-current");
-      el.removeAttribute("data-active");
-      el.removeAttribute("data-goodos-active-v42");
-      el.removeAttribute("data-goodos-active-v43");
-      el.removeAttribute("data-goodos-active-v44");
-      el.removeAttribute("data-goodos-active-v45");
-      el.removeAttribute("data-goodos-active-menu");
+      var text = norm(cleanText(el));
+      return sameLabel(text, label);
+    }) || null;
+  }
 
-      if (el.classList.contains("goodos-menu-item-v47") || el.classList.contains("goodos-sidebar-nav-item-v41")) {
-        el.setAttribute("data-goodos-active-tab", "false");
+  function rowForLabelNode(node, sidebar) {
+    if (!node || !sidebar) return null;
+
+    var clickable = node.closest("button,a,[role='button']");
+    if (clickable && sidebar.contains(clickable)) return clickable;
+
+    var current = node;
+    var best = node;
+    var sidebarWidth = sidebar.getBoundingClientRect ? sidebar.getBoundingClientRect().width : 320;
+
+    for (var i = 0; current && current !== sidebar && current !== document.body && i < 8; i += 1) {
+      var rect = current.getBoundingClientRect ? current.getBoundingClientRect() : { width: 0, height: 0 };
+      var text = norm(cleanText(current));
+
+      if (
+        text &&
+        rect.width >= 120 &&
+        rect.width <= sidebarWidth + 40 &&
+        rect.height >= 28 &&
+        rect.height <= 96
+      ) {
+        best = current;
       }
+
+      current = current.parentElement;
+    }
+
+    return best;
+  }
+
+  function getRows(sidebar) {
+    return MENU.map(function (item) {
+      var labelNode = findLabel(sidebar, item.label);
+      var row = rowForLabelNode(labelNode, sidebar);
+
+      return {
+        item: item,
+        row: row
+      };
+    }).filter(function (entry) {
+      return !!entry.row;
     });
   }
 
-  function applyActive(forcedKey) {
-    document.body.classList.add("goodos-menu-v47-ready");
+  function resetRow(row) {
+    row.classList.remove("active");
+    row.classList.remove("goodos-sidebar-active-v41");
+    row.classList.remove("goodos-v43-is-active");
 
-    var side = getSidebar();
-    if (!side) return;
+    row.removeAttribute("aria-current");
+    row.removeAttribute("data-active");
+    row.removeAttribute("data-goodos-active-tab");
+    row.removeAttribute("data-goodos-active-menu");
+    row.removeAttribute("data-goodos-active-v42");
+    row.removeAttribute("data-goodos-active-v43");
+    row.removeAttribute("data-goodos-active-v44");
+    row.removeAttribute("data-goodos-active-v45");
 
-    var activeKey = forcedKey || currentKey();
+    row.setAttribute("data-goodos-active-v48", "false");
+  }
 
-    clearState(side);
+  function applyActive(forceKey) {
+    document.body.classList.add("goodos-menu-v48-ready");
 
-    MENU.forEach(function (item) {
-      var row = findRow(side, item);
-      if (!row) return;
+    var sidebar = getSidebar();
+    if (!sidebar) return;
 
-      row.classList.add("goodos-menu-item-v47");
+    var key = forceKey || resolveActiveKey();
+    var rows = getRows(sidebar);
+
+    rows.forEach(function (entry) {
+      var row = entry.row;
+      row.classList.add("goodos-menu-v48-row");
       row.classList.add("goodos-sidebar-nav-item-v41");
-      row.setAttribute("data-goodos-menu-key", item.key);
+      row.setAttribute("data-goodos-menu-key-v48", entry.item.key);
+      resetRow(row);
+    });
 
-      if (item.key === activeKey) {
-        row.setAttribute("data-goodos-active-tab", "true");
-        row.classList.add("goodos-sidebar-active-v41");
-        row.setAttribute("aria-current", "page");
-      } else {
-        row.setAttribute("data-goodos-active-tab", "false");
-      }
+    rows.forEach(function (entry) {
+      if (entry.item.key !== key) return;
+
+      var row = entry.row;
+      row.setAttribute("data-goodos-active-v48", "true");
+      row.classList.add("goodos-sidebar-active-v41");
+      row.setAttribute("aria-current", "page");
     });
   }
 
-  function clickedKey(target, side) {
+  function keyFromClick(target, sidebar) {
     var node = target;
 
-    for (var depth = 0; node && node !== side && node !== document.body && depth < 10; depth += 1) {
-      var t = norm(cleanText(node));
+    for (var depth = 0; node && node !== sidebar && node !== document.body && depth < 10; depth += 1) {
+      var text = norm(cleanText(node));
 
       for (var i = 0; i < MENU.length; i += 1) {
-        if (labelMatches(t, MENU[i].label)) return MENU[i].key;
+        if (sameLabel(text, MENU[i].label)) return MENU[i].key;
       }
 
       node = node.parentElement;
@@ -11614,33 +11390,35 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return "";
   }
 
-  function attachClicks() {
-    var side = getSidebar();
-    if (!side || side.__goodosV47ClickAttached) return;
+  function attachClick() {
+    var sidebar = getSidebar();
+    if (!sidebar || sidebar.__goodosV48ClickAttached) return;
 
-    side.__goodosV47ClickAttached = true;
+    sidebar.__goodosV48ClickAttached = true;
 
-    side.addEventListener("click", function (event) {
-      var key = clickedKey(event.target, side);
+    sidebar.addEventListener("click", function (event) {
+      var key = keyFromClick(event.target, sidebar);
       if (!key) return;
 
-      lockedKey = key;
-      lockUntil = Date.now() + 2200;
+      activeKey = key;
+      clickLockUntil = Date.now() + 1400;
       setStoredKey(key);
 
       applyActive(key);
 
-      setTimeout(function () { applyActive(key); }, 80);
-      setTimeout(function () { applyActive(key); }, 350);
+      window.requestAnimationFrame(function () {
+        applyActive(key);
+      });
+
       setTimeout(function () {
-        lockedKey = "";
+        activeKey = "";
         applyActive();
-      }, 2300);
+      }, 1500);
     }, true);
   }
 
   function run() {
-    attachClicks();
+    attachClick();
     applyActive();
   }
 
@@ -11651,14 +11429,20 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   window.addEventListener("hashchange", function () {
-    lockedKey = "";
-    setTimeout(run, 80);
-    setTimeout(run, 350);
+    activeKey = "";
+    setTimeout(run, 40);
+    setTimeout(run, 250);
+  });
+
+  window.addEventListener("popstate", function () {
+    activeKey = "";
+    setTimeout(run, 40);
+    setTimeout(run, 250);
   });
 
   window.addEventListener("pageshow", run);
 
-  /* No MutationObserver. No endless loop. No blinking. */
+  /* No MutationObserver. No repeating loop. */
   setTimeout(run, 250);
   setTimeout(run, 900);
 })();
