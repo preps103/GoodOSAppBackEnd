@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoodOS — Build, Run, and Scale Your App Suite</title>
+  <meta name="description" content="GoodOS is a premium backend operating system for apps, APIs, auth, storage, realtime, jobs, billing, notifications, and secure secrets." />
+  <style>
+    :root {
+      --bg: #060814;
+      --ink: #f8fbff;
+      --muted: #aab8d1;
+      --panel: rgba(255,255,255,.075);
+      --panel2: rgba(255,255,255,.115);
+      --line: rgba(255,255,255,.14);
+      --blue: #4f8cff;
+      --cyan: #39d8ff;
+      --violet: #9b6cff;
+      --green: #54e6a1;
+      --gold: #f7c768;
+      --orange: #ff8a1f;
+      --danger: #ff617a;
+      --radius: 28px;
+      --shadow: 0 34px 110px rgba(0,0,0,.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(79,140,255,.28), transparent 30%),
+        radial-gradient(circle at 88% 8%, rgba(155,108,255,.24), transparent 30%),
+        radial-gradient(circle at 55% 90%, rgba(57,216,255,.12), transparent 35%),
+        linear-gradient(145deg, #050713 0%, #091326 48%, #080712 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 76%);
+      z-index: 0;
+    }
+
+    .page { position: relative; z-index: 1; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(20px, 5vw, 72px);
+      background: rgba(6, 10, 22, .72);
+      backdrop-filter: blur(22px) saturate(140%);
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      font-size: 23px;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 25%, #fff 0 9%, transparent 10%),
+        linear-gradient(135deg, var(--blue), var(--cyan) 45%, var(--violet));
+      box-shadow: 0 14px 34px rgba(79,140,255,.35);
+    }
+
+    .navlinks {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .navlinks a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .navlinks a:hover { color: var(--ink); }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 850;
+      letter-spacing: -.02em;
+      background: rgba(255,255,255,.07);
+      box-shadow: 0 14px 36px rgba(0,0,0,.22);
+      transition: .18s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(57,216,255,.55);
+      box-shadow: 0 20px 52px rgba(57,216,255,.16);
+    }
+
+    .btn.primary {
+      border: none;
+      color: #06111f;
+      background: linear-gradient(135deg, #5ee1ff, #7aa2ff 45%, #c59bff);
+    }
+
+    .btn.orange {
+      border: none;
+      color: #1d0d00;
+      background: linear-gradient(135deg, #ffd36b, #ff8a1f);
+    }
+
+    .hero {
+      padding: clamp(62px, 9vw, 130px) clamp(20px, 5vw, 72px) 64px;
+      max-width: 1540px;
+      margin: 0 auto;
+    }
+
+    .credit {
+      width: min(100%, 1040px);
+      margin: 0 auto 80px;
+      border: 1px solid rgba(247,199,104,.22);
+      background: linear-gradient(135deg, rgba(247,199,104,.12), rgba(255,138,31,.08));
+      border-radius: 26px;
+      padding: 22px 26px;
+      display: flex;
+      justify-content: space-between;
+      gap: 22px;
+      align-items: center;
+      box-shadow: 0 24px 70px rgba(0,0,0,.24);
+    }
+
+    .credit strong { font-size: 20px; letter-spacing: -.03em; }
+    .credit p { margin: 7px 0 0; color: var(--muted); line-height: 1.5; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+      gap: 46px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      font-size: 13px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #bcd7ff;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(48px, 7.4vw, 108px);
+      line-height: .95;
+      letter-spacing: -.075em;
+      max-width: 980px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #fff, #bdeeff 45%, #d9c2ff 80%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      margin: 34px 0 0;
+      max-width: 760px;
+      color: #d8e4f6;
+      font-size: clamp(18px, 2.1vw, 28px);
+      line-height: 1.5;
+      letter-spacing: -.03em;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 36px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 44px;
+      max-width: 780px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 22px;
+      padding: 20px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 28px;
+      letter-spacing: -.055em;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .visual {
+      position: relative;
+      min-height: 520px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(57,216,255,.22), transparent 34%),
+        radial-gradient(circle at 90% 0%, rgba(155,108,255,.24), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.045));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      padding: 24px;
+    }
+
+    .console-card {
+      position: absolute;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(8,13,28,.76);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.34);
+      padding: 20px;
+    }
+
+    .console-card.main {
+      inset: 36px 34px auto 34px;
+      height: 250px;
+    }
+
+    .console-card.side {
+      left: 34px;
+      right: 46%;
+      bottom: 38px;
+      height: 160px;
+    }
+
+    .console-card.float {
+      right: 34px;
+      bottom: 72px;
+      width: 41%;
+      height: 210px;
+      background: linear-gradient(145deg, rgba(79,140,255,.22), rgba(155,108,255,.18)), rgba(8,13,28,.84);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 11px;
+      background: rgba(255,255,255,.075);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #dbeafe;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 20px rgba(84,230,161,.8);
+    }
+
+    .bars {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mini {
+      min-height: 62px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.075);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 13px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .mini strong {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      margin-top: 7px;
+    }
+
+    .section {
+      padding: 84px clamp(20px, 5vw, 72px);
+      max-width: 1540px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      max-width: 860px;
+      margin-bottom: 34px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(38px, 5vw, 74px);
+      line-height: 1;
+      letter-spacing: -.065em;
+    }
+
+    .section-title p {
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.6;
+      margin: 22px 0 0;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .product {
+      min-height: 260px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at top right, rgba(79,140,255,.18), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,.095), rgba(255,255,255,.045));
+      padding: 26px;
+      box-shadow: 0 20px 70px rgba(0,0,0,.22);
+      transition: .18s ease;
+    }
+
+    .product:hover {
+      transform: translateY(-5px);
+      border-color: rgba(57,216,255,.45);
+      box-shadow: 0 30px 90px rgba(0,0,0,.34);
+    }
+
+    .icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(57,216,255,.95), rgba(155,108,255,.95));
+      color: #06111f;
+      font-weight: 1000;
+      margin-bottom: 20px;
+    }
+
+    .product h3 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -.045em;
+    }
+
+    .product p {
+      margin: 14px 0 22px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .product a {
+      color: #bdeeff;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      overflow: hidden;
+      background: rgba(255,255,255,.055);
+      box-shadow: var(--shadow);
+    }
+
+    .split-panel {
+      padding: clamp(30px, 4vw, 58px);
+      min-height: 500px;
+    }
+
+    .split-panel + .split-panel {
+      border-left: 1px solid var(--line);
+    }
+
+    .split-panel h3 {
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: 1;
+      letter-spacing: -.06em;
+      margin: 12px 0 18px;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .feature-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 17px 0;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      color: #e7efff;
+      font-weight: 850;
+    }
+
+    .integrations {
+      background: #f8fafc;
+      color: #08111f;
+      max-width: none;
+      padding: 96px clamp(20px, 5vw, 72px);
+      margin-top: 70px;
+    }
+
+    .integrations-inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .integrations h2 {
+      margin: 0;
+      font-size: clamp(36px, 4.8vw, 68px);
+      letter-spacing: -.06em;
+      line-height: 1;
+    }
+
+    .integrations p {
+      color: #526174;
+      font-size: 19px;
+      line-height: 1.6;
+      max-width: 830px;
+      margin: 20px auto 48px;
+    }
+
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+
+    .logo-card {
+      border: 1px solid #dbe4f0;
+      background: #fff;
+      border-radius: 22px;
+      min-height: 108px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 18px 50px rgba(15,23,42,.08);
+      font-weight: 1000;
+      color: #1f2a44;
+    }
+
+    .code-section {
+      padding: 90px clamp(20px, 5vw, 72px);
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+
+    .code-box {
+      border-radius: 34px;
+      background: #02050c;
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .code-head {
+      display: flex;
+      gap: 10px;
+      padding: 18px 22px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05);
+    }
+
+    .tab {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .tab.active {
+      background: var(--orange);
+      color: #150900;
+      border: none;
+    }
+
+    pre {
+      margin: 0;
+      padding: clamp(24px, 4vw, 46px);
+      color: #dbeafe;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .cta {
+      padding: 110px clamp(20px, 5vw, 72px);
+      text-align: center;
+    }
+
+    .cta-box {
+      max-width: 1050px;
+      margin: 0 auto;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 40px;
+      padding: clamp(42px, 7vw, 86px);
+      background:
+        radial-gradient(circle at top left, rgba(247,199,104,.18), transparent 40%),
+        radial-gradient(circle at top right, rgba(79,140,255,.22), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.045));
+      box-shadow: var(--shadow);
+    }
+
+    .cta h2 {
+      margin: 0;
+      font-size: clamp(44px, 6vw, 86px);
+      line-height: .95;
+      letter-spacing: -.075em;
+    }
+
+    .cta p {
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.6;
+      max-width: 760px;
+      margin: 24px auto 34px;
+    }
+
+    footer {
+      padding: 34px clamp(20px, 5vw, 72px);
+      border-top: 1px solid rgba(255,255,255,.1);
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1050px) {
+      .hero-grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .visual { min-height: 520px; }
+      .products { grid-template-columns: repeat(2, 1fr); }
+      .logo-grid { grid-template-columns: repeat(3, 1fr); }
+      .navlinks { display: none; }
+    }
+
+    @media (max-width: 680px) {
+      .credit { flex-direction: column; align-items: flex-start; }
+      .hero-stats { grid-template-columns: 1fr; }
+      .products { grid-template-columns: 1fr; }
+      .logo-grid { grid-template-columns: repeat(2, 1fr); }
+      .visual { display: none; }
+      .actions .btn:not(.primary) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav">
+      <div class="brand"><div class="mark"></div><span>GoodOS</span></div>
+      <div class="navlinks">
+        <a href="#build">Build</a>
+        <a href="#run">Run</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#developers">Developers</a>
+        <a href="/docs">Docs</a>
+      </div>
+      <div class="actions">
+        <a class="btn" href="/docs">Docs</a>
+        <a class="btn primary" href="/console">Go to console</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <div class="credit">
+          <div>
+            <strong>Launch your backend like a premium product.</strong>
+            <p>Apps, auth, API keys, storage, realtime, jobs, billing, notifications, and secure secrets in one GoodOS control layer.</p>
+          </div>
+          <a class="btn orange" href="/console">Get Started</a>
+        </div>
+
+        <div class="hero-grid">
+          <div>
+            <div class="eyebrow">Backend operating system for modern app suites</div>
+            <h1><span class="gradient-text">Make your app suite feel bigger, faster, and easier to run.</span></h1>
+            <p class="lead">GoodOS gives builders a polished command center for shipping real products without juggling disconnected tools, hidden credentials, manual jobs, and scattered dashboards.</p>
+            <div class="hero-actions">
+              <a class="btn primary" href="/console">Open GoodOS Console</a>
+              <a class="btn" href="#build">Explore Platform</a>
+            </div>
+            <div class="hero-stats">
+              <div class="stat"><b>25+</b><span>Backend foundations</span></div>
+              <div class="stat"><b>1</b><span>Unified console</span></div>
+              <div class="stat"><b>Secure</b><span>Secrets + policies</span></div>
+            </div>
+          </div>
+
+          <div class="visual" aria-label="GoodOS product console preview">
+            <div class="console-card main">
+              <div class="card-head">
+                <span class="pill"><span class="dot"></span> Production Online</span>
+                <span class="pill">GoodOS Cloud</span>
+              </div>
+              <div class="bars">
+                <div class="bar"><span style="width: 92%"></span></div>
+                <div class="bar"><span style="width: 78%"></span></div>
+                <div class="bar"><span style="width: 64%"></span></div>
+                <div class="bar"><span style="width: 86%"></span></div>
+              </div>
+            </div>
+
+            <div class="console-card side">
+              <div class="mini-grid">
+                <div class="mini">API Usage<strong>Healthy</strong></div>
+                <div class="mini">Jobs<strong>Running</strong></div>
+                <div class="mini">Secrets<strong>Encrypted</strong></div>
+                <div class="mini">Billing<strong>Ready</strong></div>
+              </div>
+            </div>
+
+            <div class="console-card float">
+              <div class="card-head">
+                <span class="pill">Realtime</span>
+                <span class="pill">Auth V2</span>
+              </div>
+              <div class="bars">
+                <div class="bar"><span style="width: 72%"></span></div>
+                <div class="bar"><span style="width: 95%"></span></div>
+                <div class="bar"><span style="width: 58%"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="build">
+        <div class="section-title">
+          <div class="eyebrow">Build</div>
+          <h2>Get to market faster with everything your app needs behind the scenes.</h2>
+          <p>GoodOS keeps the complicated backend work organized so every app in the suite can plug into the same trusted foundation.</p>
+        </div>
+
+        <div class="products">
+          <article class="product">
+            <div class="icon">A</div>
+            <h3>Auth & Roles</h3>
+            <p>Sessions, roles, permissions, MFA foundation, password reset, and owner/admin controls.</p>
+            <a href="/docs">View docs →</a>
+          </article>
+          <article class="product">
+            <div class="icon">D</div>
+            <h3>Database APIs</h3>
+            <p>Turn approved tables into controlled API endpoints with policy rules and API key usage metering.</p>
+            <a href="/docs">View docs →</a>
+          </article>
+          <article class="product">
+            <div class="icon">S</div>
+            <h3>Storage V2</h3>
+            <p>Local and S3-compatible storage metadata, CDN routing, provider configs, and version tracking.</p>
+            <a href="/docs">View docs →</a>
+          </article>
+          <article class="product">
+            <div class="icon">R</div>
+            <h3>Realtime</h3>
+            <p>Channels, events, streams, websocket foundation, presence, subscriptions, and message delivery.</p>
+            <a href="/docs">View docs →</a>
+          </article>
+          <article class="product">
+            <div class="icon">J</div>
+            <h3>Jobs & Workers</h3>
+            <p>Scheduled jobs, queue runners, worker heartbeats, locks, run history, and operations tooling.</p>
+            <a href="/docs">View docs →</a>
+          </article>
+          <article class="product">
+            <div class="icon">🔐</div>
+            <h3>Secrets V2</h3>
+            <p>Encrypted secret refs, version history, provider credentials, rotation, and SMTP-ready fallback.</p>
+            <a href="/docs">View docs →</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="run">
+        <div class="split">
+          <div class="split-panel">
+            <div class="eyebrow">Run</div>
+            <h3>Operate your app suite with confidence.</h3>
+            <p class="lead" style="font-size:20px;margin-top:0;">Monitor usage, billing, jobs, notifications, API keys, and policies from one place.</p>
+            <div class="feature-list">
+              <div class="feature-row"><span>Billing plans and usage meters</span><span>→</span></div>
+              <div class="feature-row"><span>Notifications and email queue</span><span>→</span></div>
+              <div class="feature-row"><span>Admin audit and policy rules</span><span>→</span></div>
+            </div>
+          </div>
+          <div class="split-panel">
+            <div class="eyebrow">Extend</div>
+            <h3>Designed for every GoodOS app you add next.</h3>
+            <p class="lead" style="font-size:20px;margin-top:0;">GoodFleet, GoodQR, GoodScan, GoodTrusts, GoodAds, GoodEditor, and every future app can share the same backend foundation.</p>
+            <div class="feature-list">
+              <div class="feature-row"><span>Multi-app backend layer</span><span>→</span></div>
+              <div class="feature-row"><span>Developer docs and SDK</span><span>→</span></div>
+              <div class="feature-row"><span>Postman collection and OpenAPI</span><span>→</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="integrations" id="integrations">
+        <div class="integrations-inner">
+          <div class="eyebrow" style="color:#526174;">Integrations</div>
+          <h2>Connect the services your business already uses.</h2>
+          <p>GoodOS is being built to plug into email, payments, storage, AI, maps, analytics, and app-specific tools without spreading credentials across every project.</p>
+          <div class="logo-grid">
+            <div class="logo-card">Stripe</div>
+            <div class="logo-card">SMTP</div>
+            <div class="logo-card">S3</div>
+            <div class="logo-card">OpenAI</div>
+            <div class="logo-card">Maps</div>
+            <div class="logo-card">Postman</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="code-section" id="developers">
+        <div class="section-title">
+          <div class="eyebrow">Developers</div>
+          <h2>Clean APIs for the apps you build next.</h2>
+          <p>Use one GoodOS API layer to authenticate, store data, send notifications, track usage, and operate background jobs.</p>
+        </div>
+        <div class="code-box">
+          <div class="code-head">
+            <span class="tab active">JavaScript</span>
+            <span class="tab">REST</span>
+            <span class="tab">Postman</span>
+          </div>
+<pre><code>const goodos = new GoodOS({
+  apiKey: process.env.GOODOS_API_KEY
+});
+
+await goodos.db.createRow("demo_items", {
+  title: "Launch a new app",
+  status: "ready"
+});
+
+await goodos.notifications.create({
+  title: "App deployed",
+  message: "Your GoodOS app is live."
+});</code></pre>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div class="cta-box">
+          <div class="mark" style="margin:0 auto 28px;width:64px;height:64px;border-radius:22px;"></div>
+          <h2>Build the backend platform your brands deserve.</h2>
+          <p>GoodOS should feel powerful enough for developers, but clean enough for business owners to understand what is happening.</p>
+          <a class="btn primary" href="/console">Go to GoodOS Console</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div><strong>GoodOS</strong> — Premium backend operating system.</div>
+      <div>Docs · Console · API · Security · Billing</div>
+    </footer>
+  </div>
+</body>
+</html>

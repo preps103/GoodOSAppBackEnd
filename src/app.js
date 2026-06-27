@@ -73,4 +73,14 @@ app.use(routes);
 app.use(notFound);
 app.use(errorHandler);
 
+
+// GoodOS landing route 26A
+app.get("/", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "public/landing.html"));
+});
+
+app.get("/console", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "public/console.html"));
+});
+
 module.exports = app;

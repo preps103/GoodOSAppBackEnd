@@ -64,4 +64,14 @@ router.get("/favicon.ico", (req, res) => res.status(204).end());
 
 router.use("/", consoleRoutes);
 
+
+// GoodOS landing route 26A
+router.get("/", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/landing.html"));
+});
+
+router.get("/console", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/console.html"));
+});
+
 module.exports = router;
