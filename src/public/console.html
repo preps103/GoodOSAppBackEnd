@@ -3462,6 +3462,90 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-force-active-jobs-chart-v80">
+.goodos-active-jobs-force-card-v80 {
+  min-height: 430px !important;
+  height: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  padding-bottom: 22px !important;
+}
+
+.goodos-active-jobs-force-card-v80::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,197,94,.52), rgba(20,184,166,.12));
+  border: 1px solid rgba(34,197,94,.48);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-active-jobs-force-chart-v80 {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  min-height: 230px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,197,94,.10), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  padding: 18px 20px 14px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
+}
+
+.goodos-active-jobs-force-chart-v80 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 208px !important;
+  overflow: visible !important;
+}
+
+.goodos-active-jobs-force-chart-v80 .muted {
+  fill: rgba(203,213,225,.78);
+}
+
+.goodos-active-jobs-force-chart-v80 .axis {
+  fill: rgba(203,213,225,.86);
+}
+
+.goodos-active-jobs-force-chart-v80 .grid {
+  stroke: rgba(148,163,184,.16);
+  stroke-dasharray: 5 8;
+}
+
+.goodos-active-jobs-force-trend-v80 {
+  margin-top: 16px !important;
+  color: rgba(203,213,225,.82) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em !important;
+}
+
+.goodos-active-jobs-force-trend-v80 strong {
+  color: #4ade80 !important;
+  font-weight: 950 !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -18674,6 +18758,211 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     window.setTimeout(function () {
       renderSettingsJobsCharts();
+      running = false;
+    }, 120);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+    setTimeout(run, 900);
+    setTimeout(run, 1600);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 550);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(run, 250);
+  setTimeout(run, 900);
+  setTimeout(run, 1800);
+  setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-force-active-jobs-chart-v80-js">
+(function () {
+  if (window.__goodosForceActiveJobsChartV80) return;
+  window.__goodosForceActiveJobsChartV80 = true;
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function compact(value) {
+    return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+
+    var r = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+
+    return r.width > 0 &&
+      r.height > 0 &&
+      (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function isSettingsJobsVisible() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("background jobs v2") !== -1 &&
+      text.indexOf("active jobs") !== -1 &&
+      text.indexOf("enabled schedules") !== -1 &&
+      text.indexOf("online workers") !== -1 &&
+      text.indexOf("failed runs") !== -1;
+  }
+
+  function removeOnlyActiveJobDuplicates(card) {
+    if (!card) return;
+
+    Array.prototype.slice.call(card.querySelectorAll(
+      ".goodos-active-jobs-force-chart-v80," +
+      ".goodos-active-jobs-force-trend-v80," +
+      "[data-goodos-settings-jobs-chart-v77='active-jobs']," +
+      "[data-goodos-settings-jobs-chart-v78='active-jobs']"
+    )).forEach(function (el) {
+      el.remove();
+    });
+
+    card.classList.add("goodos-active-jobs-force-card-v80");
+  }
+
+  function findActiveJobsCard() {
+    var root = getRoot();
+    var all = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    var matches = all.filter(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-active-jobs-force-chart-v80")) return false;
+
+      var text = cleanText(el);
+      var textCompact = compact(text);
+      var textNorm = norm(text);
+      var rect = el.getBoundingClientRect();
+
+      return textCompact.indexOf("ACTIVEJOBS") !== -1 &&
+        textNorm.indexOf("enabled schedules") !== -1 &&
+        rect.width >= 190 &&
+        rect.width <= 520 &&
+        rect.height >= 80 &&
+        rect.height <= 560;
+    });
+
+    if (!matches.length) return null;
+
+    matches.sort(function (a, b) {
+      var ar = a.getBoundingClientRect();
+      var br = b.getBoundingClientRect();
+
+      return (ar.width * ar.height) - (br.width * br.height);
+    });
+
+    return matches[0];
+  }
+
+  function chartSvg() {
+    var points = [
+      [42,110],[57,78],[72,62],[87,50],[102,42],[117,42],[132,42],[147,42],
+      [162,42],[177,42],[192,50],[207,78],[222,112],[237,140],[252,160],[267,160]
+    ];
+
+    var path = points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0] + " " + pt[1];
+    }).join("");
+
+    return '' +
+      '<svg viewBox="0 0 340 208" aria-label="Active Jobs chart">' +
+        '<defs>' +
+          '<linearGradient id="goodosActiveJobsForceLineV80" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="#4ade80"></stop>' +
+            '<stop offset="100%" stop-color="#16a34a"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="goodosActiveJobsForceFillV80" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="#16a34a" stop-opacity=".38"></stop>' +
+            '<stop offset="100%" stop-color="#16a34a" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="1.6">ACTIVE JOBS OVER TIME</text>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
+        '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
+        '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '<text x="0" y="72" class="axis" font-size="13" font-weight="800">6</text>' +
+        '<text x="0" y="118" class="axis" font-size="13" font-weight="800">3</text>' +
+        '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L267 160 L42 160 Z" fill="url(#goodosActiveJobsForceFillV80)"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosActiveJobsForceLineV80)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0] + '" cy="' + pt[1] + '" r="' + (i === points.length - 1 ? 7 : 3.3) + '" fill="#4ade80" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 1</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">May 8</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">May 15</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">May 29</text>' +
+      '</svg>';
+  }
+
+  function renderActiveJobsChart() {
+    if (!isSettingsJobsVisible()) return;
+
+    var card = findActiveJobsCard();
+
+    if (!card) {
+      console.warn("GoodOS V80: Active Jobs card not found.");
+      return;
+    }
+
+    removeOnlyActiveJobDuplicates(card);
+
+    card.insertAdjacentHTML("beforeend",
+      '<div class="goodos-active-jobs-force-chart-v80">' +
+        chartSvg() +
+      '</div>' +
+      '<div class="goodos-active-jobs-force-trend-v80">' +
+        '<strong>↓ 100%</strong> vs last 30 days' +
+      '</div>'
+    );
+  }
+
+  var running = false;
+
+  function run() {
+    if (running) return;
+
+    running = true;
+
+    setTimeout(function () {
+      renderActiveJobsChart();
       running = false;
     }, 120);
   }
