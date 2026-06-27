@@ -4139,6 +4139,78 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-project-overview-title-sizing-v86">
+/* V86: Project Overview KPI text sizing fix */
+
+.goodos-po-card-v85 {
+  min-width: 0 !important;
+}
+
+.goodos-po-label-v85 {
+  padding-right: 76px !important;
+  word-break: normal !important;
+}
+
+.goodos-po-value-v85 {
+  display: block !important;
+  max-width: calc(100% - 78px) !important;
+  padding-right: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.goodos-po-card-v85[data-po-card="health"] .goodos-po-value-v85,
+.goodos-po-card-v85[data-po-card="connection"] .goodos-po-value-v85 {
+  font-size: clamp(22px, 1.8vw, 34px) !important;
+}
+
+.goodos-po-card-v85[data-po-card="checklist"] .goodos-po-value-v85,
+.goodos-po-card-v85[data-po-card="usage"] .goodos-po-value-v85 {
+  font-size: clamp(30px, 2.35vw, 44px) !important;
+}
+
+.goodos-po-card-v85[data-po-card="health"] .goodos-po-desc-v85,
+.goodos-po-card-v85[data-po-card="connection"] .goodos-po-desc-v85 {
+  min-height: 42px !important;
+}
+
+.goodos-po-card-v85[data-po-card="connection"] .goodos-po-desc-v85 {
+  font-size: 13px !important;
+}
+
+.goodos-po-grid-v85 {
+  align-items: stretch !important;
+}
+
+@media (min-width: 1301px) {
+  .goodos-po-grid-v85 {
+    grid-template-columns: repeat(4, minmax(240px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1500px) and (min-width: 1301px) {
+  .goodos-po-card-v85[data-po-card="health"] .goodos-po-value-v85,
+  .goodos-po-card-v85[data-po-card="connection"] .goodos-po-value-v85 {
+    font-size: 26px !important;
+  }
+
+  .goodos-po-value-v85 {
+    max-width: calc(100% - 70px) !important;
+  }
+
+  .goodos-po-icon-v85 {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -20419,6 +20491,61 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(boot, 300);
   setTimeout(boot, 1000);
+})();
+</script>
+
+
+<script id="goodos-project-overview-title-sizing-v86-js">
+(function () {
+  if (window.__goodosProjectOverviewTitleSizingV86) return;
+  window.__goodosProjectOverviewTitleSizingV86 = true;
+
+  function isProjectOverview() {
+    return String(window.location.hash || "").toLowerCase() === "#project-overview";
+  }
+
+  function applySizing() {
+    if (!isProjectOverview()) return;
+
+    var healthValue = document.querySelector('.goodos-po-card-v85[data-po-card="health"] .goodos-po-value-v85');
+    var connectionValue = document.querySelector('.goodos-po-card-v85[data-po-card="connection"] .goodos-po-value-v85');
+
+    if (healthValue) {
+      healthValue.title = healthValue.textContent.trim();
+    }
+
+    if (connectionValue) {
+      connectionValue.title = connectionValue.textContent.trim();
+    }
+
+    document.querySelectorAll(".goodos-po-value-v85").forEach(function (el) {
+      el.style.whiteSpace = "nowrap";
+      el.style.overflow = "hidden";
+      el.style.textOverflow = "ellipsis";
+    });
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(applySizing, 200);
+    setTimeout(applySizing, 900);
+  });
+
+  window.addEventListener("pageshow", applySizing);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    if (!isProjectOverview()) return;
+    clearTimeout(timer);
+    timer = setTimeout(applySizing, 350);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  setTimeout(applySizing, 200);
+  setTimeout(applySizing, 900);
+  setTimeout(applySizing, 1800);
 })();
 </script>
 
