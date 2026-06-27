@@ -12,6 +12,8 @@ const consoleRoutes = require("./console.routes");
 const publicApiRoutes = require("./public-api.routes");
 const storageRoutes = require("./storage.routes");
 const webhookTestRoutes = require("./webhook-test.routes");
+const tableEditorRoutes = require("./table-editor.routes");
+
 
 const router = express.Router();
 
@@ -92,5 +94,7 @@ router.get("/console", (req, res) => {
 router.get("/console.html", (req, res) => {
   res.redirect("/console");
 });
+
+router.use("/admin/table-editor", tableEditorRoutes);
 
 module.exports = router;
