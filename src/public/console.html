@@ -1967,16 +1967,15 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+<style id="goodos-storage-provider-kpi-charts-api-nav-v57">
+/* V57: Storage Provider KPI charts + API Keys navigation fix */
 
-<style id="goodos-storage-provider-kpi-charts-v56">
-/* V56: Storage Provider KPI charts only */
-
-.goodos-storage-provider-kpi-card-v56 {
+.goodos-storage-provider-kpi-card-v57 {
   min-height: 252px !important;
   overflow: hidden !important;
 }
 
-.goodos-storage-provider-kpi-chart-v56 {
+.goodos-storage-provider-kpi-chart-v57 {
   margin-top: 18px;
   width: 100%;
   min-height: 116px;
@@ -1990,27 +1989,27 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   overflow: hidden;
 }
 
-.goodos-storage-provider-kpi-chart-v56 svg {
+.goodos-storage-provider-kpi-chart-v57 svg {
   width: 100%;
   height: 106px;
   display: block;
   overflow: visible;
 }
 
-.goodos-storage-provider-kpi-chart-v56 .muted {
+.goodos-storage-provider-kpi-chart-v57 .muted {
   fill: #9eabc2;
 }
 
-.goodos-storage-provider-kpi-chart-v56 .green {
+.goodos-storage-provider-kpi-chart-v57 .green {
   fill: #a8ffd4;
 }
 
-.goodos-storage-provider-kpi-chart-v56 .grid {
+.goodos-storage-provider-kpi-chart-v57 .grid {
   stroke: rgba(148,163,184,.16);
   stroke-dasharray: 4 7;
 }
 
-.goodos-storage-provider-kpi-chart-note-v56 {
+.goodos-storage-provider-kpi-chart-note-v57 {
   color: #8fa0ba;
   font-size: 11px;
   font-weight: 750;
@@ -13331,36 +13330,31 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-
-<script id="goodos-storage-provider-kpi-charts-v56-js">
+<script id="goodos-storage-provider-kpi-charts-api-nav-v57-js">
 (function () {
-  if (window.__goodosStorageProviderKpiChartsV56) return;
-  window.__goodosStorageProviderKpiChartsV56 = true;
+  if (window.__goodosStorageProviderChartsApiNavV57) return;
+  window.__goodosStorageProviderChartsApiNavV57 = true;
 
   var TARGETS = [
     {
       key: "providers",
       labels: ["PROVIDERS"],
-      type: "line",
-      note: "Provider configuration count connected."
+      note: "Provider configs over time"
     },
     {
       key: "cdn-buckets",
       labels: ["CDN BUCKETS"],
-      type: "progress",
-      note: "CDN-enabled bucket count connected."
+      note: "CDN-enabled buckets"
     },
     {
       key: "public-buckets",
       labels: ["PUBLIC BUCKETS"],
-      type: "line",
-      note: "Public object routing count connected."
+      note: "Public buckets over time"
     },
     {
       key: "versions",
       labels: ["VERSIONS"],
-      type: "bars",
-      note: "Object version record count connected."
+      note: "Version records over time"
     }
   ];
 
@@ -13387,74 +13381,155 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       document.body;
   }
 
-  function isStoragePage() {
-    var hash = currentHash();
+  function getSidebar() {
+    var candidates = Array.prototype.slice.call(
+      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
+    );
 
-    if (
-      hash === "storage" ||
-      hash === "storage-files" ||
-      hash === "files"
-    ) {
-      return true;
+    return candidates.find(function (el) {
+      var txt = norm(cleanText(el));
+      return txt.indexOf("overview") !== -1 &&
+        txt.indexOf("api keys") !== -1 &&
+        txt.indexOf("settings") !== -1;
+    }) || null;
+  }
+
+  function isApiKeysVisible() {
+    var rootText = norm(cleanText(getRoot()));
+    return rootText.indexOf("api keys") !== -1 &&
+      (
+        rootText.indexOf("restricted keys") !== -1 ||
+        rootText.indexOf("key registry") !== -1 ||
+        rootText.indexOf("api key") !== -1
+      );
+  }
+
+  function findApiKeysSidebarRow() {
+    var sidebar = getSidebar();
+    if (!sidebar) return null;
+
+    var nodes = Array.prototype.slice.call(
+      sidebar.querySelectorAll("button,a,[role='button'],div,span")
+    );
+
+    var label = nodes.find(function (el) {
+      if (el.closest("header")) return false;
+      return norm(cleanText(el)) === "api keys";
+    });
+
+    if (!label) return null;
+
+    return label.closest("button,a,[role='button']") || label;
+  }
+
+  function forceApiKeysRoute() {
+    var possibleHashes = ["api-keys", "apikeys", "keys", "apiKeys"];
+    var current = currentHash();
+
+    if (possibleHashes.indexOf(current) === -1) {
+      window.location.hash = "api-keys";
     }
 
-    var t = norm(cleanText(getRoot()));
+    setTimeout(function () {
+      if (isApiKeysVisible()) return;
 
-    return t.indexOf("storage v2") !== -1 ||
-      t.indexOf("providers") !== -1 && t.indexOf("cdn buckets") !== -1 ||
-      t.indexOf("object version records") !== -1 ||
-      t.indexOf("storage / files") !== -1;
+      var fns = [
+        "renderApiKeys",
+        "renderApiKeysView",
+        "renderApiKeysPage",
+        "apiKeysView",
+        "showApiKeys",
+        "loadApiKeys",
+        "showView"
+      ];
+
+      fns.forEach(function (name) {
+        try {
+          if (typeof window[name] === "function") {
+            if (name === "showView") {
+              window[name]("api-keys");
+            } else {
+              window[name]();
+            }
+          }
+        } catch (e) {}
+      });
+    }, 120);
+
+    setTimeout(function () {
+      if (isApiKeysVisible()) return;
+
+      var row = findApiKeysSidebarRow();
+      if (!row || row.__goodosV57ApiKeysRetrying) return;
+
+      row.__goodosV57ApiKeysRetrying = true;
+
+      try {
+        row.click();
+      } catch (e) {}
+
+      setTimeout(function () {
+        row.__goodosV57ApiKeysRetrying = false;
+      }, 900);
+    }, 450);
+  }
+
+  function installApiKeysNavFix() {
+    var sidebar = getSidebar();
+    if (!sidebar || sidebar.__goodosV57ApiKeysNavAttached) return;
+
+    sidebar.__goodosV57ApiKeysNavAttached = true;
+
+    sidebar.addEventListener("click", function (event) {
+      var node = event.target;
+
+      for (var i = 0; node && node !== sidebar && node !== document.body && i < 10; i += 1) {
+        if (norm(cleanText(node)) === "api keys") {
+          setTimeout(forceApiKeysRoute, 30);
+          setTimeout(forceApiKeysRoute, 250);
+          setTimeout(forceApiKeysRoute, 800);
+          return;
+        }
+
+        node = node.parentElement;
+      }
+    }, true);
+  }
+
+  function isStorageProviderSectionVisible() {
+    var h = currentHash();
+    var rootText = norm(cleanText(getRoot()));
+
+    if (!(h === "storage" || h === "storage-files" || h === "files")) {
+      if (
+        rootText.indexOf("providers") === -1 ||
+        rootText.indexOf("cdn buckets") === -1 ||
+        rootText.indexOf("public buckets") === -1 ||
+        rootText.indexOf("versions") === -1
+      ) {
+        return false;
+      }
+    }
+
+    return rootText.indexOf("providers") !== -1 &&
+      rootText.indexOf("cdn buckets") !== -1 &&
+      rootText.indexOf("public buckets") !== -1 &&
+      rootText.indexOf("object version") !== -1;
   }
 
   function removeOldCharts() {
-    Array.prototype.slice.call(document.querySelectorAll(".goodos-storage-provider-kpi-chart-v56")).forEach(function (el) {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57")
+    ).forEach(function (el) {
       el.remove();
     });
 
-    Array.prototype.slice.call(document.querySelectorAll(".goodos-storage-provider-kpi-card-v56")).forEach(function (el) {
+    Array.prototype.slice.call(
+      document.querySelectorAll(".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57")
+    ).forEach(function (el) {
       el.classList.remove("goodos-storage-provider-kpi-card-v56");
+      el.classList.remove("goodos-storage-provider-kpi-card-v57");
     });
-  }
-
-  function topOfMatchingText(matchers) {
-    var root = getRoot();
-    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
-
-    var found = nodes.find(function (el) {
-      if (el.closest("aside,nav,header")) return false;
-      if (el.children.length > 4) return false;
-
-      var text = norm(cleanText(el));
-      return matchers.some(function (m) {
-        return text === norm(m) || text.indexOf(norm(m)) !== -1;
-      });
-    });
-
-    return found && found.getBoundingClientRect ? found.getBoundingClientRect().top : null;
-  }
-
-  function getSectionBounds() {
-    var start = topOfMatchingText([
-      "Storage V2",
-      "Storage Providers",
-      "Provider Center",
-      "Storage / Files"
-    ]);
-
-    var end = topOfMatchingText([
-      "Buckets",
-      "Storage Buckets",
-      "Storage Files",
-      "Recent Files",
-      "Provider Configs",
-      "Object Versions",
-      "Files"
-    ]);
-
-    return {
-      start: start,
-      end: end
-    };
   }
 
   function labelMatches(text, labels) {
@@ -13465,13 +13540,13 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     });
   }
 
-  function findLabelNode(target, bounds) {
+  function findLabelNode(target) {
     var root = getRoot();
     var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
 
     return nodes.find(function (el) {
       if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-storage-provider-kpi-chart-v56")) return false;
+      if (el.closest(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57")) return false;
       if (el.children.length > 2) return false;
 
       var text = cleanText(el);
@@ -13480,14 +13555,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
       if (!rect || rect.width <= 0 || rect.height <= 0) return false;
 
-      if (bounds.start !== null && rect.top <= bounds.start) return false;
-      if (bounds.end !== null && bounds.end > bounds.start && rect.top >= bounds.end) return false;
-
       return true;
     }) || null;
   }
 
-  function allTargetLabelsInText(text) {
+  function countTargetLabels(text) {
     var upper = compact(text);
 
     return TARGETS.filter(function (target) {
@@ -13508,14 +13580,14 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
       var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
       var text = cleanText(node);
-      var labelHits = allTargetLabelsInText(text);
+      var labelHits = countTargetLabels(text);
 
       if (
         text.indexOf(cleanText(labelNode)) !== -1 &&
         rect.width >= 180 &&
-        rect.width <= 650 &&
+        rect.width <= 720 &&
         rect.height >= 80 &&
-        rect.height <= 390 &&
+        rect.height <= 430 &&
         labelHits <= 2
       ) {
         candidates.push({
@@ -13536,18 +13608,16 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return candidates[0].node;
   }
 
-  function cardTextWithoutChart(card) {
+  function metricValue(card, target) {
     var clone = card.cloneNode(true);
 
-    Array.prototype.slice.call(clone.querySelectorAll(".goodos-storage-provider-kpi-chart-v56")).forEach(function (el) {
+    Array.prototype.slice.call(
+      clone.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57")
+    ).forEach(function (el) {
       el.remove();
     });
 
-    return cleanText(clone);
-  }
-
-  function metricValue(card, target) {
-    var upper = cardTextWithoutChart(card).toUpperCase();
+    var upper = cleanText(clone).toUpperCase();
 
     target.labels.forEach(function (label) {
       upper = upper.replace(label, " ");
@@ -13569,8 +13639,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         y = 72;
       } else if (variant === "providers") {
         y = 72 - Math.min(38, v * 8) + ((i * 5) % 11) - (i > 10 ? 7 : 0);
-      } else {
+      } else if (variant === "public-buckets") {
         y = 70 - Math.min(34, v * 8) + ((i * 7) % 13);
+      } else {
+        y = 68 - Math.min(34, v * 7) + ((i * 9) % 12);
       }
 
       points.push([x, Math.max(18, Math.min(78, y))]);
@@ -13586,21 +13658,47 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var path = linePath(v, target.key);
 
     return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v56" data-storage-provider-kpi-chart-v56="' + target.key + '">' +
+      '<div class="goodos-storage-provider-kpi-chart-v57" data-storage-provider-kpi-chart-v57="' + target.key + '">' +
         '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
           '<defs>' +
-            '<linearGradient id="storageProviderLineV56' + target.key + '" x1="0" x2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient>' +
-            '<linearGradient id="storageProviderFillV56' + target.key + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop><stop offset="100%" stop-color="rgba(54,220,255,0)"></stop></linearGradient>' +
+            '<linearGradient id="storageProviderLineV57' + target.key + '" x1="0" x2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient>' +
+            '<linearGradient id="storageProviderFillV57' + target.key + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop><stop offset="100%" stop-color="rgba(54,220,255,0)"></stop></linearGradient>' +
           '</defs>' +
           '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + (target.key === "providers" ? " provider" : " bucket") + '</text>' +
           '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
           '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
-          '<path d="' + path + ' L308 90 L8 90 Z" fill="url(#storageProviderFillV56' + target.key + ')"></path>' +
-          '<path d="' + path + '" fill="none" stroke="url(#storageProviderLineV56' + target.key + ')" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<path d="' + path + ' L308 90 L8 90 Z" fill="url(#storageProviderFillV57' + target.key + ')"></path>' +
+          '<path d="' + path + '" fill="none" stroke="url(#storageProviderLineV57' + target.key + ')" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
           '<circle cx="308" cy="' + (v <= 0 ? 72 : 28) + '" r="5" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="104" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="104" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
         '</svg>' +
-        '<div class="goodos-storage-provider-kpi-chart-note-v56">' + target.note + '</div>' +
+        '<div class="goodos-storage-provider-kpi-chart-note-v57">' + target.note + '</div>' +
+      '</div>';
+  }
+
+  function progressChart(target, value) {
+    var v = Math.max(0, Number(value || 0));
+    var max = Math.max(2, v + 1);
+    var pct = Math.max(0, Math.min(100, (v / max) * 100));
+    var fill = (300 * pct / 100).toFixed(1);
+    var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
+
+    return '' +
+      '<div class="goodos-storage-provider-kpi-chart-v57" data-storage-provider-kpi-chart-v57="' + target.key + '">' +
+        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
+          '<defs><linearGradient id="storageProviderProgressGradV57" x1="0" x2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="55%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#22e6a8"></stop></linearGradient></defs>' +
+          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + ' enabled</text>' +
+          '<rect x="0" y="52" width="300" height="13" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="52" width="' + fill + '" height="13" rx="7" fill="url(#storageProviderProgressGradV57)"></rect>' +
+          '<circle cx="' + dot + '" cy="58.5" r="5" fill="#22e6a8"></circle>' +
+          '<text x="0" y="94" class="muted" font-size="11" font-weight="850">0</text>' +
+          '<text x="160" y="94" text-anchor="middle" class="muted" font-size="11" font-weight="850">' + value + '</text>' +
+          '<text x="315" y="94" text-anchor="end" class="muted" font-size="11" font-weight="850">' + max + '</text>' +
+        '</svg>' +
+        '<div class="goodos-storage-provider-kpi-chart-note-v57">' + target.note + '</div>' +
       '</div>';
   }
 
@@ -13613,46 +13711,27 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       var x = 12 + i * 21;
       var y = 84 - h;
 
-      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#storageProviderBarsGradV56)" opacity="' + (v <= 0 ? ".20" : ".92") + '"></rect>');
+      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#storageProviderBarsGradV57)" opacity="' + (v <= 0 ? ".20" : ".92") + '"></rect>');
     }
 
     return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v56" data-storage-provider-kpi-chart-v56="' + target.key + '">' +
+      '<div class="goodos-storage-provider-kpi-chart-v57" data-storage-provider-kpi-chart-v57="' + target.key + '">' +
         '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
-          '<defs><linearGradient id="storageProviderBarsGradV56" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="58%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>' +
+          '<defs><linearGradient id="storageProviderBarsGradV57" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="50%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#7c3aed"></stop></linearGradient></defs>' +
           '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + ' record</text>' +
           '<line x1="0" y1="84" x2="320" y2="84" class="grid"></line>' +
           bars.join("") +
+          '<text x="0" y="104" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="104" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
         '</svg>' +
-        '<div class="goodos-storage-provider-kpi-chart-note-v56">' + target.note + '</div>' +
-      '</div>';
-  }
-
-  function progressChart(target, value) {
-    var v = Math.max(0, Number(value || 0));
-    var max = Math.max(1, v + 2);
-    var pct = Math.max(0, Math.min(100, (v / max) * 100));
-    var fill = (300 * pct / 100).toFixed(1);
-    var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
-
-    return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v56" data-storage-provider-kpi-chart-v56="' + target.key + '">' +
-        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
-          '<defs><linearGradient id="storageProviderProgressGradV56" x1="0" x2="1"><stop offset="0%" stop-color="#4f8cff"></stop><stop offset="55%" stop-color="#36dcff"></stop><stop offset="100%" stop-color="#a78bfa"></stop></linearGradient></defs>' +
-          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
-          '<rect x="0" y="52" width="300" height="13" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
-          '<rect x="0" y="52" width="' + fill + '" height="13" rx="7" fill="url(#storageProviderProgressGradV56)"></rect>' +
-          '<circle cx="' + dot + '" cy="58.5" r="5" fill="#a8ffd4"></circle>' +
-          '<text x="0" y="94" class="muted" font-size="11" font-weight="850">CDN routing coverage snapshot</text>' +
-        '</svg>' +
+        '<div class="goodos-storage-provider-kpi-chart-note-v57">' + target.note + '</div>' +
       '</div>';
   }
 
   function chartMarkup(target, value) {
     if (target.key === "providers") {
-      return lineChart(target, value, "#36dcff", "#8b5cf6");
+      return lineChart(target, value, "#16e0ff", "#7c3aed");
     }
 
     if (target.key === "cdn-buckets") {
@@ -13660,7 +13739,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     }
 
     if (target.key === "public-buckets") {
-      return lineChart(target, value, "#38ef7d", "#36dcff");
+      return lineChart(target, value, "#18e0ff", "#7c3aed");
     }
 
     return barsChart(target, value);
@@ -13669,12 +13748,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   function renderStorageProviderCharts() {
     removeOldCharts();
 
-    if (!isStoragePage()) return;
-
-    var bounds = getSectionBounds();
+    if (!isStorageProviderSectionVisible()) return;
 
     TARGETS.forEach(function (target) {
-      var labelNode = findLabelNode(target, bounds);
+      var labelNode = findLabelNode(target);
       if (!labelNode) return;
 
       var card = cardFromLabel(labelNode);
@@ -13682,12 +13759,13 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
       var value = metricValue(card, target);
 
-      card.classList.add("goodos-storage-provider-kpi-card-v56");
+      card.classList.add("goodos-storage-provider-kpi-card-v57");
       card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
     });
   }
 
   function run() {
+    installApiKeysNavFix();
     renderStorageProviderCharts();
   }
 
@@ -13698,6 +13776,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   window.addEventListener("hashchange", function () {
+    if (currentHash() === "api-keys" || currentHash() === "apikeys" || currentHash() === "keys") {
+      setTimeout(forceApiKeysRoute, 80);
+    }
+
     setTimeout(run, 300);
     setTimeout(run, 900);
     setTimeout(run, 1800);
