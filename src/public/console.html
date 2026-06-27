@@ -1262,6 +1262,106 @@ main [class*="badge"],
 }
 </style>
 
+
+<style id="goodos-developer-center-live-v38">
+.goodos-dev-status-card-v38 {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.goodos-dev-status-card-v38::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 14px 18px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+}
+
+.goodos-dev-status-card-v38[data-live-status="ready"]::after {
+  background: linear-gradient(90deg, #4f8cff, #36dcff, #38ef7d);
+  box-shadow: 0 0 18px rgba(56,239,125,.18);
+}
+
+.goodos-dev-status-card-v38[data-live-status="checking"]::after {
+  background: linear-gradient(90deg, rgba(79,140,255,.35), rgba(54,220,255,.75), rgba(139,92,246,.35));
+  box-shadow: 0 0 18px rgba(54,220,255,.12);
+}
+
+.goodos-dev-status-card-v38[data-live-status="issue"]::after,
+.goodos-dev-status-card-v38[data-live-status="missing"]::after {
+  background: linear-gradient(90deg, #fb7185, #f97316);
+  box-shadow: 0 0 18px rgba(251,113,133,.16);
+}
+
+.goodos-dev-status-badge-v38 {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(7,16,31,.30);
+  color: #9eabc2;
+}
+
+.goodos-dev-status-badge-v38::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.goodos-dev-status-badge-v38[data-status="ready"] {
+  color: #a8ffd4;
+  border-color: rgba(56,239,125,.20);
+  background: rgba(56,239,125,.08);
+}
+
+.goodos-dev-status-badge-v38[data-status="ready"]::before {
+  background: #38ef7d;
+  box-shadow: 0 0 12px rgba(56,239,125,.65);
+}
+
+.goodos-dev-status-badge-v38[data-status="checking"] {
+  color: #b9d9ff;
+  border-color: rgba(79,140,255,.22);
+  background: rgba(79,140,255,.08);
+}
+
+.goodos-dev-status-badge-v38[data-status="checking"]::before {
+  background: #36dcff;
+  box-shadow: 0 0 12px rgba(54,220,255,.55);
+}
+
+.goodos-dev-status-badge-v38[data-status="issue"],
+.goodos-dev-status-badge-v38[data-status="missing"] {
+  color: #fecdd3;
+  border-color: rgba(251,113,133,.24);
+  background: rgba(251,113,133,.09);
+}
+
+.goodos-dev-status-badge-v38[data-status="issue"]::before,
+.goodos-dev-status-badge-v38[data-status="missing"]::before {
+  background: #fb7185;
+  box-shadow: 0 0 12px rgba(251,113,133,.55);
+}
+
+.goodos-dev-status-detail-v38 {
+  margin-top: 8px;
+  color: #8fa0ba;
+  font-size: 11px;
+  line-height: 1.35;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -10450,6 +10550,293 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(run, 800);
   setTimeout(run, 1800);
+})();
+</script>
+
+
+<script id="goodos-developer-center-live-v38-js">
+(function () {
+  if (window.__goodosDeveloperCenterLiveV38) return;
+  window.__goodosDeveloperCenterLiveV38 = true;
+
+  var DEV_ASSETS = [
+    {
+      key: "openapi",
+      label: "OPENAPI",
+      cardText: "OPENAPI",
+      url: "/openapi.json",
+      type: "json"
+    },
+    {
+      key: "javascript",
+      label: "JAVASCRIPT SDK",
+      cardText: "JAVASCRIPT SDK",
+      url: "/sdk/goodos.js",
+      type: "text"
+    },
+    {
+      key: "typescript",
+      label: "TYPESCRIPT",
+      cardText: "TYPESCRIPT",
+      url: "/sdk/goodos.d.ts",
+      type: "text"
+    },
+    {
+      key: "postman",
+      label: "POSTMAN",
+      cardText: "POSTMAN",
+      url: "/postman/goodos-postman-collection.json",
+      type: "json"
+    }
+  ];
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function findDeveloperCenter() {
+    var root = getRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    var title = nodes.find(function (el) {
+      if (el.closest("aside, nav, header")) return false;
+      if (el.children.length > 3) return false;
+      return cleanText(el).toLowerCase() === "developer center";
+    });
+
+    if (!title) return root;
+
+    var node = title;
+    for (var i = 0; node && node !== document.body && i < 8; i += 1) {
+      var text = cleanText(node).toUpperCase();
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+
+      if (
+        text.indexOf("DEVELOPER CENTER") !== -1 &&
+        text.indexOf("OPENAPI") !== -1 &&
+        text.indexOf("JAVASCRIPT SDK") !== -1 &&
+        text.indexOf("POSTMAN") !== -1 &&
+        rect.width >= 400
+      ) {
+        return node;
+      }
+
+      node = node.parentElement;
+    }
+
+    return root;
+  }
+
+  function findStatusCard(asset) {
+    var center = findDeveloperCenter();
+    var nodes = Array.prototype.slice.call(center.querySelectorAll("*"));
+
+    var labelNode = nodes.find(function (el) {
+      if (el.closest("aside, nav, header")) return false;
+      if (el.closest(".goodos-dev-status-badge-v38")) return false;
+      if (el.children.length > 3) return false;
+      return cleanText(el).toUpperCase() === asset.cardText;
+    });
+
+    if (!labelNode) return null;
+
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
+      if (node.closest && node.closest("aside, nav, header")) break;
+
+      var text = cleanText(node).toUpperCase();
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+
+      if (
+        text.indexOf(asset.cardText) !== -1 &&
+        rect.width >= 180 &&
+        rect.width <= 520 &&
+        rect.height >= 70 &&
+        rect.height <= 260
+      ) {
+        candidates.push({ node: node, area: rect.width * rect.height });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function replaceOldReadyText(card) {
+    if (!card) return;
+
+    Array.prototype.slice.call(card.querySelectorAll(".goodos-dev-status-badge-v38, .goodos-dev-status-detail-v38")).forEach(function (el) {
+      el.remove();
+    });
+
+    var nodes = Array.prototype.slice.call(card.querySelectorAll("*")).filter(function (el) {
+      if (el.closest(".goodos-dev-status-badge-v38")) return false;
+      return cleanText(el).toLowerCase() === "ready";
+    });
+
+    nodes.forEach(function (el) {
+      el.textContent = "";
+      el.style.display = "none";
+    });
+  }
+
+  function setCardStatus(card, asset, status, message) {
+    if (!card) return;
+
+    replaceOldReadyText(card);
+
+    card.classList.add("goodos-dev-status-card-v38");
+    card.setAttribute("data-live-status", status);
+
+    var badge = document.createElement("div");
+    badge.className = "goodos-dev-status-badge-v38";
+    badge.setAttribute("data-status", status);
+    badge.textContent = status === "ready"
+      ? "Live"
+      : status === "checking"
+        ? "Checking"
+        : status === "missing"
+          ? "Missing"
+          : "Issue";
+
+    var detail = document.createElement("div");
+    detail.className = "goodos-dev-status-detail-v38";
+    detail.textContent = message;
+
+    card.appendChild(badge);
+    card.appendChild(detail);
+  }
+
+  async function checkAsset(asset) {
+    var started = Date.now();
+
+    try {
+      var response = await fetch(asset.url + "?t=" + Date.now(), {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          "Accept": asset.type === "json" ? "application/json,*/*" : "text/plain,*/*"
+        }
+      });
+
+      var duration = Date.now() - started;
+
+      if (response.status === 404) {
+        return {
+          status: "missing",
+          message: "404 missing route"
+        };
+      }
+
+      if (!response.ok) {
+        return {
+          status: "issue",
+          message: "HTTP " + response.status + " returned"
+        };
+      }
+
+      var body = await response.text();
+
+      if (!body || body.trim().length < 10) {
+        return {
+          status: "issue",
+          message: "Empty response"
+        };
+      }
+
+      if (asset.type === "json") {
+        try {
+          JSON.parse(body);
+        } catch (error) {
+          return {
+            status: "issue",
+            message: "Invalid JSON"
+          };
+        }
+      }
+
+      return {
+        status: "ready",
+        message: "200 OK • " + body.length.toLocaleString() + " bytes • " + duration + "ms"
+      };
+    } catch (error) {
+      return {
+        status: "issue",
+        message: error && error.message ? error.message : "Request failed"
+      };
+    }
+  }
+
+  async function refreshDeveloperStatuses() {
+    DEV_ASSETS.forEach(function (asset) {
+      var card = findStatusCard(asset);
+      if (card) {
+        setCardStatus(card, asset, "checking", "Checking " + asset.url);
+      }
+    });
+
+    for (var i = 0; i < DEV_ASSETS.length; i += 1) {
+      var asset = DEV_ASSETS[i];
+      var card = findStatusCard(asset);
+      if (!card) continue;
+
+      var result = await checkAsset(asset);
+      setCardStatus(card, asset, result.status, result.message);
+    }
+  }
+
+  function attachButtons() {
+    var root = getRoot();
+    Array.prototype.slice.call(root.querySelectorAll("button,a")).forEach(function (btn) {
+      var text = cleanText(btn).toLowerCase();
+
+      if (text === "open docs") {
+        btn.onclick = function () {
+          window.open("/docs", "_blank");
+        };
+      }
+
+      if (text === "openapi") {
+        btn.onclick = function () {
+          window.open("/openapi.json", "_blank");
+        };
+      }
+    });
+  }
+
+  function start() {
+    attachButtons();
+    refreshDeveloperStatuses();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(start, 600);
+  });
+
+  window.refreshDeveloperCenterLiveV38 = refreshDeveloperStatuses;
 })();
 </script>
 
