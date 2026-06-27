@@ -3546,6 +3546,311 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-project-overview-functional-v82">
+.goodos-project-overview-v82 {
+  width: 100% !important;
+}
+
+.goodos-project-overview-shell-v82 {
+  border-radius: 28px !important;
+  border: 1px solid rgba(148,163,184,.18) !important;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.16), transparent 38%),
+    linear-gradient(145deg, rgba(31,42,64,.94), rgba(15,23,42,.96)) !important;
+  padding: 34px !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+.goodos-project-overview-header-v82 {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 24px !important;
+  margin-bottom: 26px !important;
+}
+
+.goodos-project-overview-eyebrow-v82 {
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  letter-spacing: .34em !important;
+  text-transform: uppercase !important;
+  color: rgba(167,139,250,.96) !important;
+  margin-bottom: 14px !important;
+}
+
+.goodos-project-overview-title-v82 {
+  font-size: clamp(42px, 4vw, 72px) !important;
+  line-height: .95 !important;
+  font-weight: 950 !important;
+  letter-spacing: -.06em !important;
+  color: #f8fafc !important;
+  margin: 0 0 16px !important;
+}
+
+.goodos-project-overview-copy-v82 {
+  max-width: 820px !important;
+  color: rgba(203,213,225,.84) !important;
+  font-size: 17px !important;
+  line-height: 1.65 !important;
+  margin: 0 !important;
+}
+
+.goodos-project-overview-actions-v82 {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+}
+
+.goodos-project-overview-btn-v82 {
+  border: 1px solid rgba(148,163,184,.18) !important;
+  background: rgba(15,23,42,.64) !important;
+  color: #dbeafe !important;
+  border-radius: 999px !important;
+  padding: 12px 18px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: transform .14s ease, border-color .14s ease, background .14s ease !important;
+}
+
+.goodos-project-overview-btn-v82:hover {
+  transform: translateY(-1px) !important;
+  border-color: rgba(34,211,238,.44) !important;
+  background: rgba(30,41,59,.82) !important;
+}
+
+.goodos-project-overview-grid-v82 {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+}
+
+.goodos-project-overview-card-v82 {
+  min-height: 310px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(148,163,184,.16) !important;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.10), transparent 42%),
+    linear-gradient(180deg, rgba(30,41,59,.88), rgba(15,23,42,.92)) !important;
+  padding: 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.goodos-project-overview-card-v82::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 34%),
+    linear-gradient(135deg, rgba(56,189,248,.35), rgba(124,58,237,.18));
+  border: 1px solid rgba(56,189,248,.24);
+  pointer-events: none;
+}
+
+.goodos-project-overview-label-v82 {
+  color: rgba(148,163,184,.78) !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  letter-spacing: .28em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 18px !important;
+}
+
+.goodos-project-overview-value-v82 {
+  font-size: 42px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  letter-spacing: -.04em !important;
+  color: #f8fafc !important;
+  margin-bottom: 10px !important;
+  max-width: calc(100% - 76px) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.goodos-project-overview-desc-v82 {
+  color: rgba(203,213,225,.74) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  margin-bottom: 20px !important;
+}
+
+.goodos-project-overview-chart-v82 {
+  margin-top: auto !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,211,238,.10), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.12) !important;
+  padding: 12px !important;
+  min-height: 126px !important;
+}
+
+.goodos-project-overview-chart-v82 svg {
+  display: block !important;
+  width: 100% !important;
+  height: 118px !important;
+}
+
+.goodos-project-overview-row-v82 {
+  display: grid !important;
+  grid-template-columns: 170px 1fr auto !important;
+  gap: 14px !important;
+  align-items: center !important;
+  padding: 13px 0 !important;
+  border-bottom: 1px solid rgba(148,163,184,.10) !important;
+}
+
+.goodos-project-overview-row-v82:last-child {
+  border-bottom: 0 !important;
+}
+
+.goodos-project-overview-row-label-v82 {
+  color: rgba(148,163,184,.74) !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+
+.goodos-project-overview-row-value-v82 {
+  color: #e2e8f0 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.goodos-project-overview-small-btn-v82 {
+  border: 1px solid rgba(148,163,184,.18) !important;
+  background: rgba(15,23,42,.62) !important;
+  color: #bae6fd !important;
+  border-radius: 999px !important;
+  padding: 7px 11px !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+}
+
+.goodos-project-overview-panel-v82 {
+  margin-top: 18px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: rgba(15,23,42,.50) !important;
+  padding: 22px !important;
+}
+
+.goodos-project-overview-panel-title-v82 {
+  color: #f8fafc !important;
+  font-size: 18px !important;
+  font-weight: 950 !important;
+  margin-bottom: 14px !important;
+}
+
+.goodos-project-overview-checklist-v82 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.goodos-project-overview-check-v82 {
+  border: 1px solid rgba(148,163,184,.12) !important;
+  background: rgba(15,23,42,.55) !important;
+  border-radius: 16px !important;
+  padding: 14px !important;
+  display: flex !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+}
+
+.goodos-project-overview-check-dot-v82 {
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 999px !important;
+  margin-top: 5px !important;
+  background: #22c55e !important;
+  box-shadow: 0 0 0 6px rgba(34,197,94,.12) !important;
+  flex: 0 0 auto !important;
+}
+
+.goodos-project-overview-check-v82.is-pending-v82 .goodos-project-overview-check-dot-v82 {
+  background: #f59e0b !important;
+  box-shadow: 0 0 0 6px rgba(245,158,11,.12) !important;
+}
+
+.goodos-project-overview-check-title-v82 {
+  color: #e2e8f0 !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.goodos-project-overview-check-copy-v82 {
+  color: rgba(203,213,225,.66) !important;
+  font-size: 12px !important;
+  margin-top: 3px !important;
+  line-height: 1.45 !important;
+}
+
+.goodos-project-overview-status-v82 {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(34,197,94,.24) !important;
+  background: rgba(34,197,94,.10) !important;
+  color: #bbf7d0 !important;
+  padding: 9px 13px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+
+.goodos-project-overview-status-v82::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+}
+
+@media (max-width: 1300px) {
+  .goodos-project-overview-grid-v82 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .goodos-project-overview-header-v82 {
+    flex-direction: column !important;
+  }
+
+  .goodos-project-overview-grid-v82,
+  .goodos-project-overview-checklist-v82 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .goodos-project-overview-row-v82 {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -18995,6 +19300,413 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(run, 900);
   setTimeout(run, 1800);
   setTimeout(run, 3000);
+})();
+</script>
+
+
+<script id="goodos-project-overview-functional-v82-js">
+(function () {
+  if (window.__goodosProjectOverviewFunctionalV82) return;
+  window.__goodosProjectOverviewFunctionalV82 = true;
+
+  var state = {
+    rendered: false,
+    data: {
+      health: null,
+      projects: null,
+      usage: null,
+      auth: null,
+      storage: null,
+      realtime: null
+    }
+  };
+
+  function root() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function isProjectOverviewRoute() {
+    var hash = String(window.location.hash || "").toLowerCase();
+    var text = cleanText(root()).toLowerCase();
+
+    return hash === "#project-overview" ||
+      hash.indexOf("project-overview") !== -1 ||
+      (
+        text.indexOf("project overview") !== -1 &&
+        text.indexOf("goodos cloud skeleton") !== -1
+      );
+  }
+
+  function safeNumber(value, fallback) {
+    var n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function htmlEscape(value) {
+    return String(value == null ? "" : value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  async function fetchJson(url) {
+    try {
+      var res = await fetch(url, {
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+
+      var text = await res.text();
+      var json = null;
+
+      try {
+        json = text ? JSON.parse(text) : null;
+      } catch (e) {
+        json = { raw: text };
+      }
+
+      return {
+        ok: res.ok,
+        status: res.status,
+        data: json
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        status: 0,
+        data: { error: err && err.message ? err.message : String(err) }
+      };
+    }
+  }
+
+  async function loadProjectOverviewData() {
+    var results = await Promise.all([
+      fetchJson("/health"),
+      fetchJson("/api/admin/projects-page-data"),
+      fetchJson("/api/admin/usage-v2-page-data"),
+      fetchJson("/api/admin/auth-v2-page-data"),
+      fetchJson("/api/admin/storage-v2-page-data"),
+      fetchJson("/api/admin/realtime-v2-page-data")
+    ]);
+
+    state.data.health = results[0];
+    state.data.projects = results[1];
+    state.data.usage = results[2];
+    state.data.auth = results[3];
+    state.data.storage = results[4];
+    state.data.realtime = results[5];
+
+    updateProjectOverviewValues();
+  }
+
+  function chartSvg(colorA, colorB, series, maxLabel, midLabel) {
+    var points = series.map(function (y, i) {
+      return [34 + i * 16.2, y];
+    });
+
+    var path = points.map(function (pt, index) {
+      return (index === 0 ? "M" : " L") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+    }).join("");
+
+    var last = points[points.length - 1];
+    var id = "gpo" + Math.random().toString(16).slice(2);
+
+    return '' +
+      '<svg viewBox="0 0 330 118" aria-hidden="true">' +
+        '<defs>' +
+          '<linearGradient id="' + id + 'line" x1="0" x2="1">' +
+            '<stop offset="0%" stop-color="' + colorA + '"></stop>' +
+            '<stop offset="100%" stop-color="' + colorB + '"></stop>' +
+          '</linearGradient>' +
+          '<linearGradient id="' + id + 'fill" x1="0" x2="0" y1="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + colorB + '" stop-opacity=".28"></stop>' +
+            '<stop offset="100%" stop-color="' + colorB + '" stop-opacity="0"></stop>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<text x="0" y="14" fill="rgba(203,213,225,.78)" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+        '<text x="0" y="48" fill="rgba(203,213,225,.78)" font-size="11" font-weight="800">' + maxLabel + '</text>' +
+        '<text x="0" y="78" fill="rgba(203,213,225,.78)" font-size="11" font-weight="800">' + midLabel + '</text>' +
+        '<text x="0" y="106" fill="rgba(203,213,225,.78)" font-size="11" font-weight="800">0</text>' +
+        '<line x1="34" y1="42" x2="314" y2="42" stroke="rgba(148,163,184,.15)" stroke-dasharray="5 8"></line>' +
+        '<line x1="34" y1="72" x2="314" y2="72" stroke="rgba(148,163,184,.15)" stroke-dasharray="5 8"></line>' +
+        '<line x1="34" y1="102" x2="314" y2="102" stroke="rgba(148,163,184,.16)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 102 L34 102 Z" fill="url(#' + id + 'fill)"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#' + id + 'line)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, index) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (index === points.length - 1 ? 5.5 : 2.8) + '" fill="' + colorA + '" stroke="rgba(255,255,255,.2)" stroke-width="1"></circle>';
+        }).join("") +
+      '</svg>';
+  }
+
+  function renderCard(id, label, value, desc, colorA, colorB, series, maxLabel, midLabel) {
+    return '' +
+      '<div class="goodos-project-overview-card-v82" data-gpo-card="' + id + '">' +
+        '<div class="goodos-project-overview-label-v82">' + htmlEscape(label) + '</div>' +
+        '<div class="goodos-project-overview-value-v82" data-gpo-value="' + id + '">' + htmlEscape(value) + '</div>' +
+        '<div class="goodos-project-overview-desc-v82" data-gpo-desc="' + id + '">' + htmlEscape(desc) + '</div>' +
+        '<div class="goodos-project-overview-chart-v82">' + chartSvg(colorA, colorB, series, maxLabel, midLabel) + '</div>' +
+      '</div>';
+  }
+
+  function renderShell() {
+    var container = root();
+
+    container.innerHTML = '' +
+      '<div class="goodos-project-overview-v82">' +
+        '<section class="goodos-project-overview-shell-v82">' +
+          '<div class="goodos-project-overview-header-v82">' +
+            '<div>' +
+              '<div class="goodos-project-overview-eyebrow-v82">GOODOS CLOUD PROJECT</div>' +
+              '<h1 class="goodos-project-overview-title-v82">Project Overview</h1>' +
+              '<p class="goodos-project-overview-copy-v82">Live project health, backend connection details, launch checklist, API usage, storage, auth, realtime status, and fast navigation from one control center.</p>' +
+            '</div>' +
+            '<div class="goodos-project-overview-actions-v82">' +
+              '<span class="goodos-project-overview-status-v82" data-gpo-status>Checking</span>' +
+              '<button class="goodos-project-overview-btn-v82" data-gpo-action="refresh">Refresh</button>' +
+              '<button class="goodos-project-overview-btn-v82" data-gpo-nav="database">Database</button>' +
+              '<button class="goodos-project-overview-btn-v82" data-gpo-nav="auth">Auth</button>' +
+              '<button class="goodos-project-overview-btn-v82" data-gpo-nav="api-keys">API Keys</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="goodos-project-overview-grid-v82">' +
+            renderCard("health", "Project Health", "Checking", "Backend health, runtime, and production API status.", "#22c55e", "#14b8a6", [92,84,76,68,56,48,42,38,34,30,28,24,22,20,18,16,14,12], "100", "50") +
+            renderCard("connection", "Connection Details", "Loading", "API base, project reference, region, and copy actions.", "#38bdf8", "#2563eb", [128,118,110,96,86,78,66,58,52,46,40,36,32,28,24,20,18,16], "6", "3") +
+            renderCard("checklist", "Launch Checklist", "Loading", "Database, auth, storage, realtime, functions, jobs, and billing readiness.", "#a78bfa", "#7c3aed", [144,132,122,110,98,86,76,66,58,50,42,36,30,24,20,16,12,10], "7", "4") +
+            renderCard("usage", "Usage Requests", "Loading", "API usage, auth requests, storage requests, realtime events, and function runs.", "#60a5fa", "#06b6d4", [150,138,124,110,100,88,76,68,62,56,48,40,32,26,20,16,12,8], "30", "15") +
+          '</div>' +
+
+          '<div class="goodos-project-overview-panel-v82">' +
+            '<div class="goodos-project-overview-panel-title-v82">Connection Details</div>' +
+            '<div class="goodos-project-overview-row-v82">' +
+              '<div class="goodos-project-overview-row-label-v82">API Base</div>' +
+              '<div class="goodos-project-overview-row-value-v82" data-gpo-field="apiBase">' + htmlEscape(location.origin) + '</div>' +
+              '<button class="goodos-project-overview-small-btn-v82" data-gpo-copy="apiBase">Copy</button>' +
+            '</div>' +
+            '<div class="goodos-project-overview-row-v82">' +
+              '<div class="goodos-project-overview-row-label-v82">Project</div>' +
+              '<div class="goodos-project-overview-row-value-v82" data-gpo-field="projectName">Loading</div>' +
+              '<button class="goodos-project-overview-small-btn-v82" data-gpo-nav="projects">Open</button>' +
+            '</div>' +
+            '<div class="goodos-project-overview-row-v82">' +
+              '<div class="goodos-project-overview-row-label-v82">Environment</div>' +
+              '<div class="goodos-project-overview-row-value-v82" data-gpo-field="environment">Production</div>' +
+              '<button class="goodos-project-overview-small-btn-v82" data-gpo-nav="settings">Settings</button>' +
+            '</div>' +
+            '<div class="goodos-project-overview-row-v82">' +
+              '<div class="goodos-project-overview-row-label-v82">Health Endpoint</div>' +
+              '<div class="goodos-project-overview-row-value-v82" data-gpo-field="healthUrl">' + htmlEscape(location.origin + "/health") + '</div>' +
+              '<button class="goodos-project-overview-small-btn-v82" data-gpo-copy="healthUrl">Copy</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="goodos-project-overview-panel-v82">' +
+            '<div class="goodos-project-overview-panel-title-v82">Launch Checklist</div>' +
+            '<div class="goodos-project-overview-checklist-v82">' +
+              '<div class="goodos-project-overview-check-v82" data-gpo-check="backend"><span class="goodos-project-overview-check-dot-v82"></span><div><div class="goodos-project-overview-check-title-v82">Backend API</div><div class="goodos-project-overview-check-copy-v82">Health endpoint is reachable.</div></div></div>' +
+              '<div class="goodos-project-overview-check-v82 is-pending-v82" data-gpo-check="projects"><span class="goodos-project-overview-check-dot-v82"></span><div><div class="goodos-project-overview-check-title-v82">Projects</div><div class="goodos-project-overview-check-copy-v82">Project and environment data loaded.</div></div></div>' +
+              '<div class="goodos-project-overview-check-v82 is-pending-v82" data-gpo-check="auth"><span class="goodos-project-overview-check-dot-v82"></span><div><div class="goodos-project-overview-check-title-v82">Auth</div><div class="goodos-project-overview-check-copy-v82">Roles, sessions, and auth data loaded.</div></div></div>' +
+              '<div class="goodos-project-overview-check-v82 is-pending-v82" data-gpo-check="storage"><span class="goodos-project-overview-check-dot-v82"></span><div><div class="goodos-project-overview-check-title-v82">Storage</div><div class="goodos-project-overview-check-copy-v82">Buckets and storage V2 metadata loaded.</div></div></div>' +
+              '<div class="goodos-project-overview-check-v82 is-pending-v82" data-gpo-check="realtime"><span class="goodos-project-overview-check-dot-v82"></span><div><div class="goodos-project-overview-check-title-v82">Realtime</div><div class="goodos-project-overview-check-copy-v82">Channels, events, and presence data loaded.</div></div></div>' +
+              '<div class="goodos-project-overview-check-v82 is-pending-v82" data-gpo-check="usage"><span class="goodos-project-overview-check-dot-v82"></span><div><div class="goodos-project-overview-check-title-v82">Usage + Billing</div><div class="goodos-project-overview-check-copy-v82">Quota and usage data loaded.</div></div></div>' +
+            '</div>' +
+          '</div>' +
+        '</section>' +
+      '</div>';
+
+    bindActions();
+    state.rendered = true;
+  }
+
+  function setText(selector, value) {
+    var el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  }
+
+  function setCheck(name, ok) {
+    var el = document.querySelector('[data-gpo-check="' + name + '"]');
+    if (!el) return;
+
+    if (ok) {
+      el.classList.remove("is-pending-v82");
+    } else {
+      el.classList.add("is-pending-v82");
+    }
+  }
+
+  function firstArrayLength(obj, keys) {
+    if (!obj) return 0;
+
+    for (var i = 0; i < keys.length; i += 1) {
+      var value = obj[keys[i]];
+
+      if (Array.isArray(value)) return value.length;
+      if (value && Array.isArray(value.rows)) return value.rows.length;
+      if (value && Array.isArray(value.items)) return value.items.length;
+    }
+
+    return 0;
+  }
+
+  function updateProjectOverviewValues() {
+    var healthOk = !!(state.data.health && state.data.health.ok);
+    var projectsOk = !!(state.data.projects && state.data.projects.ok);
+    var usageOk = !!(state.data.usage && state.data.usage.ok);
+    var authOk = !!(state.data.auth && state.data.auth.ok);
+    var storageOk = !!(state.data.storage && state.data.storage.ok);
+    var realtimeOk = !!(state.data.realtime && state.data.realtime.ok);
+
+    var healthStatus = healthOk ? "Operational" : "Needs Login";
+    var projectName = "GoodOS Platform";
+    var environment = "Production";
+
+    try {
+      var pd = state.data.projects && state.data.projects.data ? state.data.projects.data : {};
+      var project = (pd.projects && pd.projects[0]) || (pd.data && pd.data.projects && pd.data.projects[0]) || null;
+      var env = (pd.environments && pd.environments[0]) || (pd.data && pd.data.environments && pd.data.environments[0]) || null;
+
+      if (project && (project.name || project.title)) projectName = project.name || project.title;
+      if (env && (env.name || env.slug || env.type)) environment = env.name || env.slug || env.type;
+    } catch (e) {}
+
+    var usageTotal = 0;
+
+    try {
+      var ud = state.data.usage && state.data.usage.data ? state.data.usage.data : {};
+      usageTotal += firstArrayLength(ud, ["usage", "usageEvents", "meterEvents", "quotaCounters", "quotas"]);
+      if (ud.data) usageTotal += firstArrayLength(ud.data, ["usage", "usageEvents", "meterEvents", "quotaCounters", "quotas"]);
+    } catch (e) {}
+
+    var checklistReady = [healthOk, projectsOk, usageOk, authOk, storageOk, realtimeOk].filter(Boolean).length;
+
+    setText('[data-gpo-status]', healthOk ? "Operational" : "Check Login");
+    setText('[data-gpo-value="health"]', healthStatus);
+    setText('[data-gpo-desc="health"]', healthOk ? "Backend health is online and responding." : "Backend page loaded, but admin data may require login.");
+
+    setText('[data-gpo-value="connection"]', projectName);
+    setText('[data-gpo-desc="connection"]', "Environment: " + environment + " • API base ready.");
+
+    setText('[data-gpo-value="checklist"]', checklistReady + "/6");
+    setText('[data-gpo-desc="checklist"]', "Live modules ready: " + checklistReady + " of 6.");
+
+    setText('[data-gpo-value="usage"]', String(usageTotal));
+    setText('[data-gpo-desc="usage"]', usageOk ? "Usage and quota data is reachable." : "Usage data requires authenticated admin access.");
+
+    setText('[data-gpo-field="projectName"]', projectName);
+    setText('[data-gpo-field="environment"]', environment);
+
+    setCheck("backend", healthOk);
+    setCheck("projects", projectsOk);
+    setCheck("auth", authOk);
+    setCheck("storage", storageOk);
+    setCheck("realtime", realtimeOk);
+    setCheck("usage", usageOk);
+  }
+
+  function copyField(field) {
+    var el = document.querySelector('[data-gpo-field="' + field + '"]');
+    if (!el) return;
+
+    var text = cleanText(el);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        alert("Copied: " + text);
+      }).catch(function () {
+        alert(text);
+      });
+    } else {
+      alert(text);
+    }
+  }
+
+  function navTo(target) {
+    var map = {
+      "overview": "#overview",
+      "projects": "#projects",
+      "database": "#database",
+      "auth": "#auth",
+      "api-keys": "#api-keys",
+      "storage": "#storage",
+      "realtime": "#realtime",
+      "functions": "#functions",
+      "settings": "#settings"
+    };
+
+    window.location.hash = map[target] || ("#" + target);
+  }
+
+  function bindActions() {
+    document.querySelectorAll("[data-gpo-action='refresh']").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        loadProjectOverviewData();
+      });
+    });
+
+    document.querySelectorAll("[data-gpo-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        copyField(btn.getAttribute("data-gpo-copy"));
+      });
+    });
+
+    document.querySelectorAll("[data-gpo-nav]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        navTo(btn.getAttribute("data-gpo-nav"));
+      });
+    });
+  }
+
+  function boot() {
+    if (!isProjectOverviewRoute()) return;
+
+    renderShell();
+    loadProjectOverviewData();
+  }
+
+  var running = false;
+
+  function run() {
+    if (running) return;
+    running = true;
+
+    setTimeout(function () {
+      boot();
+      running = false;
+    }, 120);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 100);
+    setTimeout(run, 500);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  var timer = null;
+  var observer = new MutationObserver(function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 500);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
 })();
 </script>
 
