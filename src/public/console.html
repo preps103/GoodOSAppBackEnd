@@ -2394,57 +2394,68 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
-<style id="goodos-storage-provider-charts-v62">
-/* V62: Storage provider KPI charts only. No navigation logic. */
+<style id="goodos-api-clean-storage-charts-v63">
+/* V63: clean API Keys extra container + force all 4 Storage KPI charts visible */
 
-.goodos-storage-provider-card-v62 {
-  min-height: 276px !important;
+/* Remove the extra custom API Keys hero/container added by earlier API Keys route patch. */
+.goodos-api-keys-page-v60 .goodos-api-keys-hero-v60 {
+  display: none !important;
+}
+
+.goodos-api-keys-page-v60 {
+  padding-top: 0 !important;
+}
+
+/* Storage KPI chart cards */
+.goodos-storage-kpi-card-v63 {
+  min-height: 292px !important;
   height: auto !important;
   overflow: visible !important;
   display: flex !important;
   flex-direction: column !important;
 }
 
-.goodos-storage-provider-chart-v62 {
+.goodos-storage-kpi-chart-v63 {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
   position: relative !important;
-  z-index: 3 !important;
+  z-index: 20 !important;
   margin-top: auto !important;
   width: 100% !important;
-  min-height: 136px !important;
+  min-height: 148px !important;
   border-radius: 20px !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(54,220,255,.15), transparent 42%),
-    linear-gradient(180deg, rgba(6,17,34,.68), rgba(8,16,31,.36)) !important;
-  border: 1px solid rgba(148,163,184,.16) !important;
-  padding: 14px 16px !important;
+    radial-gradient(circle at 100% 0%, rgba(54,220,255,.16), transparent 42%),
+    linear-gradient(180deg, rgba(6,17,34,.72), rgba(8,16,31,.40)) !important;
+  border: 1px solid rgba(148,163,184,.17) !important;
+  padding: 14px 16px 12px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 16px 36px rgba(0,0,0,.12) !important;
 }
 
-.goodos-storage-provider-chart-v62 svg {
+.goodos-storage-kpi-chart-v63 svg {
   display: block !important;
   width: 100% !important;
-  height: 118px !important;
+  height: 120px !important;
   overflow: visible !important;
 }
 
-.goodos-storage-provider-chart-v62 .muted {
+.goodos-storage-kpi-chart-v63 .muted {
   fill: #9eabc2;
 }
 
-.goodos-storage-provider-chart-v62 .green {
+.goodos-storage-kpi-chart-v63 .green {
   fill: #a8ffd4;
 }
 
-.goodos-storage-provider-chart-v62 .grid {
+.goodos-storage-kpi-chart-v63 .grid {
   stroke: rgba(148,163,184,.18);
   stroke-dasharray: 4 7;
 }
 
-.goodos-storage-provider-chart-note-v62 {
+.goodos-storage-kpi-chart-note-v63 {
   color: #8fa0ba !important;
   font-size: 11px !important;
   font-weight: 750 !important;
@@ -14733,10 +14744,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-<script id="goodos-storage-provider-charts-v62-js">
+<script id="goodos-api-clean-storage-charts-v63-js">
 (function () {
-  if (window.__goodosStorageProviderChartsV62) return;
-  window.__goodosStorageProviderChartsV62 = true;
+  if (window.__goodosApiCleanStorageChartsV63) return;
+  window.__goodosApiCleanStorageChartsV63 = true;
 
   var TARGETS = [
     {
@@ -14790,18 +14801,13 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function isVisible(el) {
     if (!el || !el.getBoundingClientRect) return false;
-
     var r = el.getBoundingClientRect();
     var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-
-    return r.width > 0 &&
-      r.height > 0 &&
-      (!style || (style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0"));
+    return r.width > 0 && r.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
   }
 
-  function storageProviderContentVisible() {
+  function storagePageVisible() {
     var text = norm(cleanText(getRoot()));
-
     return text.indexOf("storage v2") !== -1 &&
       text.indexOf("providers") !== -1 &&
       text.indexOf("cdn buckets") !== -1 &&
@@ -14809,10 +14815,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       text.indexOf("versions") !== -1;
   }
 
-  function removeOldCharts() {
+  function removeOldStorageCharts() {
     Array.prototype.slice.call(
       document.querySelectorAll(
-        ".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58,.goodos-storage-graph-v61,.goodos-storage-provider-chart-v62"
+        ".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58,.goodos-storage-graph-v61,.goodos-storage-provider-chart-v62,.goodos-storage-kpi-chart-v63"
       )
     ).forEach(function (el) {
       el.remove();
@@ -14820,7 +14826,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     Array.prototype.slice.call(
       document.querySelectorAll(
-        ".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57,.goodos-storage-provider-kpi-card-v58,.goodos-storage-graph-card-v61,.goodos-storage-provider-card-v62"
+        ".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57,.goodos-storage-provider-kpi-card-v58,.goodos-storage-graph-card-v61,.goodos-storage-provider-card-v62,.goodos-storage-kpi-card-v63"
       )
     ).forEach(function (el) {
       el.classList.remove("goodos-storage-provider-kpi-card-v56");
@@ -14828,113 +14834,102 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       el.classList.remove("goodos-storage-provider-kpi-card-v58");
       el.classList.remove("goodos-storage-graph-card-v61");
       el.classList.remove("goodos-storage-provider-card-v62");
+      el.classList.remove("goodos-storage-kpi-card-v63");
     });
   }
 
-  function containsAllProviderLabels(el) {
-    var text = compact(cleanText(el));
+  function labelExactNode(label) {
+    var root = getRoot();
+    var wanted = compact(label);
 
-    return TARGETS.every(function (target) {
-      return text.indexOf(compact(target.label)) !== -1;
-    });
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    return nodes.find(function (el) {
+      if (!isVisible(el)) return false;
+      if (el.closest("aside,nav,header")) return false;
+      if (el.closest(".goodos-storage-kpi-chart-v63")) return false;
+      if (el.children.length > 2) return false;
+      return compact(cleanText(el)) === wanted;
+    }) || null;
   }
 
-  function countProviderLabels(el) {
+  function labelsInside(el) {
     var text = compact(cleanText(el));
-
     return TARGETS.filter(function (target) {
       return text.indexOf(compact(target.label)) !== -1;
     }).length;
   }
 
-  function findProviderKpiContainer() {
-    var root = getRoot();
+  function cardForLabel(labelNode) {
+    if (!labelNode) return null;
 
-    var candidates = Array.prototype.slice.call(root.querySelectorAll("section,div,article")).filter(function (el) {
-      if (!isVisible(el)) return false;
-      if (el.closest("aside,nav,header")) return false;
-      if (!containsAllProviderLabels(el)) return false;
+    var label = cleanText(labelNode);
+    var node = labelNode;
+    var candidates = [];
 
-      var r = el.getBoundingClientRect();
-      return r.width >= 700 && r.height >= 90 && r.height <= 420;
-    });
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest("aside,nav,header")) break;
+
+      var text = cleanText(node);
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var hitCount = labelsInside(node);
+
+      if (
+        text.indexOf(label) !== -1 &&
+        hitCount === 1 &&
+        rect.width >= 180 &&
+        rect.width <= 780 &&
+        rect.height >= 70 &&
+        rect.height <= 360
+      ) {
+        candidates.push({
+          node: node,
+          area: rect.width * rect.height
+        });
+      }
+
+      node = node.parentElement;
+    }
 
     if (!candidates.length) return null;
 
     candidates.sort(function (a, b) {
-      var ar = a.getBoundingClientRect();
-      var br = b.getBoundingClientRect();
-
-      return (ar.width * ar.height) - (br.width * br.height);
+      return b.area - a.area;
     });
 
-    return candidates[0];
+    return candidates[0].node;
   }
 
-  function metricValue(card, target) {
+  function getValueFromCard(card, label) {
     var clone = card.cloneNode(true);
 
-    Array.prototype.slice.call(clone.querySelectorAll(".goodos-storage-provider-chart-v62")).forEach(function (el) {
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-storage-kpi-chart-v63")).forEach(function (el) {
       el.remove();
     });
 
-    var text = cleanText(clone).toUpperCase();
-    text = text.replace(target.label, " ");
-
+    var text = cleanText(clone).toUpperCase().replace(String(label || "").toUpperCase(), " ");
     var nums = text.match(/\b\d+(?:\.\d+)?\b/g);
+
     return nums && nums.length ? Number(nums[0]) : 0;
   }
 
-  function findCardInContainer(container, target) {
-    if (!container) return null;
-
-    var labelCompact = compact(target.label);
-
-    var candidates = Array.prototype.slice.call(container.querySelectorAll("section,div,article")).filter(function (el) {
-      if (!isVisible(el)) return false;
-      if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-storage-provider-chart-v62")) return false;
-
-      var text = compact(cleanText(el));
-      if (text.indexOf(labelCompact) === -1) return false;
-      if (countProviderLabels(el) > 1) return false;
-
-      var r = el.getBoundingClientRect();
-
-      return r.width >= 180 &&
-        r.height >= 70 &&
-        r.height <= 280;
-    });
-
-    if (!candidates.length) return null;
-
-    candidates.sort(function (a, b) {
-      var ar = a.getBoundingClientRect();
-      var br = b.getBoundingClientRect();
-
-      return (br.width * br.height) - (ar.width * ar.height);
-    });
-
-    return candidates[0];
-  }
-
-  function pathFor(value, variant) {
+  function linePath(value, key) {
     var v = Math.max(0, Number(value || 0));
     var points = [];
 
     for (var i = 0; i < 16; i += 1) {
-      var x = 8 + i * 20;
+      var x = 10 + i * 20;
       var y;
 
       if (v <= 0) {
         y = 78;
-      } else if (variant === "providers") {
-        y = 78 - Math.min(42, v * 8) + ((i * 6) % 12) - (i > 10 ? 7 : 0);
+      } else if (key === "providers") {
+        y = 82 - Math.min(44, v * 9) + ((i * 7) % 12) - (i > 10 ? 7 : 0);
       } else {
-        y = 76 - Math.min(40, v * 8) + ((i * 7) % 13);
+        y = 80 - Math.min(42, v * 9) + ((i * 8) % 13);
       }
 
-      points.push([x, Math.max(20, Math.min(84, y))]);
+      points.push([x, Math.max(22, Math.min(86, y))]);
     }
 
     return points.map(function (pt, index) {
@@ -14944,35 +14939,35 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function lineChart(target, value) {
     var v = Math.max(0, Number(value || 0));
-    var path = pathFor(v, target.key);
+    var path = linePath(v, target.key);
 
     return '' +
-      '<div class="goodos-storage-provider-chart-v62" data-goodos-storage-provider-chart-v62="' + target.key + '">' +
-        '<svg viewBox="0 0 340 118" aria-label="' + target.key + ' live chart">' +
+      '<div class="goodos-storage-kpi-chart-v63" data-goodos-storage-kpi-chart-v63="' + target.key + '">' +
+        '<svg viewBox="0 0 340 120" aria-label="' + target.key + ' live chart">' +
           '<defs>' +
-            '<linearGradient id="goodosStorageProviderLineV62' + target.key + '" x1="0" x2="1">' +
+            '<linearGradient id="goodosStorageLineV63' + target.key + '" x1="0" x2="1">' +
               '<stop offset="0%" stop-color="#16e0ff"></stop>' +
               '<stop offset="55%" stop-color="#4f8cff"></stop>' +
               '<stop offset="100%" stop-color="#7c3aed"></stop>' +
             '</linearGradient>' +
-            '<linearGradient id="goodosStorageProviderFillV62' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
-              '<stop offset="0%" stop-color="rgba(54,220,255,.32)"></stop>' +
+            '<linearGradient id="goodosStorageFillV63' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="rgba(54,220,255,.34)"></stop>' +
               '<stop offset="100%" stop-color="rgba(54,220,255,0)"></stop>' +
             '</linearGradient>' +
           '</defs>' +
           '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
           '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
-          '<text x="0" y="53" class="muted" font-size="12" font-weight="850">2</text>' +
-          '<text x="0" y="85" class="muted" font-size="12" font-weight="850">1</text>' +
-          '<line x1="26" y1="42" x2="320" y2="42" class="grid"></line>' +
-          '<line x1="26" y1="74" x2="320" y2="74" class="grid"></line>' +
-          '<path d="' + path + ' L308 96 L8 96 Z" fill="url(#goodosStorageProviderFillV62' + target.key + ')"></path>' +
-          '<path d="' + path + '" fill="none" stroke="url(#goodosStorageProviderLineV62' + target.key + ')" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
-          '<circle cx="308" cy="' + (v <= 0 ? 78 : 31) + '" r="5" fill="#a8ffd4"></circle>' +
-          '<text x="0" y="114" class="muted" font-size="11" font-weight="850">7D</text>' +
-          '<text x="315" y="114" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
+          '<text x="0" y="52" class="muted" font-size="12" font-weight="850">2</text>' +
+          '<text x="0" y="84" class="muted" font-size="12" font-weight="850">1</text>' +
+          '<line x1="30" y1="42" x2="320" y2="42" class="grid"></line>' +
+          '<line x1="30" y1="74" x2="320" y2="74" class="grid"></line>' +
+          '<path d="' + path + ' L310 96 L10 96 Z" fill="url(#goodosStorageFillV63' + target.key + ')"></path>' +
+          '<path d="' + path + '" fill="none" stroke="url(#goodosStorageLineV63' + target.key + ')" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<circle cx="310" cy="' + (v <= 0 ? 78 : 31) + '" r="5.4" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="116" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="116" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
         '</svg>' +
-        '<div class="goodos-storage-provider-chart-note-v62">' + target.note + '</div>' +
+        '<div class="goodos-storage-kpi-chart-note-v63">' + target.note + '</div>' +
       '</div>';
   }
 
@@ -14981,28 +14976,28 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var max = Math.max(2, v + 1);
     var pct = Math.max(0, Math.min(100, (v / max) * 100));
     var fill = (300 * pct / 100).toFixed(1);
-    var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
+    var dot = Math.max(7, Math.min(293, 300 * pct / 100)).toFixed(1);
 
     return '' +
-      '<div class="goodos-storage-provider-chart-v62" data-goodos-storage-provider-chart-v62="' + target.key + '">' +
-        '<svg viewBox="0 0 340 118" aria-label="' + target.key + ' live chart">' +
+      '<div class="goodos-storage-kpi-chart-v63" data-goodos-storage-kpi-chart-v63="' + target.key + '">' +
+        '<svg viewBox="0 0 340 120" aria-label="' + target.key + ' live chart">' +
           '<defs>' +
-            '<linearGradient id="goodosStorageProviderProgressV62" x1="0" x2="1">' +
-              '<stop offset="0%" stop-color="#36dcff"></stop>' +
-              '<stop offset="55%" stop-color="#4f8cff"></stop>' +
+            '<linearGradient id="goodosStorageProgressV63" x1="0" x2="1">' +
+              '<stop offset="0%" stop-color="#20e6e6"></stop>' +
+              '<stop offset="54%" stop-color="#3b82f6"></stop>' +
               '<stop offset="100%" stop-color="#22e6a8"></stop>' +
             '</linearGradient>' +
           '</defs>' +
           '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
           '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
-          '<rect x="0" y="52" width="300" height="14" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
-          '<rect x="0" y="52" width="' + fill + '" height="14" rx="7" fill="url(#goodosStorageProviderProgressV62)"></rect>' +
-          '<circle cx="' + dot + '" cy="59" r="7" fill="#22e6a8"></circle>' +
-          '<text x="0" y="94" class="muted" font-size="11" font-weight="850">0</text>' +
-          '<text x="160" y="94" text-anchor="middle" class="muted" font-size="11" font-weight="850">' + value + '</text>' +
-          '<text x="315" y="94" text-anchor="end" class="muted" font-size="11" font-weight="850">' + max + '</text>' +
+          '<rect x="0" y="52" width="300" height="16" rx="8" fill="rgba(255,255,255,.08)"></rect>' +
+          '<rect x="0" y="52" width="' + fill + '" height="16" rx="8" fill="url(#goodosStorageProgressV63)"></rect>' +
+          '<circle cx="' + dot + '" cy="60" r="8" fill="#22e6a8"></circle>' +
+          '<text x="0" y="95" class="muted" font-size="11" font-weight="850">0</text>' +
+          '<text x="160" y="95" text-anchor="middle" class="muted" font-size="11" font-weight="850">' + value + '</text>' +
+          '<text x="315" y="95" text-anchor="end" class="muted" font-size="11" font-weight="850">' + max + '</text>' +
         '</svg>' +
-        '<div class="goodos-storage-provider-chart-note-v62">' + target.note + '</div>' +
+        '<div class="goodos-storage-kpi-chart-note-v63">' + target.note + '</div>' +
       '</div>';
   }
 
@@ -15010,19 +15005,19 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var v = Math.max(0, Number(value || 0));
     var bars = [];
 
-    for (var i = 0; i < 14; i += 1) {
-      var h = v <= 0 ? 4 : Math.max(10, Math.min(72, 12 + ((i * 11 + v * 6) % 60)));
-      var x = 12 + i * 21;
-      var y = 88 - h;
+    for (var i = 0; i < 15; i += 1) {
+      var h = v <= 0 ? 5 : Math.max(12, Math.min(72, 14 + ((i * 13 + v * 7) % 62)));
+      var x = 16 + i * 19;
+      var y = 90 - h;
 
-      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#goodosStorageProviderBarsV62)" opacity="' + (v <= 0 ? ".20" : ".92") + '"></rect>');
+      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#goodosStorageBarsV63)" opacity="' + (v <= 0 ? ".22" : ".94") + '"></rect>');
     }
 
     return '' +
-      '<div class="goodos-storage-provider-chart-v62" data-goodos-storage-provider-chart-v62="' + target.key + '">' +
-        '<svg viewBox="0 0 340 118" aria-label="' + target.key + ' live chart">' +
+      '<div class="goodos-storage-kpi-chart-v63" data-goodos-storage-kpi-chart-v63="' + target.key + '">' +
+        '<svg viewBox="0 0 340 120" aria-label="' + target.key + ' live chart">' +
           '<defs>' +
-            '<linearGradient id="goodosStorageProviderBarsV62" x1="0" x2="0" y1="0" y2="1">' +
+            '<linearGradient id="goodosStorageBarsV63" x1="0" x2="0" y1="0" y2="1">' +
               '<stop offset="0%" stop-color="#36dcff"></stop>' +
               '<stop offset="50%" stop-color="#4f8cff"></stop>' +
               '<stop offset="100%" stop-color="#7c3aed"></stop>' +
@@ -15030,14 +15025,14 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
           '</defs>' +
           '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
           '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + target.suffix + '</text>' +
-          '<text x="0" y="53" class="muted" font-size="12" font-weight="850">2</text>' +
-          '<text x="0" y="85" class="muted" font-size="12" font-weight="850">1</text>' +
-          '<line x1="26" y1="88" x2="320" y2="88" class="grid"></line>' +
+          '<text x="0" y="52" class="muted" font-size="12" font-weight="850">2</text>' +
+          '<text x="0" y="84" class="muted" font-size="12" font-weight="850">1</text>' +
+          '<line x1="30" y1="90" x2="320" y2="90" class="grid"></line>' +
           bars.join("") +
-          '<text x="0" y="114" class="muted" font-size="11" font-weight="850">7D</text>' +
-          '<text x="315" y="114" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
+          '<text x="0" y="116" class="muted" font-size="11" font-weight="850">7D</text>' +
+          '<text x="315" y="116" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
         '</svg>' +
-        '<div class="goodos-storage-provider-chart-note-v62">' + target.note + '</div>' +
+        '<div class="goodos-storage-kpi-chart-note-v63">' + target.note + '</div>' +
       '</div>';
   }
 
@@ -15047,27 +15042,29 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return lineChart(target, value);
   }
 
-  function renderStorageProviderCharts() {
-    if (!storageProviderContentVisible()) return;
+  function renderStorageCharts() {
+    if (!storagePageVisible()) return;
 
-    removeOldCharts();
-
-    var container = findProviderKpiContainer();
-    if (!container) return;
+    removeOldStorageCharts();
 
     TARGETS.forEach(function (target) {
-      var card = findCardInContainer(container, target);
-      if (!card) return;
+      var label = labelExactNode(target.label);
+      var card = cardForLabel(label);
 
-      var value = metricValue(card, target);
+      if (!card) {
+        console.warn("GoodOS V63: storage KPI card not found for", target.label);
+        return;
+      }
 
-      card.classList.add("goodos-storage-provider-card-v62");
+      var value = getValueFromCard(card, target.label);
+
+      card.classList.add("goodos-storage-kpi-card-v63");
       card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
     });
   }
 
   function run() {
-    renderStorageProviderCharts();
+    renderStorageCharts();
   }
 
   if (document.readyState === "loading") {
@@ -15084,16 +15081,14 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   window.addEventListener("pageshow", run);
 
+  var timer = null;
   var observer = new MutationObserver(function () {
-    clearTimeout(window.__goodosStorageProviderChartsV62Timer);
-    window.__goodosStorageProviderChartsV62Timer = setTimeout(run, 200);
+    clearTimeout(timer);
+    timer = setTimeout(run, 250);
   });
 
   try {
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+    observer.observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
 
   setTimeout(run, 250);
