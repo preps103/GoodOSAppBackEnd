@@ -1362,6 +1362,223 @@ main [class*="badge"],
 }
 </style>
 
+
+<style id="goodos-sidebar-premium-v41">
+/* V41: Sidebar UI upgrade only. Keeps existing navigation click behavior intact. */
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-v41 {
+  position: relative !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(99, 102, 241, .26), transparent 22%),
+    radial-gradient(circle at 100% 24%, rgba(34, 211, 238, .13), transparent 28%),
+    radial-gradient(circle at 10% 93%, rgba(45, 212, 191, .10), transparent 26%),
+    linear-gradient(180deg, #06111f 0%, #030a14 54%, #020712 100%) !important;
+  border-right: 1px solid rgba(125, 159, 210, .18) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255,255,255,.025),
+    18px 0 42px rgba(0,0,0,.24) !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-v41::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.04), transparent 24%),
+    radial-gradient(circle at 52% 0%, rgba(148, 163, 184, .055), transparent 24%);
+  opacity: .92;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-v41::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(54,220,255,.26), transparent);
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-brand-v41 {
+  position: relative !important;
+  z-index: 2 !important;
+  padding: 26px 22px 24px !important;
+  margin: 0 0 12px !important;
+  display: grid !important;
+  grid-template-columns: 52px 1fr !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-brand-icon-v41 {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 18px !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 950 !important;
+  letter-spacing: -.03em !important;
+  background: linear-gradient(135deg, #6657ff, #7c5cff 52%, #2bd6ff) !important;
+  box-shadow:
+    0 18px 38px rgba(99,102,241,.28),
+    inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-brand-title-v41 {
+  color: #f8fbff !important;
+  font-size: 17px !important;
+  font-weight: 950 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.04em !important;
+  margin: 0 !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-brand-subtitle-v41 {
+  color: #8fa0ba !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+  margin-top: 5px !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-section-v41 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 22px 22px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: rgba(172, 184, 203, .70) !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  letter-spacing: .42em !important;
+  text-transform: uppercase !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-section-v41::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(148,163,184,.20), transparent);
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41 {
+  position: relative !important;
+  z-index: 2 !important;
+  width: calc(100% - 28px) !important;
+  margin: 3px 14px !important;
+  min-height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 14px !important;
+  border-radius: 15px !important;
+  color: #dce8f7 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  letter-spacing: -.015em !important;
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    color .18s ease,
+    transform .18s ease,
+    box-shadow .18s ease !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41::before {
+  content: attr(data-goodos-icon);
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 10px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  color: #a9bdd8 !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(54,220,255,.14), transparent 58%),
+    rgba(148,163,184,.055) !important;
+  border: 1px solid rgba(148,163,184,.09) !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  opacity: .88 !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41:hover {
+  color: #ffffff !important;
+  background: rgba(79, 140, 255, .095) !important;
+  border-color: rgba(148, 163, 184, .12) !important;
+  transform: translateX(2px) !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41:hover::before {
+  color: #dff7ff !important;
+  border-color: rgba(54,220,255,.18) !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(54,220,255,.23), transparent 58%),
+    rgba(79,140,255,.10) !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41.goodos-sidebar-active-v41,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41.active,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[aria-current="page"],
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-active="true"] {
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(54,220,255,.26), transparent 32%),
+    linear-gradient(135deg, rgba(79,140,255,.34), rgba(139,92,246,.27) 55%, rgba(34,211,238,.22)) !important;
+  border-color: rgba(95, 213, 255, .28) !important;
+  box-shadow:
+    0 14px 32px rgba(79,140,255,.16),
+    inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41.goodos-sidebar-active-v41::after,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41.active::after,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[aria-current="page"]::after,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  right: 13px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #67f5ff;
+  box-shadow: 0 0 16px rgba(103,245,255,.72);
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41.goodos-sidebar-active-v41::before,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41.active::before,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[aria-current="page"]::before,
+body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-active="true"]::before {
+  color: #dff7ff !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(103,245,255,.30), transparent 58%),
+    rgba(255,255,255,.08) !important;
+  border-color: rgba(103,245,255,.20) !important;
+}
+
+body.goodos-sidebar-premium-v41 .goodos-sidebar-help-v41 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 28px 14px 18px !important;
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(54,220,255,.12), transparent 46%),
+    rgba(15, 25, 48, .46) !important;
+  border: 1px solid rgba(148,163,184,.12) !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -10837,6 +11054,236 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   });
 
   window.refreshDeveloperCenterLiveV38 = refreshDeveloperStatuses;
+})();
+</script>
+
+
+<script id="goodos-sidebar-premium-v41-js">
+(function () {
+  if (window.__goodosSidebarPremiumV41) return;
+  window.__goodosSidebarPremiumV41 = true;
+
+  var ICONS = {
+    "overview": "▦",
+    "auth": "◈",
+    "projects": "▱",
+    "database": "▤",
+    "storage": "▰",
+    "api keys": "⚿",
+    "webhooks": "⌘",
+    "realtime": "◌",
+    "functions": "⌁",
+    "logs": "☰",
+    "alerts": "△",
+    "backups": "⇣",
+    "settings": "⚙"
+  };
+
+  var LABELS = Object.keys(ICONS);
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function getSidebar() {
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("aside, nav, [class*='side'], [class*='Sidebar'], [class*='sidebar']"));
+
+    var best = candidates.find(function (el) {
+      var text = cleanText(el).toLowerCase();
+      return text.indexOf("goodos cloud") !== -1 &&
+        text.indexOf("overview") !== -1 &&
+        text.indexOf("api keys") !== -1 &&
+        text.indexOf("settings") !== -1;
+    });
+
+    if (best) return best;
+
+    var nodes = Array.prototype.slice.call(document.querySelectorAll("body *"));
+    var brand = nodes.find(function (el) {
+      return cleanText(el).toLowerCase() === "goodos cloud";
+    });
+
+    if (!brand) return null;
+
+    var node = brand;
+    for (var i = 0; node && node !== document.body && i < 10; i += 1) {
+      var text = cleanText(node).toLowerCase();
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+
+      if (
+        text.indexOf("overview") !== -1 &&
+        text.indexOf("settings") !== -1 &&
+        rect.width > 140 &&
+        rect.width < 420
+      ) {
+        return node;
+      }
+
+      node = node.parentElement;
+    }
+
+    return null;
+  }
+
+  function normalizeLabel(text) {
+    return String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function isMenuItem(el) {
+    var t = normalizeLabel(cleanText(el));
+    return LABELS.indexOf(t) !== -1;
+  }
+
+  function findMenuElement(sidebar, label) {
+    var all = Array.prototype.slice.call(sidebar.querySelectorAll("button,a,[role='button'],div,span"));
+    label = normalizeLabel(label);
+
+    var direct = all.find(function (el) {
+      if (el.closest(".goodos-sidebar-brand-v41")) return false;
+      if (el.closest(".goodos-sidebar-section-v41")) return false;
+      if (el.children.length > 4) return false;
+      return normalizeLabel(cleanText(el)) === label;
+    });
+
+    if (direct) {
+      var clickable = direct.closest("button,a,[role='button']");
+      return clickable || direct;
+    }
+
+    return null;
+  }
+
+  function applyBrand(sidebar) {
+    var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("*"));
+    var title = nodes.find(function (el) {
+      return cleanText(el).toLowerCase() === "goodos cloud";
+    });
+
+    if (!title) return;
+
+    var brand = title;
+    for (var i = 0; brand && brand.parentElement && i < 5; i += 1) {
+      var text = cleanText(brand.parentElement).toLowerCase();
+      if (text.indexOf("goodos cloud") !== -1 && text.indexOf("backend hosting console") !== -1) {
+        brand = brand.parentElement;
+      } else {
+        break;
+      }
+    }
+
+    brand.classList.add("goodos-sidebar-brand-v41");
+
+    var subtitle = nodes.find(function (el) {
+      return cleanText(el).toLowerCase() === "backend hosting console";
+    });
+
+    title.classList.add("goodos-sidebar-brand-title-v41");
+    if (subtitle) subtitle.classList.add("goodos-sidebar-brand-subtitle-v41");
+
+    var possibleIcon = Array.prototype.slice.call(brand.children).find(function (el) {
+      var txt = cleanText(el).toLowerCase();
+      var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
+      return txt === "g" || (rect.width <= 80 && rect.height <= 80 && txt.length <= 2);
+    });
+
+    if (possibleIcon) {
+      possibleIcon.classList.add("goodos-sidebar-brand-icon-v41");
+    }
+  }
+
+  function applySections(sidebar) {
+    var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("*"));
+
+    ["CORE", "BUILD", "OPERATE"].forEach(function (label) {
+      var node = nodes.find(function (el) {
+        return cleanText(el).toUpperCase() === label;
+      });
+
+      if (node) {
+        node.classList.add("goodos-sidebar-section-v41");
+      }
+    });
+  }
+
+  function currentViewName() {
+    var hash = String(window.location.hash || "").replace("#", "").trim().toLowerCase();
+    if (hash === "dashboard") return "overview";
+    if (hash) return hash.replace(/-/g, " ");
+
+    var path = String(window.location.pathname || "").toLowerCase();
+    if (path.indexOf("dashboard") !== -1) return "overview";
+    return "overview";
+  }
+
+  function applyMenuItems(sidebar) {
+    LABELS.forEach(function (label) {
+      var item = findMenuElement(sidebar, label);
+      if (!item) return;
+
+      item.classList.add("goodos-sidebar-nav-item-v41");
+      item.setAttribute("data-goodos-nav-label", label);
+      item.setAttribute("data-goodos-icon", ICONS[label]);
+
+      var current = currentViewName();
+      var isActive = label === current || (current === "overview" && label === "overview");
+
+      if (isActive || item.classList.contains("active") || item.getAttribute("aria-current") === "page") {
+        item.classList.add("goodos-sidebar-active-v41");
+      } else {
+        item.classList.remove("goodos-sidebar-active-v41");
+      }
+    });
+  }
+
+  function applyHelpCard(sidebar) {
+    var nodes = Array.prototype.slice.call(sidebar.querySelectorAll("*"));
+    var help = nodes.find(function (el) {
+      var text = cleanText(el).toLowerCase();
+      return text.indexOf("need help") !== -1 || text.indexOf("documentation") !== -1;
+    });
+
+    if (!help) return;
+
+    var node = help;
+    for (var i = 0; node && node.parentElement && i < 5; i += 1) {
+      var t = cleanText(node.parentElement).toLowerCase();
+      if (t.indexOf("need help") !== -1 || t.indexOf("documentation") !== -1) {
+        node = node.parentElement;
+      } else {
+        break;
+      }
+    }
+
+    node.classList.add("goodos-sidebar-help-v41");
+  }
+
+  function runSidebarUpgrade() {
+    document.body.classList.add("goodos-sidebar-premium-v41");
+
+    var sidebar = getSidebar();
+    if (!sidebar) return;
+
+    sidebar.classList.add("goodos-sidebar-v41");
+
+    applyBrand(sidebar);
+    applySections(sidebar);
+    applyMenuItems(sidebar);
+    applyHelpCard(sidebar);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runSidebarUpgrade);
+  } else {
+    runSidebarUpgrade();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(runSidebarUpgrade, 120);
+  });
+
+  setTimeout(runSidebarUpgrade, 500);
+  setTimeout(runSidebarUpgrade, 1400);
+  setTimeout(runSidebarUpgrade, 2600);
 })();
 </script>
 
