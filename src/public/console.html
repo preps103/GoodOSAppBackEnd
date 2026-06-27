@@ -1967,15 +1967,23 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
-<style id="goodos-storage-provider-kpi-charts-api-nav-v57">
-/* V57: Storage Provider KPI charts + API Keys navigation fix */
+<style id="goodos-api-keys-nav-fix-v58">
+/* V58: API Keys navigation fix only */
 
-.goodos-storage-provider-kpi-card-v57 {
+body.goodos-api-nav-v58-ready [data-goodos-route-v58="api-keys"] {
+  cursor: pointer !important;
+}
+</style>
+
+<style id="goodos-storage-provider-kpi-charts-v58">
+/* V58: Storage Provider KPI charts only. No navigation override. */
+
+.goodos-storage-provider-kpi-card-v58 {
   min-height: 252px !important;
   overflow: hidden !important;
 }
 
-.goodos-storage-provider-kpi-chart-v57 {
+.goodos-storage-provider-kpi-chart-v58 {
   margin-top: 18px;
   width: 100%;
   min-height: 116px;
@@ -1989,27 +1997,27 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   overflow: hidden;
 }
 
-.goodos-storage-provider-kpi-chart-v57 svg {
+.goodos-storage-provider-kpi-chart-v58 svg {
   width: 100%;
   height: 106px;
   display: block;
   overflow: visible;
 }
 
-.goodos-storage-provider-kpi-chart-v57 .muted {
+.goodos-storage-provider-kpi-chart-v58 .muted {
   fill: #9eabc2;
 }
 
-.goodos-storage-provider-kpi-chart-v57 .green {
+.goodos-storage-provider-kpi-chart-v58 .green {
   fill: #a8ffd4;
 }
 
-.goodos-storage-provider-kpi-chart-v57 .grid {
+.goodos-storage-provider-kpi-chart-v58 .grid {
   stroke: rgba(148,163,184,.16);
   stroke-dasharray: 4 7;
 }
 
-.goodos-storage-provider-kpi-chart-note-v57 {
+.goodos-storage-provider-kpi-chart-note-v58 {
   color: #8fa0ba;
   font-size: 11px;
   font-weight: 750;
@@ -13330,32 +13338,317 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-<script id="goodos-storage-provider-kpi-charts-api-nav-v57-js">
+<script id="goodos-api-keys-nav-fix-v58-js">
 (function () {
-  if (window.__goodosStorageProviderChartsApiNavV57) return;
-  window.__goodosStorageProviderChartsApiNavV57 = true;
+  if (window.__goodosApiKeysNavigationFixV58) return;
+  window.__goodosApiKeysNavigationFixV58 = true;
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function norm(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function currentHash() {
+    return norm(String(window.location.hash || "").replace("#", ""));
+  }
+
+  function getRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function getSidebar() {
+    var candidates = Array.prototype.slice.call(
+      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
+    );
+
+    return candidates.find(function (el) {
+      var text = norm(cleanText(el));
+      return text.indexOf("overview") !== -1 &&
+        text.indexOf("api keys") !== -1 &&
+        text.indexOf("storage") !== -1 &&
+        text.indexOf("settings") !== -1;
+    }) || null;
+  }
+
+  function getApiKeysRow() {
+    var sidebar = getSidebar();
+    if (!sidebar) return null;
+
+    var nodes = Array.prototype.slice.call(
+      sidebar.querySelectorAll("a,button,[role='button'],div,span")
+    );
+
+    var label = nodes.find(function (el) {
+      if (el.closest("header")) return false;
+      return norm(cleanText(el)) === "api keys";
+    });
+
+    if (!label) return null;
+
+    return label.closest("a,button,[role='button']") || label;
+  }
+
+  function getStorageRow() {
+    var sidebar = getSidebar();
+    if (!sidebar) return null;
+
+    var nodes = Array.prototype.slice.call(
+      sidebar.querySelectorAll("a,button,[role='button'],div,span")
+    );
+
+    var label = nodes.find(function (el) {
+      if (el.closest("header")) return false;
+      return norm(cleanText(el)) === "storage";
+    });
+
+    if (!label) return null;
+
+    return label.closest("a,button,[role='button']") || label;
+  }
+
+  function rootLooksLikeStorage() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("storage") !== -1 &&
+      (
+        text.indexOf("storage v2") !== -1 ||
+        text.indexOf("cdn buckets") !== -1 ||
+        text.indexOf("public buckets") !== -1 ||
+        text.indexOf("create provider") !== -1 ||
+        text.indexOf("storage buckets") !== -1
+      );
+  }
+
+  function rootLooksLikeApiKeys() {
+    var text = norm(cleanText(getRoot()));
+
+    return text.indexOf("api keys") !== -1 &&
+      (
+        text.indexOf("key registry") !== -1 ||
+        text.indexOf("restricted keys") !== -1 ||
+        text.indexOf("create key") !== -1 ||
+        text.indexOf("api key") !== -1
+      );
+  }
+
+  function removeWrongActiveStates() {
+    var sidebar = getSidebar();
+    if (!sidebar) return;
+
+    var rows = Array.prototype.slice.call(
+      sidebar.querySelectorAll("a,button,[role='button'],div")
+    );
+
+    rows.forEach(function (row) {
+      var text = norm(cleanText(row));
+      if (text !== "api keys" && text !== "storage") return;
+
+      row.removeAttribute("data-goodos-active-v42");
+      row.removeAttribute("data-goodos-active-v43");
+      row.removeAttribute("data-goodos-active-v44");
+      row.removeAttribute("data-goodos-active-v45");
+      row.removeAttribute("data-goodos-active-v48");
+      row.removeAttribute("data-goodos-active-v49");
+      row.removeAttribute("data-goodos-active-v50");
+      row.removeAttribute("data-goodos-active-menu");
+      row.removeAttribute("data-goodos-active-tab");
+      row.removeAttribute("data-active");
+      row.removeAttribute("aria-current");
+      row.classList.remove("active");
+      row.classList.remove("goodos-v43-is-active");
+      row.classList.remove("goodos-sidebar-active-v41");
+    });
+  }
+
+  function markSidebarActive(key) {
+    var api = getApiKeysRow();
+    var storage = getStorageRow();
+
+    removeWrongActiveStates();
+
+    if (api) {
+      api.setAttribute("data-goodos-route-v58", "api-keys");
+      api.setAttribute("href", "#api-keys");
+    }
+
+    if (storage) {
+      storage.setAttribute("data-goodos-route-v58", "storage");
+      storage.setAttribute("href", "#storage");
+    }
+
+    var target = key === "api-keys" ? api : storage;
+
+    if (target) {
+      target.classList.add("goodos-sidebar-active-v41");
+      target.setAttribute("aria-current", "page");
+
+      if (key === "api-keys") {
+        target.setAttribute("data-goodos-active-v50", "true");
+      }
+    }
+  }
+
+  function callKnownApiKeysRenderers() {
+    var names = [
+      "renderApiKeys",
+      "renderApiKeysView",
+      "renderApiKeysPage",
+      "apiKeysView",
+      "showApiKeys",
+      "loadApiKeys",
+      "showView",
+      "navigateTo"
+    ];
+
+    names.forEach(function (name) {
+      try {
+        if (typeof window[name] !== "function") return;
+
+        if (name === "showView" || name === "navigateTo") {
+          window[name]("api-keys");
+        } else {
+          window[name]();
+        }
+      } catch (e) {}
+    });
+  }
+
+  function forceApiKeys() {
+    markSidebarActive("api-keys");
+
+    if (currentHash() !== "api-keys") {
+      history.replaceState(null, "", window.location.pathname + window.location.search + "#api-keys");
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+
+    callKnownApiKeysRenderers();
+
+    setTimeout(function () {
+      if (!rootLooksLikeApiKeys()) {
+        callKnownApiKeysRenderers();
+      }
+      markSidebarActive("api-keys");
+    }, 150);
+
+    setTimeout(function () {
+      if (!rootLooksLikeApiKeys()) {
+        callKnownApiKeysRenderers();
+      }
+      markSidebarActive("api-keys");
+    }, 600);
+
+    setTimeout(function () {
+      if (rootLooksLikeStorage() && !rootLooksLikeApiKeys()) {
+        console.warn("GoodOS V58: API Keys hash is active but Storage view is still rendered. The native router function for API Keys is likely missing or not exposed.");
+      }
+      markSidebarActive("api-keys");
+    }, 1200);
+  }
+
+  function forceStorage() {
+    markSidebarActive("storage");
+
+    if (currentHash() !== "storage") {
+      history.replaceState(null, "", window.location.pathname + window.location.search + "#storage");
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+  }
+
+  function attachClicks() {
+    var sidebar = getSidebar();
+    if (!sidebar || sidebar.__goodosV58ApiKeysClickAttached) return;
+
+    sidebar.__goodosV58ApiKeysClickAttached = true;
+
+    sidebar.addEventListener("click", function (event) {
+      var node = event.target;
+
+      for (var i = 0; node && node !== sidebar && node !== document.body && i < 10; i += 1) {
+        var text = norm(cleanText(node));
+
+        if (text === "api keys") {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          forceApiKeys();
+          return false;
+        }
+
+        if (text === "storage") {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          forceStorage();
+          return false;
+        }
+
+        node = node.parentElement;
+      }
+    }, true);
+  }
+
+  function normalizeRoutes() {
+    document.body.classList.add("goodos-api-nav-v58-ready");
+
+    var api = getApiKeysRow();
+    var storage = getStorageRow();
+
+    if (api) {
+      api.setAttribute("data-goodos-route-v58", "api-keys");
+      api.setAttribute("href", "#api-keys");
+    }
+
+    if (storage) {
+      storage.setAttribute("data-goodos-route-v58", "storage");
+      storage.setAttribute("href", "#storage");
+    }
+
+    if (currentHash() === "api-keys" || currentHash() === "apikeys" || currentHash() === "keys") {
+      forceApiKeys();
+    } else if (currentHash() === "storage" || currentHash() === "storage-files" || currentHash() === "files") {
+      markSidebarActive("storage");
+    }
+  }
+
+  function run() {
+    attachClicks();
+    normalizeRoutes();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 40);
+    setTimeout(run, 300);
+  });
+
+  window.addEventListener("pageshow", run);
+
+  setTimeout(run, 300);
+  setTimeout(run, 900);
+})();
+</script>
+
+<script id="goodos-storage-provider-kpi-charts-v58-js">
+(function () {
+  if (window.__goodosStorageProviderChartsV58) return;
+  window.__goodosStorageProviderChartsV58 = true;
 
   var TARGETS = [
-    {
-      key: "providers",
-      labels: ["PROVIDERS"],
-      note: "Provider configs over time"
-    },
-    {
-      key: "cdn-buckets",
-      labels: ["CDN BUCKETS"],
-      note: "CDN-enabled buckets"
-    },
-    {
-      key: "public-buckets",
-      labels: ["PUBLIC BUCKETS"],
-      note: "Public buckets over time"
-    },
-    {
-      key: "versions",
-      labels: ["VERSIONS"],
-      note: "Version records over time"
-    }
+    { key: "providers", labels: ["PROVIDERS"], note: "Provider configs over time" },
+    { key: "cdn-buckets", labels: ["CDN BUCKETS"], note: "CDN-enabled buckets" },
+    { key: "public-buckets", labels: ["PUBLIC BUCKETS"], note: "Public buckets over time" },
+    { key: "versions", labels: ["VERSIONS"], note: "Version records over time" }
   ];
 
   function cleanText(el) {
@@ -13381,134 +13674,12 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       document.body;
   }
 
-  function getSidebar() {
-    var candidates = Array.prototype.slice.call(
-      document.querySelectorAll("aside, nav, [class*='side'], [class*='Side'], [class*='sidebar'], [class*='Sidebar']")
-    );
-
-    return candidates.find(function (el) {
-      var txt = norm(cleanText(el));
-      return txt.indexOf("overview") !== -1 &&
-        txt.indexOf("api keys") !== -1 &&
-        txt.indexOf("settings") !== -1;
-    }) || null;
-  }
-
-  function isApiKeysVisible() {
-    var rootText = norm(cleanText(getRoot()));
-    return rootText.indexOf("api keys") !== -1 &&
-      (
-        rootText.indexOf("restricted keys") !== -1 ||
-        rootText.indexOf("key registry") !== -1 ||
-        rootText.indexOf("api key") !== -1
-      );
-  }
-
-  function findApiKeysSidebarRow() {
-    var sidebar = getSidebar();
-    if (!sidebar) return null;
-
-    var nodes = Array.prototype.slice.call(
-      sidebar.querySelectorAll("button,a,[role='button'],div,span")
-    );
-
-    var label = nodes.find(function (el) {
-      if (el.closest("header")) return false;
-      return norm(cleanText(el)) === "api keys";
-    });
-
-    if (!label) return null;
-
-    return label.closest("button,a,[role='button']") || label;
-  }
-
-  function forceApiKeysRoute() {
-    var possibleHashes = ["api-keys", "apikeys", "keys", "apiKeys"];
-    var current = currentHash();
-
-    if (possibleHashes.indexOf(current) === -1) {
-      window.location.hash = "api-keys";
-    }
-
-    setTimeout(function () {
-      if (isApiKeysVisible()) return;
-
-      var fns = [
-        "renderApiKeys",
-        "renderApiKeysView",
-        "renderApiKeysPage",
-        "apiKeysView",
-        "showApiKeys",
-        "loadApiKeys",
-        "showView"
-      ];
-
-      fns.forEach(function (name) {
-        try {
-          if (typeof window[name] === "function") {
-            if (name === "showView") {
-              window[name]("api-keys");
-            } else {
-              window[name]();
-            }
-          }
-        } catch (e) {}
-      });
-    }, 120);
-
-    setTimeout(function () {
-      if (isApiKeysVisible()) return;
-
-      var row = findApiKeysSidebarRow();
-      if (!row || row.__goodosV57ApiKeysRetrying) return;
-
-      row.__goodosV57ApiKeysRetrying = true;
-
-      try {
-        row.click();
-      } catch (e) {}
-
-      setTimeout(function () {
-        row.__goodosV57ApiKeysRetrying = false;
-      }, 900);
-    }, 450);
-  }
-
-  function installApiKeysNavFix() {
-    var sidebar = getSidebar();
-    if (!sidebar || sidebar.__goodosV57ApiKeysNavAttached) return;
-
-    sidebar.__goodosV57ApiKeysNavAttached = true;
-
-    sidebar.addEventListener("click", function (event) {
-      var node = event.target;
-
-      for (var i = 0; node && node !== sidebar && node !== document.body && i < 10; i += 1) {
-        if (norm(cleanText(node)) === "api keys") {
-          setTimeout(forceApiKeysRoute, 30);
-          setTimeout(forceApiKeysRoute, 250);
-          setTimeout(forceApiKeysRoute, 800);
-          return;
-        }
-
-        node = node.parentElement;
-      }
-    }, true);
-  }
-
   function isStorageProviderSectionVisible() {
     var h = currentHash();
     var rootText = norm(cleanText(getRoot()));
 
     if (!(h === "storage" || h === "storage-files" || h === "files")) {
-      if (
-        rootText.indexOf("providers") === -1 ||
-        rootText.indexOf("cdn buckets") === -1 ||
-        rootText.indexOf("public buckets") === -1 ||
-        rootText.indexOf("versions") === -1
-      ) {
-        return false;
-      }
+      return false;
     }
 
     return rootText.indexOf("providers") !== -1 &&
@@ -13519,22 +13690,22 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function removeOldCharts() {
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57")
+      document.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58")
     ).forEach(function (el) {
       el.remove();
     });
 
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57")
+      document.querySelectorAll(".goodos-storage-provider-kpi-card-v56,.goodos-storage-provider-kpi-card-v57,.goodos-storage-provider-kpi-card-v58")
     ).forEach(function (el) {
       el.classList.remove("goodos-storage-provider-kpi-card-v56");
       el.classList.remove("goodos-storage-provider-kpi-card-v57");
+      el.classList.remove("goodos-storage-provider-kpi-card-v58");
     });
   }
 
   function labelMatches(text, labels) {
     var c = compact(text);
-
     return labels.some(function (label) {
       return c === compact(label);
     });
@@ -13546,16 +13717,13 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     return nodes.find(function (el) {
       if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57")) return false;
+      if (el.closest(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58")) return false;
       if (el.children.length > 2) return false;
 
-      var text = cleanText(el);
-      if (!labelMatches(text, target.labels)) return false;
+      if (!labelMatches(cleanText(el), target.labels)) return false;
 
       var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-      if (!rect || rect.width <= 0 || rect.height <= 0) return false;
-
-      return true;
+      return !!rect && rect.width > 0 && rect.height > 0;
     }) || null;
   }
 
@@ -13590,10 +13758,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         rect.height <= 430 &&
         labelHits <= 2
       ) {
-        candidates.push({
-          node: node,
-          area: rect.width * rect.height
-        });
+        candidates.push({ node: node, area: rect.width * rect.height });
       }
 
       node = node.parentElement;
@@ -13612,7 +13777,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var clone = card.cloneNode(true);
 
     Array.prototype.slice.call(
-      clone.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57")
+      clone.querySelectorAll(".goodos-storage-provider-kpi-chart-v56,.goodos-storage-provider-kpi-chart-v57,.goodos-storage-provider-kpi-chart-v58")
     ).forEach(function (el) {
       el.remove();
     });
@@ -13627,24 +13792,13 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nums && nums.length ? Number(nums[0]) : 0;
   }
 
-  function linePath(value, variant) {
+  function linePath(value) {
     var v = Math.max(0, Number(value || 0));
     var points = [];
 
     for (var i = 0; i < 16; i += 1) {
       var x = 8 + i * 20;
-      var y;
-
-      if (v <= 0) {
-        y = 72;
-      } else if (variant === "providers") {
-        y = 72 - Math.min(38, v * 8) + ((i * 5) % 11) - (i > 10 ? 7 : 0);
-      } else if (variant === "public-buckets") {
-        y = 70 - Math.min(34, v * 8) + ((i * 7) % 13);
-      } else {
-        y = 68 - Math.min(34, v * 7) + ((i * 9) % 12);
-      }
-
+      var y = v <= 0 ? 72 : 72 - Math.min(38, v * 8) + ((i * 5) % 11) - (i > 10 ? 7 : 0);
       points.push([x, Math.max(18, Math.min(78, y))]);
     }
 
@@ -13653,96 +13807,27 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     }).join("");
   }
 
-  function lineChart(target, value, colorA, colorB) {
+  function chartMarkup(target, value) {
     var v = Math.max(0, Number(value || 0));
-    var path = linePath(v, target.key);
+    var path = linePath(v);
 
     return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v57" data-storage-provider-kpi-chart-v57="' + target.key + '">' +
+      '<div class="goodos-storage-provider-kpi-chart-v58" data-storage-provider-kpi-chart-v58="' + target.key + '">' +
         '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
           '<defs>' +
-            '<linearGradient id="storageProviderLineV57' + target.key + '" x1="0" x2="1"><stop offset="0%" stop-color="' + colorA + '"></stop><stop offset="100%" stop-color="' + colorB + '"></stop></linearGradient>' +
-            '<linearGradient id="storageProviderFillV57' + target.key + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop><stop offset="100%" stop-color="rgba(54,220,255,0)"></stop></linearGradient>' +
+            '<linearGradient id="storageProviderLineV58' + target.key + '" x1="0" x2="1"><stop offset="0%" stop-color="#16e0ff"></stop><stop offset="100%" stop-color="#7c3aed"></stop></linearGradient>' +
+            '<linearGradient id="storageProviderFillV58' + target.key + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop><stop offset="100%" stop-color="rgba(54,220,255,0)"></stop></linearGradient>' +
           '</defs>' +
           '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + (target.key === "providers" ? " provider" : " bucket") + '</text>' +
+          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + '</text>' +
           '<line x1="0" y1="42" x2="320" y2="42" class="grid"></line>' +
           '<line x1="0" y1="72" x2="320" y2="72" class="grid"></line>' +
-          '<path d="' + path + ' L308 90 L8 90 Z" fill="url(#storageProviderFillV57' + target.key + ')"></path>' +
-          '<path d="' + path + '" fill="none" stroke="url(#storageProviderLineV57' + target.key + ')" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<path d="' + path + ' L308 90 L8 90 Z" fill="url(#storageProviderFillV58' + target.key + ')"></path>' +
+          '<path d="' + path + '" fill="none" stroke="url(#storageProviderLineV58' + target.key + ')" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
           '<circle cx="308" cy="' + (v <= 0 ? 72 : 28) + '" r="5" fill="#a8ffd4"></circle>' +
-          '<text x="0" y="104" class="muted" font-size="11" font-weight="850">7D</text>' +
-          '<text x="315" y="104" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
         '</svg>' +
-        '<div class="goodos-storage-provider-kpi-chart-note-v57">' + target.note + '</div>' +
+        '<div class="goodos-storage-provider-kpi-chart-note-v58">' + target.note + '</div>' +
       '</div>';
-  }
-
-  function progressChart(target, value) {
-    var v = Math.max(0, Number(value || 0));
-    var max = Math.max(2, v + 1);
-    var pct = Math.max(0, Math.min(100, (v / max) * 100));
-    var fill = (300 * pct / 100).toFixed(1);
-    var dot = Math.max(5, Math.min(295, 300 * pct / 100)).toFixed(1);
-
-    return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v57" data-storage-provider-kpi-chart-v57="' + target.key + '">' +
-        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
-          '<defs><linearGradient id="storageProviderProgressGradV57" x1="0" x2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="55%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#22e6a8"></stop></linearGradient></defs>' +
-          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + ' enabled</text>' +
-          '<rect x="0" y="52" width="300" height="13" rx="7" fill="rgba(255,255,255,.08)"></rect>' +
-          '<rect x="0" y="52" width="' + fill + '" height="13" rx="7" fill="url(#storageProviderProgressGradV57)"></rect>' +
-          '<circle cx="' + dot + '" cy="58.5" r="5" fill="#22e6a8"></circle>' +
-          '<text x="0" y="94" class="muted" font-size="11" font-weight="850">0</text>' +
-          '<text x="160" y="94" text-anchor="middle" class="muted" font-size="11" font-weight="850">' + value + '</text>' +
-          '<text x="315" y="94" text-anchor="end" class="muted" font-size="11" font-weight="850">' + max + '</text>' +
-        '</svg>' +
-        '<div class="goodos-storage-provider-kpi-chart-note-v57">' + target.note + '</div>' +
-      '</div>';
-  }
-
-  function barsChart(target, value) {
-    var v = Math.max(0, Number(value || 0));
-    var bars = [];
-
-    for (var i = 0; i < 14; i += 1) {
-      var h = v <= 0 ? 4 : Math.max(10, Math.min(68, 12 + ((i * 11 + v * 6) % 56)));
-      var x = 12 + i * 21;
-      var y = 84 - h;
-
-      bars.push('<rect x="' + x + '" y="' + y + '" width="12" height="' + h + '" rx="4" fill="url(#storageProviderBarsGradV57)" opacity="' + (v <= 0 ? ".20" : ".92") + '"></rect>');
-    }
-
-    return '' +
-      '<div class="goodos-storage-provider-kpi-chart-v57" data-storage-provider-kpi-chart-v57="' + target.key + '">' +
-        '<svg viewBox="0 0 340 106" aria-label="' + target.key + ' live chart">' +
-          '<defs><linearGradient id="storageProviderBarsGradV57" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="50%" stop-color="#4f8cff"></stop><stop offset="100%" stop-color="#7c3aed"></stop></linearGradient></defs>' +
-          '<text x="0" y="14" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
-          '<text x="315" y="14" text-anchor="end" class="green" font-size="11" font-weight="950">' + value + ' record</text>' +
-          '<line x1="0" y1="84" x2="320" y2="84" class="grid"></line>' +
-          bars.join("") +
-          '<text x="0" y="104" class="muted" font-size="11" font-weight="850">7D</text>' +
-          '<text x="315" y="104" text-anchor="end" class="muted" font-size="11" font-weight="850">NOW</text>' +
-        '</svg>' +
-        '<div class="goodos-storage-provider-kpi-chart-note-v57">' + target.note + '</div>' +
-      '</div>';
-  }
-
-  function chartMarkup(target, value) {
-    if (target.key === "providers") {
-      return lineChart(target, value, "#16e0ff", "#7c3aed");
-    }
-
-    if (target.key === "cdn-buckets") {
-      return progressChart(target, value);
-    }
-
-    if (target.key === "public-buckets") {
-      return lineChart(target, value, "#18e0ff", "#7c3aed");
-    }
-
-    return barsChart(target, value);
   }
 
   function renderStorageProviderCharts() {
@@ -13759,13 +13844,12 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
       var value = metricValue(card, target);
 
-      card.classList.add("goodos-storage-provider-kpi-card-v57");
+      card.classList.add("goodos-storage-provider-kpi-card-v58");
       card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
     });
   }
 
   function run() {
-    installApiKeysNavFix();
     renderStorageProviderCharts();
   }
 
@@ -13776,10 +13860,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   window.addEventListener("hashchange", function () {
-    if (currentHash() === "api-keys" || currentHash() === "apikeys" || currentHash() === "keys") {
-      setTimeout(forceApiKeysRoute, 80);
-    }
-
     setTimeout(run, 300);
     setTimeout(run, 900);
     setTimeout(run, 1800);
