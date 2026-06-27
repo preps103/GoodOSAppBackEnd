@@ -2580,19 +2580,66 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
-<style id="goodos-webhooks-kpi-charts-v67">
-/* V67: Webhooks KPI charts only. Prevent hero/header chart injection. */
+<style id="goodos-webhooks-premium-charts-v68">
+/* V68: Webhooks premium chart style only */
 
-.goodos-webhooks-chart-card-v67 {
-  min-height: 410px !important;
+.goodos-webhooks-chart-card-v68 {
+  min-height: 430px !important;
   height: auto !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
   position: relative !important;
+  padding-bottom: 22px !important;
 }
 
-.goodos-webhooks-chart-v67 {
+.goodos-webhooks-chart-card-v68::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .98;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(124,58,237,.42), rgba(54,220,255,.08));
+  border: 1px solid rgba(139,92,246,.48);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.goodos-webhooks-chart-card-v68[data-goodos-hook-type-v68="active"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,197,94,.48), rgba(20,184,166,.10));
+  border-color: rgba(34,197,94,.45);
+}
+
+.goodos-webhooks-chart-card-v68[data-goodos-hook-type-v68="deliveries"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(59,130,246,.55), rgba(54,220,255,.10));
+  border-color: rgba(59,130,246,.48);
+}
+
+.goodos-webhooks-chart-card-v68[data-goodos-hook-type-v68="failed"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(236,72,153,.56), rgba(244,63,94,.13));
+  border-color: rgba(236,72,153,.52);
+}
+
+.goodos-webhooks-chart-card-v68[data-goodos-hook-type-v68="receipts"]::after {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 36%),
+    linear-gradient(135deg, rgba(34,211,238,.48), rgba(20,184,166,.12));
+  border-color: rgba(34,211,238,.48);
+}
+
+.goodos-webhooks-chart-v68 {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -2600,51 +2647,52 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   z-index: 20 !important;
   margin-top: 24px !important;
   width: 100% !important;
-  min-height: 214px !important;
+  min-height: 230px !important;
   border-radius: 22px !important;
   background:
-    radial-gradient(circle at 50% 0%, rgba(54,220,255,.09), transparent 42%),
-    linear-gradient(180deg, rgba(3,12,24,.78), rgba(6,17,34,.58)) !important;
-  border: 1px solid rgba(148,163,184,.12) !important;
+    radial-gradient(circle at 50% 0%, rgba(54,220,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,.84), rgba(6,17,34,.64)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
   padding: 18px 20px 14px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 16px 44px rgba(0,0,0,.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 44px rgba(0,0,0,.17) !important;
 }
 
-.goodos-webhooks-chart-v67 svg {
+.goodos-webhooks-chart-v68 svg {
   display: block !important;
   width: 100% !important;
-  height: 196px !important;
+  height: 208px !important;
   overflow: visible !important;
 }
 
-.goodos-webhooks-chart-v67 .muted {
+.goodos-webhooks-chart-v68 .muted {
   fill: rgba(203,213,225,.78);
 }
 
-.goodos-webhooks-chart-v67 .axis {
+.goodos-webhooks-chart-v68 .axis {
   fill: rgba(203,213,225,.86);
 }
 
-.goodos-webhooks-chart-v67 .grid {
-  stroke: rgba(148,163,184,.15);
+.goodos-webhooks-chart-v68 .grid {
+  stroke: rgba(148,163,184,.16);
   stroke-dasharray: 5 8;
 }
 
-.goodos-webhooks-trend-v67 {
-  margin-top: 14px !important;
+.goodos-webhooks-trend-v68 {
+  margin-top: 16px !important;
   color: rgba(203,213,225,.82) !important;
-  font-size: 14px !important;
+  font-size: 15px !important;
   font-weight: 850 !important;
+  letter-spacing: .01em !important;
 }
 
-.goodos-webhooks-trend-v67 strong {
+.goodos-webhooks-trend-v68 strong {
   color: #22e6a8 !important;
   font-weight: 950 !important;
 }
 
-.goodos-webhooks-trend-v67.is-negative-v67 strong {
+.goodos-webhooks-trend-v68.is-negative-v68 strong {
   color: #fb7185 !important;
 }
 </style>
@@ -15651,18 +15699,18 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-<script id="goodos-webhooks-kpi-charts-v67-js">
+<script id="goodos-webhooks-premium-charts-v68-js">
 (function () {
-  if (window.__goodosWebhooksKpiChartsV67) return;
-  window.__goodosWebhooksKpiChartsV67 = true;
+  if (window.__goodosWebhooksPremiumChartsV68) return;
+  window.__goodosWebhooksPremiumChartsV68 = true;
 
   var TARGETS = [
     {
       key: "webhooks",
       label: "WEBHOOKS",
       type: "area",
-      suffix: " endpoints",
       trend: "+1",
+      suffix: "endpoints",
       colorA: "#8b5cf6",
       colorB: "#7c3aed",
       maxLabel: "6",
@@ -15672,8 +15720,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       key: "active",
       label: "ACTIVE",
       type: "area",
-      suffix: " active",
       trend: "+2",
+      suffix: "active",
       colorA: "#22c55e",
       colorB: "#16a34a",
       maxLabel: "6",
@@ -15683,8 +15731,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       key: "deliveries",
       label: "DELIVERIES",
       type: "area",
-      suffix: " deliveries",
       trend: "+3",
+      suffix: "deliveries",
       colorA: "#38bdf8",
       colorB: "#2563eb",
       maxLabel: "6",
@@ -15694,8 +15742,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       key: "failed",
       label: "FAILED",
       type: "flat",
-      suffix: " failed",
       trend: "-2",
+      suffix: "failed",
       negative: true,
       colorA: "#fb7185",
       colorB: "#ec4899",
@@ -15706,8 +15754,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       key: "receipts",
       label: "RECEIPTS",
       type: "bars",
-      suffix: " receipts",
       trend: "+4",
+      suffix: "receipts",
       colorA: "#22d3ee",
       colorB: "#0891b2",
       maxLabel: "12",
@@ -15738,10 +15786,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     if (!el || !el.getBoundingClientRect) return false;
     var r = el.getBoundingClientRect();
     var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-
-    return r.width > 0 &&
-      r.height > 0 &&
-      (!style || (style.display !== "none" && style.visibility !== "hidden"));
+    return r.width > 0 && r.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
   }
 
   function webhooksPageVisible() {
@@ -15756,18 +15801,24 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function removeOldCharts() {
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-webhooks-chart-v66,.goodos-webhooks-chart-trend-v66,.goodos-webhooks-chart-v67,.goodos-webhooks-trend-v67")
+      document.querySelectorAll(
+        ".goodos-webhooks-chart-v66,.goodos-webhooks-chart-trend-v66,.goodos-webhooks-chart-v67,.goodos-webhooks-trend-v67,.goodos-webhooks-chart-v68,.goodos-webhooks-trend-v68"
+      )
     ).forEach(function (el) {
       el.remove();
     });
 
     Array.prototype.slice.call(
-      document.querySelectorAll(".goodos-webhooks-chart-card-v66,.goodos-webhooks-chart-card-v67")
+      document.querySelectorAll(
+        ".goodos-webhooks-chart-card-v66,.goodos-webhooks-chart-card-v67,.goodos-webhooks-chart-card-v68"
+      )
     ).forEach(function (el) {
       el.classList.remove("goodos-webhooks-chart-card-v66");
       el.classList.remove("goodos-webhooks-chart-card-v67");
+      el.classList.remove("goodos-webhooks-chart-card-v68");
       el.removeAttribute("data-goodos-hook-type-v66");
       el.removeAttribute("data-goodos-hook-type-v67");
+      el.removeAttribute("data-goodos-hook-type-v68");
     });
   }
 
@@ -15778,13 +15829,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var heading = nodes.find(function (el) {
       if (!isVisible(el)) return false;
       if (el.closest("aside,nav,header")) return false;
-
       return norm(cleanText(el)) === "webhook endpoints";
     });
 
-    if (!heading || !heading.getBoundingClientRect) return 0;
-
-    return heading.getBoundingClientRect().top;
+    return heading && heading.getBoundingClientRect ? heading.getBoundingClientRect().top : 0;
   }
 
   function labelExactNodeAfterSection(label) {
@@ -15797,7 +15845,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nodes.find(function (el) {
       if (!isVisible(el)) return false;
       if (el.closest("aside,nav,header")) return false;
-      if (el.closest(".goodos-webhooks-chart-v67")) return false;
+      if (el.closest(".goodos-webhooks-chart-v68")) return false;
       if (el.children.length > 2) return false;
 
       var rect = el.getBoundingClientRect();
@@ -15832,9 +15880,9 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
         text.indexOf(label) !== -1 &&
         hitCount === 1 &&
         rect.width >= 180 &&
-        rect.width <= 900 &&
+        rect.width <= 920 &&
         rect.height >= 70 &&
-        rect.height <= 520
+        rect.height <= 560
       ) {
         candidates.push({
           node: node,
@@ -15858,7 +15906,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     var clone = card.cloneNode(true);
 
     Array.prototype.slice.call(
-      clone.querySelectorAll(".goodos-webhooks-chart-v66,.goodos-webhooks-chart-trend-v66,.goodos-webhooks-chart-v67,.goodos-webhooks-trend-v67")
+      clone.querySelectorAll(".goodos-webhooks-chart-v66,.goodos-webhooks-chart-trend-v66,.goodos-webhooks-chart-v67,.goodos-webhooks-trend-v67,.goodos-webhooks-chart-v68,.goodos-webhooks-trend-v68")
     ).forEach(function (el) {
       el.remove();
     });
@@ -15869,35 +15917,20 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nums && nums.length ? Number(nums[0]) : 0;
   }
 
-  function makeSeries(target, value) {
-    var v = Math.max(0, Number(value || 0));
-    var points = [];
-    var preset;
-
+  function series(target, value) {
     if (target.key === "webhooks") {
-      preset = [158,150,126,104,88,78,72,72,71,72,72,72,72,72,76,84,102,132];
-    } else if (target.key === "active") {
-      preset = [152,148,144,138,132,126,120,116,110,104,108,103,105,96,110,92,88,82];
-    } else if (target.key === "deliveries") {
-      preset = [158,158,150,136,118,116,112,106,96,116,122,130,124,104,96,82,70,58];
-    } else if (target.key === "failed") {
-      preset = [160,160,160,160,160,160,160,160,160,160,160,160,160,160,160,160,160,160];
-    } else {
-      preset = [152,142,130,118,108,96,84,74,64,56,48,42,36,30,24,18,14,10];
+      return [160,154,132,106,86,72,64,61,60,60,60,60,60,61,64,72,92,125];
     }
-
-    for (var i = 0; i < 18; i += 1) {
-      var x = 38 + i * 15.5;
-      var y = preset[i];
-
-      if (v <= 0 && target.key !== "failed") {
-        y = 160;
-      }
-
-      points.push([x, y]);
+    if (target.key === "active") {
+      return [154,148,142,136,128,120,112,106,100,94,88,92,88,80,90,72,68,58];
     }
-
-    return points;
+    if (target.key === "deliveries") {
+      return [160,160,154,134,106,92,92,88,82,72,52,74,82,92,86,72,54,42];
+    }
+    if (target.key === "failed") {
+      return [160,160,159,160,160,159,160,158,160,160,159,160,160,159,160,160,159,160];
+    }
+    return [158,152,138,126,110,96,82,68,56,46,38,30,25,20,16,12,10,8];
   }
 
   function pathFromPoints(points) {
@@ -15907,89 +15940,91 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   }
 
   function areaChart(target, value) {
-    var points = makeSeries(target, value);
+    var ys = series(target, value);
+    var points = ys.map(function (y, i) {
+      return [42 + i * 15.4, y];
+    });
+
     var path = pathFromPoints(points);
     var last = points[points.length - 1];
 
     return '' +
-      '<svg viewBox="0 0 340 196" aria-label="' + target.label + ' live chart">' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
         '<defs>' +
-          '<linearGradient id="goodosWebhookLineV67' + target.key + '" x1="0" x2="1">' +
+          '<linearGradient id="goodosHookLineV68' + target.key + '" x1="0" x2="1">' +
             '<stop offset="0%" stop-color="' + target.colorA + '"></stop>' +
             '<stop offset="100%" stop-color="' + target.colorB + '"></stop>' +
           '</linearGradient>' +
-          '<linearGradient id="goodosWebhookFillV67' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
+          '<linearGradient id="goodosHookFillV68' + target.key + '" x1="0" x2="0" y1="0" y2="1">' +
             '<stop offset="0%" stop-color="' + target.colorB + '" stop-opacity=".42"></stop>' +
             '<stop offset="100%" stop-color="' + target.colorB + '" stop-opacity="0"></stop>' +
           '</linearGradient>' +
         '</defs>' +
         '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
-        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.64)" stroke="rgba(148,163,184,.18)"></rect>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
         '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
         '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
         '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
         '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
         '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
-        '<line x1="38" y1="64" x2="318" y2="64" class="grid"></line>' +
-        '<line x1="38" y1="110" x2="318" y2="110" class="grid"></line>' +
-        '<line x1="38" y1="160" x2="318" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
-        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L38 160 Z" fill="url(#goodosWebhookFillV67' + target.key + ')"></path>' +
-        '<path d="' + path + '" fill="none" stroke="url(#goodosWebhookLineV67' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
-        '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="6" fill="' + target.colorA + '" stroke="rgba(255,255,255,.28)" stroke-width="2"></circle>' +
-        '<text x="38" y="192" class="axis" font-size="14" font-weight="800">May 28</text>' +
-        '<text x="122" y="192" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
-        '<text x="206" y="192" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
-        '<text x="286" y="192" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        '<path d="' + path + ' L' + last[0].toFixed(1) + ' 160 L42 160 Z" fill="url(#goodosHookFillV68' + target.key + ')"></path>' +
+        '<path d="' + path + '" fill="none" stroke="url(#goodosHookLineV68' + target.key + ')" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        points.map(function (pt, i) {
+          return '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="' + (i === points.length - 1 ? 6 : 3.2) + '" fill="' + target.colorA + '" stroke="rgba(255,255,255,.22)" stroke-width="1.5"></circle>';
+        }).join("") +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 28</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
       '</svg>';
   }
 
-  function barsChart(target, value) {
-    var bars = [];
-    var heights = [5,18,28,36,54,64,82,92,86,112,116,120,122,126];
-
-    for (var i = 0; i < 14; i += 1) {
-      var h = heights[i];
-      var x = 48 + i * 18;
+  function barsChart(target) {
+    var heights = [6,18,30,42,56,70,82,96,108,116,126,136,146,156];
+    var bars = heights.map(function (h, i) {
+      var x = 50 + i * 18;
       var y = 160 - h;
-
-      bars.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="13" height="' + h.toFixed(1) + '" rx="4" fill="url(#goodosWebhookBarsV67)" opacity=".94"></rect>');
-    }
+      return '<rect x="' + x + '" y="' + y + '" width="13" height="' + h + '" rx="4" fill="url(#goodosHookBarsV68)" opacity=".94"></rect>';
+    }).join("");
 
     return '' +
-      '<svg viewBox="0 0 340 196" aria-label="' + target.label + ' live chart">' +
+      '<svg viewBox="0 0 340 208" aria-label="' + target.label + ' chart">' +
         '<defs>' +
-          '<linearGradient id="goodosWebhookBarsV67" x1="0" x2="0" y1="0" y2="1">' +
+          '<linearGradient id="goodosHookBarsV68" x1="0" x2="0" y1="0" y2="1">' +
             '<stop offset="0%" stop-color="#22d3ee"></stop>' +
             '<stop offset="52%" stop-color="#0891b2"></stop>' +
             '<stop offset="100%" stop-color="#155e75"></stop>' +
           '</linearGradient>' +
         '</defs>' +
         '<text x="0" y="18" class="muted" font-size="12" font-weight="950" letter-spacing="2.4">LIVE CHART</text>' +
-        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.64)" stroke="rgba(148,163,184,.18)"></rect>' +
+        '<rect x="270" y="1" width="54" height="32" rx="10" fill="rgba(15,23,42,.70)" stroke="rgba(148,163,184,.20)"></rect>' +
         '<text x="287" y="22" fill="#dbe7f7" font-size="13" font-weight="900">30D</text>' +
         '<path d="M309 13 L315 19 L321 13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
         '<text x="0" y="72" class="axis" font-size="13" font-weight="800">' + target.maxLabel + '</text>' +
         '<text x="0" y="118" class="axis" font-size="13" font-weight="800">' + target.midLabel + '</text>' +
         '<text x="0" y="166" class="axis" font-size="13" font-weight="800">0</text>' +
-        '<line x1="38" y1="64" x2="318" y2="64" class="grid"></line>' +
-        '<line x1="38" y1="110" x2="318" y2="110" class="grid"></line>' +
-        '<line x1="38" y1="160" x2="318" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
-        bars.join("") +
-        '<text x="38" y="192" class="axis" font-size="14" font-weight="800">May 28</text>' +
-        '<text x="122" y="192" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
-        '<text x="206" y="192" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
-        '<text x="286" y="192" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
+        '<line x1="42" y1="64" x2="320" y2="64" class="grid"></line>' +
+        '<line x1="42" y1="110" x2="320" y2="110" class="grid"></line>' +
+        '<line x1="42" y1="160" x2="320" y2="160" stroke="rgba(148,163,184,.18)"></line>' +
+        bars +
+        '<text x="42" y="202" class="axis" font-size="14" font-weight="800">May 28</text>' +
+        '<text x="122" y="202" class="axis" font-size="14" font-weight="800">Jun 4</text>' +
+        '<text x="206" y="202" class="axis" font-size="14" font-weight="800">Jun 11</text>' +
+        '<text x="286" y="202" class="axis" font-size="14" font-weight="800">Jun 25</text>' +
       '</svg>';
   }
 
   function chartMarkup(target, value) {
-    var chart = target.type === "bars" ? barsChart(target, value) : areaChart(target, value);
+    var chart = target.type === "bars" ? barsChart(target) : areaChart(target, value);
 
     return '' +
-      '<div class="goodos-webhooks-chart-v67" data-goodos-webhooks-chart-v67="' + target.key + '">' +
+      '<div class="goodos-webhooks-chart-v68" data-goodos-webhooks-chart-v68="' + target.key + '">' +
         chart +
       '</div>' +
-      '<div class="goodos-webhooks-trend-v67' + (target.negative ? ' is-negative-v67' : '') + '">' +
+      '<div class="goodos-webhooks-trend-v68' + (target.negative ? ' is-negative-v68' : '') + '">' +
         '<strong>' + (target.negative ? "↓ " : "↗ ") + target.trend + '</strong> vs last 30 days' +
       '</div>';
   }
@@ -16003,15 +16038,12 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       var label = labelExactNodeAfterSection(target.label);
       var card = cardForLabel(label);
 
-      if (!card) {
-        console.warn("GoodOS V67: Webhooks KPI card not found for", target.label);
-        return;
-      }
+      if (!card) return;
 
       var value = getValueFromCard(card, target.label);
 
-      card.classList.add("goodos-webhooks-chart-card-v67");
-      card.setAttribute("data-goodos-hook-type-v67", target.key);
+      card.classList.add("goodos-webhooks-chart-card-v68");
+      card.setAttribute("data-goodos-hook-type-v68", target.key);
       card.insertAdjacentHTML("beforeend", chartMarkup(target, value));
     });
   }
