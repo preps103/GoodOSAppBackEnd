@@ -1133,6 +1133,135 @@ main [class*="badge"],
 }
 </style>
 
+
+<style id="goodos-dashboard-section-layout-v37">
+/* V37: fix Activity Center + Project Control Center spacing/layout only */
+.goodos-dashboard-v37-ready .goodos-section-heading-v37 {
+  margin: 22px 0 12px !important;
+  padding: 0 !important;
+  min-height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.goodos-dashboard-v37-ready .goodos-section-title-v37 {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #f8fbff !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.15 !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.18) !important;
+}
+
+.goodos-dashboard-v37-ready .goodos-section-subline-v37 {
+  margin-top: 4px !important;
+  color: #8fa0ba !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.goodos-dashboard-v37-ready .goodos-section-actions-v37 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin-left: auto !important;
+}
+
+.goodos-dashboard-v37-ready .goodos-section-actions-v37 button,
+.goodos-dashboard-v37-ready .goodos-section-actions-v37 a {
+  min-height: 36px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148,163,184,.18) !important;
+  background: rgba(15,25,48,.55) !important;
+  color: #dbeafe !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.goodos-dashboard-v37-ready .goodos-section-actions-v37 button:hover,
+.goodos-dashboard-v37-ready .goodos-section-actions-v37 a:hover {
+  background: rgba(79,140,255,.15) !important;
+  border-color: rgba(79,140,255,.30) !important;
+}
+
+/* Remove the weird heavy horizontal bar look around these two labels */
+.goodos-dashboard-v37-ready .goodos-activity-heading-v37,
+.goodos-dashboard-v37-ready .goodos-project-control-heading-v37 {
+  border-bottom: 0 !important;
+}
+
+/* Keep Project Control Center KPI cards in a clean 4-card row */
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+  margin-top: 12px !important;
+  margin-bottom: 18px !important;
+}
+
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 > * {
+  min-width: 0 !important;
+}
+
+/* Keep the four KPI cards compact with charts inside the card */
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 .goodos-kpi-card-v35,
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 .goodos-module-scope-card-v36,
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 > * {
+  min-height: 176px !important;
+  max-height: 206px !important;
+  overflow: hidden !important;
+}
+
+/* Better chart positioning inside KPI cards */
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 .goodos-kpi-chart-v35,
+.goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 .goodos-module-scope-chart-v36 {
+  margin-top: 14px !important;
+  height: 70px !important;
+}
+
+/* Better desktop width balance */
+.goodos-dashboard-v37-ready .goodos-dashboard-content-v37 {
+  max-width: 1640px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 1200px) {
+  .goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .goodos-dashboard-v37-ready .goodos-project-kpi-row-v37 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .goodos-dashboard-v37-ready .goodos-section-heading-v37 {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .goodos-dashboard-v37-ready .goodos-section-actions-v37 {
+    justify-content: flex-start !important;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -10089,6 +10218,238 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   window.addEventListener("hashchange", function () {
     setTimeout(renderModuleScopeChart, 500);
   });
+})();
+</script>
+
+
+<script id="goodos-dashboard-section-layout-v37-js">
+(function () {
+  if (window.__goodosDashboardSectionLayoutV37) return;
+  window.__goodosDashboardSectionLayoutV37 = true;
+
+  function cleanText(el) {
+    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function viewRoot() {
+    return document.getElementById("view") ||
+      document.querySelector("[data-view-root]") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function findExactTextNode(label) {
+    var root = viewRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("h1,h2,h3,h4,strong,div,span,p"));
+
+    return nodes.find(function (el) {
+      if (el.closest("aside, nav, header")) return false;
+      if (el.closest(".goodos-kpi-chart-v35, .goodos-module-scope-chart-v36")) return false;
+      if (el.children.length > 3) return false;
+      return cleanText(el).toLowerCase() === label.toLowerCase();
+    }) || null;
+  }
+
+  function findHeadingContainer(label) {
+    var node = findExactTextNode(label);
+    if (!node) return null;
+
+    var best = node;
+
+    for (var i = 0; best && best.parentElement && i < 5; i += 1) {
+      var parent = best.parentElement;
+      if (parent.closest && parent.closest("aside, nav, header")) break;
+
+      var text = cleanText(parent);
+      var rect = parent.getBoundingClientRect ? parent.getBoundingClientRect() : { width: 0, height: 999 };
+
+      if (
+        text.indexOf(label) !== -1 &&
+        rect.height <= 92 &&
+        rect.width >= 300
+      ) {
+        best = parent;
+      } else {
+        break;
+      }
+    }
+
+    return best;
+  }
+
+  function collectNearbyButtons(container) {
+    if (!container || !container.parentElement) return;
+
+    var parent = container.parentElement;
+    var buttons = Array.prototype.slice.call(parent.querySelectorAll("button,a")).filter(function (btn) {
+      if (btn.closest("aside, nav, header")) return false;
+      var btxt = cleanText(btn);
+      return /refresh|create project|refresh projects|refresh activity/i.test(btxt);
+    });
+
+    if (!buttons.length) return;
+
+    var actionWrap = container.querySelector(".goodos-section-actions-v37");
+    if (!actionWrap) {
+      actionWrap = document.createElement("div");
+      actionWrap.className = "goodos-section-actions-v37";
+      container.appendChild(actionWrap);
+    }
+
+    buttons.forEach(function (btn) {
+      if (btn.parentElement === actionWrap) return;
+
+      var btxt = cleanText(btn);
+      if (
+        /refresh activity/i.test(btxt) ||
+        /refresh projects/i.test(btxt) ||
+        /create project/i.test(btxt)
+      ) {
+        actionWrap.appendChild(btn);
+      }
+    });
+  }
+
+  function normalizeHeading(label, className, subline) {
+    var container = findHeadingContainer(label);
+    if (!container) return;
+
+    container.classList.add("goodos-section-heading-v37");
+    container.classList.add(className);
+
+    var labelNode = findExactTextNode(label);
+    if (labelNode) {
+      labelNode.classList.add("goodos-section-title-v37");
+    }
+
+    if (subline && !container.querySelector(".goodos-section-subline-v37")) {
+      var textWrap = document.createElement("div");
+      textWrap.className = "goodos-section-copy-v37";
+
+      if (labelNode && labelNode.parentElement === container) {
+        container.insertBefore(textWrap, labelNode);
+        textWrap.appendChild(labelNode);
+      }
+
+      var p = document.createElement("div");
+      p.className = "goodos-section-subline-v37";
+      p.textContent = subline;
+      textWrap.appendChild(p);
+    }
+
+    collectNearbyButtons(container);
+  }
+
+  function findKpiCard(label) {
+    var root = viewRoot();
+    var nodes = Array.prototype.slice.call(root.querySelectorAll("*"));
+
+    var labelNode = nodes.find(function (el) {
+      if (el.closest("aside, nav, header")) return false;
+      if (el.closest(".goodos-kpi-chart-v35, .goodos-module-scope-chart-v36")) return false;
+      if (el.children.length > 2) return false;
+      return cleanText(el).toUpperCase() === label;
+    });
+
+    if (!labelNode) return null;
+
+    var node = labelNode;
+    var candidates = [];
+
+    for (var i = 0; node && node !== document.body && i < 12; i += 1) {
+      if (node.closest && node.closest("aside, nav, header")) break;
+      if (node.querySelector && node.querySelector("table")) {
+        node = node.parentElement;
+        continue;
+      }
+
+      var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var text = cleanText(node).toUpperCase();
+
+      if (
+        text.indexOf(label) !== -1 &&
+        rect.width >= 180 &&
+        rect.width <= 760 &&
+        rect.height >= 80 &&
+        rect.height <= 340
+      ) {
+        candidates.push({ node: node, area: rect.width * rect.height });
+      }
+
+      node = node.parentElement;
+    }
+
+    if (!candidates.length) return null;
+
+    candidates.sort(function (a, b) {
+      return b.area - a.area;
+    });
+
+    return candidates[0].node;
+  }
+
+  function restoreKpiRow() {
+    var labels = ["ORGANIZATIONS", "PROJECTS", "ENVIRONMENTS", "MODULE SCOPE"];
+    var cards = labels.map(findKpiCard).filter(Boolean);
+
+    if (cards.length < 4) return;
+
+    var parentCounts = new Map();
+
+    cards.forEach(function (card) {
+      var parent = card.parentElement;
+      if (!parent) return;
+      parentCounts.set(parent, (parentCounts.get(parent) || 0) + 1);
+    });
+
+    var bestParent = null;
+    var bestCount = 0;
+
+    parentCounts.forEach(function (count, parent) {
+      if (count > bestCount) {
+        bestCount = count;
+        bestParent = parent;
+      }
+    });
+
+    if (bestParent && bestCount >= 4) {
+      bestParent.classList.add("goodos-project-kpi-row-v37");
+    }
+  }
+
+  function run() {
+    document.body.classList.add("goodos-dashboard-v37-ready");
+
+    var root = viewRoot();
+    if (root) root.classList.add("goodos-dashboard-content-v37");
+
+    normalizeHeading(
+      "Activity Center",
+      "goodos-activity-heading-v37",
+      "Live production activity, readiness, and recent backend movement."
+    );
+
+    normalizeHeading(
+      "Project Control Center",
+      "goodos-project-control-heading-v37",
+      "Project, environment, and module scope overview."
+    );
+
+    restoreKpiRow();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(run, 250);
+  });
+
+  setTimeout(run, 800);
+  setTimeout(run, 1800);
 })();
 </script>
 
