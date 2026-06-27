@@ -1053,57 +1053,16 @@ main [class*="badge"],
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 
-<meta name="goodos-cache-version" content="20260627045144">
-<style id="goodos-sidebar-flow-v34">
-body.goodos-sidebar-flow-v34 aside,
-body.goodos-sidebar-flow-v34 nav,
-body.goodos-sidebar-flow-v34 .sidebar,
-body.goodos-sidebar-flow-v34 [class*="sidebar"] {
-  background:
-    radial-gradient(circle at 0% 0%, rgba(91, 108, 255, .20), transparent 30%),
-    radial-gradient(circle at 100% 28%, rgba(54, 220, 255, .09), transparent 32%),
-    linear-gradient(180deg, rgba(5, 14, 28, .99), rgba(3, 8, 17, .99)) !important;
-  border-right: 1px solid rgba(115, 139, 190, .18) !important;
+<meta name="goodos-cache-version" content="KPI_CHARTS_V35">
+<style id="goodos-kpi-four-charts-v35">
+.goodos-kpi-card-v35 {
+  min-height: 176px !important;
 }
 
-body.goodos-sidebar-flow-v34 aside button,
-body.goodos-sidebar-flow-v34 nav button,
-body.goodos-sidebar-flow-v34 .sidebar button,
-body.goodos-sidebar-flow-v34 [class*="sidebar"] button {
-  border-radius: 14px !important;
-  color: #dce8f7 !important;
-  border: 1px solid transparent !important;
-  background: transparent !important;
-}
-
-body.goodos-sidebar-flow-v34 aside button:hover,
-body.goodos-sidebar-flow-v34 nav button:hover,
-body.goodos-sidebar-flow-v34 .sidebar button:hover,
-body.goodos-sidebar-flow-v34 [class*="sidebar"] button:hover {
-  background: rgba(79, 140, 255, .12) !important;
-  border-color: rgba(148, 163, 184, .14) !important;
-}
-
-body.goodos-sidebar-flow-v34 aside button.active,
-body.goodos-sidebar-flow-v34 nav button.active,
-body.goodos-sidebar-flow-v34 .sidebar button.active,
-body.goodos-sidebar-flow-v34 aside button[aria-current="page"],
-body.goodos-sidebar-flow-v34 nav button[aria-current="page"] {
-  background: linear-gradient(135deg, rgba(79,140,255,.43), rgba(139,92,246,.30)) !important;
-  border-color: rgba(255,255,255,.10) !important;
-  color: #ffffff !important;
-}
-</style>
-
-<style id="goodos-kpi-real-charts-v34">
-.goodos-kpi-card-v34 {
-  min-height: 188px !important;
-}
-
-.goodos-kpi-visual-v34 {
-  margin-top: 18px;
+.goodos-kpi-chart-v35 {
+  margin-top: 16px;
   width: 100%;
-  height: 88px;
+  height: 74px;
   border-radius: 16px;
   background:
     radial-gradient(circle at 100% 0%, rgba(54,220,255,.10), transparent 42%),
@@ -1114,49 +1073,36 @@ body.goodos-sidebar-flow-v34 nav button[aria-current="page"] {
   overflow: hidden;
 }
 
-.goodos-kpi-visual-v34 svg {
+.goodos-kpi-chart-v35 svg {
   width: 100%;
   height: 100%;
   display: block;
   overflow: visible;
 }
 
-.goodos-kpi-visual-v34 text {
+.goodos-kpi-chart-v35 text {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.goodos-kpi-visual-v34 .muted {
+.goodos-kpi-chart-v35 .muted {
   fill: #9eabc2;
 }
 
-.goodos-kpi-visual-v34 .white {
+.goodos-kpi-chart-v35 .white {
   fill: #f8fbff;
 }
 
-.goodos-kpi-visual-v34 .green {
+.goodos-kpi-chart-v35 .green {
   fill: #a8ffd4;
 }
 
-.goodos-kpi-visual-v34 .grid {
+.goodos-kpi-chart-v35 .grid {
   stroke: rgba(148,163,184,.16);
   stroke-dasharray: 4 6;
 }
 
-.goodos-kpi-visual-v34 .axis {
-  stroke: rgba(148,163,184,.20);
-}
-
-.goodos-kpi-visual-v34 .track {
+.goodos-kpi-chart-v35 .track {
   fill: rgba(255,255,255,.08);
-}
-
-.goodos-kpi-visual-v34 .soft-card {
-  fill: rgba(3, 10, 24, .35);
-  stroke: rgba(148,163,184,.10);
-}
-
-.goodos-kpi-visual-v34 .glow-line {
-  filter: drop-shadow(0 0 8px rgba(54,220,255,.22));
 }
 </style>
 
@@ -9708,34 +9654,12 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
-<script id="goodos-sidebar-flow-v34-js">
+<script id="goodos-kpi-four-charts-v35-js">
 (function () {
-  if (window.__goodosSidebarFlowV34) return;
-  window.__goodosSidebarFlowV34 = true;
+  if (window.__goodosKpiFourChartsV35) return;
+  window.__goodosKpiFourChartsV35 = true;
 
-  function run() {
-    document.body.classList.add("goodos-sidebar-flow-v34");
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-})();
-</script>
-
-<script id="goodos-kpi-real-charts-v34-js">
-(function () {
-  if (window.__goodosKpiRealChartsV34) return;
-  window.__goodosKpiRealChartsV34 = true;
-
-  var KPI_LABELS = [
-    "ORGANIZATIONS",
-    "PROJECTS",
-    "ENVIRONMENTS",
-    "MODULE SCOPE"
-  ];
+  var KPI_LABELS = ["ORGANIZATIONS", "PROJECTS", "ENVIRONMENTS", "MODULE SCOPE"];
 
   function cleanText(el) {
     return String((el && el.textContent) || "").replace(/\s+/g, " ").trim();
@@ -9748,10 +9672,20 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       document.body;
   }
 
+  function removeOldChartsFromCard(card) {
+    Array.prototype.slice.call(card.querySelectorAll(
+      ".goodos-kpi-chart-v35, .goodos-kpi-visual-v34, .goodos-kpi-meter-v33, .goodos-kpi-chart-v32, .goodos-kpi-chart-v31"
+    )).forEach(function (old) {
+      old.remove();
+    });
+  }
+
   function stripChartText(card) {
     var clone = card.cloneNode(true);
-    Array.prototype.slice.call(clone.querySelectorAll(".goodos-kpi-visual-v34, .goodos-kpi-meter-v33, .goodos-kpi-chart-v32, .goodos-kpi-chart-v31")).forEach(function (el) {
-      el.remove();
+    Array.prototype.slice.call(clone.querySelectorAll(
+      ".goodos-kpi-chart-v35, .goodos-kpi-visual-v34, .goodos-kpi-meter-v33, .goodos-kpi-chart-v32, .goodos-kpi-chart-v31"
+    )).forEach(function (old) {
+      old.remove();
     });
     return cleanText(clone);
   }
@@ -9761,7 +9695,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     return nodes.find(function (el) {
       if (el.closest("aside, nav, header")) return false;
-      if (el.closest(".goodos-kpi-visual-v34")) return false;
+      if (el.closest(".goodos-kpi-chart-v35")) return false;
       if (el.children.length > 2) return false;
       return cleanText(el).toUpperCase() === label;
     }) || null;
@@ -9774,12 +9708,6 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     }).length;
   }
 
-  function hasValue(text, label) {
-    text = String(text || "").toUpperCase();
-    if (label === "MODULE SCOPE") return /(\d+(?:\.\d+)?)\s*%/.test(text);
-    return /\b\d+(?:\.\d+)?\b/.test(text.replace(label, " "));
-  }
-
   function findKpiCard(label) {
     var labelNode = findLabelNode(label);
     if (!labelNode) return null;
@@ -9789,23 +9717,21 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     for (var i = 0; node && node !== document.body && i < 12; i += 1) {
       if (node.closest && node.closest("aside, nav, header")) break;
-
       if (node.querySelector && node.querySelector("table")) {
         node = node.parentElement;
         continue;
       }
 
-      var text = stripChartText(node).toUpperCase();
       var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { width: 0, height: 0 };
+      var text = stripChartText(node).toUpperCase();
 
       if (
         text.indexOf(label) !== -1 &&
         countKpiLabels(text) === 1 &&
-        hasValue(text, label) &&
-        rect.width >= 170 &&
-        rect.width <= 820 &&
-        rect.height >= 65 &&
-        rect.height <= 360
+        rect.width >= 180 &&
+        rect.width <= 700 &&
+        rect.height >= 80 &&
+        rect.height <= 310
       ) {
         candidates.push({
           node: node,
@@ -9825,7 +9751,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return candidates[0].node;
   }
 
-  function valueFromCard(card, label) {
+  function getValue(card, label) {
     var text = stripChartText(card).toUpperCase();
 
     if (label === "MODULE SCOPE") {
@@ -9838,140 +9764,119 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return nums && nums.length ? Number(nums[0]) : 0;
   }
 
-  function orgChart(value) {
-    var total = Math.max(1, Number(value || 0));
-    var pct = total > 0 ? 100 : 0;
-    var r = 24;
+  function organizationChart(value) {
+    var v = Number(value || 0);
+    var pct = v > 0 ? 100 : 0;
+    var r = 21;
     var c = 2 * Math.PI * r;
     var dash = c * pct / 100;
 
     return '' +
-      '<div class="goodos-kpi-visual-v34" data-kpi-chart="organizations">' +
-        '<svg viewBox="0 0 360 88" aria-label="Organizations live chart">' +
+      '<div class="goodos-kpi-chart-v35" data-kpi-chart="organizations">' +
+        '<svg viewBox="0 0 340 74" aria-label="Organizations live chart">' +
           '<defs>' +
-            '<linearGradient id="orgGradV34" x1="0" x2="1" y1="0" y2="1">' +
+            '<linearGradient id="orgGradV35" x1="0" x2="1" y1="0" y2="1">' +
               '<stop offset="0%" stop-color="#4f8cff"></stop>' +
               '<stop offset="55%" stop-color="#36dcff"></stop>' +
               '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
             '</linearGradient>' +
           '</defs>' +
-          '<circle cx="48" cy="44" r="' + r + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"></circle>' +
-          '<circle cx="48" cy="44" r="' + r + '" fill="none" stroke="url(#orgGradV34)" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + c.toFixed(2) + '" transform="rotate(-90 48 44)"></circle>' +
-          '<text x="48" y="42" text-anchor="middle" class="white" font-size="15" font-weight="900">' + total + '</text>' +
-          '<text x="48" y="57" text-anchor="middle" class="muted" font-size="9" font-weight="800">TOTAL</text>' +
-          '<circle cx="108" cy="42" r="4" fill="#4f8cff"></circle>' +
-          '<text x="121" y="47" class="muted" font-size="13" font-weight="800">Active</text>' +
-          '<text x="315" y="47" text-anchor="end" class="muted" font-size="13" font-weight="900">' + total + ' (100%)</text>' +
+          '<circle cx="42" cy="37" r="' + r + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"></circle>' +
+          '<circle cx="42" cy="37" r="' + r + '" fill="none" stroke="url(#orgGradV35)" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + c.toFixed(2) + '" transform="rotate(-90 42 37)"></circle>' +
+          '<text x="42" y="40" text-anchor="middle" class="white" font-size="14" font-weight="900">' + v + '</text>' +
+          '<text x="88" y="28" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="88" y="48" class="green" font-size="12" font-weight="900">' + v + ' active tenant</text>' +
         '</svg>' +
       '</div>';
   }
 
-  function projectChart(value) {
-    var v = Math.max(1, Number(value || 0));
-    var points = [
-      [0, 40],
-      [35, 36],
-      [72, 38],
-      [110, 41],
-      [148, 39],
-      [185, 35],
-      [222, 37],
-      [260, 32],
-      [300, 24],
-      [336, 20]
-    ];
-
-    var d = points.map(function (p, i) {
-      return (i ? "L" : "M") + p[0] + " " + p[1];
-    }).join(" ");
-
-    var area = d + " L336 60 L0 60 Z";
+  function projectsChart(value) {
+    var v = Math.max(0, Number(value || 0));
+    var d = "M0 44 L34 42 L68 43 L102 40 L136 42 L170 36 L204 38 L238 32 L272 28 L320 22";
+    var area = d + " L320 58 L0 58 Z";
 
     return '' +
-      '<div class="goodos-kpi-visual-v34" data-kpi-chart="projects">' +
-        '<svg viewBox="0 0 360 88" aria-label="Projects live chart">' +
+      '<div class="goodos-kpi-chart-v35" data-kpi-chart="projects">' +
+        '<svg viewBox="0 0 340 74" aria-label="Projects live chart">' +
           '<defs>' +
-            '<linearGradient id="projFillV34" x1="0" x2="0" y1="0" y2="1">' +
+            '<linearGradient id="projectFillV35" x1="0" x2="0" y1="0" y2="1">' +
               '<stop offset="0%" stop-color="rgba(54,220,255,.30)"></stop>' +
               '<stop offset="100%" stop-color="rgba(79,140,255,0)"></stop>' +
             '</linearGradient>' +
-            '<linearGradient id="projLineV34" x1="0" x2="1">' +
+            '<linearGradient id="projectLineV35" x1="0" x2="1">' +
               '<stop offset="0%" stop-color="#4f8cff"></stop>' +
-              '<stop offset="65%" stop-color="#36dcff"></stop>' +
+              '<stop offset="58%" stop-color="#36dcff"></stop>' +
               '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
             '</linearGradient>' +
           '</defs>' +
-          '<line x1="0" y1="20" x2="336" y2="20" class="grid"></line>' +
-          '<line x1="0" y1="40" x2="336" y2="40" class="grid"></line>' +
-          '<line x1="0" y1="60" x2="336" y2="60" class="axis"></line>' +
-          '<path d="' + area + '" fill="url(#projFillV34)"></path>' +
-          '<path d="' + d + '" fill="none" stroke="url(#projLineV34)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="glow-line"></path>' +
-          '<circle cx="336" cy="20" r="5" fill="#a8ffd4"></circle>' +
-          '<text x="0" y="82" class="muted" font-size="9" font-weight="800">LIVE PROJECT TREND</text>' +
-          '<text x="336" y="82" text-anchor="end" class="green" font-size="11" font-weight="900">' + v + ' ACTIVE</text>' +
+          '<line x1="0" y1="22" x2="320" y2="22" class="grid"></line>' +
+          '<line x1="0" y1="44" x2="320" y2="44" class="grid"></line>' +
+          '<path d="' + area + '" fill="url(#projectFillV35)"></path>' +
+          '<path d="' + d + '" fill="none" stroke="url(#projectLineV35)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '<circle cx="320" cy="22" r="5" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="70" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="320" y="70" text-anchor="end" class="green" font-size="11" font-weight="900">' + v + ' active</text>' +
         '</svg>' +
       '</div>';
   }
 
-  function environmentChart(value) {
+  function environmentsChart(value) {
     var v = Math.max(0, Number(value || 0));
     var dev = v >= 1 ? 1 : 0;
     var staging = v >= 2 ? 1 : 0;
     var prod = v >= 3 ? 1 : 0;
 
     return '' +
-      '<div class="goodos-kpi-visual-v34" data-kpi-chart="environments">' +
-        '<svg viewBox="0 0 360 88" aria-label="Environments live chart">' +
+      '<div class="goodos-kpi-chart-v35" data-kpi-chart="environments">' +
+        '<svg viewBox="0 0 340 74" aria-label="Environments live chart">' +
           '<defs>' +
-            '<linearGradient id="envBar1V34" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#36dcff"></stop><stop offset="100%" stop-color="#4f8cff"></stop></linearGradient>' +
-            '<linearGradient id="envBar2V34" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#6f8cff"></stop><stop offset="100%" stop-color="#4f8cff"></stop></linearGradient>' +
-            '<linearGradient id="envBar3V34" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#a855f7"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient>' +
+            '<linearGradient id="envGradV35" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="#36dcff"></stop>' +
+              '<stop offset="60%" stop-color="#4f8cff"></stop>' +
+              '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
+            '</linearGradient>' +
           '</defs>' +
-          '<line x1="28" y1="18" x2="342" y2="18" class="grid"></line>' +
-          '<line x1="28" y1="40" x2="342" y2="40" class="axis"></line>' +
-          '<line x1="28" y1="62" x2="342" y2="62" class="axis"></line>' +
-          '<text x="10" y="22" class="muted" font-size="10" font-weight="800">2</text>' +
-          '<text x="10" y="44" class="muted" font-size="10" font-weight="800">1</text>' +
-          '<text x="10" y="66" class="muted" font-size="10" font-weight="800">0</text>' +
-          '<rect x="70" y="' + (dev ? 40 : 62) + '" width="42" height="' + (dev ? 22 : 0) + '" rx="5" fill="url(#envBar1V34)"></rect>' +
-          '<rect x="158" y="' + (staging ? 40 : 62) + '" width="42" height="' + (staging ? 22 : 0) + '" rx="5" fill="url(#envBar2V34)"></rect>' +
-          '<rect x="246" y="' + (prod ? 40 : 62) + '" width="42" height="' + (prod ? 22 : 0) + '" rx="5" fill="url(#envBar3V34)"></rect>' +
-          '<text x="91" y="82" text-anchor="middle" class="muted" font-size="10" font-weight="800">Dev</text>' +
-          '<text x="179" y="82" text-anchor="middle" class="muted" font-size="10" font-weight="800">Staging</text>' +
-          '<text x="267" y="82" text-anchor="middle" class="muted" font-size="10" font-weight="800">Production</text>' +
+          '<text x="0" y="12" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="320" y="12" text-anchor="end" class="green" font-size="11" font-weight="900">' + v + ' envs</text>' +
+          '<line x1="0" y1="58" x2="320" y2="58" class="grid"></line>' +
+          '<rect x="34" y="' + (dev ? 36 : 58) + '" width="54" height="' + (dev ? 22 : 0) + '" rx="6" fill="url(#envGradV35)"></rect>' +
+          '<rect x="132" y="' + (staging ? 28 : 58) + '" width="54" height="' + (staging ? 30 : 0) + '" rx="6" fill="url(#envGradV35)" opacity=".88"></rect>' +
+          '<rect x="230" y="' + (prod ? 20 : 58) + '" width="54" height="' + (prod ? 38 : 0) + '" rx="6" fill="url(#envGradV35)" opacity=".78"></rect>' +
+          '<text x="61" y="72" text-anchor="middle" class="muted" font-size="9" font-weight="800">Dev</text>' +
+          '<text x="159" y="72" text-anchor="middle" class="muted" font-size="9" font-weight="800">Stage</text>' +
+          '<text x="257" y="72" text-anchor="middle" class="muted" font-size="9" font-weight="800">Prod</text>' +
         '</svg>' +
       '</div>';
   }
 
   function moduleScopeChart(value) {
     var pct = Math.max(0, Math.min(100, Number(value || 0)));
-    var width = (pct * 3.18).toFixed(1);
-    var dot = Math.max(7, Math.min(313, pct * 3.18)).toFixed(1);
+    var width = (pct * 3.0).toFixed(1);
+    var dot = Math.max(7, Math.min(307, pct * 3.0)).toFixed(1);
 
     return '' +
-      '<div class="goodos-kpi-visual-v34" data-kpi-chart="module-scope">' +
-        '<svg viewBox="0 0 360 88" aria-label="Module scope live chart">' +
+      '<div class="goodos-kpi-chart-v35" data-kpi-chart="module-scope">' +
+        '<svg viewBox="0 0 340 74" aria-label="Module scope live chart">' +
           '<defs>' +
-            '<linearGradient id="scopeGradV34" x1="0" x2="1" y1="0" y2="0">' +
+            '<linearGradient id="scopeGradV35" x1="0" x2="1" y1="0" y2="0">' +
               '<stop offset="0%" stop-color="#4f8cff"></stop>' +
               '<stop offset="55%" stop-color="#36dcff"></stop>' +
               '<stop offset="100%" stop-color="#8b5cf6"></stop>' +
             '</linearGradient>' +
           '</defs>' +
-          '<rect x="0" y="0" width="360" height="88" rx="18" class="soft-card"></rect>' +
-          '<text x="20" y="28" class="muted" font-size="12" font-weight="950" letter-spacing="3">LIVE CHART</text>' +
-          '<text x="340" y="28" text-anchor="end" class="green" font-size="13" font-weight="950">' + Math.round(pct) + '%</text>' +
-          '<rect x="20" y="48" width="318" height="12" rx="6" class="track"></rect>' +
-          '<rect x="20" y="48" width="' + width + '" height="12" rx="6" fill="url(#scopeGradV34)"></rect>' +
-          '<circle cx="' + (20 + Number(dot)).toFixed(1) + '" cy="54" r="5" fill="#a8ffd4"></circle>' +
+          '<text x="0" y="13" class="muted" font-size="10" font-weight="950" letter-spacing="2">LIVE CHART</text>' +
+          '<text x="320" y="13" text-anchor="end" class="green" font-size="12" font-weight="950">' + Math.round(pct) + '%</text>' +
+          '<rect x="0" y="36" width="320" height="12" rx="6" class="track"></rect>' +
+          '<rect x="0" y="36" width="' + width + '" height="12" rx="6" fill="url(#scopeGradV35)"></rect>' +
+          '<circle cx="' + dot + '" cy="42" r="5" fill="#a8ffd4"></circle>' +
         '</svg>' +
       '</div>';
   }
 
   function chartFor(label, value) {
-    if (label === "ORGANIZATIONS") return orgChart(value);
-    if (label === "PROJECTS") return projectChart(value);
-    if (label === "ENVIRONMENTS") return environmentChart(value);
+    if (label === "ORGANIZATIONS") return organizationChart(value);
+    if (label === "PROJECTS") return projectsChart(value);
+    if (label === "ENVIRONMENTS") return environmentsChart(value);
     if (label === "MODULE SCOPE") return moduleScopeChart(value);
     return "";
   }
@@ -9981,12 +9886,10 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       var card = findKpiCard(label);
       if (!card) return;
 
-      Array.prototype.slice.call(card.querySelectorAll(".goodos-kpi-visual-v34, .goodos-kpi-meter-v33, .goodos-kpi-chart-v32, .goodos-kpi-chart-v31")).forEach(function (old) {
-        old.remove();
-      });
+      removeOldChartsFromCard(card);
 
-      var value = valueFromCard(card, label);
-      card.classList.add("goodos-kpi-card-v34");
+      var value = getValue(card, label);
+      card.classList.add("goodos-kpi-card-v35");
       card.insertAdjacentHTML("beforeend", chartFor(label, value));
     });
   }
