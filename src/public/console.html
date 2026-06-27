@@ -430,6 +430,301 @@
       .search { display: none; }
     }
   </style>
+
+<!-- GoodOS Premium UI 26A -->
+<style id="goodos-premium-ui-26a">
+:root {
+  --goodos-bg: #070a12;
+  --goodos-panel: rgba(15, 23, 42, 0.78);
+  --goodos-panel-strong: rgba(18, 28, 51, 0.92);
+  --goodos-line: rgba(148, 163, 184, 0.18);
+  --goodos-text: #eef5ff;
+  --goodos-muted: #9fb0c8;
+  --goodos-soft: #dbeafe;
+  --goodos-blue: #4f8cff;
+  --goodos-cyan: #38d5ff;
+  --goodos-purple: #9b6cff;
+  --goodos-green: #47e6a2;
+  --goodos-warm: #f6c76f;
+  --goodos-danger: #ff647c;
+  --goodos-radius: 22px;
+  --goodos-shadow: 0 24px 80px rgba(0,0,0,0.34);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(79, 140, 255, 0.22), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(155, 108, 255, 0.18), transparent 32%),
+    radial-gradient(circle at 55% 95%, rgba(56, 213, 255, 0.12), transparent 30%),
+    linear-gradient(145deg, #05070d 0%, #08111f 48%, #090914 100%) !important;
+  color: var(--goodos-text) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: -0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent 78%);
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: #8fc7ff !important;
+}
+
+header,
+.sidebar,
+nav {
+  background: rgba(7, 12, 24, 0.76) !important;
+  backdrop-filter: blur(22px) saturate(150%);
+  border-color: var(--goodos-line) !important;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.28);
+}
+
+header h1,
+.logo,
+.brand,
+.app-title {
+  color: var(--goodos-text) !important;
+  letter-spacing: -0.04em;
+}
+
+nav button,
+button,
+.logout {
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  border-radius: 999px !important;
+  background:
+    linear-gradient(135deg, rgba(79, 140, 255, 0.18), rgba(155, 108, 255, 0.15)),
+    rgba(15, 23, 42, 0.7) !important;
+  color: var(--goodos-soft) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.16);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+nav button:hover,
+button:hover,
+.logout:hover {
+  transform: translateY(-1px);
+  border-color: rgba(79, 140, 255, 0.56) !important;
+  background:
+    linear-gradient(135deg, rgba(79, 140, 255, 0.34), rgba(56, 213, 255, 0.2)),
+    rgba(15, 23, 42, 0.92) !important;
+  box-shadow: 0 16px 45px rgba(79, 140, 255, 0.18);
+}
+
+nav button.active,
+nav button[aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(79, 140, 255, 0.95), rgba(56, 213, 255, 0.72)) !important;
+  color: #06111f !important;
+  font-weight: 800;
+}
+
+main,
+#view,
+.content,
+.dashboard {
+  color: var(--goodos-text) !important;
+}
+
+.hero,
+.section-head,
+.card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035)),
+    var(--goodos-panel) !important;
+  border: 1px solid var(--goodos-line) !important;
+  border-radius: var(--goodos-radius) !important;
+  box-shadow: var(--goodos-shadow);
+}
+
+.hero {
+  overflow: hidden;
+  position: relative;
+  padding: 30px !important;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  top: -90px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(56, 213, 255, 0.28), transparent 68%);
+  pointer-events: none;
+}
+
+.hero h1,
+.hero h2,
+h1,
+h2,
+h3 {
+  color: var(--goodos-text) !important;
+  letter-spacing: -0.045em;
+}
+
+.hero p,
+.muted,
+small {
+  color: var(--goodos-muted) !important;
+}
+
+.card {
+  transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(79, 140, 255, 0.34) !important;
+  box-shadow: 0 28px 90px rgba(0,0,0,0.42);
+}
+
+.grid.cards .card {
+  min-height: 126px;
+  background:
+    radial-gradient(circle at top right, rgba(79, 140, 255, 0.18), transparent 48%),
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035)),
+    rgba(15, 23, 42, 0.78) !important;
+}
+
+.grid.cards .card strong,
+.card strong {
+  color: #ffffff !important;
+}
+
+.badge {
+  border-radius: 999px !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  background: rgba(79, 140, 255, 0.13) !important;
+  color: #cfe6ff !important;
+  font-weight: 700;
+}
+
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 8px !important;
+}
+
+thead th {
+  color: #bdd4ef !important;
+  background: rgba(255,255,255,0.035) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+tbody tr {
+  background: rgba(15, 23, 42, 0.42) !important;
+}
+
+td,
+th {
+  border-color: rgba(148, 163, 184, 0.11) !important;
+}
+
+td {
+  color: #e6eefb !important;
+}
+
+code {
+  background: rgba(56, 213, 255, 0.09) !important;
+  border: 1px solid rgba(56, 213, 255, 0.16) !important;
+  color: #bff2ff !important;
+  border-radius: 10px !important;
+}
+
+input,
+select,
+textarea {
+  background: rgba(15, 23, 42, 0.76) !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  color: var(--goodos-text) !important;
+  border-radius: 14px !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: rgba(56, 213, 255, 0.72) !important;
+  box-shadow: 0 0 0 4px rgba(56, 213, 255, 0.12);
+}
+
+.goodos-premium-welcome {
+  background:
+    radial-gradient(circle at top left, rgba(71, 230, 162, 0.16), transparent 35%),
+    radial-gradient(circle at top right, rgba(79, 140, 255, 0.24), transparent 42%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(12, 18, 34, 0.88)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 28px !important;
+  padding: 28px !important;
+  margin: 18px 0 !important;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.35);
+}
+
+.goodos-premium-welcome h2 {
+  margin: 0 0 8px !important;
+  font-size: clamp(28px, 4vw, 48px) !important;
+  line-height: 0.98 !important;
+}
+
+.goodos-premium-welcome p {
+  max-width: 860px;
+  color: var(--goodos-muted) !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+.goodos-premium-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.goodos-premium-pill {
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #dbeafe;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .card,
+  .goodos-premium-welcome {
+    border-radius: 18px !important;
+  }
+
+  table {
+    font-size: 13px;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -5696,6 +5991,24 @@ function jobsV2Section() {
   `;
 }
 
+
+function goodosPremiumWelcome() {
+  return `
+    <div class="goodos-premium-welcome">
+      <h2>Build, launch, and control your apps from one premium console.</h2>
+      <p>GoodOS brings your apps, APIs, auth, storage, realtime, jobs, billing, notifications, and secrets into one clean operating layer. This dashboard is being shaped to feel warmer, clearer, and more powerful than a traditional developer backend.</p>
+      <div class="goodos-premium-pill-row">
+        <span class="goodos-premium-pill">App Control Center</span>
+        <span class="goodos-premium-pill">Secure Secrets Vault</span>
+        <span class="goodos-premium-pill">Realtime + Jobs</span>
+        <span class="goodos-premium-pill">Billing + Usage</span>
+        <span class="goodos-premium-pill">Developer API Layer</span>
+      </div>
+    </div>
+  `;
+}
+
+
 function settingsView() {
   if (!state.settingsLiveLoaded && !state.settingsLiveLoading) {
     state.settingsLiveLoading = true;
@@ -5733,6 +6046,7 @@ function settingsView() {
   const usageCounts = state.usageCounts || {};
   return `
     ${hero("Settings", "Complete backend platform configuration for auth, apps, API keys, storage, webhooks, realtime, functions, logs, backups, security, notifications, billing, usage, and developer operations.")}
+    ${goodosPremiumWelcome()}
 
     ${jobsV2Section()}
 
