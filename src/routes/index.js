@@ -15,6 +15,20 @@ const webhookTestRoutes = require("./webhook-test.routes");
 
 const router = express.Router();
 
+// GoodOS Console V2 route 26C
+router.get("/console", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/console.html"));
+});
+
+router.get("/console.html", (req, res) => {
+  res.redirect("/console");
+});
+
+router.get("/console-v2.js", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/console-v2.js"));
+});
+
+
 router.get("/api", (req, res) => {
   return success(res, {
     message: "GoodAppBackEnd API is running",

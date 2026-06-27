@@ -10,6 +10,20 @@ const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
+
+// GoodOS Console V2 app route 26C
+app.get("/console", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "public/console.html"));
+});
+
+app.get("/console.html", (req, res) => {
+  res.redirect("/console");
+});
+
+app.get("/console-v2.js", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "public/console-v2.js"));
+});
+
 const allowedOrigins = [
   "https://app.goodos.app",
   "https://backend.goodos.app",
