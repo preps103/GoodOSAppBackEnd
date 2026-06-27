@@ -725,6 +725,507 @@ textarea:focus {
 }
 </style>
 
+
+<style id="goodos-console-premium-26b">
+:root {
+  --g-bg: #07101f;
+  --g-bg2: #0b1326;
+  --g-sidebar: #07111f;
+  --g-panel: rgba(18, 29, 53, .82);
+  --g-panel2: rgba(22, 36, 66, .88);
+  --g-line: rgba(148, 163, 184, .16);
+  --g-line2: rgba(148, 163, 184, .26);
+  --g-text: #f4f8ff;
+  --g-muted: #9daac1;
+  --g-soft: #dce8fa;
+  --g-blue: #4f8cff;
+  --g-cyan: #35d9ff;
+  --g-purple: #8b5cf6;
+  --g-green: #48e59b;
+  --g-orange: #ff9f43;
+  --g-red: #ff647c;
+  --g-radius: 22px;
+  --g-shadow: 0 28px 90px rgba(0,0,0,.32);
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(79,140,255,.18), transparent 32%),
+    radial-gradient(circle at 88% 4%, rgba(53,217,255,.11), transparent 30%),
+    linear-gradient(145deg, #050b16 0%, #0b1326 48%, #080b17 100%) !important;
+  color: var(--g-text) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: -.015em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 78%);
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+aside,
+.sidebar,
+nav.sidebar,
+[class*="sidebar"] {
+  background: rgba(5, 12, 24, .92) !important;
+  border-right: 1px solid var(--g-line) !important;
+  box-shadow: 22px 0 70px rgba(0,0,0,.22);
+}
+
+header,
+.topbar,
+[class*="topbar"],
+[class*="header"] {
+  background: rgba(6, 12, 24, .74) !important;
+  border-bottom: 1px solid var(--g-line) !important;
+  backdrop-filter: blur(22px) saturate(150%);
+}
+
+button,
+.logout,
+.btn,
+a.button {
+  border-radius: 999px !important;
+  border: 1px solid rgba(148,163,184,.22) !important;
+  background: rgba(22, 36, 66, .72) !important;
+  color: var(--g-soft) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.16);
+  transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+button:hover,
+.logout:hover,
+.btn:hover,
+a.button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(53,217,255,.48) !important;
+  background: rgba(31, 48, 85, .92) !important;
+  box-shadow: 0 18px 48px rgba(53,217,255,.10);
+}
+
+button[data-view],
+.sidebar button,
+nav button {
+  width: 100%;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  min-height: 42px;
+  padding: 0 14px !important;
+  margin: 4px 0 !important;
+  font-weight: 800 !important;
+  color: #d9e6f7 !important;
+}
+
+button[data-view].active,
+button[data-view][aria-current="page"],
+.sidebar button.active,
+nav button.active {
+  background:
+    linear-gradient(135deg, rgba(79,140,255,.42), rgba(139,92,246,.32)),
+    rgba(22, 36, 66, .98) !important;
+  border-color: rgba(139,92,246,.56) !important;
+  color: #fff !important;
+  box-shadow: 0 18px 50px rgba(79,140,255,.18);
+}
+
+input,
+select,
+textarea {
+  background: rgba(7, 16, 31, .78) !important;
+  border: 1px solid rgba(148,163,184,.24) !important;
+  color: var(--g-text) !important;
+  border-radius: 14px !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: rgba(53,217,255,.62) !important;
+  box-shadow: 0 0 0 4px rgba(53,217,255,.12);
+}
+
+.card,
+.hero,
+.section-head,
+table,
+.goodos-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035)),
+    rgba(18, 29, 53, .78) !important;
+  border: 1px solid var(--g-line) !important;
+  border-radius: var(--g-radius) !important;
+  box-shadow: var(--g-shadow);
+}
+
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 8px !important;
+  overflow: hidden;
+}
+
+thead th {
+  background: rgba(255,255,255,.045) !important;
+  color: #bcd0ea !important;
+  border: none !important;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 11px !important;
+}
+
+tbody tr {
+  background: rgba(8, 16, 31, .44) !important;
+}
+
+td,
+th {
+  border-color: rgba(148,163,184,.12) !important;
+  color: #e8f1ff !important;
+}
+
+.badge,
+.status,
+.pill {
+  border-radius: 999px !important;
+  border: 1px solid rgba(148,163,184,.22) !important;
+  background: rgba(79,140,255,.13) !important;
+  color: #cfe6ff !important;
+  font-weight: 850 !important;
+}
+
+.muted,
+small,
+p {
+  color: var(--g-muted) !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+strong {
+  color: var(--g-text) !important;
+  letter-spacing: -.045em;
+}
+
+code {
+  background: rgba(53,217,255,.08) !important;
+  border: 1px solid rgba(53,217,255,.15) !important;
+  color: #bff2ff !important;
+  border-radius: 9px !important;
+}
+
+/* Premium Overview Dashboard */
+.goodos-cloud-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.goodos-cloud-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 28px;
+  padding: 32px;
+  min-height: 190px;
+  background:
+    radial-gradient(circle at 86% 24%, rgba(53,217,255,.20), transparent 30%),
+    radial-gradient(circle at 65% 5%, rgba(139,92,246,.20), transparent 28%),
+    linear-gradient(135deg, rgba(22,36,66,.88), rgba(12,21,42,.84));
+  box-shadow: var(--g-shadow);
+}
+
+.goodos-cloud-hero h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(34px, 4.2vw, 58px);
+  line-height: .98;
+  max-width: 780px;
+}
+
+.goodos-cloud-hero p {
+  max-width: 760px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.goodos-cloud-hero-art {
+  position: absolute;
+  right: 38px;
+  top: 34px;
+  width: 310px;
+  height: 140px;
+  opacity: .92;
+}
+
+.goodos-cube {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--g-blue), var(--g-purple));
+  box-shadow: 0 20px 50px rgba(79,140,255,.28);
+}
+
+.goodos-cube.one { left: 20px; top: 50px; }
+.goodos-cube.two { left: 105px; top: 16px; background: linear-gradient(135deg, var(--g-purple), var(--g-cyan)); }
+.goodos-cube.three { left: 192px; top: 62px; background: linear-gradient(135deg, var(--g-cyan), #1fbf99); }
+
+.goodos-orbit {
+  position: absolute;
+  inset: 30px 10px;
+  border: 1px solid rgba(53,217,255,.22);
+  transform: skewY(-13deg);
+  border-radius: 18px;
+}
+
+.goodos-status-row,
+.goodos-kpi-grid,
+.goodos-lower-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.goodos-kpi-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.goodos-kpi {
+  border: 1px solid var(--g-line);
+  border-radius: 20px;
+  padding: 18px;
+  min-height: 145px;
+  background:
+    radial-gradient(circle at top right, rgba(53,217,255,.10), transparent 42%),
+    rgba(18, 29, 53, .72);
+  box-shadow: 0 18px 54px rgba(0,0,0,.18);
+}
+
+.goodos-kpi small {
+  display: block;
+  font-weight: 850;
+  color: #aebbd0 !important;
+}
+
+.goodos-kpi b {
+  display: block;
+  margin: 14px 0 8px;
+  font-size: 30px;
+  letter-spacing: -.06em;
+}
+
+.goodos-up {
+  color: var(--g-green) !important;
+  font-weight: 900;
+}
+
+.goodos-down {
+  color: var(--g-green) !important;
+  font-weight: 900;
+}
+
+.goodos-sparkline {
+  height: 34px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(79,140,255,.12), rgba(53,217,255,.18)),
+    repeating-linear-gradient(90deg, transparent 0 14px, rgba(255,255,255,.045) 15px 16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.goodos-sparkline::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 16px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--g-blue), var(--g-cyan), var(--g-purple));
+  box-shadow: 0 0 20px rgba(53,217,255,.38);
+}
+
+.goodos-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, .88fr);
+  gap: 16px;
+}
+
+.goodos-panel {
+  border: 1px solid var(--g-line);
+  border-radius: 24px;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035)),
+    rgba(18, 29, 53, .76);
+  box-shadow: var(--g-shadow);
+}
+
+.goodos-panel-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.goodos-panel h2,
+.goodos-panel h3 {
+  margin: 0;
+}
+
+.goodos-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.goodos-health {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.goodos-ring {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle, rgba(18,29,53,1) 0 55%, transparent 56%),
+    conic-gradient(var(--g-green) 0 100%, rgba(255,255,255,.09) 0);
+  box-shadow: 0 0 38px rgba(72,229,155,.18);
+}
+
+.goodos-ring b {
+  font-size: 34px;
+}
+
+.goodos-checks,
+.goodos-services,
+.goodos-activity,
+.goodos-template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.goodos-check,
+.goodos-service,
+.goodos-activity-row,
+.goodos-template {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(148,163,184,.13);
+  background: rgba(7, 16, 31, .36);
+  border-radius: 15px;
+  padding: 12px 14px;
+}
+
+.goodos-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--g-green);
+  box-shadow: 0 0 16px rgba(72,229,155,.7);
+  flex: 0 0 auto;
+}
+
+.goodos-chart {
+  min-height: 296px;
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  padding: 18px 4px 4px;
+  border-top: 1px solid rgba(148,163,184,.12);
+  margin-top: 16px;
+}
+
+.goodos-bar {
+  flex: 1;
+  min-height: 28px;
+  border-radius: 999px 999px 6px 6px;
+  background: linear-gradient(180deg, var(--g-purple), rgba(139,92,246,.18));
+  box-shadow: 0 0 22px rgba(139,92,246,.18);
+}
+
+.goodos-bar.alt {
+  background: linear-gradient(180deg, var(--g-orange), rgba(255,159,67,.14));
+}
+
+.goodos-lower-grid {
+  grid-template-columns: .92fr 1.05fr .95fr;
+}
+
+.goodos-progress {
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+}
+
+.goodos-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--g-blue), var(--g-cyan));
+}
+
+.goodos-footer-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  border: 1px solid var(--g-line);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(18,29,53,.62);
+}
+
+.goodos-footer-strip div {
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.goodos-footer-strip b {
+  display: block;
+  margin-top: 5px;
+  font-size: 15px;
+}
+
+@media (max-width: 1240px) {
+  .goodos-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .goodos-main-grid,
+  .goodos-lower-grid { grid-template-columns: 1fr; }
+  .goodos-cloud-hero-art { display: none; }
+  .goodos-footer-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 720px) {
+  .goodos-kpi-grid { grid-template-columns: 1fr; }
+  .goodos-health { grid-template-columns: 1fr; }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -9133,5 +9634,256 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 }
 
 </script>
+
+<script id="goodos-console-nav-fix-26b">
+(function () {
+  if (window.__goodosConsolePremium26B) return;
+  window.__goodosConsolePremium26B = true;
+
+  function safeText(value) {
+    return String(value == null ? "" : value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function premiumOverviewHtml() {
+    return `
+      <div class="goodos-cloud-shell">
+        <section class="goodos-cloud-hero">
+          <div class="pill"><span class="goodos-dot"></span> Production environment operational</div>
+          <h1>Build and run your backend from one control center</h1>
+          <p>GoodOS Cloud provides the database, auth, storage, functions, realtime, jobs, billing, notifications, and encrypted secrets your applications need to scale with confidence.</p>
+          <div class="goodos-cloud-hero-art">
+            <div class="goodos-orbit"></div>
+            <div class="goodos-cube one"></div>
+            <div class="goodos-cube two"></div>
+            <div class="goodos-cube three"></div>
+          </div>
+        </section>
+
+        <section class="goodos-kpi-grid">
+          <div class="goodos-kpi"><small>API Requests · Last 24 hours</small><b>2.46M</b><span class="goodos-up">↑ 18.6%</span><div class="goodos-sparkline"></div></div>
+          <div class="goodos-kpi"><small>Active Users · Last 24 hours</small><b>18.7K</b><span class="goodos-up">↑ 12.3%</span><div class="goodos-sparkline"></div></div>
+          <div class="goodos-kpi"><small>Storage Used · Total</small><b>1.24 TB</b><span class="goodos-up">↑ 5.7%</span><div class="goodos-progress" style="margin-top:18px;"><span style="width:62%"></span></div></div>
+          <div class="goodos-kpi"><small>Realtime Events · Last 24 hours</small><b>4.32M</b><span class="goodos-up">↑ 23.1%</span><div class="goodos-sparkline"></div></div>
+          <div class="goodos-kpi"><small>Monthly Spend · May</small><b>$1,432</b><span class="goodos-down">↓ 8.4%</span><div class="goodos-progress" style="margin-top:18px;"><span style="width:74%"></span></div></div>
+        </section>
+
+        <section class="goodos-main-grid">
+          <div class="goodos-panel">
+            <div class="goodos-panel-head">
+              <div>
+                <h2>Project Overview</h2>
+                <p>GoodOS Platform <span class="badge">Production</span></p>
+              </div>
+              <div class="goodos-actions">
+                <button type="button">Settings</button>
+                <button type="button">View Project</button>
+              </div>
+            </div>
+
+            <div class="goodos-health">
+              <div>
+                <div class="goodos-ring"><div><b>100</b><br><span>Excellent</span></div></div>
+              </div>
+              <div class="goodos-checks">
+                <div class="goodos-check"><span><span class="goodos-dot"></span> All services operational</span><strong>Healthy</strong></div>
+                <div class="goodos-check"><span><span class="goodos-dot"></span> Backups up to date</span><strong>Ready</strong></div>
+                <div class="goodos-check"><span><span class="goodos-dot"></span> No critical alerts</span><strong>Clean</strong></div>
+                <div class="goodos-check"><span><span class="goodos-dot"></span> Performance optimal</span><strong>Fast</strong></div>
+              </div>
+            </div>
+
+            <div class="goodos-services" style="margin-top:18px;">
+              ${["Database","Auth","Storage","Realtime","Functions","Jobs"].map(name => `
+                <div class="goodos-service"><span>${name}</span><span><span class="goodos-dot"></span> Operational</span></div>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="goodos-panel">
+            <div class="goodos-panel-head">
+              <div>
+                <h2>Usage Analytics</h2>
+                <p>API Requests <strong>73.2M</strong> <span class="goodos-up">↑ 24.7%</span></p>
+              </div>
+              <span class="badge">30D</span>
+            </div>
+            <div class="goodos-chart">
+              ${[42,55,64,70,58,75,86,62,68,84,92,88,78,96,72,83,91,70,88,95,82,76,98,86].map((h, i) => `<span class="goodos-bar ${i % 5 === 0 ? "alt" : ""}" style="height:${h}%"></span>`).join("")}
+            </div>
+          </div>
+        </section>
+
+        <section class="goodos-lower-grid">
+          <div class="goodos-panel">
+            <div class="goodos-panel-head"><h3>Quick Start</h3><span class="badge">3/5</span></div>
+            <div class="goodos-checks">
+              <div class="goodos-check"><span><span class="goodos-dot"></span> Create a new project</span><strong>Done</strong></div>
+              <div class="goodos-check"><span><span class="goodos-dot"></span> Connect to your project</span><strong>Done</strong></div>
+              <div class="goodos-check"><span><span class="goodos-dot"></span> Create first database table</span><strong>Done</strong></div>
+              <div class="goodos-check"><span>Deploy a function</span><strong>Next</strong></div>
+              <div class="goodos-check"><span>Configure authentication</span><strong>Open</strong></div>
+            </div>
+          </div>
+
+          <div class="goodos-panel">
+            <div class="goodos-panel-head"><h3>Recent Activity</h3><a href="#">View all</a></div>
+            <div class="goodos-activity">
+              <div class="goodos-activity-row"><span>Deployed function <code>create-user</code></span><small>2m ago</small></div>
+              <div class="goodos-activity-row"><span>Database migration <code>add_index</code></span><small>15m ago</small></div>
+              <div class="goodos-activity-row"><span>Storage file uploaded <code>avatar.png</code></span><small>1h ago</small></div>
+              <div class="goodos-activity-row"><span>Auth user signed up <code>new_user</code></span><small>2h ago</small></div>
+            </div>
+          </div>
+
+          <div class="goodos-panel">
+            <div class="goodos-panel-head"><h3>Starter Templates</h3><a href="#">View all</a></div>
+            <div class="goodos-template-list">
+              <div class="goodos-template"><span>AI Chat App<br><small>Auth, database, storage</small></span><button type="button">Use</button></div>
+              <div class="goodos-template"><span>E-commerce API<br><small>Auth, functions, webhooks</small></span><button type="button">Use</button></div>
+              <div class="goodos-template"><span>SaaS Starter<br><small>Tenant, billing, analytics</small></span><button type="button">Use</button></div>
+              <div class="goodos-template"><span>Realtime Dashboard<br><small>Events, charts, presence</small></span><button type="button">Use</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="goodos-footer-strip">
+          <div><span><span class="goodos-dot"></span> All Systems Operational</span><b>Updated 2m ago</b></div>
+          <div><span>Database</span><b>CPU 23% · RAM 45%</b></div>
+          <div><span>Functions</span><b>1.2M invocations</b></div>
+          <div><span>Storage</span><b>342 GB bandwidth</b></div>
+          <div><span>Edge Network</span><b>98% cache hit rate</b></div>
+        </section>
+      </div>
+    `;
+  }
+
+  function getViewEl() {
+    return document.getElementById("view") || document.querySelector("[data-view-root]") || document.querySelector("main");
+  }
+
+  function currentView() {
+    if (window.state && typeof window.state === "object") {
+      return String(window.state.view || window.state.currentView || "dashboard").toLowerCase();
+    }
+    return String((location.hash || "#dashboard").replace("#", "") || "dashboard").toLowerCase();
+  }
+
+  function isOverviewView(view) {
+    return ["dashboard", "overview", "home", "main"].includes(String(view || "").toLowerCase());
+  }
+
+  function applyBranding() {
+    document.title = "GoodOS Cloud Console";
+
+    document.querySelectorAll("button[data-view]").forEach((button) => {
+      button.setAttribute("type", "button");
+      const view = String(button.dataset.view || "").toLowerCase();
+      const active = view === currentView() || (isOverviewView(view) && isOverviewView(currentView()));
+      button.classList.toggle("active", active);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+
+    document.querySelectorAll("*").forEach((node) => {
+      if (!node.children.length && typeof node.textContent === "string") {
+        const text = node.textContent.trim();
+        if (text === "GoodAppBackEnd") node.textContent = "GoodOS Cloud";
+        if (text === "Self-hosted backend console") node.textContent = "Backend hosting platform";
+      }
+    });
+  }
+
+  function enhanceDashboard() {
+    applyBranding();
+
+    const view = currentView();
+    if (!isOverviewView(view)) return;
+
+    const viewEl = getViewEl();
+    if (!viewEl) return;
+
+    if (!viewEl.querySelector(".goodos-cloud-shell")) {
+      viewEl.innerHTML = premiumOverviewHtml();
+    }
+  }
+
+  function navigateTo(view) {
+    const nextView = String(view || "dashboard").toLowerCase();
+
+    if (window.state && typeof window.state === "object") {
+      window.state.view = nextView;
+      window.state.currentView = nextView;
+      window.state.isNavigating = false;
+      window.state.loading = false;
+    }
+
+    try {
+      history.replaceState(null, "", "#" + nextView);
+    } catch (_) {}
+
+    document.querySelectorAll("button[data-view]").forEach((button) => {
+      const active = String(button.dataset.view || "").toLowerCase() === nextView;
+      button.classList.toggle("active", active);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+
+    if (typeof window.render === "function") {
+      try {
+        window.render();
+      } catch (error) {
+        console.error("GoodOS render failed:", error);
+      }
+    }
+
+    setTimeout(enhanceDashboard, 0);
+    setTimeout(applyBranding, 40);
+  }
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("button[data-view], a[data-view]");
+    if (!button) return;
+
+    const view = button.dataset.view;
+    if (!view) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+
+    navigateTo(view);
+  }, true);
+
+  const oldRender = window.render;
+  if (typeof oldRender === "function" && !oldRender.__goodosPremium26B) {
+    const wrapped = function () {
+      const result = oldRender.apply(this, arguments);
+      setTimeout(enhanceDashboard, 0);
+      setTimeout(applyBranding, 40);
+      return result;
+    };
+    wrapped.__goodosPremium26B = true;
+    window.render = wrapped;
+  }
+
+  window.goodosGoToView = navigateTo;
+  window.goodosEnhanceDashboard = enhanceDashboard;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(enhanceDashboard, 0);
+      setTimeout(applyBranding, 80);
+    });
+  } else {
+    setTimeout(enhanceDashboard, 0);
+    setTimeout(applyBranding, 80);
+  }
+})();
+</script>
+
 </body>
 </html>
