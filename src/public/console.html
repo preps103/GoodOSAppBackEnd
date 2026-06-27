@@ -1,6 +1,118 @@
 <!doctype html>
 <html lang="en">
 <head>
+
+<script id="goodos-global-date-helpers-v76-js">
+(function () {
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function parseGoodOSDate(value) {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+      return isNaN(value.getTime()) ? null : value;
+    }
+
+    var raw = String(value).trim();
+
+    if (!raw || raw.toLowerCase() === "null" || raw.toLowerCase() === "undefined") {
+      return null;
+    }
+
+    var d = new Date(raw);
+
+    if (!isNaN(d.getTime())) {
+      return d;
+    }
+
+    d = new Date(raw.replace(" ", "T"));
+
+    if (!isNaN(d.getTime())) {
+      return d;
+    }
+
+    return null;
+  }
+
+  function goodosFormatDate(value, fallback) {
+    var d = parseGoodOSDate(value);
+
+    if (!d) {
+      return fallback || "—";
+    }
+
+    try {
+      return d.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    } catch (e) {
+      return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    }
+  }
+
+  function goodosFormatDateTime(value, fallback) {
+    var d = parseGoodOSDate(value);
+
+    if (!d) {
+      return fallback || "—";
+    }
+
+    try {
+      return d.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    } catch (e) {
+      return d.getFullYear() + "-" +
+        pad2(d.getMonth() + 1) + "-" +
+        pad2(d.getDate()) + " " +
+        pad2(d.getHours()) + ":" +
+        pad2(d.getMinutes());
+    }
+  }
+
+  function goodosFormatTimeAgo(value, fallback) {
+    var d = parseGoodOSDate(value);
+
+    if (!d) {
+      return fallback || "—";
+    }
+
+    var seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+
+    if (seconds < 0) seconds = 0;
+    if (seconds < 60) return seconds + "s ago";
+
+    var minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + "m ago";
+
+    var hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + "h ago";
+
+    var days = Math.floor(hours / 24);
+    if (days < 30) return days + "d ago";
+
+    return goodosFormatDate(value, fallback);
+  }
+
+  window.parseGoodOSDate = window.parseGoodOSDate || parseGoodOSDate;
+  window.formatDate = window.formatDate || goodosFormatDate;
+  window.formatDateTime = window.formatDateTime || goodosFormatDateTime;
+  window.formatTimeAgo = window.formatTimeAgo || goodosFormatTimeAgo;
+  window.goodosFormatDate = window.goodosFormatDate || goodosFormatDate;
+  window.goodosFormatDateTime = window.goodosFormatDateTime || goodosFormatDateTime;
+  window.goodosFormatTimeAgo = window.goodosFormatTimeAgo || goodosFormatTimeAgo;
+})();
+</script>
+
+
   <meta charset="utf-8" />
   <title>GoodOS Cloud Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
