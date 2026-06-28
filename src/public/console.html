@@ -5812,6 +5812,260 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-storage-v101-functional>
+.goodos-storage-selected-v101 {
+  border-color: rgba(56, 189, 248, 0.82) !important;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.35),
+    0 18px 55px rgba(14, 165, 233, 0.14) !important;
+}
+
+.goodos-storage-functional-panel-v101 {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  margin: 14px 0 22px;
+  padding: 22px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.13), transparent 34%),
+    linear-gradient(135deg, rgba(17, 24, 39, 0.97), rgba(15, 23, 42, 0.94));
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.26);
+  color: rgba(241, 245, 249, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.goodos-storage-functional-panel-v101::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(56, 189, 248, 0.10), transparent 26%, transparent 74%, rgba(167, 139, 250, 0.08)),
+    radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.09), transparent 28%);
+}
+
+.goodos-storage-panel-inner-v101 {
+  position: relative;
+  z-index: 1;
+}
+
+.goodos-storage-panel-head-v101 {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.goodos-storage-panel-eyebrow-v101 {
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  color: #67e8f9;
+  text-transform: uppercase;
+}
+
+.goodos-storage-panel-title-v101 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 0.95;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+  color: white;
+}
+
+.goodos-storage-panel-subtitle-v101 {
+  margin: 10px 0 0;
+  max-width: 760px;
+  color: rgba(203, 213, 225, 0.82);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.goodos-storage-panel-actions-v101 {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.goodos-storage-panel-btn-v101 {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.76);
+  color: rgba(241, 245, 249, 0.92);
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-storage-panel-btn-v101:hover {
+  border-color: rgba(125, 211, 252, 0.5);
+  background: rgba(14, 116, 144, 0.20);
+}
+
+.goodos-storage-panel-btn-danger-v101 {
+  border-color: rgba(248, 113, 113, 0.28);
+  color: #fecaca;
+}
+
+.goodos-storage-metrics-v101 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.goodos-storage-metric-v101 {
+  padding: 14px;
+  border-radius: 17px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.34);
+}
+
+.goodos-storage-metric-label-v101 {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(203, 213, 225, 0.64);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-storage-metric-value-v101 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.goodos-storage-table-section-v101 {
+  margin-top: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(2, 6, 23, 0.26);
+}
+
+.goodos-storage-table-title-v101 {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(224, 242, 254, 0.92);
+}
+
+.goodos-storage-table-wrap-v101 {
+  overflow-x: auto;
+}
+
+.goodos-storage-table-v101 {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.goodos-storage-table-v101 th,
+.goodos-storage-table-v101 td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-storage-table-v101 th {
+  color: rgba(186, 230, 253, 0.78);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-storage-table-v101 td {
+  color: rgba(226, 232, 240, 0.88);
+  max-width: 420px;
+  word-break: break-word;
+}
+
+.goodos-storage-notes-v101 {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.goodos-storage-note-v101 {
+  padding: 11px 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background: rgba(20, 184, 166, 0.07);
+  color: rgba(204, 251, 241, 0.88);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-storage-loading-v101,
+.goodos-storage-error-v101 {
+  padding: 22px;
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.34);
+  color: rgba(226, 232, 240, 0.78);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.goodos-storage-error-v101 {
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(127, 29, 29, 0.18);
+  color: #fecaca;
+}
+
+.goodos-storage-empty-v101 {
+  padding: 14px;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .goodos-storage-panel-head-v101 {
+    display: block;
+  }
+
+  .goodos-storage-panel-actions-v101 {
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .goodos-storage-metrics-v101 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .goodos-storage-metrics-v101 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -24746,6 +25000,556 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(enhanceStorageConsole, 300);
   setTimeout(enhanceStorageConsole, 1200);
+})();
+</script>
+
+
+<script data-goodos-storage-v101-functional>
+(function () {
+  var STORAGE_SECTIONS_V101 = {
+    "Files": {
+      key: "files",
+      label: "Files",
+      endpoint: "/api/admin/storage-console/section/files"
+    },
+    "Analytics": {
+      key: "analytics",
+      label: "Analytics",
+      endpoint: "/api/admin/storage-console/section/analytics"
+    },
+    "Vectors": {
+      key: "vectors",
+      label: "Vectors",
+      endpoint: "/api/admin/storage-console/section/vectors"
+    },
+    "S3": {
+      key: "s3",
+      label: "S3",
+      endpoint: "/api/admin/storage-console/section/s3"
+    },
+    "Providers": {
+      key: "providers",
+      label: "Providers",
+      endpoint: "/api/admin/storage-console/section/providers"
+    },
+    "CDN Buckets": {
+      key: "cdn-buckets",
+      label: "CDN Buckets",
+      endpoint: "/api/admin/storage-console/section/cdn-buckets"
+    },
+    "Public Buckets": {
+      key: "public-buckets",
+      label: "Public Buckets",
+      endpoint: "/api/admin/storage-console/section/public-buckets"
+    },
+    "Versions": {
+      key: "versions",
+      label: "Versions",
+      endpoint: "/api/admin/storage-console/section/versions"
+    }
+  };
+
+  var activeStorageCardV101 = null;
+  var activeStorageKeyV101 = null;
+  var activeStorageTitleV101 = null;
+  var activeStoragePanelV101 = null;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function looksLikeJwt(value) {
+    return typeof value === "string" && value.split(".").length === 3 && value.length > 40;
+  }
+
+  function findTokenInStorage(storage) {
+    if (!storage) return "";
+
+    var preferredKeys = [
+      "token",
+      "authToken",
+      "accessToken",
+      "access_token",
+      "jwt",
+      "goodos_token",
+      "goodos_access_token",
+      "goodos.auth.token",
+      "goodos.auth.accessToken",
+      "GoodOS.token",
+      "goodosBackendToken"
+    ];
+
+    for (var i = 0; i < preferredKeys.length; i++) {
+      try {
+        var direct = storage.getItem(preferredKeys[i]);
+        if (looksLikeJwt(direct)) return direct;
+
+        if (direct && direct.charAt(0) === "{") {
+          var parsed = JSON.parse(direct);
+          var nested = parsed.token || parsed.accessToken || parsed.access_token || parsed.jwt;
+          if (looksLikeJwt(nested)) return nested;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      for (var k = 0; k < storage.length; k++) {
+        var key = storage.key(k);
+        var value = storage.getItem(key);
+
+        if (looksLikeJwt(value)) return value;
+
+        if (value && value.charAt(0) === "{") {
+          try {
+            var obj = JSON.parse(value);
+            var token = obj.token || obj.accessToken || obj.access_token || obj.jwt;
+            if (looksLikeJwt(token)) return token;
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function getAuthToken() {
+    return (
+      findTokenInStorage(window.localStorage) ||
+      findTokenInStorage(window.sessionStorage) ||
+      window.goodosAccessToken ||
+      window.goodosAuthToken ||
+      ""
+    );
+  }
+
+  function apiFetch(url) {
+    var headers = {
+      "Accept": "application/json"
+    };
+
+    var token = getAuthToken();
+
+    if (token) {
+      headers.Authorization = "Bearer " + token;
+    }
+
+    return fetch(url, {
+      method: "GET",
+      headers: headers,
+      credentials: "same-origin",
+      cache: "no-store"
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (_) {}
+
+        if (!res.ok) {
+          var message = json && json.message ? json.message : "Request failed: " + res.status;
+          var err = new Error(message);
+          err.status = res.status;
+          err.payload = json;
+          throw err;
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function isStoragePage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash.indexOf("storage-console") !== -1) return true;
+
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    return bodyText.indexOf("bucket browser") !== -1 &&
+      bodyText.indexOf("vector storage") !== -1 &&
+      bodyText.indexOf("storage analytics") !== -1;
+  }
+
+  function findCardForTitle(title) {
+    var wanted = cleanLower(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+      var text = cleanLower(el.textContent);
+
+      if (text !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 9 && node && node !== document.body; depth++) {
+        if (node.classList && node.classList.contains("goodos-storage-functional-panel-v101")) break;
+
+        var rect = node.getBoundingClientRect();
+        var nodeText = cleanLower(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (
+          rect.width >= 180 &&
+          rect.height >= 70 &&
+          nodeText.indexOf(wanted) !== -1 &&
+          cleanLower(nodeText).indexOf("storage console true functionality") === -1
+        ) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function removePanel() {
+    if (activeStoragePanelV101 && activeStoragePanelV101.parentNode) {
+      activeStoragePanelV101.parentNode.removeChild(activeStoragePanelV101);
+    }
+
+    if (activeStorageCardV101) {
+      activeStorageCardV101.classList.remove("goodos-storage-selected-v101");
+      activeStorageCardV101.removeAttribute("data-goodos-storage-active-v101");
+    }
+
+    activeStorageCardV101 = null;
+    activeStorageKeyV101 = null;
+    activeStorageTitleV101 = null;
+    activeStoragePanelV101 = null;
+  }
+
+  function panelShell(section) {
+    var panel = document.createElement("section");
+    panel.className = "goodos-storage-functional-panel-v101";
+    panel.setAttribute("data-goodos-storage-panel-key", section.key);
+
+    panel.innerHTML = [
+      '<div class="goodos-storage-panel-inner-v101">',
+        '<div class="goodos-storage-panel-head-v101">',
+          '<div>',
+            '<div class="goodos-storage-panel-eyebrow-v101">Storage Console Live Section</div>',
+            '<h2 class="goodos-storage-panel-title-v101">' + escapeHtml(section.label) + '</h2>',
+            '<p class="goodos-storage-panel-subtitle-v101">Loading live storage data from <strong>' + escapeHtml(section.endpoint) + '</strong>.</p>',
+          '</div>',
+          '<div class="goodos-storage-panel-actions-v101">',
+            '<button class="goodos-storage-panel-btn-v101" type="button" data-storage-action="refresh">Refresh Section</button>',
+            '<button class="goodos-storage-panel-btn-v101" type="button" data-storage-action="copy">Copy JSON</button>',
+            '<button class="goodos-storage-panel-btn-v101" type="button" data-storage-action="open-api">Open API</button>',
+            '<button class="goodos-storage-panel-btn-v101 goodos-storage-panel-btn-danger-v101" type="button" data-storage-action="deselect">Deselect</button>',
+          '</div>',
+        '</div>',
+        '<div data-storage-panel-body>',
+          '<div class="goodos-storage-loading-v101">Loading live storage section...</div>',
+        '</div>',
+      '</div>'
+    ].join("");
+
+    panel.__goodosStorageSection = section;
+    panel.__goodosStoragePayload = null;
+
+    panel.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-storage-action]");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var action = button.getAttribute("data-storage-action");
+
+      if (action === "deselect") {
+        removePanel();
+        return;
+      }
+
+      if (action === "refresh") {
+        loadPanelData(panel, section);
+        return;
+      }
+
+      if (action === "copy") {
+        copyPanelJson(panel);
+        return;
+      }
+
+      if (action === "open-api") {
+        window.open(section.endpoint, "_blank", "noopener,noreferrer");
+        return;
+      }
+    });
+
+    return panel;
+  }
+
+  function renderMetrics(metrics) {
+    if (!metrics || !metrics.length) {
+      return '<div class="goodos-storage-empty-v101">No metrics returned for this section.</div>';
+    }
+
+    return [
+      '<div class="goodos-storage-metrics-v101">',
+        metrics.map(function (item) {
+          return [
+            '<div class="goodos-storage-metric-v101">',
+              '<span class="goodos-storage-metric-label-v101">' + escapeHtml(item.label) + '</span>',
+              '<span class="goodos-storage-metric-value-v101">' + escapeHtml(item.value) + '</span>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderTable(table) {
+    var columns = table.columns || [];
+    var rows = table.rows || [];
+
+    if (!columns.length && rows.length) {
+      columns = Object.keys(rows[0]);
+    }
+
+    return [
+      '<section class="goodos-storage-table-section-v101">',
+        '<div class="goodos-storage-table-title-v101">' + escapeHtml(table.title || "Data") + '</div>',
+        rows.length ? [
+          '<div class="goodos-storage-table-wrap-v101">',
+            '<table class="goodos-storage-table-v101">',
+              '<thead>',
+                '<tr>',
+                  columns.map(function (column) {
+                    return '<th>' + escapeHtml(column) + '</th>';
+                  }).join(""),
+                '</tr>',
+              '</thead>',
+              '<tbody>',
+                rows.slice(0, 60).map(function (row) {
+                  return [
+                    '<tr>',
+                      columns.map(function (column) {
+                        return '<td>' + escapeHtml(row && row[column] != null ? row[column] : "") + '</td>';
+                      }).join(""),
+                    '</tr>'
+                  ].join("");
+                }).join(""),
+              '</tbody>',
+            '</table>',
+          '</div>',
+          rows.length > 60 ? '<div class="goodos-storage-empty-v101">Showing first 60 rows of ' + rows.length + '.</div>' : ''
+        ].join("") : '<div class="goodos-storage-empty-v101">No rows returned.</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function renderNotes(notes) {
+    if (!notes || !notes.length) return "";
+
+    return [
+      '<div class="goodos-storage-notes-v101">',
+        notes.map(function (note) {
+          return '<div class="goodos-storage-note-v101">' + escapeHtml(note) + '</div>';
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderPanelData(panel, payload) {
+    var body = panel.querySelector("[data-storage-panel-body]");
+    var subtitle = panel.querySelector(".goodos-storage-panel-subtitle-v101");
+
+    if (subtitle) {
+      subtitle.innerHTML = escapeHtml(payload.subtitle || "Live storage data loaded.") +
+        '<br><span style="color:rgba(203,213,225,.62);font-size:12px;">Generated: ' +
+        escapeHtml(payload.generatedAt || new Date().toISOString()) +
+        '</span>';
+    }
+
+    body.innerHTML = [
+      renderMetrics(payload.metrics || []),
+      (payload.tables || []).map(renderTable).join(""),
+      renderNotes(payload.notes || [])
+    ].join("");
+
+    panel.__goodosStoragePayload = payload;
+  }
+
+  function renderPanelError(panel, err) {
+    var body = panel.querySelector("[data-storage-panel-body]");
+    var message = err && err.message ? err.message : "Storage Console section failed to load.";
+
+    body.innerHTML = [
+      '<div class="goodos-storage-error-v101">',
+        '<strong>Load failed:</strong> ' + escapeHtml(message),
+        err && err.status === 401 ? '<br><br>Your login token was not accepted by the Storage Console API. Log out and log back in, then reopen this tab.' : '',
+      '</div>'
+    ].join("");
+  }
+
+  function loadPanelData(panel, section) {
+    var body = panel.querySelector("[data-storage-panel-body]");
+
+    body.innerHTML = '<div class="goodos-storage-loading-v101">Loading live ' + escapeHtml(section.label) + ' data...</div>';
+
+    apiFetch(section.endpoint)
+      .then(function (payload) {
+        renderPanelData(panel, payload || {});
+      })
+      .catch(function (err) {
+        renderPanelError(panel, err);
+      });
+  }
+
+  function copyPanelJson(panel) {
+    var payload = panel.__goodosStoragePayload;
+
+    if (!payload) return;
+
+    var text = JSON.stringify(payload, null, 2);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+  }
+
+  function openPanelForCard(card, title, section) {
+    if (activeStorageCardV101 === card && activeStorageKeyV101 === section.key) {
+      removePanel();
+      return;
+    }
+
+    removePanel();
+
+    activeStorageCardV101 = card;
+    activeStorageKeyV101 = section.key;
+    activeStorageTitleV101 = title;
+
+    card.classList.add("goodos-storage-selected-v101");
+    card.setAttribute("data-goodos-storage-active-v101", "true");
+
+    var panel = panelShell(section);
+    activeStoragePanelV101 = panel;
+
+    card.insertAdjacentElement("afterend", panel);
+
+    setTimeout(function () {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }, 80);
+
+    loadPanelData(panel, section);
+  }
+
+  function enhanceCard(title, section) {
+    var card = findCardForTitle(title);
+
+    if (!card) return;
+
+    if (card.getAttribute("data-goodos-storage-functional-v101") === "true") return;
+
+    card.setAttribute("data-goodos-storage-functional-v101", "true");
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", function (event) {
+      if (!isStoragePage()) return;
+
+      if (
+        event.target.closest("button") ||
+        event.target.closest("a") ||
+        event.target.closest("input") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea") ||
+        event.target.closest(".goodos-storage-functional-panel-v101")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      openPanelForCard(card, title, section);
+    });
+  }
+
+  function enhanceStorageConsoleV101() {
+    if (!document.body || !isStoragePage()) return;
+
+    Object.keys(STORAGE_SECTIONS_V101).forEach(function (title) {
+      enhanceCard(title, STORAGE_SECTIONS_V101[title]);
+    });
+  }
+
+  var enhanceTimer = null;
+
+  function scheduleEnhance() {
+    clearTimeout(enhanceTimer);
+    enhanceTimer = setTimeout(enhanceStorageConsoleV101, 120);
+  }
+
+  window.goodosEnhanceStorageConsoleFunctionalV101 = enhanceStorageConsoleV101;
+  window.goodosCloseStorageConsolePanelV101 = removePanel;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhanceStorageConsoleV101, 700);
+    setTimeout(enhanceStorageConsoleV101, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    removePanel();
+    setTimeout(enhanceStorageConsoleV101, 150);
+    setTimeout(enhanceStorageConsoleV101, 800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhanceStorageConsoleV101, 300);
+  setTimeout(enhanceStorageConsoleV101, 1200);
 })();
 </script>
 

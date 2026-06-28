@@ -11,6 +11,22 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS STORAGE CONSOLE V101 API MOUNT */
+try {
+  const goodosStorageConsoleRouterV101 = require('./routes/storage-console.routes');
+
+  app.use('/api/admin/storage-console', goodosStorageConsoleRouterV101);
+  app.use('/api/storage-console', goodosStorageConsoleRouterV101);
+  app.use('/api/admin/storage', goodosStorageConsoleRouterV101);
+
+  console.log('GOODOS V101 Storage Console API mounted');
+} catch (err) {
+  console.error('GOODOS V101 Storage Console API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS STORAGE CONSOLE V101 API MOUNT */
+
+
+
 /* GOODOS AUTH CONSOLE V99 EARLY API NORMALIZER - HARD FIX FOR 404 */
 try {
   const goodosAuthConsoleRouterV99 = require('./routes/authentication-console.routes');
