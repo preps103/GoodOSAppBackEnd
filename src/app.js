@@ -11,6 +11,21 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS DATABASE CONSOLE V121 API MOUNT */
+try {
+  const goodosDatabaseConsoleRouterV121 = require('./routes/database-console.routes');
+
+  app.use('/api/admin/database-console', goodosDatabaseConsoleRouterV121);
+  app.use('/api/database-console', goodosDatabaseConsoleRouterV121);
+
+  console.log('GOODOS V121 Database Console API mounted');
+} catch (err) {
+  console.error('GOODOS V121 Database Console API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS DATABASE CONSOLE V121 API MOUNT */
+
+
+
 /* GOODOS PROJECT SETTINGS V107 API MOUNT */
 try {
   const goodosProjectSettingsRouterV107 = require('./routes/project-settings-console.routes');

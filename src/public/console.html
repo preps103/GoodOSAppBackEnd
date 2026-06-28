@@ -8260,6 +8260,227 @@ button[title*="Skeleton"] {
 }
 </style>
 
+
+<style data-goodos-database-functional-v121>
+.goodos-db-selected-v121 {
+  border-color: rgba(56,189,248,0.85) !important;
+  box-shadow:
+    0 0 0 1px rgba(56,189,248,0.30),
+    0 18px 46px rgba(14,165,233,0.14) !important;
+}
+
+.goodos-db-panel-v121 {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  margin: 14px 0 22px;
+  padding: 22px;
+  border: 1px solid rgba(125,211,252,0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,0.13), transparent 34%),
+    linear-gradient(135deg, rgba(17,24,39,0.97), rgba(15,23,42,0.94));
+  color: rgba(241,245,249,0.94);
+  box-shadow: 0 22px 65px rgba(0,0,0,0.24);
+}
+
+.goodos-db-panel-head-v121 {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.goodos-db-eyebrow-v121 {
+  margin-bottom: 8px;
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.goodos-db-title-v121 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 0.95;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.goodos-db-subtitle-v121 {
+  margin: 10px 0 0;
+  max-width: 820px;
+  color: rgba(203,213,225,0.82);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.goodos-db-actions-v121 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.goodos-db-btn-v121 {
+  appearance: none;
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 999px;
+  background: rgba(15,23,42,0.76);
+  color: rgba(241,245,249,0.92);
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-db-btn-v121:hover {
+  border-color: rgba(125,211,252,0.5);
+  background: rgba(14,116,144,0.20);
+}
+
+.goodos-db-btn-danger-v121 {
+  border-color: rgba(248,113,113,0.28);
+  color: #fecaca;
+}
+
+.goodos-db-metrics-v121 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.goodos-db-metric-v121 {
+  padding: 14px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 17px;
+  background: rgba(2,6,23,0.34);
+}
+
+.goodos-db-metric-label-v121 {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(203,213,225,0.64);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-db-metric-value-v121 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.goodos-db-table-section-v121 {
+  margin-top: 18px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(2,6,23,0.26);
+}
+
+.goodos-db-table-title-v121 {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(148,163,184,0.12);
+  color: rgba(224,242,254,0.92);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goodos-db-table-wrap-v121 {
+  overflow-x: auto;
+}
+
+.goodos-db-table-v121 {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.goodos-db-table-v121 th,
+.goodos-db-table-v121 td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148,163,184,0.10);
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-db-table-v121 th {
+  color: rgba(186,230,253,0.78);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-db-table-v121 td {
+  color: rgba(226,232,240,0.88);
+  max-width: 460px;
+  word-break: break-word;
+}
+
+.goodos-db-note-v121 {
+  margin-top: 12px;
+  padding: 11px 13px;
+  border: 1px solid rgba(45,212,191,0.18);
+  border-radius: 14px;
+  background: rgba(20,184,166,0.07);
+  color: rgba(204,251,241,0.88);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-db-loading-v121,
+.goodos-db-error-v121,
+.goodos-db-empty-v121 {
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(2,6,23,0.34);
+  color: rgba(226,232,240,0.78);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.goodos-db-error-v121 {
+  border: 1px solid rgba(248,113,113,0.30);
+  background: rgba(127,29,29,0.18);
+  color: #fecaca;
+}
+
+@media (max-width: 900px) {
+  .goodos-db-panel-head-v121 {
+    display: block;
+  }
+
+  .goodos-db-actions-v121 {
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .goodos-db-metrics-v121 {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -32244,6 +32465,514 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(applyCompactFix, 250);
   setTimeout(applyCompactFix, 1000);
   setTimeout(applyCompactFix, 2200);
+})();
+</script>
+
+
+<script data-goodos-database-functional-v121>
+(function () {
+  var SECTIONS = {
+    "Published Tables": {
+      key: "published-tables",
+      label: "Published Tables",
+      endpoint: "/api/admin/database-console/section/published-tables"
+    },
+    "Writable Tables": {
+      key: "writable-tables",
+      label: "Writable Tables",
+      endpoint: "/api/admin/database-console/section/writable-tables"
+    },
+    "Rules": {
+      key: "rules",
+      label: "Rules",
+      endpoint: "/api/admin/database-console/section/rules"
+    },
+    "Scope": {
+      key: "scope",
+      label: "Scope",
+      endpoint: "/api/admin/database-console/section/scope"
+    }
+  };
+
+  var activeCard = null;
+  var activeKey = null;
+  var activePanel = null;
+  var timer = null;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function compact(value) {
+    return cleanLower(value).replace(/[^a-z0-9]/g, "");
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function isDatabasePage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash.indexOf("database") !== -1 && hash.indexOf("database-management") === -1) return true;
+
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    return bodyText.indexOf("generated database api") !== -1 &&
+      bodyText.indexOf("published table rules") !== -1;
+  }
+
+  function looksLikeJwt(value) {
+    return typeof value === "string" && value.split(".").length === 3 && value.length > 40;
+  }
+
+  function findTokenInStorage(storage) {
+    if (!storage) return "";
+
+    var keys = [
+      "token",
+      "authToken",
+      "accessToken",
+      "access_token",
+      "jwt",
+      "goodos_token",
+      "goodos_access_token",
+      "goodos.auth.token",
+      "goodos.auth.accessToken",
+      "goodosBackendToken"
+    ];
+
+    for (var i = 0; i < keys.length; i++) {
+      try {
+        var direct = storage.getItem(keys[i]);
+
+        if (looksLikeJwt(direct)) return direct;
+
+        if (direct && direct.charAt(0) === "{") {
+          var parsed = JSON.parse(direct);
+          var nested = parsed.token || parsed.accessToken || parsed.access_token || parsed.jwt;
+
+          if (looksLikeJwt(nested)) return nested;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      for (var k = 0; k < storage.length; k++) {
+        var key = storage.key(k);
+        var value = storage.getItem(key);
+
+        if (looksLikeJwt(value)) return value;
+
+        if (value && value.charAt(0) === "{") {
+          try {
+            var obj = JSON.parse(value);
+            var token = obj.token || obj.accessToken || obj.access_token || obj.jwt;
+
+            if (looksLikeJwt(token)) return token;
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function getAuthToken() {
+    return (
+      findTokenInStorage(window.localStorage) ||
+      findTokenInStorage(window.sessionStorage) ||
+      window.goodosAccessToken ||
+      window.goodosAuthToken ||
+      ""
+    );
+  }
+
+  function apiFetch(url) {
+    var headers = { Accept: "application/json" };
+    var token = getAuthToken();
+
+    if (token) headers.Authorization = "Bearer " + token;
+
+    return fetch(url, {
+      method: "GET",
+      headers: headers,
+      credentials: "same-origin",
+      cache: "no-store"
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (_) {}
+
+        if (!res.ok) {
+          var message = json && json.message ? json.message : "Request failed: " + res.status;
+          var err = new Error(message);
+          err.status = res.status;
+          err.payload = json;
+          throw err;
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function findCardForTitle(title) {
+    var wanted = compact(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+
+      if (compact(el.textContent) !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 10 && node && node !== document.body; depth++) {
+        if (node.classList && node.classList.contains("goodos-db-panel-v121")) break;
+
+        var rect = node.getBoundingClientRect();
+        var style = window.getComputedStyle(node);
+        var nodeText = compact(node.textContent);
+
+        if (rect.width >= 170 && rect.height >= 70 && nodeText.indexOf(wanted) !== -1) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(String(node.className || "")) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function removePanel() {
+    if (activePanel && activePanel.parentNode) {
+      activePanel.parentNode.removeChild(activePanel);
+    }
+
+    if (activeCard) {
+      activeCard.classList.remove("goodos-db-selected-v121");
+      activeCard.removeAttribute("data-goodos-db-active-v121");
+    }
+
+    activeCard = null;
+    activeKey = null;
+    activePanel = null;
+  }
+
+  function panelShell(section) {
+    var panel = document.createElement("section");
+    panel.className = "goodos-db-panel-v121";
+    panel.setAttribute("data-goodos-db-panel-key-v121", section.key);
+
+    panel.innerHTML = [
+      '<div class="goodos-db-panel-head-v121">',
+        '<div>',
+          '<div class="goodos-db-eyebrow-v121">Database Live Section</div>',
+          '<h2 class="goodos-db-title-v121">' + escapeHtml(section.label) + '</h2>',
+          '<p class="goodos-db-subtitle-v121">Loading live data from <strong>' + escapeHtml(section.endpoint) + '</strong>.</p>',
+        '</div>',
+        '<div class="goodos-db-actions-v121">',
+          '<button class="goodos-db-btn-v121" type="button" data-db-v121-action="refresh">Refresh Section</button>',
+          '<button class="goodos-db-btn-v121" type="button" data-db-v121-action="copy">Copy JSON</button>',
+          '<button class="goodos-db-btn-v121" type="button" data-db-v121-action="open-api">Open API</button>',
+          '<button class="goodos-db-btn-v121 goodos-db-btn-danger-v121" type="button" data-db-v121-action="deselect">Deselect</button>',
+        '</div>',
+      '</div>',
+      '<div data-db-v121-body><div class="goodos-db-loading-v121">Loading live database data...</div></div>'
+    ].join("");
+
+    panel.__goodosDbSection = section;
+    panel.__goodosDbPayload = null;
+
+    panel.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-db-v121-action]");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var action = button.getAttribute("data-db-v121-action");
+
+      if (action === "deselect") {
+        removePanel();
+        return;
+      }
+
+      if (action === "refresh") {
+        loadPanelData(panel, section);
+        return;
+      }
+
+      if (action === "copy") {
+        copyPanelJson(panel);
+        return;
+      }
+
+      if (action === "open-api") {
+        window.open(section.endpoint, "_blank", "noopener,noreferrer");
+      }
+    });
+
+    return panel;
+  }
+
+  function renderMetrics(metrics) {
+    if (!metrics || !metrics.length) {
+      return '<div class="goodos-db-empty-v121">No metrics returned.</div>';
+    }
+
+    return [
+      '<div class="goodos-db-metrics-v121">',
+        metrics.map(function (item) {
+          return [
+            '<div class="goodos-db-metric-v121">',
+              '<span class="goodos-db-metric-label-v121">' + escapeHtml(item.label) + '</span>',
+              '<span class="goodos-db-metric-value-v121">' + escapeHtml(item.value) + '</span>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderTable(table) {
+    var columns = table.columns || [];
+    var rows = table.rows || [];
+
+    if (!columns.length && rows.length) columns = Object.keys(rows[0]);
+
+    return [
+      '<section class="goodos-db-table-section-v121">',
+        '<div class="goodos-db-table-title-v121">' + escapeHtml(table.title || "Data") + '</div>',
+        rows.length ? [
+          '<div class="goodos-db-table-wrap-v121">',
+            '<table class="goodos-db-table-v121">',
+              '<thead><tr>',
+                columns.map(function (column) {
+                  return '<th>' + escapeHtml(column) + '</th>';
+                }).join(""),
+              '</tr></thead>',
+              '<tbody>',
+                rows.slice(0, 80).map(function (row) {
+                  return [
+                    '<tr>',
+                      columns.map(function (column) {
+                        return '<td>' + escapeHtml(row && row[column] != null ? row[column] : "") + '</td>';
+                      }).join(""),
+                    '</tr>'
+                  ].join("");
+                }).join(""),
+              '</tbody>',
+            '</table>',
+          '</div>',
+          rows.length > 80 ? '<div class="goodos-db-empty-v121">Showing first 80 rows of ' + rows.length + '.</div>' : ''
+        ].join("") : '<div class="goodos-db-empty-v121">No rows returned.</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function renderNotes(notes) {
+    if (!notes || !notes.length) return "";
+
+    return notes.map(function (note) {
+      return '<div class="goodos-db-note-v121">' + escapeHtml(note) + '</div>';
+    }).join("");
+  }
+
+  function renderPanelData(panel, payload) {
+    var body = panel.querySelector("[data-db-v121-body]");
+    var subtitle = panel.querySelector(".goodos-db-subtitle-v121");
+
+    if (subtitle) {
+      subtitle.innerHTML =
+        escapeHtml(payload.subtitle || "Live database data loaded.") +
+        '<br><span style="color:rgba(203,213,225,.62);font-size:12px;">Generated: ' +
+        escapeHtml(payload.generatedAt || new Date().toISOString()) +
+        '</span>';
+    }
+
+    body.innerHTML = [
+      renderMetrics(payload.metrics || []),
+      (payload.tables || []).map(renderTable).join(""),
+      renderNotes(payload.notes || [])
+    ].join("");
+
+    panel.__goodosDbPayload = payload;
+  }
+
+  function renderPanelError(panel, err) {
+    var body = panel.querySelector("[data-db-v121-body]");
+    var message = err && err.message ? err.message : "Database section failed to load.";
+
+    body.innerHTML = [
+      '<div class="goodos-db-error-v121">',
+        '<strong>Load failed:</strong> ' + escapeHtml(message),
+        err && err.status === 401 ? '<br><br>Your browser login token was not accepted. Log out and log back in, then reopen Database.' : '',
+      '</div>'
+    ].join("");
+  }
+
+  function loadPanelData(panel, section) {
+    var body = panel.querySelector("[data-db-v121-body]");
+    body.innerHTML = '<div class="goodos-db-loading-v121">Loading live ' + escapeHtml(section.label) + ' data...</div>';
+
+    apiFetch(section.endpoint)
+      .then(function (payload) {
+        renderPanelData(panel, payload || {});
+      })
+      .catch(function (err) {
+        renderPanelError(panel, err);
+      });
+  }
+
+  function copyPanelJson(panel) {
+    var payload = panel.__goodosDbPayload;
+    if (!payload) return;
+
+    var text = JSON.stringify(payload, null, 2);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+  }
+
+  function openPanelForCard(card, section) {
+    if (activeCard === card && activeKey === section.key) {
+      removePanel();
+      return;
+    }
+
+    removePanel();
+
+    activeCard = card;
+    activeKey = section.key;
+
+    card.classList.add("goodos-db-selected-v121");
+    card.setAttribute("data-goodos-db-active-v121", "true");
+
+    var panel = panelShell(section);
+    activePanel = panel;
+
+    card.insertAdjacentElement("afterend", panel);
+
+    setTimeout(function () {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }, 80);
+
+    loadPanelData(panel, section);
+  }
+
+  function enhanceCard(title, section) {
+    var card = findCardForTitle(title);
+    if (!card) return;
+
+    var marker = "true:" + section.key;
+
+    if (card.getAttribute("data-goodos-db-functional-v121") === marker) return;
+
+    card.setAttribute("data-goodos-db-functional-v121", marker);
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", function (event) {
+      if (!isDatabasePage()) return;
+
+      if (
+        event.target.closest("button") ||
+        event.target.closest("a") ||
+        event.target.closest("input") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea") ||
+        event.target.closest(".goodos-db-panel-v121")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      openPanelForCard(card, section);
+    }, true);
+  }
+
+  function enhanceDatabase() {
+    if (!document.body || !isDatabasePage()) return;
+
+    Object.keys(SECTIONS).forEach(function (title) {
+      enhanceCard(title, SECTIONS[title]);
+    });
+  }
+
+  function scheduleEnhance() {
+    clearTimeout(timer);
+    timer = setTimeout(enhanceDatabase, 120);
+  }
+
+  window.goodosEnhanceDatabaseV121 = enhanceDatabase;
+  window.goodosCloseDatabasePanelV121 = removePanel;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhanceDatabase, 700);
+    setTimeout(enhanceDatabase, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    removePanel();
+    setTimeout(enhanceDatabase, 150);
+    setTimeout(enhanceDatabase, 800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhanceDatabase, 250);
+  setTimeout(enhanceDatabase, 1000);
 })();
 </script>
 
