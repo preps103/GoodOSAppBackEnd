@@ -118,6 +118,11 @@ try {
 
   if (app && typeof app.use === "function") {
     app.use("/api/admin/authentication-console", authenticationConsoleRoutes);
+/* GOODOS AUTH CONSOLE V98 API ALIAS MOUNTS */
+app.use('/api/admin/auth-console', authenticationConsoleRoutes);
+app.use('/api/authentication-console', authenticationConsoleRoutes);
+/* END GOODOS AUTH CONSOLE V98 API ALIAS MOUNTS */
+
     console.log("GoodOS Authentication Console API mounted at /api/admin/authentication-console");
   }
 } catch (err) {

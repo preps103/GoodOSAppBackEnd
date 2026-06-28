@@ -376,4 +376,68 @@ router.get("/section/:slug", async (req, res) => {
   }
 });
 
+
+/* GOODOS AUTH CONSOLE V98 DIRECT SECTION ALIASES - FIX 404 ROUTE MISMATCH */
+const __goodosAuthConsoleV98SectionMap = {
+  "users": "users",
+  "user": "users",
+  "oauth-apps": "oauth-apps",
+  "oauthapps": "oauth-apps",
+  "oauthApps": "oauth-apps",
+  "apps": "oauth-apps",
+  "email-templates": "email-templates",
+  "emailtemplates": "email-templates",
+  "emailTemplates": "email-templates",
+  "templates": "email-templates",
+  "policies": "policies",
+  "policy": "policies",
+  "providers": "providers",
+  "provider": "providers",
+  "passkeys": "passkeys",
+  "passkey": "passkeys",
+  "sessions": "sessions",
+  "session": "sessions",
+  "mfa": "mfa",
+  "rate-limits": "rate-limits",
+  "ratelimits": "rate-limits",
+  "rateLimits": "rate-limits",
+  "hooks": "hooks",
+  "hook": "hooks",
+  "audit-logs": "audit-logs",
+  "auditlogs": "audit-logs",
+  "auditLogs": "audit-logs",
+  "logs": "audit-logs",
+  "performance": "performance"
+};
+
+function __goodosAuthConsoleV98RedirectToSection(req, res, next) {
+  try {
+    const raw = String(req.params.sectionKey || "")
+      .trim()
+      .replace(/^\/+/, "")
+      .replace(/\.+$/, "");
+
+    const mapped =
+      __goodosAuthConsoleV98SectionMap[raw] ||
+      __goodosAuthConsoleV98SectionMap[raw.toLowerCase()];
+
+    if (!mapped) return next();
+
+    const query = req.originalUrl.includes("?")
+      ? "?" + req.originalUrl.split("?").slice(1).join("?")
+      : "";
+
+    return res.redirect(
+      307,
+      "/api/admin/authentication-console/section/" + encodeURIComponent(mapped) + query
+    );
+  } catch (err) {
+    return next(err);
+  }
+}
+
+router.get("/sections/:sectionKey", __goodosAuthConsoleV98RedirectToSection);
+router.get("/:sectionKey", __goodosAuthConsoleV98RedirectToSection);
+/* END GOODOS AUTH CONSOLE V98 DIRECT SECTION ALIASES */
+
 module.exports = router;
