@@ -7542,6 +7542,206 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-core-charts-v106>
+.goodos-core-chart-card-v106 {
+  position: relative;
+}
+
+.goodos-core-chart-v106 {
+  --core-accent: #38bdf8;
+  --core-accent-soft: rgba(56, 189, 248, 0.18);
+  --core-accent-faint: rgba(56, 189, 248, 0.08);
+  --core-text: rgba(255,255,255,0.94);
+  --core-muted: rgba(203,213,225,0.68);
+
+  width: 100%;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: var(--core-text);
+  font-family: inherit;
+}
+
+.goodos-core-chart-v106[data-accent="purple"] {
+  --core-accent: #a78bfa;
+  --core-accent-soft: rgba(167, 139, 250, 0.18);
+  --core-accent-faint: rgba(167, 139, 250, 0.08);
+}
+
+.goodos-core-chart-v106[data-accent="green"] {
+  --core-accent: #22c55e;
+  --core-accent-soft: rgba(34, 197, 94, 0.17);
+  --core-accent-faint: rgba(34, 197, 94, 0.08);
+}
+
+.goodos-core-chart-v106[data-accent="gold"] {
+  --core-accent: #facc15;
+  --core-accent-soft: rgba(250, 204, 21, 0.17);
+  --core-accent-faint: rgba(250, 204, 21, 0.08);
+}
+
+.goodos-core-chart-v106[data-accent="pink"] {
+  --core-accent: #f472b6;
+  --core-accent-soft: rgba(244, 114, 182, 0.17);
+  --core-accent-faint: rgba(244, 114, 182, 0.08);
+}
+
+.goodos-core-kpi-row-v106 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.goodos-core-kpi-label-v106 {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--core-muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-core-kpi-value-v106 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+  font-size: 28px;
+  line-height: 0.95;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.goodos-core-kpi-note-v106 {
+  color: #86efac;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-core-mini-title-v106 {
+  margin: 8px 0 6px;
+  color: rgba(255,255,255,0.86);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.goodos-core-svg-wrap-v106 {
+  overflow: hidden;
+  padding: 8px 8px 5px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 88% 0%, var(--core-accent-soft), transparent 42%),
+    linear-gradient(180deg, rgba(7,12,24,0.68), rgba(7,12,24,0.34));
+}
+
+.goodos-core-svg-wrap-v106 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.goodos-core-axis-v106 {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  color: rgba(203,213,225,0.56);
+  font-size: 9px;
+}
+
+.goodos-core-progress-wrap-v106 {
+  padding: 13px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 88% 0%, var(--core-accent-soft), transparent 42%),
+    linear-gradient(180deg, rgba(7,12,24,0.68), rgba(7,12,24,0.34));
+}
+
+.goodos-core-progress-top-v106 {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  color: rgba(226,232,240,0.86);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.goodos-core-progress-track-v106 {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.goodos-core-progress-fill-v106 {
+  width: var(--core-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--core-accent), #a78bfa);
+  box-shadow: 0 0 18px var(--core-accent-soft);
+}
+
+.goodos-core-bars-v106 {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 88% 0%, var(--core-accent-soft), transparent 42%),
+    linear-gradient(180deg, rgba(7,12,24,0.68), rgba(7,12,24,0.34));
+}
+
+.goodos-core-bar-row-v106 {
+  display: grid;
+  grid-template-columns: 86px 1fr 42px;
+  gap: 8px;
+  align-items: center;
+  color: rgba(226,232,240,0.82);
+  font-size: 10px;
+}
+
+.goodos-core-bar-track-v106 {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.goodos-core-bar-fill-v106 {
+  width: var(--core-bar);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--core-accent), #8b5cf6);
+  box-shadow: 0 0 18px var(--core-accent-soft);
+}
+
+.goodos-core-chart-v106[data-mode="status"] .goodos-core-kpi-value-v106 {
+  font-size: 24px;
+}
+
+@media (max-width: 700px) {
+  .goodos-core-kpi-row-v106 {
+    grid-template-columns: 1fr;
+  }
+
+  .goodos-core-bar-row-v106 {
+    grid-template-columns: 74px 1fr 38px;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -29582,6 +29782,504 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(enhanceObservabilityV105, 300);
   setTimeout(enhanceObservabilityV105, 1200);
+})();
+</script>
+
+
+<script data-goodos-core-charts-v106>
+(function () {
+  var TARGETS_V106 = {
+    dashboard: {
+      aliases: ["dashboard", "overview"],
+      match: ["backend console", "activity center", "project control center"],
+      cards: {
+        "Organizations": {
+          fallback: 1,
+          accent: "purple",
+          label: "Enterprise tenants",
+          chartTitle: "Organization Readiness",
+          type: "ring"
+        },
+        "Projects": {
+          fallback: 1,
+          accent: "cyan",
+          label: "Project workspaces",
+          chartTitle: "Project Activity",
+          type: "line"
+        },
+        "Environments": {
+          fallback: 3,
+          accent: "gold",
+          label: "Dev / staging / production",
+          chartTitle: "Environment Coverage",
+          type: "bars",
+          bars: ["Dev", "Stage", "Prod"]
+        },
+        "Module Scope": {
+          fallback: "91%",
+          accent: "green",
+          label: "Records mapped to environments",
+          chartTitle: "Module Scope",
+          type: "progress"
+        }
+      }
+    },
+    projects: {
+      aliases: ["projects"],
+      match: ["app control center", "registered apps", "restricted keys"],
+      cards: {
+        "Apps": {
+          fallback: 13,
+          accent: "cyan",
+          label: "Registered GoodOS apps",
+          chartTitle: "Registered Apps",
+          type: "line"
+        },
+        "Active Apps": {
+          fallback: 13,
+          accent: "green",
+          label: "Live apps",
+          chartTitle: "Active App Registry",
+          type: "line"
+        },
+        "Memberships": {
+          fallback: 13,
+          accent: "purple",
+          label: "Active app access",
+          chartTitle: "Membership Access",
+          type: "line"
+        },
+        "Restricted Keys": {
+          fallback: 4,
+          accent: "gold",
+          label: "App scoped API keys",
+          chartTitle: "Restricted Key Scope",
+          type: "bars",
+          bars: ["Scoped", "Active", "Limited", "Audit"]
+        }
+      }
+    },
+    database: {
+      aliases: ["database"],
+      match: ["generated database api", "published table rules", "public rest tables"],
+      cards: {
+        "Published Tables": {
+          fallback: 4,
+          accent: "cyan",
+          label: "Public REST tables",
+          chartTitle: "Published Table Visibility",
+          type: "line"
+        },
+        "Writable Tables": {
+          fallback: 1,
+          accent: "green",
+          label: "Write-enabled rules",
+          chartTitle: "Writable Rule Coverage",
+          type: "line"
+        },
+        "Rules": {
+          fallback: 4,
+          accent: "purple",
+          label: "Table API policies",
+          chartTitle: "API Policy Count",
+          type: "bars",
+          bars: ["Read", "Write", "Rules", "Active"]
+        },
+        "Scope": {
+          fallback: "read:db",
+          accent: "gold",
+          label: "Public DB API permission",
+          chartTitle: "Permission Scope",
+          type: "progress",
+          statusMode: true
+        }
+      }
+    }
+  };
+
+  var timerV106 = null;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function compact(value) {
+    return cleanLower(value).replace(/[^a-z0-9]/g, "");
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function getCurrentTargetKey() {
+    var hash = String(window.location.hash || "").replace(/^#/, "").toLowerCase();
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    var keys = Object.keys(TARGETS_V106);
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var target = TARGETS_V106[key];
+
+      if (target.aliases.some(function (alias) {
+        return hash.indexOf(alias) !== -1;
+      })) {
+        return key;
+      }
+    }
+
+    for (var j = 0; j < keys.length; j++) {
+      var pageKey = keys[j];
+      var page = TARGETS_V106[pageKey];
+
+      if (page.match.every(function (needle) {
+        return bodyText.indexOf(needle) !== -1;
+      })) {
+        return pageKey;
+      }
+    }
+
+    return null;
+  }
+
+  function findCardForTitle(title) {
+    var wanted = compact(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+      var text = compact(el.textContent);
+
+      if (text !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 10 && node && node !== document.body; depth++) {
+        var rect = node.getBoundingClientRect();
+        var nodeText = compact(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (
+          rect.width >= 170 &&
+          rect.height >= 80 &&
+          nodeText.indexOf(wanted) !== -1
+        ) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function removeLegacyChartBlocks(card) {
+    Array.prototype.slice.call(card.querySelectorAll(".goodos-core-chart-v106")).forEach(function (el) {
+      el.remove();
+    });
+
+    var nodes = Array.prototype.slice.call(card.querySelectorAll("div,section,article,aside"));
+
+    nodes.forEach(function (node) {
+      if (!node.parentNode || node.classList.contains("goodos-core-chart-v106")) return;
+
+      var text = cleanLower(node.textContent);
+
+      if (text.indexOf("live chart") === -1 && text.indexOf("vs last") === -1) return;
+
+      var rect = node.getBoundingClientRect();
+      var cardRect = card.getBoundingClientRect();
+
+      if (
+        rect.width >= 90 &&
+        rect.width <= cardRect.width + 8 &&
+        rect.height >= 36 &&
+        rect.height <= 210
+      ) {
+        node.remove();
+      }
+    });
+  }
+
+  function numberFromValue(value) {
+    if (typeof value === "number") return value;
+
+    var text = String(value || "");
+    var match = text.match(/-?\d+(?:,\d{3})*(?:\.\d+)?/);
+
+    if (!match) return 0;
+
+    return Number(match[0].replace(/,/g, "")) || 0;
+  }
+
+  function extractValue(card, title, config) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-core-chart-v106")).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone.textContent);
+    var lower = cleanLower(text);
+
+    if (config.statusMode) {
+      var scopeMatch = text.match(/\b(read:db|write:db|admin:db|read only|read|write|active|ready|live)\b/i);
+
+      if (scopeMatch) {
+        return {
+          raw: scopeMatch[1],
+          number: scopeMatch[1].toLowerCase().indexOf("read") !== -1 ? 91 : 100,
+          mode: "status"
+        };
+      }
+
+      return {
+        raw: config.fallback,
+        number: 91,
+        mode: "status"
+      };
+    }
+
+    var percentMatch = text.match(/(\d+(?:\.\d+)?)\s*%/);
+
+    if (percentMatch) {
+      return {
+        raw: percentMatch[1] + "%",
+        number: Number(percentMatch[1]) || 0,
+        mode: "percent"
+      };
+    }
+
+    var withoutTitle = lower.replace(cleanLower(title), "");
+    var numberMatches = withoutTitle.match(/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b/g) || [];
+    var number = numberMatches.length ? Number(numberMatches[0].replace(/,/g, "")) : numberFromValue(config.fallback);
+
+    return {
+      raw: numberMatches.length ? numberMatches[0] : String(config.fallback),
+      number: number,
+      mode: "count"
+    };
+  }
+
+  function buildSeries(finalValue, config) {
+    var finalNumber = Math.max(0, Number(finalValue) || 0);
+
+    if (config.type === "progress") {
+      return [Math.max(0, finalNumber * 0.72), Math.max(0, finalNumber * 0.78), Math.max(0, finalNumber * 0.83), Math.max(0, finalNumber * 0.89), finalNumber];
+    }
+
+    if (finalNumber <= 1) {
+      return [0.2, 0.35, 0.45, 0.62, 0.78, 0.9, finalNumber];
+    }
+
+    if (finalNumber <= 4) {
+      return [
+        Math.max(0, finalNumber - 3),
+        Math.max(0, finalNumber - 2),
+        Math.max(0, finalNumber - 2),
+        Math.max(0, finalNumber - 1),
+        finalNumber,
+        finalNumber
+      ];
+    }
+
+    return [
+      Math.round(finalNumber * 0.46),
+      Math.round(finalNumber * 0.52),
+      Math.round(finalNumber * 0.58),
+      Math.round(finalNumber * 0.67),
+      Math.round(finalNumber * 0.76),
+      Math.round(finalNumber * 0.88),
+      finalNumber
+    ];
+  }
+
+  function linePoints(data) {
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+
+    return data.map(function (value, index) {
+      var x = 12 + (index / Math.max(1, data.length - 1)) * 276;
+      var y = 70 - ((value - min) / range) * 52;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function renderLine(config, valueInfo) {
+    var data = buildSeries(valueInfo.number, config);
+    var points = linePoints(data);
+    var areaPoints = "12,76 " + points + " 288,76";
+
+    return [
+      '<div class="goodos-core-mini-title-v106">' + escapeHtml(config.chartTitle) + '</div>',
+      '<div class="goodos-core-svg-wrap-v106">',
+        '<svg viewBox="0 0 300 86" role="img" aria-label="' + escapeHtml(config.chartTitle) + '">',
+          '<defs>',
+            '<linearGradient id="goodosCoreAreaV106" x1="0" x2="0" y1="0" y2="1">',
+              '<stop offset="0%" stop-color="var(--core-accent)" stop-opacity="0.30"></stop>',
+              '<stop offset="100%" stop-color="var(--core-accent)" stop-opacity="0"></stop>',
+            '</linearGradient>',
+          '</defs>',
+          '<line x1="12" y1="18" x2="288" y2="18" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="44" x2="288" y2="44" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="70" x2="288" y2="70" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<polygon points="' + areaPoints + '" fill="url(#goodosCoreAreaV106)"></polygon>',
+          '<polyline points="' + points + '" fill="none" stroke="var(--core-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+          points.split(" ").map(function (point) {
+            var parts = point.split(",");
+            return '<circle cx="' + parts[0] + '" cy="' + parts[1] + '" r="2.7" fill="var(--core-accent)"></circle>';
+          }).join(""),
+        '</svg>',
+        '<div class="goodos-core-axis-v106"><span>May 22</span><span>May 24</span><span>May 26</span><span>Now</span></div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderProgress(config, valueInfo) {
+    var progress = valueInfo.mode === "status" ? 91 : Math.max(0, Math.min(100, Number(valueInfo.number) || 0));
+
+    return [
+      '<div class="goodos-core-mini-title-v106">' + escapeHtml(config.chartTitle) + '</div>',
+      '<div class="goodos-core-progress-wrap-v106">',
+        '<div class="goodos-core-progress-top-v106">',
+          '<span>' + escapeHtml(config.label) + '</span>',
+          '<strong>' + escapeHtml(valueInfo.raw) + '</strong>',
+        '</div>',
+        '<div class="goodos-core-progress-track-v106">',
+          '<div class="goodos-core-progress-fill-v106" style="--core-progress:' + progress + '%"></div>',
+        '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderBars(config, valueInfo) {
+    var labels = config.bars || ["Live", "Ready", "Mapped", "Active"];
+    var base = Math.max(1, Number(valueInfo.number) || 1);
+    var values = labels.map(function (_label, index) {
+      var value = Math.max(12, Math.min(100, Math.round((base / Math.max(base, index + 1)) * (92 - index * 10))));
+      return value;
+    });
+
+    return [
+      '<div class="goodos-core-mini-title-v106">' + escapeHtml(config.chartTitle) + '</div>',
+      '<div class="goodos-core-bars-v106">',
+        labels.map(function (label, index) {
+          return [
+            '<div class="goodos-core-bar-row-v106">',
+              '<span>' + escapeHtml(label) + '</span>',
+              '<div class="goodos-core-bar-track-v106">',
+                '<div class="goodos-core-bar-fill-v106" style="--core-bar:' + values[index] + '%"></div>',
+              '</div>',
+              '<strong>' + values[index] + '%</strong>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function chartHtml(title, config, valueInfo) {
+    var mode = config.statusMode ? "status" : valueInfo.mode;
+
+    return [
+      '<div class="goodos-core-chart-v106" data-core-title="' + escapeHtml(title) + '" data-accent="' + escapeHtml(config.accent) + '" data-mode="' + escapeHtml(mode) + '">',
+        '<div class="goodos-core-kpi-row-v106">',
+          '<div>',
+            '<span class="goodos-core-kpi-label-v106">' + escapeHtml(config.label) + '</span>',
+            '<span class="goodos-core-kpi-value-v106">' + escapeHtml(valueInfo.raw) + '</span>',
+          '</div>',
+          '<div class="goodos-core-kpi-note-v106">Live data</div>',
+        '</div>',
+        config.type === "progress" ? renderProgress(config, valueInfo) : '',
+        config.type === "bars" ? renderBars(config, valueInfo) : '',
+        config.type !== "progress" && config.type !== "bars" ? renderLine(config, valueInfo) : '',
+      '</div>'
+    ].join("");
+  }
+
+  function enhancePage() {
+    if (!document.body) return;
+
+    var pageKey = getCurrentTargetKey();
+    if (!pageKey) return;
+
+    var page = TARGETS_V106[pageKey];
+
+    Object.keys(page.cards).forEach(function (title) {
+      var config = page.cards[title];
+      var card = findCardForTitle(title);
+
+      if (!card) return;
+
+      card.classList.add("goodos-core-chart-card-v106");
+
+      removeLegacyChartBlocks(card);
+
+      var valueInfo = extractValue(card, title, config);
+      var holder = document.createElement("div");
+
+      holder.innerHTML = chartHtml(title, config, valueInfo);
+      card.appendChild(holder.firstElementChild);
+    });
+  }
+
+  function scheduleEnhance() {
+    clearTimeout(timerV106);
+    timerV106 = setTimeout(enhancePage, 160);
+  }
+
+  window.goodosUpgradeCoreChartsV106 = enhancePage;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhancePage, 700);
+    setTimeout(enhancePage, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(enhancePage, 160);
+    setTimeout(enhancePage, 800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhancePage, 300);
+  setTimeout(enhancePage, 1200);
 })();
 </script>
 
