@@ -7210,6 +7210,338 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-observability-v105>
+.goodos-observability-v105-selected {
+  border-color: rgba(56, 189, 248, 0.88) !important;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.38),
+    0 22px 58px rgba(14, 165, 233, 0.16) !important;
+}
+
+.goodos-observability-v105-chart {
+  --obs-accent: #38bdf8;
+  --obs-accent-soft: rgba(56, 189, 248, 0.18);
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: rgba(255,255,255,0.94);
+}
+
+.goodos-observability-v105-chart[data-accent="purple"] {
+  --obs-accent: #a78bfa;
+  --obs-accent-soft: rgba(167,139,250,0.18);
+}
+
+.goodos-observability-v105-chart[data-accent="green"] {
+  --obs-accent: #22c55e;
+  --obs-accent-soft: rgba(34,197,94,0.16);
+}
+
+.goodos-observability-v105-kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.goodos-observability-v105-kpi-label {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(203,213,225,0.68);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.goodos-observability-v105-kpi-value {
+  display: inline-block;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.goodos-observability-v105-kpi-change {
+  display: inline-block;
+  margin-left: 7px;
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.goodos-observability-v105-mini-title {
+  margin: 8px 0 6px;
+  color: rgba(255,255,255,0.86);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.goodos-observability-v105-svg-wrap {
+  overflow: hidden;
+  padding: 8px 8px 5px;
+  border: 1px solid rgba(148,163,184,0.11);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 85% 0%, var(--obs-accent-soft), transparent 40%),
+    linear-gradient(180deg, rgba(7,12,24,0.62), rgba(7,12,24,0.32));
+}
+
+.goodos-observability-v105-svg-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.goodos-observability-v105-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  color: rgba(203,213,225,0.56);
+  font-size: 9px;
+}
+
+.goodos-observability-v105-panel {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  margin: 14px 0 22px;
+  padding: 22px;
+  border: 1px solid rgba(125,211,252,0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,0.13), transparent 34%),
+    linear-gradient(135deg, rgba(17,24,39,0.97), rgba(15,23,42,0.94));
+  box-shadow: 0 22px 65px rgba(0,0,0,0.26);
+  color: rgba(241,245,249,0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.goodos-observability-v105-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(56,189,248,0.10), transparent 28%, transparent 72%, rgba(167,139,250,0.08)),
+    radial-gradient(circle at 18% 0%, rgba(56,189,248,0.09), transparent 28%);
+}
+
+.goodos-observability-v105-panel-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.goodos-observability-v105-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.goodos-observability-v105-eyebrow {
+  margin-bottom: 8px;
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.goodos-observability-v105-title {
+  margin: 0;
+  color: white;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 0.95;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.goodos-observability-v105-subtitle {
+  margin: 10px 0 0;
+  max-width: 780px;
+  color: rgba(203,213,225,0.82);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.goodos-observability-v105-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.goodos-observability-v105-btn {
+  appearance: none;
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 999px;
+  background: rgba(15,23,42,0.76);
+  color: rgba(241,245,249,0.92);
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-observability-v105-btn:hover {
+  border-color: rgba(125,211,252,0.5);
+  background: rgba(14,116,144,0.20);
+}
+
+.goodos-observability-v105-btn-danger {
+  border-color: rgba(248,113,113,0.28);
+  color: #fecaca;
+}
+
+.goodos-observability-v105-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.goodos-observability-v105-metric {
+  padding: 14px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 17px;
+  background: rgba(2,6,23,0.34);
+}
+
+.goodos-observability-v105-metric-label {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(203,213,225,0.64);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-observability-v105-metric-value {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.goodos-observability-v105-table-section {
+  margin-top: 18px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(2,6,23,0.26);
+}
+
+.goodos-observability-v105-table-title {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(148,163,184,0.12);
+  color: rgba(224,242,254,0.92);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goodos-observability-v105-table-wrap {
+  overflow-x: auto;
+}
+
+.goodos-observability-v105-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+}
+
+.goodos-observability-v105-table th,
+.goodos-observability-v105-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148,163,184,0.10);
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-observability-v105-table th {
+  color: rgba(186,230,253,0.78);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-observability-v105-table td {
+  color: rgba(226,232,240,0.88);
+  max-width: 430px;
+  word-break: break-word;
+}
+
+.goodos-observability-v105-notes {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.goodos-observability-v105-note {
+  padding: 11px 13px;
+  border: 1px solid rgba(45,212,191,0.18);
+  border-radius: 14px;
+  background: rgba(20,184,166,0.07);
+  color: rgba(204,251,241,0.88);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-observability-v105-loading,
+.goodos-observability-v105-error,
+.goodos-observability-v105-empty {
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(2,6,23,0.34);
+  color: rgba(226,232,240,0.78);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.goodos-observability-v105-error {
+  border: 1px solid rgba(248,113,113,0.30);
+  background: rgba(127,29,29,0.18);
+  color: #fecaca;
+}
+
+@media (max-width: 980px) {
+  .goodos-observability-v105-panel-head {
+    display: block;
+  }
+
+  .goodos-observability-v105-actions {
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .goodos-observability-v105-metrics {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .goodos-observability-v105-kpis,
+  .goodos-observability-v105-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -28656,6 +28988,600 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(enhanceOperateConsole, 300);
   setTimeout(enhanceOperateConsole, 1200);
+})();
+</script>
+
+
+<script data-goodos-observability-v105>
+(function () {
+  var OBS_V105 = {
+    "Storage": {
+      key: "storage",
+      label: "Storage",
+      endpoint: "/api/admin/operate-console/observability/section/storage",
+      accent: "cyan",
+      metrics: [["Storage", "Live", "scan"], ["Disk", "Ready", "df"]],
+      title: "Storage Health",
+      data: [31, 36, 42, 48, 54, 59, 66, 74]
+    },
+    "Realtime": {
+      key: "realtime",
+      label: "Realtime",
+      endpoint: "/api/admin/operate-console/observability/section/realtime",
+      accent: "purple",
+      metrics: [["Realtime", "Live", "scan"], ["Signals", "Active", "events"]],
+      title: "Realtime Signals",
+      data: [12, 15, 19, 28, 34, 42, 55, 67]
+    },
+    "New Custom Report": {
+      key: "new-custom-report",
+      label: "New Custom Report",
+      endpoint: "/api/admin/operate-console/observability/section/new-custom-report",
+      accent: "green",
+      metrics: [["Reports", "Ready", "json"], ["Builder", "Live", "read"]],
+      title: "Report Builder Readiness",
+      data: [22, 28, 35, 43, 52, 61, 72, 84]
+    }
+  };
+
+  var activeCard = null;
+  var activeKey = null;
+  var activePanel = null;
+  var timer = null;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function isObservabilityPage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash.indexOf("observability") !== -1) return true;
+
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    return bodyText.indexOf("observability") !== -1 &&
+      bodyText.indexOf("service health") !== -1 &&
+      bodyText.indexOf("custom reports") !== -1;
+  }
+
+  function looksLikeJwt(value) {
+    return typeof value === "string" && value.split(".").length === 3 && value.length > 40;
+  }
+
+  function findTokenInStorage(storage) {
+    if (!storage) return "";
+
+    var preferredKeys = [
+      "token",
+      "authToken",
+      "accessToken",
+      "access_token",
+      "jwt",
+      "goodos_token",
+      "goodos_access_token",
+      "goodos.auth.token",
+      "goodos.auth.accessToken",
+      "GoodOS.token",
+      "goodosBackendToken"
+    ];
+
+    for (var i = 0; i < preferredKeys.length; i++) {
+      try {
+        var direct = storage.getItem(preferredKeys[i]);
+        if (looksLikeJwt(direct)) return direct;
+
+        if (direct && direct.charAt(0) === "{") {
+          var parsed = JSON.parse(direct);
+          var nested = parsed.token || parsed.accessToken || parsed.access_token || parsed.jwt;
+          if (looksLikeJwt(nested)) return nested;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      for (var k = 0; k < storage.length; k++) {
+        var key = storage.key(k);
+        var value = storage.getItem(key);
+
+        if (looksLikeJwt(value)) return value;
+
+        if (value && value.charAt(0) === "{") {
+          try {
+            var obj = JSON.parse(value);
+            var token = obj.token || obj.accessToken || obj.access_token || obj.jwt;
+            if (looksLikeJwt(token)) return token;
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function getAuthToken() {
+    return (
+      findTokenInStorage(window.localStorage) ||
+      findTokenInStorage(window.sessionStorage) ||
+      window.goodosAccessToken ||
+      window.goodosAuthToken ||
+      ""
+    );
+  }
+
+  function apiFetch(url) {
+    var headers = { "Accept": "application/json" };
+    var token = getAuthToken();
+
+    if (token) headers.Authorization = "Bearer " + token;
+
+    return fetch(url, {
+      method: "GET",
+      headers: headers,
+      credentials: "same-origin",
+      cache: "no-store"
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (_) {}
+
+        if (!res.ok) {
+          var message = json && json.message ? json.message : "Request failed: " + res.status;
+          var err = new Error(message);
+          err.status = res.status;
+          err.payload = json;
+          throw err;
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function findCardForTitle(title) {
+    var wanted = cleanLower(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+
+      if (cleanLower(el.textContent) !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 9 && node && node !== document.body; depth++) {
+        if (node.classList && node.classList.contains("goodos-observability-v105-panel")) break;
+
+        var rect = node.getBoundingClientRect();
+        var nodeText = cleanLower(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (
+          rect.width >= 170 &&
+          rect.height >= 65 &&
+          nodeText.indexOf(wanted) !== -1 &&
+          nodeText.indexOf("observability live section") === -1
+        ) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function linePoints(data) {
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+
+    return data.map(function (value, index) {
+      var x = 12 + (index / Math.max(1, data.length - 1)) * 276;
+      var y = 70 - ((value - min) / range) * 52;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function chartHtml(config) {
+    var points = linePoints(config.data || [1, 2, 3, 4]);
+    var areaPoints = "12,76 " + points + " 288,76";
+
+    return [
+      '<div class="goodos-observability-v105-chart" data-accent="' + escapeHtml(config.accent || "cyan") + '">',
+        '<div class="goodos-observability-v105-kpis">',
+          (config.metrics || []).map(function (metric) {
+            return [
+              '<div>',
+                '<span class="goodos-observability-v105-kpi-label">' + escapeHtml(metric[0]) + '</span>',
+                '<span class="goodos-observability-v105-kpi-value">' + escapeHtml(metric[1]) + '</span>',
+                '<span class="goodos-observability-v105-kpi-change">' + escapeHtml(metric[2] || "") + '</span>',
+              '</div>'
+            ].join("");
+          }).join(""),
+        '</div>',
+        '<div class="goodos-observability-v105-mini-title">' + escapeHtml(config.title || "Activity") + '</div>',
+        '<div class="goodos-observability-v105-svg-wrap">',
+          '<svg viewBox="0 0 300 86" role="img" aria-label="' + escapeHtml(config.title || "Observability chart") + '">',
+            '<defs>',
+              '<linearGradient id="goodosObservabilityV105Area" x1="0" x2="0" y1="0" y2="1">',
+                '<stop offset="0%" stop-color="var(--obs-accent)" stop-opacity="0.28"></stop>',
+                '<stop offset="100%" stop-color="var(--obs-accent)" stop-opacity="0"></stop>',
+              '</linearGradient>',
+            '</defs>',
+            '<line x1="12" y1="18" x2="288" y2="18" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+            '<line x1="12" y1="44" x2="288" y2="44" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+            '<line x1="12" y1="70" x2="288" y2="70" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+            '<polygon points="' + areaPoints + '" fill="url(#goodosObservabilityV105Area)"></polygon>',
+            '<polyline points="' + points + '" fill="none" stroke="var(--obs-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+            points.split(" ").map(function (point) {
+              var parts = point.split(",");
+              return '<circle cx="' + parts[0] + '" cy="' + parts[1] + '" r="2.6" fill="var(--obs-accent)"></circle>';
+            }).join(""),
+          '</svg>',
+          '<div class="goodos-observability-v105-axis"><span>May 22</span><span>May 24</span><span>May 26</span><span>May 28</span></div>',
+        '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function addCharts() {
+    if (!document.body || !isObservabilityPage()) return;
+
+    Object.keys(OBS_V105).forEach(function (title) {
+      var card = findCardForTitle(title);
+      if (!card) return;
+
+      if (card.querySelector('.goodos-observability-v105-chart[data-observability-v105-title="' + title + '"]')) return;
+
+      var wrapper = document.createElement("div");
+      wrapper.innerHTML = chartHtml(OBS_V105[title]);
+
+      var chart = wrapper.firstElementChild;
+      chart.setAttribute("data-observability-v105-title", title);
+
+      card.appendChild(chart);
+    });
+  }
+
+  function removePanel() {
+    if (activePanel && activePanel.parentNode) {
+      activePanel.parentNode.removeChild(activePanel);
+    }
+
+    if (activeCard) {
+      activeCard.classList.remove("goodos-observability-v105-selected");
+      activeCard.removeAttribute("data-goodos-observability-v105-active");
+    }
+
+    activeCard = null;
+    activeKey = null;
+    activePanel = null;
+  }
+
+  function panelShell(section) {
+    var panel = document.createElement("section");
+    panel.className = "goodos-observability-v105-panel";
+    panel.setAttribute("data-goodos-observability-v105-panel-key", section.key);
+
+    panel.innerHTML = [
+      '<div class="goodos-observability-v105-panel-inner">',
+        '<div class="goodos-observability-v105-panel-head">',
+          '<div>',
+            '<div class="goodos-observability-v105-eyebrow">Observability Live Section</div>',
+            '<h2 class="goodos-observability-v105-title">' + escapeHtml(section.label) + '</h2>',
+            '<p class="goodos-observability-v105-subtitle">Loading live data from <strong>' + escapeHtml(section.endpoint) + '</strong>.</p>',
+          '</div>',
+          '<div class="goodos-observability-v105-actions">',
+            '<button class="goodos-observability-v105-btn" type="button" data-obs-v105-action="refresh">Refresh Section</button>',
+            '<button class="goodos-observability-v105-btn" type="button" data-obs-v105-action="copy">Copy JSON</button>',
+            '<button class="goodos-observability-v105-btn" type="button" data-obs-v105-action="open-api">Open API</button>',
+            '<button class="goodos-observability-v105-btn goodos-observability-v105-btn-danger" type="button" data-obs-v105-action="deselect">Deselect</button>',
+          '</div>',
+        '</div>',
+        '<div data-obs-v105-panel-body><div class="goodos-observability-v105-loading">Loading live observability data...</div></div>',
+      '</div>'
+    ].join("");
+
+    panel.__goodosObsV105Section = section;
+    panel.__goodosObsV105Payload = null;
+
+    panel.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-obs-v105-action]");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var action = button.getAttribute("data-obs-v105-action");
+
+      if (action === "deselect") {
+        removePanel();
+        return;
+      }
+
+      if (action === "refresh") {
+        loadPanelData(panel, section);
+        return;
+      }
+
+      if (action === "copy") {
+        copyPanelJson(panel);
+        return;
+      }
+
+      if (action === "open-api") {
+        window.open(section.endpoint, "_blank", "noopener,noreferrer");
+      }
+    });
+
+    return panel;
+  }
+
+  function renderMetrics(metrics) {
+    if (!metrics || !metrics.length) {
+      return '<div class="goodos-observability-v105-empty">No metrics returned.</div>';
+    }
+
+    return [
+      '<div class="goodos-observability-v105-metrics">',
+        metrics.map(function (item) {
+          return [
+            '<div class="goodos-observability-v105-metric">',
+              '<span class="goodos-observability-v105-metric-label">' + escapeHtml(item.label) + '</span>',
+              '<span class="goodos-observability-v105-metric-value">' + escapeHtml(item.value) + '</span>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderTable(table) {
+    var columns = table.columns || [];
+    var rows = table.rows || [];
+
+    if (!columns.length && rows.length) columns = Object.keys(rows[0]);
+
+    return [
+      '<section class="goodos-observability-v105-table-section">',
+        '<div class="goodos-observability-v105-table-title">' + escapeHtml(table.title || "Data") + '</div>',
+        rows.length ? [
+          '<div class="goodos-observability-v105-table-wrap">',
+            '<table class="goodos-observability-v105-table">',
+              '<thead><tr>',
+                columns.map(function (column) {
+                  return '<th>' + escapeHtml(column) + '</th>';
+                }).join(""),
+              '</tr></thead>',
+              '<tbody>',
+                rows.slice(0, 70).map(function (row) {
+                  return [
+                    '<tr>',
+                      columns.map(function (column) {
+                        return '<td>' + escapeHtml(row && row[column] != null ? row[column] : "") + '</td>';
+                      }).join(""),
+                    '</tr>'
+                  ].join("");
+                }).join(""),
+              '</tbody>',
+            '</table>',
+          '</div>',
+          rows.length > 70 ? '<div class="goodos-observability-v105-empty">Showing first 70 rows of ' + rows.length + '.</div>' : ''
+        ].join("") : '<div class="goodos-observability-v105-empty">No rows returned.</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function renderNotes(notes) {
+    if (!notes || !notes.length) return "";
+
+    return [
+      '<div class="goodos-observability-v105-notes">',
+        notes.map(function (note) {
+          return '<div class="goodos-observability-v105-note">' + escapeHtml(note) + '</div>';
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderPanelData(panel, payload) {
+    var body = panel.querySelector("[data-obs-v105-panel-body]");
+    var subtitle = panel.querySelector(".goodos-observability-v105-subtitle");
+
+    if (subtitle) {
+      subtitle.innerHTML = escapeHtml(payload.subtitle || "Live observability data loaded.") +
+        '<br><span style="color:rgba(203,213,225,.62);font-size:12px;">Generated: ' +
+        escapeHtml(payload.generatedAt || new Date().toISOString()) +
+        '</span>';
+    }
+
+    body.innerHTML = [
+      renderMetrics(payload.metrics || []),
+      (payload.tables || []).map(renderTable).join(""),
+      renderNotes(payload.notes || [])
+    ].join("");
+
+    panel.__goodosObsV105Payload = payload;
+  }
+
+  function renderPanelError(panel, err) {
+    var body = panel.querySelector("[data-obs-v105-panel-body]");
+    var message = err && err.message ? err.message : "Observability section failed to load.";
+
+    body.innerHTML = [
+      '<div class="goodos-observability-v105-error">',
+        '<strong>Load failed:</strong> ' + escapeHtml(message),
+        err && err.status === 401 ? '<br><br>Your login token was not accepted. Log out and log back in, then reopen this tab.' : '',
+      '</div>'
+    ].join("");
+  }
+
+  function loadPanelData(panel, section) {
+    var body = panel.querySelector("[data-obs-v105-panel-body]");
+    body.innerHTML = '<div class="goodos-observability-v105-loading">Loading live ' + escapeHtml(section.label) + ' data...</div>';
+
+    apiFetch(section.endpoint)
+      .then(function (payload) {
+        renderPanelData(panel, payload || {});
+      })
+      .catch(function (err) {
+        renderPanelError(panel, err);
+      });
+  }
+
+  function copyPanelJson(panel) {
+    var payload = panel.__goodosObsV105Payload;
+    if (!payload) return;
+
+    var text = JSON.stringify(payload, null, 2);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+  }
+
+  function openPanelForCard(card, section) {
+    if (activeCard === card && activeKey === section.key) {
+      removePanel();
+      return;
+    }
+
+    removePanel();
+
+    activeCard = card;
+    activeKey = section.key;
+
+    card.classList.add("goodos-observability-v105-selected");
+    card.setAttribute("data-goodos-observability-v105-active", "true");
+
+    var panel = panelShell(section);
+    activePanel = panel;
+
+    card.insertAdjacentElement("afterend", panel);
+
+    setTimeout(function () {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }, 80);
+
+    loadPanelData(panel, section);
+  }
+
+  function enhanceCard(title, section) {
+    var card = findCardForTitle(title);
+    if (!card) return;
+
+    var marker = "true:" + section.key;
+
+    if (card.getAttribute("data-goodos-observability-v105-functional") === marker) return;
+
+    card.setAttribute("data-goodos-observability-v105-functional", marker);
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", function (event) {
+      if (!isObservabilityPage()) return;
+
+      if (
+        event.target.closest("button") ||
+        event.target.closest("a") ||
+        event.target.closest("input") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea") ||
+        event.target.closest(".goodos-observability-v105-panel")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      openPanelForCard(card, section);
+    });
+  }
+
+  function enhanceObservabilityV105() {
+    if (!document.body || !isObservabilityPage()) return;
+
+    addCharts();
+
+    Object.keys(OBS_V105).forEach(function (title) {
+      enhanceCard(title, OBS_V105[title]);
+    });
+  }
+
+  function scheduleEnhance() {
+    clearTimeout(timer);
+    timer = setTimeout(enhanceObservabilityV105, 120);
+  }
+
+  window.goodosEnhanceObservabilityMissingChartsV105 = enhanceObservabilityV105;
+  window.goodosCloseObservabilityV105Panel = removePanel;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhanceObservabilityV105, 700);
+    setTimeout(enhanceObservabilityV105, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    removePanel();
+    setTimeout(enhanceObservabilityV105, 150);
+    setTimeout(enhanceObservabilityV105, 800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhanceObservabilityV105, 300);
+  setTimeout(enhanceObservabilityV105, 1200);
 })();
 </script>
 

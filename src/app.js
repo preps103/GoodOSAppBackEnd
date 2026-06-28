@@ -11,6 +11,21 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS OBSERVABILITY V105 MISSING CARDS API MOUNT */
+try {
+  const goodosObservabilityV105Router = require('./routes/observability-v105.routes');
+
+  app.use('/api/admin/operate-console/observability', goodosObservabilityV105Router);
+  app.use('/api/operate-console/observability', goodosObservabilityV105Router);
+
+  console.log('GOODOS V105 Observability missing-card API mounted');
+} catch (err) {
+  console.error('GOODOS V105 Observability missing-card API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS OBSERVABILITY V105 MISSING CARDS API MOUNT */
+
+
+
 /* GOODOS OPERATE CONSOLES V104 API MOUNT */
 try {
   const goodosOperateConsolesRouterV104 = require('./routes/operate-consoles.routes');
