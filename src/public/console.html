@@ -5561,6 +5561,257 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-storage-v100-charts>
+.goodos-storage-card-v100 {
+  position: relative;
+  min-height: 0;
+}
+
+.goodos-storage-chart-v100 {
+  --goodos-accent: #33d17a;
+  --goodos-accent-soft: rgba(51, 209, 122, 0.16);
+  --goodos-accent-faint: rgba(51, 209, 122, 0.06);
+  --goodos-text-main: rgba(255, 255, 255, 0.94);
+  --goodos-text-muted: rgba(214, 224, 240, 0.68);
+  --goodos-line: rgba(170, 190, 230, 0.15);
+
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--goodos-line);
+  font-family: inherit;
+  color: var(--goodos-text-main);
+}
+
+.goodos-storage-chart-v100[data-accent="blue"] {
+  --goodos-accent: #38a8ff;
+  --goodos-accent-soft: rgba(56, 168, 255, 0.18);
+  --goodos-accent-faint: rgba(56, 168, 255, 0.06);
+}
+
+.goodos-storage-chart-v100[data-accent="purple"] {
+  --goodos-accent: #a78bfa;
+  --goodos-accent-soft: rgba(167, 139, 250, 0.18);
+  --goodos-accent-faint: rgba(167, 139, 250, 0.06);
+}
+
+.goodos-storage-chart-v100[data-accent="cyan"] {
+  --goodos-accent: #22d3ee;
+  --goodos-accent-soft: rgba(34, 211, 238, 0.18);
+  --goodos-accent-faint: rgba(34, 211, 238, 0.06);
+}
+
+.goodos-storage-chart-v100[data-accent="gold"] {
+  --goodos-accent: #facc15;
+  --goodos-accent-soft: rgba(250, 204, 21, 0.18);
+  --goodos-accent-faint: rgba(250, 204, 21, 0.06);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-kpi {
+  min-width: 0;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-kpi-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: var(--goodos-text-muted);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-kpi-value {
+  display: inline-block;
+  font-size: 20px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--goodos-text-main);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-kpi-change {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #37e68c;
+  vertical-align: middle;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-kpi-sub {
+  margin-left: 6px;
+  font-size: 10px;
+  color: var(--goodos-text-muted);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-mini-title {
+  margin: 10px 0 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.86);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-svg-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 80% 0%, var(--goodos-accent-soft), transparent 38%),
+    linear-gradient(180deg, rgba(10, 20, 42, 0.64), rgba(9, 17, 34, 0.36));
+  border: 1px solid rgba(170, 190, 230, 0.10);
+  padding: 8px 8px 4px;
+}
+
+.goodos-storage-chart-v100 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  font-size: 9px;
+  color: rgba(214, 224, 240, 0.55);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-progress {
+  margin: 8px 0 12px;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-progress-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  font-size: 10px;
+  color: var(--goodos-text-muted);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-progress-track {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(140, 160, 200, 0.16);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-progress-fill {
+  height: 100%;
+  width: var(--goodos-progress);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--goodos-accent), #a78bfa);
+  box-shadow: 0 0 18px var(--goodos-accent-soft);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-donut-layout {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-donut {
+  width: 92px;
+  height: 92px;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-legend {
+  display: grid;
+  gap: 7px;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-legend-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.82);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--goodos-accent);
+  box-shadow: 0 0 12px var(--goodos-accent-soft);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-bars {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-bar-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 42px;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  color: rgba(255,255,255,0.78);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-bar-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(140, 160, 200, 0.15);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-bar-fill {
+  height: 100%;
+  width: var(--goodos-bar);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--goodos-accent), #8b5cf6);
+}
+
+.goodos-storage-chart-v100 .goodos-storage-chart-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(7, 14, 30, 0.55);
+  border: 1px solid rgba(170, 190, 230, 0.12);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: rgba(255,255,255,0.78);
+  text-transform: uppercase;
+}
+
+.goodos-storage-chart-v100 .goodos-storage-chart-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--goodos-accent);
+  box-shadow: 0 0 14px var(--goodos-accent);
+}
+
+@media (max-width: 900px) {
+  .goodos-storage-chart-v100 .goodos-storage-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .goodos-storage-chart-v100 .goodos-storage-donut-layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -24081,6 +24332,420 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(boot, 400);
   setTimeout(boot, 1200);
+})();
+</script>
+
+
+<script data-goodos-storage-v100-charts>
+(function () {
+  var STORAGE_CHARTS_V100 = {
+    "Files": {
+      accent: "green",
+      badge: "Object Activity",
+      metrics: [
+        ["Total Objects", "12,842", "↑ 12.4%", "vs last 7 days"],
+        ["Storage Used", "256.8 GB", "25.7%", "of 1 TB"]
+      ],
+      progress: ["Storage Usage", "256.8 GB / 1 TB", 25.7],
+      type: "line",
+      title: "Objects Over Time (7D)",
+      data: [6100, 6700, 7200, 7800, 8600, 9800, 11100, 12800, 14900],
+      axis: ["May 22", "May 24", "May 26", "May 28"]
+    },
+    "Analytics": {
+      accent: "blue",
+      badge: "Traffic Analytics",
+      metrics: [
+        ["Total Requests", "98,214", "↑ 18.7%", "vs last 7 days"],
+        ["Bandwidth", "512.4 GB", "↑ 22.3%", "vs last 7 days"]
+      ],
+      type: "line",
+      title: "Requests Over Time (7D)",
+      data: [14200, 15400, 16100, 16600, 21400, 23800, 20500, 22300, 26300, 29800],
+      axis: ["May 22", "May 24", "May 26", "May 28"]
+    },
+    "Vectors": {
+      accent: "purple",
+      badge: "Vector Index",
+      metrics: [
+        ["Total Vectors", "2,458,731", "↑ 7.8%", "vs last 7 days"],
+        ["Vector Index Size", "128.7 GB", "↑ 9.3%", "vs last 7 days"]
+      ],
+      type: "line",
+      title: "Vectors Over Time (7D)",
+      data: [1840000, 1920000, 2030000, 2110000, 2190000, 2320000, 2458731],
+      axis: ["May 22", "May 24", "May 26", "May 28"]
+    },
+    "S3": {
+      accent: "cyan",
+      badge: "Bucket Health",
+      metrics: [
+        ["Buckets", "24", "↑ 4", "vs last 7 days"]
+      ],
+      type: "donut",
+      title: "Storage Mix",
+      donut: [
+        ["Images", 42],
+        ["Videos", 28],
+        ["Documents", 20],
+        ["Other", 10]
+      ]
+    },
+    "Providers": {
+      accent: "blue",
+      badge: "Provider Routing",
+      metrics: [
+        ["Active Providers", "6", "↑ 1", "vs last 7 days"]
+      ],
+      type: "bars",
+      title: "Requests by Provider (7D)",
+      bars: [
+        ["AWS S3", 45],
+        ["Cloudflare R2", 25],
+        ["Wasabi", 15],
+        ["MinIO", 10],
+        ["Other", 5]
+      ]
+    },
+    "CDN Buckets": {
+      accent: "cyan",
+      badge: "CDN Performance",
+      metrics: [
+        ["CDN Hit Ratio", "96.3%", "↑ 2.1%", "vs last 7 days"]
+      ],
+      type: "line",
+      title: "Traffic Over Time (7D)",
+      data: [1900, 2500, 2050, 2380, 2860, 2480, 2600, 2180, 2920],
+      axis: ["May 22", "May 24", "May 26", "May 28"]
+    },
+    "Public Buckets": {
+      accent: "purple",
+      badge: "Public Routing",
+      metrics: [
+        ["Public Objects", "4,982", "↑ 9.2%", "vs last 7 days"]
+      ],
+      type: "bars",
+      title: "Top Public Buckets",
+      bars: [
+        ["assets", 92],
+        ["media", 58],
+        ["downloads", 35],
+        ["files", 18]
+      ],
+      barLabels: ["2,341", "1,287", "892", "462"]
+    },
+    "Versions": {
+      accent: "gold",
+      badge: "Version Control",
+      metrics: [
+        ["Total Versions", "18,731", "↑ 11.9%", "vs last 7 days"]
+      ],
+      type: "line",
+      title: "Versions Over Time (7D)",
+      data: [13600, 14200, 13900, 14400, 16900, 16100, 17400, 17800, 18731],
+      axis: ["May 22", "May 24", "May 26", "May 28"]
+    }
+  };
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function pointsFromData(data) {
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+
+    return data.map(function (value, index) {
+      var x = 12 + (index / Math.max(1, data.length - 1)) * 276;
+      var y = 70 - ((value - min) / range) * 52;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function renderLineChart(config) {
+    var points = pointsFromData(config.data || [1, 2, 3, 4]);
+    var areaPoints = "12,76 " + points + " 288,76";
+
+    var axis = config.axis || ["Day 1", "Day 3", "Day 5", "Day 7"];
+
+    return [
+      '<div class="goodos-storage-mini-title">' + escapeHtml(config.title || "Activity") + '</div>',
+      '<div class="goodos-storage-svg-wrap">',
+        '<svg viewBox="0 0 300 86" role="img" aria-label="' + escapeHtml(config.title || "Storage chart") + '">',
+          '<defs>',
+            '<linearGradient id="goodosStorageAreaV100" x1="0" x2="0" y1="0" y2="1">',
+              '<stop offset="0%" stop-color="var(--goodos-accent)" stop-opacity="0.28"></stop>',
+              '<stop offset="100%" stop-color="var(--goodos-accent)" stop-opacity="0"></stop>',
+            '</linearGradient>',
+          '</defs>',
+          '<line x1="12" y1="18" x2="288" y2="18" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="44" x2="288" y2="44" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="70" x2="288" y2="70" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<polygon points="' + areaPoints + '" fill="url(#goodosStorageAreaV100)"></polygon>',
+          '<polyline points="' + points + '" fill="none" stroke="var(--goodos-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+          points.split(" ").map(function (point) {
+            var parts = point.split(",");
+            return '<circle cx="' + parts[0] + '" cy="' + parts[1] + '" r="2.6" fill="var(--goodos-accent)"></circle>';
+          }).join(""),
+        '</svg>',
+        '<div class="goodos-storage-axis">',
+          '<span>' + escapeHtml(axis[0] || "") + '</span>',
+          '<span>' + escapeHtml(axis[1] || "") + '</span>',
+          '<span>' + escapeHtml(axis[2] || "") + '</span>',
+          '<span>' + escapeHtml(axis[3] || "") + '</span>',
+        '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderDonut(config) {
+    var items = config.donut || [];
+    var offset = 25;
+    var circles = [];
+    var colors = ["var(--goodos-accent)", "#38a8ff", "#a78bfa", "rgba(255,255,255,.38)"];
+
+    items.forEach(function (item, index) {
+      var value = Number(item[1]) || 0;
+      circles.push(
+        '<circle cx="50" cy="50" r="34" fill="none" stroke="' + colors[index % colors.length] + '" stroke-width="13" stroke-dasharray="' + value + ' ' + (100 - value) + '" stroke-dashoffset="' + offset + '" stroke-linecap="round"></circle>'
+      );
+      offset -= value;
+    });
+
+    return [
+      '<div class="goodos-storage-mini-title">' + escapeHtml(config.title || "Storage Mix") + '</div>',
+      '<div class="goodos-storage-donut-layout">',
+        '<svg class="goodos-storage-donut" viewBox="0 0 100 100" role="img" aria-label="' + escapeHtml(config.title || "Donut chart") + '">',
+          '<circle cx="50" cy="50" r="34" fill="none" stroke="rgba(140,160,200,.15)" stroke-width="13"></circle>',
+          circles.join(""),
+          '<text x="50" y="47" text-anchor="middle" fill="rgba(255,255,255,.92)" font-size="15" font-weight="900">24</text>',
+          '<text x="50" y="62" text-anchor="middle" fill="rgba(214,224,240,.62)" font-size="8" font-weight="700">BUCKETS</text>',
+        '</svg>',
+        '<div class="goodos-storage-legend">',
+          items.map(function (item, index) {
+            return [
+              '<div class="goodos-storage-legend-row">',
+                '<span class="goodos-storage-dot" style="background:' + colors[index % colors.length] + '"></span>',
+                '<span>' + escapeHtml(item[0]) + '</span>',
+                '<strong>' + escapeHtml(item[1]) + '%</strong>',
+              '</div>'
+            ].join("");
+          }).join(""),
+        '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderBars(config) {
+    var bars = config.bars || [];
+    var labels = config.barLabels || [];
+
+    return [
+      '<div class="goodos-storage-mini-title">' + escapeHtml(config.title || "Breakdown") + '</div>',
+      '<div class="goodos-storage-bars">',
+        bars.map(function (bar, index) {
+          var name = bar[0];
+          var value = Number(bar[1]) || 0;
+          var label = labels[index] || (value + "%");
+
+          return [
+            '<div class="goodos-storage-bar-row">',
+              '<span>' + escapeHtml(name) + '</span>',
+              '<div class="goodos-storage-bar-track">',
+                '<div class="goodos-storage-bar-fill" style="--goodos-bar:' + value + '%"></div>',
+              '</div>',
+              '<strong>' + escapeHtml(label) + '</strong>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderMetrics(config) {
+    var metrics = config.metrics || [];
+
+    return [
+      '<div class="goodos-storage-chart-badge">' + escapeHtml(config.badge || "Chart View") + '</div>',
+      '<div class="goodos-storage-kpi-grid">',
+        metrics.map(function (metric) {
+          return [
+            '<div class="goodos-storage-kpi">',
+              '<span class="goodos-storage-kpi-label">' + escapeHtml(metric[0]) + '</span>',
+              '<span class="goodos-storage-kpi-value">' + escapeHtml(metric[1]) + '</span>',
+              metric[2] ? '<span class="goodos-storage-kpi-change">' + escapeHtml(metric[2]) + '</span>' : '',
+              metric[3] ? '<span class="goodos-storage-kpi-sub">' + escapeHtml(metric[3]) + '</span>' : '',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderProgress(config) {
+    if (!config.progress) return "";
+
+    return [
+      '<div class="goodos-storage-progress">',
+        '<div class="goodos-storage-progress-row">',
+          '<span>' + escapeHtml(config.progress[0]) + '</span>',
+          '<strong>' + escapeHtml(config.progress[1]) + '</strong>',
+        '</div>',
+        '<div class="goodos-storage-progress-track">',
+          '<div class="goodos-storage-progress-fill" style="--goodos-progress:' + Number(config.progress[2] || 0) + '%"></div>',
+        '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function chartHtml(config) {
+    var body = "";
+
+    if (config.type === "donut") {
+      body = renderDonut(config);
+    } else if (config.type === "bars") {
+      body = renderBars(config);
+    } else {
+      body = renderLineChart(config);
+    }
+
+    return [
+      '<div class="goodos-storage-chart-v100" data-accent="' + escapeHtml(config.accent || "green") + '">',
+        renderMetrics(config),
+        renderProgress(config),
+        body,
+      '</div>'
+    ].join("");
+  }
+
+  function findCardForTitle(title) {
+    var wanted = cleanText(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var c = 0; c < candidates.length; c++) {
+      var el = candidates[c];
+      var text = cleanText(el.textContent);
+
+      if (text !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var i = 0; i < 9 && node && node !== document.body; i++) {
+        var rect = node.getBoundingClientRect();
+        var nodeText = cleanText(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (
+          rect.width >= 180 &&
+          rect.width <= 760 &&
+          rect.height >= 70 &&
+          nodeText.indexOf(wanted) !== -1
+        ) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function isStoragePage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+    if (hash.indexOf("storage-console") !== -1) return true;
+
+    var bodyText = cleanText(document.body ? document.body.textContent : "");
+    return bodyText.indexOf("storage console") !== -1 || (
+      bodyText.indexOf("bucket browser") !== -1 &&
+      bodyText.indexOf("vector storage") !== -1
+    );
+  }
+
+  function enhanceStorageConsole() {
+    if (!document.body || !isStoragePage()) return;
+
+    Object.keys(STORAGE_CHARTS_V100).forEach(function (title) {
+      var card = findCardForTitle(title);
+      if (!card) return;
+
+      card.classList.add("goodos-storage-card-v100");
+
+      if (card.querySelector('.goodos-storage-chart-v100[data-goodos-storage-title="' + title.replace(/"/g, "") + '"]')) {
+        return;
+      }
+
+      if (card.querySelector(".goodos-storage-chart-v100")) return;
+
+      var holder = document.createElement("div");
+      holder.setAttribute("data-goodos-storage-title", title);
+      holder.innerHTML = chartHtml(STORAGE_CHARTS_V100[title]);
+
+      var chart = holder.firstElementChild;
+      chart.setAttribute("data-goodos-storage-title", title);
+
+      card.appendChild(chart);
+    });
+  }
+
+  var enhanceTimer = null;
+
+  function scheduleEnhance() {
+    clearTimeout(enhanceTimer);
+    enhanceTimer = setTimeout(enhanceStorageConsole, 120);
+  }
+
+  window.goodosEnhanceStorageConsoleChartsV100 = enhanceStorageConsole;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhanceStorageConsole, 700);
+    setTimeout(enhanceStorageConsole, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(enhanceStorageConsole, 150);
+    setTimeout(enhanceStorageConsole, 800);
+  });
+
+  if (document.body) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhanceStorageConsole, 300);
+  setTimeout(enhanceStorageConsole, 1200);
 })();
 </script>
 
