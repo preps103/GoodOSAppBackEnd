@@ -8187,6 +8187,107 @@ button[title*="Skeleton"] {
 }
 </style>
 
+
+<style data-goodos-targeted-chart-fit-v119>
+.goodos-chart-card-v119 {
+  box-sizing: border-box !important;
+  min-height: 370px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding-bottom: 24px !important;
+  align-self: stretch !important;
+}
+
+.goodos-chart-card-row-v119 {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  align-items: stretch !important;
+  gap: 18px !important;
+  row-gap: 18px !important;
+  margin-bottom: 30px !important;
+  padding-bottom: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.goodos-chart-card-row-v119 > * {
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  align-self: stretch !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-chart-v108,
+.goodos-chart-card-v119 .goodos-core-chart-v106 {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+  padding-bottom: 0 !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-chart-head-v108 {
+  margin-bottom: 8px !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-svg-wrap-v108,
+.goodos-chart-card-v119 .goodos-core-progress-wrap-v108,
+.goodos-chart-card-v119 .goodos-core-bars-v108 {
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding: 10px !important;
+  border-radius: 15px !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-svg-wrap-v108 svg {
+  height: 86px !important;
+  min-height: 86px !important;
+  max-height: 86px !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-axis-v108 {
+  margin-top: 5px !important;
+  padding-bottom: 0 !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-bars-v108 {
+  min-height: 118px !important;
+}
+
+.goodos-chart-card-v119 .goodos-core-progress-wrap-v108 {
+  min-height: 86px !important;
+}
+
+/* Remove the double background behind the chart-card row only */
+.goodos-chart-shell-clean-v119 {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep table sections/cards separate and normal */
+.goodos-chart-card-v119 + .goodos-chart-card-v119 {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 980px) {
+  .goodos-chart-card-v119 {
+    min-height: 350px !important;
+  }
+
+  .goodos-chart-card-row-v119 {
+    gap: 16px !important;
+    row-gap: 16px !important;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -31865,6 +31966,326 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(applyRealtimeConnectedFix, 250);
   setTimeout(applyRealtimeConnectedFix, 1000);
   setTimeout(applyRealtimeConnectedFix, 2000);
+})();
+</script>
+
+
+<script data-goodos-targeted-chart-fit-v119>
+(function () {
+  var timer = null;
+  var isRunning = false;
+
+  var PAGE_CONFIG = {
+    dashboard: {
+      hashes: ["dashboard", "overview"],
+      titles: ["Organizations", "Projects", "Environments", "Module Scope"],
+      shellNeedles: ["project control center", "activity center"]
+    },
+    projects: {
+      hashes: ["projects"],
+      titles: ["Apps", "Active Apps", "Memberships", "Restricted Keys"],
+      shellNeedles: ["app control center"]
+    },
+    database: {
+      hashes: ["database"],
+      titles: ["Published Tables", "Writable Tables", "Rules", "Scope"],
+      shellNeedles: ["generated database api"]
+    },
+    apiKeys: {
+      hashes: ["api-keys"],
+      titles: ["API Keys", "Webhooks", "Realtime", "Function Runs"],
+      shellNeedles: ["api keys"]
+    }
+  };
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function compact(value) {
+    return cleanLower(value).replace(/[^a-z0-9]/g, "");
+  }
+
+  function currentPageConfig() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    var keys = Object.keys(PAGE_CONFIG);
+
+    for (var i = 0; i < keys.length; i++) {
+      var config = PAGE_CONFIG[keys[i]];
+
+      if (config.hashes.some(function (h) { return hash.indexOf(h) !== -1; })) {
+        return config;
+      }
+    }
+
+    return null;
+  }
+
+  function looksLikeCard(node) {
+    if (!node || !node.getBoundingClientRect) return false;
+
+    var rect = node.getBoundingClientRect();
+    var style = window.getComputedStyle(node);
+    var className = String(node.className || "");
+
+    if (rect.width < 170 || rect.height < 90) return false;
+
+    return /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+      style.borderStyle !== "none" ||
+      parseFloat(style.borderRadius || "0") >= 8;
+  }
+
+  function findCardForTitle(title) {
+    var wanted = compact(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+
+      if (compact(el.textContent) !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 12 && node && node !== document.body; depth++) {
+        var text = compact(node.textContent);
+
+        if (text.indexOf(wanted) !== -1 && looksLikeCard(node)) {
+          best = node;
+          break;
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function findLowestSharedDisplayParent(cards) {
+    if (!cards.length) return null;
+
+    var first = cards[0];
+    var node = first.parentElement;
+
+    while (node && node !== document.body) {
+      var containsAll = cards.every(function (card) {
+        return node.contains(card);
+      });
+
+      if (containsAll) {
+        var style = window.getComputedStyle(node);
+        var rect = node.getBoundingClientRect();
+
+        if (
+          rect.width >= 600 &&
+          (
+            style.display.indexOf("grid") !== -1 ||
+            style.display.indexOf("flex") !== -1
+          )
+        ) {
+          return node;
+        }
+      }
+
+      node = node.parentElement;
+    }
+
+    return first.parentElement;
+  }
+
+  function removeOldClasses(el) {
+    if (!el || !el.classList) return;
+
+    [
+      "goodos-core-card-fit-v110",
+      "goodos-core-dashboard-card-height-v113",
+      "goodos-core-card-balanced-v114",
+      "goodos-card-uniform-v115",
+      "goodos-card-height-reset-v116",
+      "goodos-card-has-chart-v116",
+      "goodos-card-no-chart-v116"
+    ].forEach(function (cls) {
+      el.classList.remove(cls);
+    });
+  }
+
+  function applyCardFit(card) {
+    if (!card) return;
+
+    removeOldClasses(card);
+
+    card.classList.add("goodos-chart-card-v119");
+
+    card.style.boxSizing = "border-box";
+    card.style.minHeight = "370px";
+    card.style.height = "auto";
+    card.style.maxHeight = "none";
+    card.style.overflow = "hidden";
+    card.style.paddingBottom = "24px";
+
+    var chart = card.querySelector(".goodos-core-chart-v108, .goodos-core-chart-v106");
+
+    if (chart) {
+      chart.style.height = "auto";
+      chart.style.maxHeight = "none";
+      chart.style.overflow = "visible";
+      chart.style.marginTop = "14px";
+      chart.style.paddingTop = "12px";
+      chart.style.paddingBottom = "0";
+    }
+  }
+
+  function applyRowFit(row) {
+    if (!row) return;
+
+    [
+      "goodos-core-row-fit-v110",
+      "goodos-core-dashboard-row-height-v113",
+      "goodos-core-row-balanced-v114",
+      "goodos-card-row-uniform-v115",
+      "goodos-card-row-normal-v116"
+    ].forEach(function (cls) {
+      row.classList.remove(cls);
+    });
+
+    row.classList.add("goodos-chart-card-row-v119");
+
+    row.style.height = "auto";
+    row.style.maxHeight = "none";
+    row.style.overflow = "visible";
+    row.style.marginBottom = "30px";
+    row.style.paddingBottom = "0";
+    row.style.background = "transparent";
+    row.style.backgroundImage = "none";
+    row.style.boxShadow = "none";
+
+    var style = window.getComputedStyle(row);
+
+    if (style.display.indexOf("grid") !== -1) {
+      row.style.alignItems = "stretch";
+      row.style.gridAutoRows = "minmax(370px, auto)";
+    }
+
+    if (style.display.indexOf("flex") !== -1) {
+      row.style.alignItems = "stretch";
+    }
+  }
+
+  function cleanDoubleContainer(row, config) {
+    if (!row || !config) return;
+
+    var rowRect = row.getBoundingClientRect();
+    var node = row.parentElement;
+    var depth = 0;
+
+    while (node && node !== document.body && depth < 5) {
+      var text = cleanLower(node.textContent);
+      var rect = node.getBoundingClientRect();
+      var style = window.getComputedStyle(node);
+
+      var closeToRow =
+        rect.width >= rowRect.width &&
+        rect.top <= rowRect.top + 80 &&
+        rect.bottom >= rowRect.bottom - 40 &&
+        rect.height <= rowRect.height + 260;
+
+      var hasContainerPaint =
+        String(style.backgroundImage || "").indexOf("gradient") !== -1 ||
+        style.borderStyle !== "none" ||
+        parseFloat(style.borderRadius || "0") >= 12;
+
+      var matchesSection = config.shellNeedles.some(function (needle) {
+        return text.indexOf(needle) !== -1;
+      });
+
+      if (closeToRow && hasContainerPaint && matchesSection) {
+        node.classList.add("goodos-chart-shell-clean-v119");
+        node.style.background = "transparent";
+        node.style.backgroundImage = "none";
+        node.style.borderColor = "transparent";
+        node.style.boxShadow = "none";
+      }
+
+      node.style.maxHeight = "none";
+      node.style.overflow = "visible";
+
+      node = node.parentElement;
+      depth += 1;
+    }
+  }
+
+  function applyTargetedFit() {
+    if (isRunning || !document.body) return;
+
+    var config = currentPageConfig();
+    if (!config) return;
+
+    isRunning = true;
+
+    try {
+      var cards = config.titles.map(findCardForTitle).filter(Boolean);
+
+      if (!cards.length) return;
+
+      cards.forEach(applyCardFit);
+
+      var row = findLowestSharedDisplayParent(cards);
+
+      applyRowFit(row);
+      cleanDoubleContainer(row, config);
+    } finally {
+      setTimeout(function () {
+        isRunning = false;
+      }, 80);
+    }
+  }
+
+  function scheduleFit() {
+    clearTimeout(timer);
+    timer = setTimeout(applyTargetedFit, 180);
+  }
+
+  window.goodosTargetedChartFitV119 = applyTargetedFit;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleFit();
+    setTimeout(applyTargetedFit, 700);
+    setTimeout(applyTargetedFit, 1600);
+    setTimeout(applyTargetedFit, 2800);
+  });
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(applyTargetedFit, 150);
+    setTimeout(applyTargetedFit, 800);
+    setTimeout(applyTargetedFit, 1800);
+  });
+
+  window.addEventListener("resize", function () {
+    scheduleFit();
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      if (!isRunning) scheduleFit();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(applyTargetedFit, 250);
+  setTimeout(applyTargetedFit, 1000);
+  setTimeout(applyTargetedFit, 2200);
 })();
 </script>
 
