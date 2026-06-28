@@ -11,6 +11,22 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS EDGE FUNCTIONS CONSOLE V102 API MOUNT */
+try {
+  const goodosEdgeFunctionsConsoleRouterV102 = require('./routes/edge-functions-console.routes');
+
+  app.use('/api/admin/edge-functions-console', goodosEdgeFunctionsConsoleRouterV102);
+  app.use('/api/admin/edge-functions', goodosEdgeFunctionsConsoleRouterV102);
+  app.use('/api/edge-functions-console', goodosEdgeFunctionsConsoleRouterV102);
+
+  console.log('GOODOS V102 Edge Functions Console API mounted');
+} catch (err) {
+  console.error('GOODOS V102 Edge Functions Console API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS EDGE FUNCTIONS CONSOLE V102 API MOUNT */
+
+
+
 /* GOODOS STORAGE CONSOLE V101 API MOUNT */
 try {
   const goodosStorageConsoleRouterV101 = require('./routes/storage-console.routes');
