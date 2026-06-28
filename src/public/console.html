@@ -1,6 +1,149 @@
 <!doctype html>
 <html lang="en">
-<head>\n<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" data-goodos-v98-cache="no-store">
+<head>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" data-goodos-v99-cache="no-store">
+
+<script data-goodos-auth-console-v99-request-rewrite>
+(function () {
+  var sectionMap = {
+    users: 'users',
+    user: 'users',
+    apps: 'oauth-apps',
+    oauthapps: 'oauth-apps',
+    'oauth-apps': 'oauth-apps',
+    oauthApps: 'oauth-apps',
+    templates: 'email-templates',
+    emailtemplates: 'email-templates',
+    'email-templates': 'email-templates',
+    emailTemplates: 'email-templates',
+    policies: 'policies',
+    providers: 'providers',
+    passkeys: 'passkeys',
+    sessions: 'sessions',
+    session: 'sessions',
+    mfa: 'mfa',
+    ratelimits: 'rate-limits',
+    'rate-limits': 'rate-limits',
+    rateLimits: 'rate-limits',
+    hooks: 'hooks',
+    auditlogs: 'audit-logs',
+    'audit-logs': 'audit-logs',
+    auditLogs: 'audit-logs',
+    logs: 'audit-logs',
+    performance: 'performance',
+    summary: 'summary'
+  };
+
+  var knownSections = {
+    users: true,
+    'oauth-apps': true,
+    'email-templates': true,
+    policies: true,
+    providers: true,
+    passkeys: true,
+    sessions: true,
+    mfa: true,
+    'rate-limits': true,
+    hooks: true,
+    'audit-logs': true,
+    performance: true
+  };
+
+  function cleanKey(value) {
+    var key = String(value || '')
+      .trim()
+      .replace(/<[^>]*>/g, '')
+      .replace(/[+"'\`]/g, '')
+      .replace(/[.)\];,]+$/g, '')
+      .replace(/^\/+|\/+$/g, '');
+
+    return sectionMap[key] || sectionMap[key.toLowerCase()] || key.toLowerCase();
+  }
+
+  function normalizeAuthConsoleUrl(input) {
+    try {
+      var isRequest = typeof Request !== 'undefined' && input instanceof Request;
+      var raw = isRequest ? input.url : String(input || '');
+      var url = new URL(raw, window.location.origin);
+      var path = url.pathname;
+
+      var base = null;
+
+      if (path.indexOf('/api/admin/authentication-console') !== -1) {
+        base = '/api/admin/authentication-console';
+      } else if (path.indexOf('/api/admin/auth-console') !== -1) {
+        base = '/api/admin/authentication-console';
+      } else if (path.indexOf('/api/authentication-console') !== -1) {
+        base = '/api/admin/authentication-console';
+      }
+
+      if (!base) return input;
+
+      var baseIndex = path.indexOf(base);
+      var tail = path.slice(baseIndex + base.length);
+
+      try {
+        tail = decodeURI(tail);
+      } catch (_) {}
+
+      tail = tail
+        .replace(/<[^>]*>/g, '')
+        .replace(/\\+/g, '/')
+        .replace(/\/+/g, '/')
+        .replace(/[+"'\`]/g, '')
+        .replace(/[.)\];,]+$/g, '')
+        .replace(/\/sections\//i, '/section/');
+
+      var parts = tail.split('/').filter(Boolean);
+      var normalizedPath = base + '/summary';
+
+      if (parts.length > 0) {
+        var first = cleanKey(parts[0]);
+        var second = cleanKey(parts[1] || '');
+
+        if (first === 'summary') {
+          normalizedPath = base + '/summary';
+        } else if ((first === 'section' || first === 'sections') && knownSections[second]) {
+          normalizedPath = base + '/section/' + second;
+        } else if (knownSections[first]) {
+          normalizedPath = base + '/section/' + first;
+        }
+      }
+
+      url.pathname = normalizedPath;
+
+      if (isRequest) {
+        return new Request(url.toString(), input);
+      }
+
+      return url.toString();
+    } catch (err) {
+      return input;
+    }
+  }
+
+  window.goodosAuthConsoleNormalizeUrlV99 = normalizeAuthConsoleUrl;
+
+  if (window.fetch && !window.fetch.__goodosAuthConsoleV99Wrapped) {
+    var originalFetch = window.fetch;
+    var wrappedFetch = function (input, init) {
+      return originalFetch.call(this, normalizeAuthConsoleUrl(input), init);
+    };
+    wrappedFetch.__goodosAuthConsoleV99Wrapped = true;
+    window.fetch = wrappedFetch;
+  }
+
+  if (window.XMLHttpRequest && window.XMLHttpRequest.prototype && !window.XMLHttpRequest.prototype.__goodosAuthConsoleV99Wrapped) {
+    var originalOpen = window.XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function (method, url) {
+      arguments[1] = normalizeAuthConsoleUrl(url);
+      return originalOpen.apply(this, arguments);
+    };
+    window.XMLHttpRequest.prototype.__goodosAuthConsoleV99Wrapped = true;
+  }
+})();
+</script>
+\n<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" data-goodos-v98-cache="no-store">
 
 <script id="goodos-global-date-helpers-v76-js">
 (function () {

@@ -2,6 +2,121 @@ const express = require("express");
 
 const router = express.Router();
 
+/* GOODOS AUTH CONSOLE V99 ROUTER URL NORMALIZER */
+const goodosAuthConsoleSectionMapV99Router = {
+  users: 'users',
+  user: 'users',
+  apps: 'oauth-apps',
+  oauthapps: 'oauth-apps',
+  'oauth-apps': 'oauth-apps',
+  oauthApps: 'oauth-apps',
+  templates: 'email-templates',
+  emailtemplates: 'email-templates',
+  'email-templates': 'email-templates',
+  emailTemplates: 'email-templates',
+  policies: 'policies',
+  providers: 'providers',
+  passkeys: 'passkeys',
+  sessions: 'sessions',
+  session: 'sessions',
+  mfa: 'mfa',
+  ratelimits: 'rate-limits',
+  'rate-limits': 'rate-limits',
+  rateLimits: 'rate-limits',
+  hooks: 'hooks',
+  auditlogs: 'audit-logs',
+  'audit-logs': 'audit-logs',
+  auditLogs: 'audit-logs',
+  logs: 'audit-logs',
+  performance: 'performance',
+  summary: 'summary'
+};
+
+const goodosAuthConsoleKnownSectionsV99Router = new Set([
+  'users',
+  'oauth-apps',
+  'email-templates',
+  'policies',
+  'providers',
+  'passkeys',
+  'sessions',
+  'mfa',
+  'rate-limits',
+  'hooks',
+  'audit-logs',
+  'performance'
+]);
+
+function goodosCleanAuthConsoleKeyV99Router(value) {
+  let key = String(value || '')
+    .trim()
+    .replace(/<[^>]*>/g, '')
+    .replace(/[+"'\`]/g, '')
+    .replace(/[.)\];,]+$/g, '')
+    .replace(/^\/+|\/+$/g, '');
+
+  return (
+    goodosAuthConsoleSectionMapV99Router[key] ||
+    goodosAuthConsoleSectionMapV99Router[key.toLowerCase()] ||
+    key.toLowerCase()
+  );
+}
+
+router.use(function goodosAuthConsoleRouterNormalizerV99(req, res, next) {
+  try {
+    const originalUrl = String(req.url || '/');
+    const queryIndex = originalUrl.indexOf('?');
+    let pathname = queryIndex >= 0 ? originalUrl.slice(0, queryIndex) : originalUrl;
+    const query = queryIndex >= 0 ? originalUrl.slice(queryIndex) : '';
+
+    try {
+      pathname = decodeURI(pathname);
+    } catch (_) {}
+
+    pathname = pathname
+      .replace(/<[^>]*>/g, '')
+      .replace(/\\+/g, '/')
+      .replace(/\/+/g, '/')
+      .replace(/[+"'\`]/g, '')
+      .replace(/[.)\];,]+$/g, '')
+      .replace(/\/sections\//i, '/section/');
+
+    const parts = pathname.split('/').filter(Boolean);
+
+    if (parts.length === 0) {
+      req.url = '/summary' + query;
+      return next();
+    }
+
+    const first = goodosCleanAuthConsoleKeyV99Router(parts[0]);
+    const second = goodosCleanAuthConsoleKeyV99Router(parts[1] || '');
+
+    if (first === 'summary') {
+      req.url = '/summary' + query;
+      return next();
+    }
+
+    if (first === 'section' || first === 'sections') {
+      if (goodosAuthConsoleKnownSectionsV99Router.has(second)) {
+        req.url = '/section/' + second + query;
+        return next();
+      }
+    }
+
+    if (goodosAuthConsoleKnownSectionsV99Router.has(first)) {
+      req.url = '/section/' + first + query;
+      return next();
+    }
+
+    return next();
+  } catch (err) {
+    return next();
+  }
+});
+/* END GOODOS AUTH CONSOLE V99 ROUTER URL NORMALIZER */
+
+
+
 function resolveDb() {
   const candidates = [
     "../db",

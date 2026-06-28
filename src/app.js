@@ -11,6 +11,140 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS AUTH CONSOLE V99 EARLY API NORMALIZER - HARD FIX FOR 404 */
+try {
+  const goodosAuthConsoleRouterV99 = require('./routes/authentication-console.routes');
+
+  const goodosAuthConsoleSectionMapV99 = {
+    users: 'users',
+    user: 'users',
+    apps: 'oauth-apps',
+    oauthapps: 'oauth-apps',
+    'oauth-apps': 'oauth-apps',
+    oauthApps: 'oauth-apps',
+    templates: 'email-templates',
+    emailtemplates: 'email-templates',
+    'email-templates': 'email-templates',
+    emailTemplates: 'email-templates',
+    policies: 'policies',
+    policy: 'policies',
+    providers: 'providers',
+    provider: 'providers',
+    passkeys: 'passkeys',
+    passkey: 'passkeys',
+    sessions: 'sessions',
+    session: 'sessions',
+    mfa: 'mfa',
+    ratelimits: 'rate-limits',
+    'rate-limits': 'rate-limits',
+    rateLimits: 'rate-limits',
+    hooks: 'hooks',
+    hook: 'hooks',
+    auditlogs: 'audit-logs',
+    'audit-logs': 'audit-logs',
+    auditLogs: 'audit-logs',
+    logs: 'audit-logs',
+    performance: 'performance',
+    perf: 'performance',
+    summary: 'summary'
+  };
+
+  const goodosAuthConsoleKnownSectionsV99 = new Set([
+    'users',
+    'oauth-apps',
+    'email-templates',
+    'policies',
+    'providers',
+    'passkeys',
+    'sessions',
+    'mfa',
+    'rate-limits',
+    'hooks',
+    'audit-logs',
+    'performance'
+  ]);
+
+  function goodosCleanAuthConsoleKeyV99(value) {
+    let key = String(value || '')
+      .trim()
+      .replace(/<[^>]*>/g, '')
+      .replace(/[+"'\`]/g, '')
+      .replace(/[.)\];,]+$/g, '')
+      .replace(/^\/+|\/+$/g, '');
+
+    return (
+      goodosAuthConsoleSectionMapV99[key] ||
+      goodosAuthConsoleSectionMapV99[key.toLowerCase()] ||
+      key.toLowerCase()
+    );
+  }
+
+  function goodosNormalizeAuthConsoleUrlV99(req, res, next) {
+    try {
+      const originalUrl = String(req.url || '/');
+      const queryIndex = originalUrl.indexOf('?');
+      let pathname = queryIndex >= 0 ? originalUrl.slice(0, queryIndex) : originalUrl;
+      const query = queryIndex >= 0 ? originalUrl.slice(queryIndex) : '';
+
+      try {
+        pathname = decodeURI(pathname);
+      } catch (_) {}
+
+      pathname = pathname
+        .replace(/<[^>]*>/g, '')
+        .replace(/\\+/g, '/')
+        .replace(/\/+/g, '/')
+        .replace(/[+"'\`]/g, '')
+        .replace(/[.)\];,]+$/g, '');
+
+      pathname = pathname.replace(/\/sections\//i, '/section/');
+
+      const parts = pathname.split('/').filter(Boolean);
+
+      if (parts.length === 0) {
+        req.url = '/summary' + query;
+        return next();
+      }
+
+      const first = goodosCleanAuthConsoleKeyV99(parts[0]);
+      const second = goodosCleanAuthConsoleKeyV99(parts[1] || '');
+
+      if (first === 'summary') {
+        req.url = '/summary' + query;
+        return next();
+      }
+
+      if (first === 'section' || first === 'sections') {
+        if (goodosAuthConsoleKnownSectionsV99.has(second)) {
+          req.url = '/section/' + second + query;
+          return next();
+        }
+      }
+
+      if (goodosAuthConsoleKnownSectionsV99.has(first)) {
+        req.url = '/section/' + first + query;
+        return next();
+      }
+
+      req.url = pathname + query;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+
+  app.use('/api/admin/authentication-console', goodosNormalizeAuthConsoleUrlV99, goodosAuthConsoleRouterV99);
+  app.use('/api/admin/auth-console', goodosNormalizeAuthConsoleUrlV99, goodosAuthConsoleRouterV99);
+  app.use('/api/authentication-console', goodosNormalizeAuthConsoleUrlV99, goodosAuthConsoleRouterV99);
+
+  console.log('GOODOS V99 Auth Console early normalizer mounted');
+} catch (err) {
+  console.error('GOODOS V99 Auth Console early normalizer failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS AUTH CONSOLE V99 EARLY API NORMALIZER */
+
+
+
 // GoodOS Console V2 app route 26C
 app.get("/console", (req, res) => {
   res.sendFile(require("path").join(__dirname, "public/console.html"));
