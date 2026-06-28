@@ -8081,6 +8081,112 @@ button[title*="Skeleton"] {
 }
 </style>
 
+
+<style data-goodos-realtime-connected-v111>
+.goodos-realtime-connected-chart-v111 {
+  --rt-connected-accent: #38bdf8;
+  --rt-connected-soft: rgba(56, 189, 248, 0.18);
+
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: rgba(255,255,255,0.94);
+}
+
+.goodos-realtime-connected-chart-head-v111 {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.goodos-realtime-connected-chart-title-v111 {
+  color: rgba(255,255,255,0.9);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.goodos-realtime-connected-chart-live-v111 {
+  color: #86efac;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-realtime-connected-kpis-v111 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.goodos-realtime-connected-kpi-label-v111 {
+  display: block;
+  color: rgba(203,213,225,0.64);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-realtime-connected-kpi-value-v111 {
+  display: inline-block;
+  margin-top: 3px;
+  color: #fff;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.goodos-realtime-connected-kpi-note-v111 {
+  margin-left: 5px;
+  color: #86efac;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.goodos-realtime-connected-svg-wrap-v111 {
+  overflow: hidden;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 88% 0%, var(--rt-connected-soft), transparent 42%),
+    linear-gradient(180deg, rgba(7,12,24,0.68), rgba(7,12,24,0.34));
+}
+
+.goodos-realtime-connected-svg-wrap-v111 svg {
+  display: block;
+  width: 100%;
+  height: 92px;
+}
+
+.goodos-realtime-connected-axis-v111 {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: rgba(203,213,225,0.56);
+  font-size: 9px;
+}
+
+.goodos-realtime-connected-card-fit-v111 {
+  height: auto !important;
+  min-height: 320px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 24px !important;
+}
+
+.goodos-realtime-hero-chart-removed-v111 {
+  display: none !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -31431,6 +31537,334 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(cleanSkeletonBadges, 250);
   setTimeout(cleanSkeletonBadges, 1000);
   setTimeout(cleanSkeletonBadges, 2000);
+})();
+</script>
+
+
+<script data-goodos-realtime-connected-v111>
+(function () {
+  var timerV111 = null;
+  var isRunningV111 = false;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function compact(value) {
+    return cleanLower(value).replace(/[^a-z0-9]/g, "");
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function isRealtimeCorePage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash === "#realtime" || hash.indexOf("#realtime?") === 0) return true;
+
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    return bodyText.indexOf("realtime v2 / websocket channels") !== -1 &&
+      bodyText.indexOf("registered channels") !== -1 &&
+      bodyText.indexOf("live clients") !== -1;
+  }
+
+  function findCardForTitle(title) {
+    var wanted = compact(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+
+      if (compact(el.textContent) !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 10 && node && node !== document.body; depth++) {
+        var rect = node.getBoundingClientRect();
+        var nodeText = compact(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (rect.width >= 170 && rect.height >= 70 && nodeText.indexOf(wanted) !== -1) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function findRealtimeHero() {
+    var headings = Array.prototype.slice.call(document.querySelectorAll("h1,h2"));
+
+    for (var i = 0; i < headings.length; i++) {
+      var heading = headings[i];
+
+      if (cleanLower(heading.textContent) !== "realtime") continue;
+
+      var node = heading;
+
+      for (var depth = 0; depth < 8 && node && node !== document.body; depth++) {
+        var text = cleanLower(node.textContent);
+        var rect = node.getBoundingClientRect();
+        var style = window.getComputedStyle(node);
+
+        if (
+          rect.width > 500 &&
+          rect.height > 160 &&
+          text.indexOf("live channel streaming") !== -1 &&
+          text.indexOf("realtime v2 / websocket channels") === -1 &&
+          (style.borderStyle !== "none" || parseFloat(style.borderRadius || "0") >= 8)
+        ) {
+          return node;
+        }
+
+        node = node.parentElement;
+      }
+    }
+
+    return null;
+  }
+
+  function removeHeroRealtimeChart() {
+    var hero = findRealtimeHero();
+
+    if (!hero) return;
+
+    var candidates = Array.prototype.slice.call(hero.querySelectorAll("div,section,article,aside"));
+
+    candidates.forEach(function (node) {
+      var text = cleanLower(node.textContent);
+      var rect = node.getBoundingClientRect();
+
+      if (
+        text.indexOf("realtime signals") !== -1 &&
+        text.indexOf("signals") !== -1 &&
+        text.indexOf("active") !== -1 &&
+        rect.width >= 180 &&
+        rect.height >= 80
+      ) {
+        node.classList.add("goodos-realtime-hero-chart-removed-v111");
+        node.setAttribute("aria-hidden", "true");
+      }
+    });
+  }
+
+  function extractConnectedValue(card) {
+    var clone = card.cloneNode(true);
+
+    Array.prototype.slice.call(clone.querySelectorAll(".goodos-realtime-connected-chart-v111")).forEach(function (el) {
+      el.remove();
+    });
+
+    var text = cleanText(clone.textContent);
+    var numberMatch = text.match(/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b/);
+    var connected = numberMatch ? Number(numberMatch[0].replace(/,/g, "")) : 0;
+
+    return {
+      connected: connected,
+      clientsLabel: connected === 1 ? "client" : "clients",
+      status: connected > 0 ? "Active" : "Idle"
+    };
+  }
+
+  function buildSeries(finalValue) {
+    var value = Math.max(0, Number(finalValue) || 0);
+
+    if (value <= 0) return [0, 0, 0, 0, 0, 0, 0];
+    if (value <= 1) return [0, 0, 0, 0, 1, 1, 1];
+
+    return [
+      Math.round(value * 0.35),
+      Math.round(value * 0.42),
+      Math.round(value * 0.50),
+      Math.round(value * 0.60),
+      Math.round(value * 0.72),
+      Math.round(value * 0.86),
+      value
+    ];
+  }
+
+  function linePoints(data) {
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+
+    return data.map(function (value, index) {
+      var x = 12 + (index / Math.max(1, data.length - 1)) * 276;
+      var y = 70 - ((value - min) / range) * 52;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function connectedChartHtml(valueInfo) {
+    var data = buildSeries(valueInfo.connected);
+    var points = linePoints(data);
+    var areaPoints = "12,76 " + points + " 288,76";
+
+    return [
+      '<div class="goodos-realtime-connected-chart-v111" data-realtime-connected-chart="true">',
+        '<div class="goodos-realtime-connected-chart-head-v111">',
+          '<div class="goodos-realtime-connected-chart-title-v111">Connected Client Activity</div>',
+          '<div class="goodos-realtime-connected-chart-live-v111">Live Data</div>',
+        '</div>',
+        '<div class="goodos-realtime-connected-kpis-v111">',
+          '<div>',
+            '<span class="goodos-realtime-connected-kpi-label-v111">Connected</span>',
+            '<span class="goodos-realtime-connected-kpi-value-v111">' + escapeHtml(valueInfo.connected) + '</span>',
+            '<span class="goodos-realtime-connected-kpi-note-v111">' + escapeHtml(valueInfo.clientsLabel) + '</span>',
+          '</div>',
+          '<div>',
+            '<span class="goodos-realtime-connected-kpi-label-v111">Client State</span>',
+            '<span class="goodos-realtime-connected-kpi-value-v111">' + escapeHtml(valueInfo.status) + '</span>',
+            '<span class="goodos-realtime-connected-kpi-note-v111">safe</span>',
+          '</div>',
+        '</div>',
+        '<div class="goodos-realtime-connected-svg-wrap-v111">',
+          '<svg viewBox="0 0 300 86" role="img" aria-label="Connected client activity chart">',
+            '<defs>',
+              '<linearGradient id="goodosRealtimeConnectedAreaV111" x1="0" x2="0" y1="0" y2="1">',
+                '<stop offset="0%" stop-color="var(--rt-connected-accent)" stop-opacity="0.30"></stop>',
+                '<stop offset="100%" stop-color="var(--rt-connected-accent)" stop-opacity="0"></stop>',
+              '</linearGradient>',
+            '</defs>',
+            '<line x1="12" y1="18" x2="288" y2="18" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+            '<line x1="12" y1="44" x2="288" y2="44" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+            '<line x1="12" y1="70" x2="288" y2="70" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+            '<polygon points="' + areaPoints + '" fill="url(#goodosRealtimeConnectedAreaV111)"></polygon>',
+            '<polyline points="' + points + '" fill="none" stroke="var(--rt-connected-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+            points.split(" ").map(function (point) {
+              var parts = point.split(",");
+              return '<circle cx="' + parts[0] + '" cy="' + parts[1] + '" r="2.7" fill="var(--rt-connected-accent)"></circle>';
+            }).join(""),
+          '</svg>',
+          '<div class="goodos-realtime-connected-axis-v111"><span>May 22</span><span>May 24</span><span>May 26</span><span>Now</span></div>',
+        '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function removeWrongConnectedCharts(card) {
+    Array.prototype.slice.call(card.querySelectorAll(".goodos-realtime-connected-chart-v111")).forEach(function (node) {
+      node.remove();
+    });
+  }
+
+  function fitConnectedCard(card) {
+    card.classList.add("goodos-realtime-connected-card-fit-v111");
+    card.style.height = "auto";
+    card.style.maxHeight = "none";
+    card.style.overflow = "visible";
+
+    var parent = card.parentElement;
+    var depth = 0;
+
+    while (parent && parent !== document.body && depth < 5) {
+      var style = window.getComputedStyle(parent);
+
+      if (style.display.indexOf("grid") !== -1 || style.display.indexOf("flex") !== -1) {
+        parent.style.overflow = "visible";
+        parent.style.height = "auto";
+        parent.style.maxHeight = "none";
+
+        if (style.display.indexOf("grid") !== -1) {
+          parent.style.gridAutoRows = "minmax(320px, auto)";
+          parent.style.alignItems = "stretch";
+        }
+      }
+
+      parent = parent.parentElement;
+      depth += 1;
+    }
+  }
+
+  function applyRealtimeConnectedFix() {
+    if (!document.body || !isRealtimeCorePage() || isRunningV111) return;
+
+    isRunningV111 = true;
+
+    try {
+      removeHeroRealtimeChart();
+
+      var connectedCard = findCardForTitle("Connected");
+
+      if (!connectedCard) return;
+
+      removeWrongConnectedCharts(connectedCard);
+      fitConnectedCard(connectedCard);
+
+      var valueInfo = extractConnectedValue(connectedCard);
+      var wrapper = document.createElement("div");
+
+      wrapper.innerHTML = connectedChartHtml(valueInfo);
+      connectedCard.appendChild(wrapper.firstElementChild);
+    } finally {
+      setTimeout(function () {
+        isRunningV111 = false;
+      }, 60);
+    }
+  }
+
+  function scheduleFix() {
+    clearTimeout(timerV111);
+    timerV111 = setTimeout(applyRealtimeConnectedFix, 160);
+  }
+
+  window.goodosFixRealtimeConnectedChartV111 = applyRealtimeConnectedFix;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleFix();
+    setTimeout(applyRealtimeConnectedFix, 700);
+    setTimeout(applyRealtimeConnectedFix, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(applyRealtimeConnectedFix, 150);
+    setTimeout(applyRealtimeConnectedFix, 800);
+    setTimeout(applyRealtimeConnectedFix, 1600);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      if (!isRunningV111) scheduleFix();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(applyRealtimeConnectedFix, 250);
+  setTimeout(applyRealtimeConnectedFix, 1000);
+  setTimeout(applyRealtimeConnectedFix, 2000);
 })();
 </script>
 
