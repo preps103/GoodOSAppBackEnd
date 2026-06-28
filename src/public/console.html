@@ -8061,6 +8061,26 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-remove-skeleton-v109>
+.goodos-skeleton-cleaned-v109 {
+  display: none !important;
+}
+
+.goodos-skeleton-progress-cleaned-v109 {
+  display: none !important;
+}
+
+.goodos-skeleton-status-cleaned-v109 {
+  display: none !important;
+}
+
+button[aria-label*="Skeleton"],
+button[title*="Skeleton"] {
+  display: none !important;
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -31181,6 +31201,236 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(enhancePage, 300);
   setTimeout(enhancePage, 1200);
+})();
+</script>
+
+
+<script data-goodos-remove-skeleton-v109>
+(function () {
+  var cleanupTimerV109 = null;
+  var isCleaningV109 = false;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function lowerText(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function isSkeletonOnlyText(value) {
+    return lowerText(value) === "skeleton only";
+  }
+
+  function isSkeletonStatusText(value) {
+    var text = lowerText(value);
+    return text.indexOf("skeleton status:") !== -1 ||
+      text.indexOf("these tabs and subcategories are now mapped") !== -1 ||
+      text.indexOf("buttons and cards are placeholders") !== -1;
+  }
+
+  function looksLikeTinyProgressBar(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+
+    var rect = el.getBoundingClientRect();
+    var style = window.getComputedStyle(el);
+    var text = cleanText(el.textContent);
+
+    if (text.length > 3) return false;
+    if (rect.width < 40 || rect.width > 360) return false;
+    if (rect.height < 3 || rect.height > 18) return false;
+
+    var radius = parseFloat(style.borderRadius || "0");
+    var bg = style.backgroundImage + " " + style.backgroundColor;
+
+    return radius >= 2 ||
+      bg.indexOf("gradient") !== -1 ||
+      bg.indexOf("rgb") !== -1 ||
+      bg.indexOf("rgba") !== -1;
+  }
+
+  function removeNearbyProgressAfter(el) {
+    if (!el) return;
+
+    var current = el.nextElementSibling;
+    var checked = 0;
+
+    while (current && checked < 5) {
+      checked += 1;
+
+      if (looksLikeTinyProgressBar(current)) {
+        current.classList.add("goodos-skeleton-progress-cleaned-v109");
+        return;
+      }
+
+      var nestedBars = Array.prototype.slice.call(current.querySelectorAll("div,span,section"));
+      var matched = nestedBars.find(looksLikeTinyProgressBar);
+
+      if (matched) {
+        matched.classList.add("goodos-skeleton-progress-cleaned-v109");
+
+        var parent = matched.parentElement;
+        if (parent && looksLikeTinyProgressBar(parent)) {
+          parent.classList.add("goodos-skeleton-progress-cleaned-v109");
+        }
+
+        return;
+      }
+
+      current = current.nextElementSibling;
+    }
+
+    var parent = el.parentElement;
+    if (!parent) return;
+
+    var siblings = Array.prototype.slice.call(parent.children);
+    var index = siblings.indexOf(el);
+
+    siblings.slice(index + 1, index + 6).forEach(function (candidate) {
+      if (looksLikeTinyProgressBar(candidate)) {
+        candidate.classList.add("goodos-skeleton-progress-cleaned-v109");
+      }
+
+      Array.prototype.slice.call(candidate.querySelectorAll("div,span")).forEach(function (nested) {
+        if (looksLikeTinyProgressBar(nested)) {
+          nested.classList.add("goodos-skeleton-progress-cleaned-v109");
+        }
+      });
+    });
+  }
+
+  function getSmallestExactSkeletonNode(node) {
+    var current = node;
+
+    while (current && current !== document.body) {
+      var text = cleanText(current.textContent);
+
+      if (isSkeletonOnlyText(text)) {
+        var childrenWithText = Array.prototype.slice.call(current.children || []).filter(function (child) {
+          return cleanText(child.textContent).length > 0;
+        });
+
+        if (childrenWithText.length === 0 || childrenWithText.every(function (child) {
+          return isSkeletonOnlyText(child.textContent);
+        })) {
+          return current;
+        }
+      }
+
+      current = current.parentElement;
+    }
+
+    return node;
+  }
+
+  function cleanSkeletonBadges() {
+    if (!document.body || isCleaningV109) return;
+
+    isCleaningV109 = true;
+
+    try {
+      var allNodes = Array.prototype.slice.call(document.querySelectorAll("button,a,span,div,p,strong,b,section"));
+
+      allNodes.forEach(function (node) {
+        if (!node || node.classList.contains("goodos-skeleton-cleaned-v109")) return;
+
+        var text = cleanText(node.textContent);
+
+        if (isSkeletonOnlyText(text)) {
+          var target = getSmallestExactSkeletonNode(node);
+
+          removeNearbyProgressAfter(target);
+
+          target.classList.add("goodos-skeleton-cleaned-v109");
+          target.setAttribute("aria-hidden", "true");
+          return;
+        }
+
+        if (isSkeletonStatusText(text)) {
+          var rect = node.getBoundingClientRect ? node.getBoundingClientRect() : { height: 0, width: 0 };
+          var parent = node.parentElement;
+
+          if (
+            rect.height <= 120 &&
+            rect.width >= 220 &&
+            text.length <= 360
+          ) {
+            node.classList.add("goodos-skeleton-status-cleaned-v109");
+            node.setAttribute("aria-hidden", "true");
+          } else if (parent) {
+            var parentText = lowerText(parent.textContent);
+
+            if (
+              parentText.indexOf("skeleton status:") !== -1 &&
+              parentText.length <= 420
+            ) {
+              parent.classList.add("goodos-skeleton-status-cleaned-v109");
+              parent.setAttribute("aria-hidden", "true");
+            }
+          }
+        }
+      });
+
+      var possibleProgressBars = Array.prototype.slice.call(document.querySelectorAll("div,span"));
+
+      possibleProgressBars.forEach(function (bar) {
+        if (!looksLikeTinyProgressBar(bar)) return;
+
+        var parent = bar.parentElement;
+        if (!parent) return;
+
+        var parentText = lowerText(parent.textContent);
+        var previousText = lowerText(bar.previousElementSibling ? bar.previousElementSibling.textContent : "");
+
+        if (
+          parentText.indexOf("skeleton only") !== -1 ||
+          previousText.indexOf("skeleton only") !== -1
+        ) {
+          bar.classList.add("goodos-skeleton-progress-cleaned-v109");
+          bar.setAttribute("aria-hidden", "true");
+        }
+      });
+    } finally {
+      setTimeout(function () {
+        isCleaningV109 = false;
+      }, 40);
+    }
+  }
+
+  function scheduleCleanup() {
+    clearTimeout(cleanupTimerV109);
+    cleanupTimerV109 = setTimeout(cleanSkeletonBadges, 120);
+  }
+
+  window.goodosRemoveSkeletonUiV109 = cleanSkeletonBadges;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleCleanup();
+    setTimeout(cleanSkeletonBadges, 500);
+    setTimeout(cleanSkeletonBadges, 1200);
+    setTimeout(cleanSkeletonBadges, 2200);
+  });
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(cleanSkeletonBadges, 120);
+    setTimeout(cleanSkeletonBadges, 700);
+    setTimeout(cleanSkeletonBadges, 1500);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      if (!isCleaningV109) scheduleCleanup();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(cleanSkeletonBadges, 250);
+  setTimeout(cleanSkeletonBadges, 1000);
+  setTimeout(cleanSkeletonBadges, 2000);
 })();
 </script>
 
