@@ -7742,6 +7742,382 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-project-settings-v107>
+.goodos-project-settings-selected-v107 {
+  border-color: rgba(56, 189, 248, 0.88) !important;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.38),
+    0 22px 58px rgba(14, 165, 233, 0.16) !important;
+}
+
+.goodos-project-settings-chart-v107 {
+  --ps-accent: #38bdf8;
+  --ps-accent-soft: rgba(56, 189, 248, 0.18);
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: rgba(255,255,255,0.94);
+}
+
+.goodos-project-settings-chart-v107[data-accent="purple"] {
+  --ps-accent: #a78bfa;
+  --ps-accent-soft: rgba(167,139,250,0.18);
+}
+
+.goodos-project-settings-chart-v107[data-accent="green"] {
+  --ps-accent: #22c55e;
+  --ps-accent-soft: rgba(34,197,94,0.16);
+}
+
+.goodos-project-settings-chart-v107[data-accent="gold"] {
+  --ps-accent: #facc15;
+  --ps-accent-soft: rgba(250,204,21,0.16);
+}
+
+.goodos-project-settings-chart-v107[data-accent="pink"] {
+  --ps-accent: #f472b6;
+  --ps-accent-soft: rgba(244,114,182,0.17);
+}
+
+.goodos-project-settings-kpis-v107 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.goodos-project-settings-kpi-label-v107 {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(203,213,225,0.68);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.goodos-project-settings-kpi-value-v107 {
+  display: inline-block;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.goodos-project-settings-kpi-change-v107 {
+  display: inline-block;
+  margin-left: 7px;
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.goodos-project-settings-mini-title-v107 {
+  margin: 8px 0 6px;
+  color: rgba(255,255,255,0.86);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.goodos-project-settings-svg-wrap-v107 {
+  overflow: hidden;
+  padding: 8px 8px 5px;
+  border: 1px solid rgba(148,163,184,0.11);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 85% 0%, var(--ps-accent-soft), transparent 40%),
+    linear-gradient(180deg, rgba(7,12,24,0.62), rgba(7,12,24,0.32));
+}
+
+.goodos-project-settings-svg-wrap-v107 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.goodos-project-settings-axis-v107 {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  color: rgba(203,213,225,0.56);
+  font-size: 9px;
+}
+
+.goodos-project-settings-bars-v107 {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(148,163,184,0.11);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 85% 0%, var(--ps-accent-soft), transparent 40%),
+    linear-gradient(180deg, rgba(7,12,24,0.62), rgba(7,12,24,0.32));
+}
+
+.goodos-project-settings-bar-row-v107 {
+  display: grid;
+  grid-template-columns: 82px 1fr 42px;
+  gap: 8px;
+  align-items: center;
+  color: rgba(226,232,240,0.82);
+  font-size: 10px;
+}
+
+.goodos-project-settings-bar-track-v107 {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.14);
+}
+
+.goodos-project-settings-bar-fill-v107 {
+  width: var(--ps-bar);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ps-accent), #8b5cf6);
+}
+
+.goodos-project-settings-panel-v107 {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  margin: 14px 0 22px;
+  padding: 22px;
+  border: 1px solid rgba(125,211,252,0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,0.13), transparent 34%),
+    linear-gradient(135deg, rgba(17,24,39,0.97), rgba(15,23,42,0.94));
+  box-shadow: 0 22px 65px rgba(0,0,0,0.26);
+  color: rgba(241,245,249,0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.goodos-project-settings-panel-v107::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(56,189,248,0.10), transparent 28%, transparent 72%, rgba(167,139,250,0.08)),
+    radial-gradient(circle at 18% 0%, rgba(56,189,248,0.09), transparent 28%);
+}
+
+.goodos-project-settings-panel-inner-v107 {
+  position: relative;
+  z-index: 1;
+}
+
+.goodos-project-settings-panel-head-v107 {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.goodos-project-settings-eyebrow-v107 {
+  margin-bottom: 8px;
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.goodos-project-settings-title-v107 {
+  margin: 0;
+  color: white;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 0.95;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.goodos-project-settings-subtitle-v107 {
+  margin: 10px 0 0;
+  max-width: 780px;
+  color: rgba(203,213,225,0.82);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.goodos-project-settings-actions-v107 {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.goodos-project-settings-btn-v107 {
+  appearance: none;
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 999px;
+  background: rgba(15,23,42,0.76);
+  color: rgba(241,245,249,0.92);
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-project-settings-btn-v107:hover {
+  border-color: rgba(125,211,252,0.5);
+  background: rgba(14,116,144,0.20);
+}
+
+.goodos-project-settings-btn-danger-v107 {
+  border-color: rgba(248,113,113,0.28);
+  color: #fecaca;
+}
+
+.goodos-project-settings-metrics-v107 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.goodos-project-settings-metric-v107 {
+  padding: 14px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 17px;
+  background: rgba(2,6,23,0.34);
+}
+
+.goodos-project-settings-metric-label-v107 {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(203,213,225,0.64);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-project-settings-metric-value-v107 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.goodos-project-settings-table-section-v107 {
+  margin-top: 18px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(2,6,23,0.26);
+}
+
+.goodos-project-settings-table-title-v107 {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(148,163,184,0.12);
+  color: rgba(224,242,254,0.92);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goodos-project-settings-table-wrap-v107 {
+  overflow-x: auto;
+}
+
+.goodos-project-settings-table-v107 {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+}
+
+.goodos-project-settings-table-v107 th,
+.goodos-project-settings-table-v107 td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148,163,184,0.10);
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-project-settings-table-v107 th {
+  color: rgba(186,230,253,0.78);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-project-settings-table-v107 td {
+  color: rgba(226,232,240,0.88);
+  max-width: 430px;
+  word-break: break-word;
+}
+
+.goodos-project-settings-notes-v107 {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.goodos-project-settings-note-v107 {
+  padding: 11px 13px;
+  border: 1px solid rgba(45,212,191,0.18);
+  border-radius: 14px;
+  background: rgba(20,184,166,0.07);
+  color: rgba(204,251,241,0.88);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-project-settings-loading-v107,
+.goodos-project-settings-error-v107,
+.goodos-project-settings-empty-v107 {
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(2,6,23,0.34);
+  color: rgba(226,232,240,0.78);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.goodos-project-settings-error-v107 {
+  border: 1px solid rgba(248,113,113,0.30);
+  background: rgba(127,29,29,0.18);
+  color: #fecaca;
+}
+
+@media (max-width: 980px) {
+  .goodos-project-settings-panel-head-v107 {
+    display: block;
+  }
+
+  .goodos-project-settings-actions-v107 {
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .goodos-project-settings-metrics-v107 {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .goodos-project-settings-kpis-v107,
+  .goodos-project-settings-metrics-v107 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -30280,6 +30656,717 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(enhancePage, 300);
   setTimeout(enhancePage, 1200);
+})();
+</script>
+
+
+<script data-goodos-project-settings-v107>
+(function () {
+  var SECTIONS_V107 = {
+    "General": {
+      key: "general",
+      label: "General",
+      endpoint: "/api/admin/project-settings-console/section/general",
+      accent: "cyan",
+      metrics: [["Project", "Live", "read"], ["Git", "Active", "state"]],
+      chartType: "line",
+      title: "Project Lifecycle",
+      data: [12, 18, 25, 31, 40, 52, 66, 78]
+    },
+    "Compute and Disk": {
+      key: "compute-and-disk",
+      label: "Compute and Disk",
+      endpoint: "/api/admin/project-settings-console/section/compute-and-disk",
+      accent: "green",
+      metrics: [["Compute", "Live", "pm2"], ["Disk", "Ready", "df"]],
+      chartType: "line",
+      title: "Runtime Health",
+      data: [72, 76, 81, 83, 86, 88, 91, 94]
+    },
+    "Infrastructure": {
+      key: "infrastructure",
+      label: "Infrastructure",
+      endpoint: "/api/admin/project-settings-console/section/infrastructure",
+      accent: "purple",
+      metrics: [["Services", "Live", "system"], ["PM2", "Active", "apps"]],
+      chartType: "bars",
+      title: "Infrastructure Readiness",
+      bars: [["Nginx", 96], ["PM2", 94], ["SSL", 88], ["SSH", 92]]
+    },
+    "Integrations": {
+      key: "integrations",
+      label: "Integrations",
+      endpoint: "/api/admin/project-settings-console/section/integrations",
+      accent: "cyan",
+      metrics: [["Packages", "Live", "deps"], ["Env", "Scan", "keys"]],
+      chartType: "line",
+      title: "Integration Coverage",
+      data: [21, 29, 34, 42, 51, 63, 72, 84]
+    },
+    "API Keys": {
+      key: "api-keys",
+      label: "API Keys",
+      endpoint: "/api/admin/project-settings-console/section/api-keys",
+      accent: "gold",
+      metrics: [["Keys", "Masked", "safe"], ["Routes", "Scan", "live"]],
+      chartType: "bars",
+      title: "API Key Coverage",
+      bars: [["Admin", 88], ["Public", 72], ["Service", 64], ["Audit", 80]]
+    },
+    "JWT Keys": {
+      key: "jwt-keys",
+      label: "JWT Keys",
+      endpoint: "/api/admin/project-settings-console/section/jwt-keys",
+      accent: "purple",
+      metrics: [["JWT", "Masked", "safe"], ["Auth", "Live", "routes"]],
+      chartType: "bars",
+      title: "JWT Readiness",
+      bars: [["Access", 90], ["Refresh", 66], ["Session", 74], ["Routes", 86]]
+    },
+    "Log Drains": {
+      key: "log-drains",
+      label: "Log Drains",
+      endpoint: "/api/admin/project-settings-console/section/log-drains",
+      accent: "green",
+      metrics: [["Drains", "Env", "check"], ["Logs", "Live", "tail"]],
+      chartType: "line",
+      title: "Log Drain Activity",
+      data: [15, 22, 27, 33, 41, 55, 63, 77]
+    },
+    "Add-ons": {
+      key: "add-ons",
+      label: "Add-ons",
+      endpoint: "/api/admin/project-settings-console/section/add-ons",
+      accent: "pink",
+      metrics: [["Add-ons", "Scan", "packages"], ["Modules", "Live", "files"]],
+      chartType: "bars",
+      title: "Add-on Mix",
+      bars: [["AI", 70], ["Queues", 55], ["Email", 64], ["Storage", 76]]
+    },
+    "Data API": {
+      key: "data-api",
+      label: "Data API",
+      endpoint: "/api/admin/project-settings-console/section/data-api",
+      accent: "cyan",
+      metrics: [["Routes", "Live", "scan"], ["DB", "Config", "check"]],
+      chartType: "line",
+      title: "Data API Readiness",
+      data: [11, 17, 22, 31, 42, 56, 71, 89]
+    },
+    "Vault": {
+      key: "vault",
+      label: "Vault",
+      endpoint: "/api/admin/project-settings-console/section/vault",
+      accent: "purple",
+      metrics: [["Vault", "Masked", "safe"], ["Secrets", "Scan", "env"]],
+      chartType: "bars",
+      title: "Vault Coverage",
+      bars: [["JWT", 92], ["DB", 86], ["Stripe", 68], ["AI", 60]]
+    },
+    "Subscription": {
+      key: "subscription",
+      label: "Subscription",
+      endpoint: "/api/admin/project-settings-console/section/subscription",
+      accent: "gold",
+      metrics: [["Billing", "Ready", "env"], ["Stripe", "Scan", "files"]],
+      chartType: "line",
+      title: "Subscription Readiness",
+      data: [8, 14, 20, 28, 40, 52, 65, 78]
+    },
+    "Usage": {
+      key: "usage",
+      label: "Usage",
+      endpoint: "/api/admin/project-settings-console/section/usage",
+      accent: "green",
+      metrics: [["Usage", "Live", "vps"], ["Logs", "Read", "tail"]],
+      chartType: "line",
+      title: "Usage Activity",
+      data: [18, 24, 33, 39, 49, 61, 74, 91]
+    }
+  };
+
+  var activeCard = null;
+  var activeKey = null;
+  var activePanel = null;
+  var timer = null;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function isProjectSettingsPage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash.indexOf("project-settings") !== -1) return true;
+
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    return bodyText.indexOf("project settings") !== -1 &&
+      bodyText.indexOf("compute sizing") !== -1 &&
+      bodyText.indexOf("subscription settings") !== -1;
+  }
+
+  function looksLikeJwt(value) {
+    return typeof value === "string" && value.split(".").length === 3 && value.length > 40;
+  }
+
+  function findTokenInStorage(storage) {
+    if (!storage) return "";
+
+    var preferredKeys = [
+      "token",
+      "authToken",
+      "accessToken",
+      "access_token",
+      "jwt",
+      "goodos_token",
+      "goodos_access_token",
+      "goodos.auth.token",
+      "goodos.auth.accessToken",
+      "GoodOS.token",
+      "goodosBackendToken"
+    ];
+
+    for (var i = 0; i < preferredKeys.length; i++) {
+      try {
+        var direct = storage.getItem(preferredKeys[i]);
+        if (looksLikeJwt(direct)) return direct;
+
+        if (direct && direct.charAt(0) === "{") {
+          var parsed = JSON.parse(direct);
+          var nested = parsed.token || parsed.accessToken || parsed.access_token || parsed.jwt;
+          if (looksLikeJwt(nested)) return nested;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      for (var k = 0; k < storage.length; k++) {
+        var key = storage.key(k);
+        var value = storage.getItem(key);
+
+        if (looksLikeJwt(value)) return value;
+
+        if (value && value.charAt(0) === "{") {
+          try {
+            var obj = JSON.parse(value);
+            var token = obj.token || obj.accessToken || obj.access_token || obj.jwt;
+            if (looksLikeJwt(token)) return token;
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function getAuthToken() {
+    return (
+      findTokenInStorage(window.localStorage) ||
+      findTokenInStorage(window.sessionStorage) ||
+      window.goodosAccessToken ||
+      window.goodosAuthToken ||
+      ""
+    );
+  }
+
+  function apiFetch(url) {
+    var headers = { "Accept": "application/json" };
+    var token = getAuthToken();
+
+    if (token) headers.Authorization = "Bearer " + token;
+
+    return fetch(url, {
+      method: "GET",
+      headers: headers,
+      credentials: "same-origin",
+      cache: "no-store"
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (_) {}
+
+        if (!res.ok) {
+          var message = json && json.message ? json.message : "Request failed: " + res.status;
+          var err = new Error(message);
+          err.status = res.status;
+          err.payload = json;
+          throw err;
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function findCardForTitle(title) {
+    var wanted = cleanLower(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+
+      if (cleanLower(el.textContent) !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 9 && node && node !== document.body; depth++) {
+        if (node.classList && node.classList.contains("goodos-project-settings-panel-v107")) break;
+
+        var rect = node.getBoundingClientRect();
+        var nodeText = cleanLower(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (
+          rect.width >= 170 &&
+          rect.height >= 65 &&
+          nodeText.indexOf(wanted) !== -1 &&
+          nodeText.indexOf("project settings live section") === -1
+        ) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function linePoints(data) {
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+
+    return data.map(function (value, index) {
+      var x = 12 + (index / Math.max(1, data.length - 1)) * 276;
+      var y = 70 - ((value - min) / range) * 52;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function renderLineChart(config) {
+    var points = linePoints(config.data || [1, 2, 3, 4]);
+    var areaPoints = "12,76 " + points + " 288,76";
+
+    return [
+      '<div class="goodos-project-settings-mini-title-v107">' + escapeHtml(config.title || "Activity") + '</div>',
+      '<div class="goodos-project-settings-svg-wrap-v107">',
+        '<svg viewBox="0 0 300 86" role="img" aria-label="' + escapeHtml(config.title || "Project settings chart") + '">',
+          '<defs>',
+            '<linearGradient id="goodosProjectSettingsAreaV107" x1="0" x2="0" y1="0" y2="1">',
+              '<stop offset="0%" stop-color="var(--ps-accent)" stop-opacity="0.28"></stop>',
+              '<stop offset="100%" stop-color="var(--ps-accent)" stop-opacity="0"></stop>',
+            '</linearGradient>',
+          '</defs>',
+          '<line x1="12" y1="18" x2="288" y2="18" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="44" x2="288" y2="44" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="70" x2="288" y2="70" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<polygon points="' + areaPoints + '" fill="url(#goodosProjectSettingsAreaV107)"></polygon>',
+          '<polyline points="' + points + '" fill="none" stroke="var(--ps-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+          points.split(" ").map(function (point) {
+            var parts = point.split(",");
+            return '<circle cx="' + parts[0] + '" cy="' + parts[1] + '" r="2.6" fill="var(--ps-accent)"></circle>';
+          }).join(""),
+        '</svg>',
+        '<div class="goodos-project-settings-axis-v107"><span>May 22</span><span>May 24</span><span>May 26</span><span>May 28</span></div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderBars(config) {
+    return [
+      '<div class="goodos-project-settings-mini-title-v107">' + escapeHtml(config.title || "Breakdown") + '</div>',
+      '<div class="goodos-project-settings-bars-v107">',
+        (config.bars || []).map(function (bar) {
+          return [
+            '<div class="goodos-project-settings-bar-row-v107">',
+              '<span>' + escapeHtml(bar[0]) + '</span>',
+              '<div class="goodos-project-settings-bar-track-v107"><div class="goodos-project-settings-bar-fill-v107" style="--ps-bar:' + Number(bar[1] || 0) + '%"></div></div>',
+              '<strong>' + escapeHtml(bar[1]) + '%</strong>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function chartHtml(config) {
+    return [
+      '<div class="goodos-project-settings-chart-v107" data-accent="' + escapeHtml(config.accent || "cyan") + '">',
+        '<div class="goodos-project-settings-kpis-v107">',
+          (config.metrics || []).map(function (metric) {
+            return [
+              '<div>',
+                '<span class="goodos-project-settings-kpi-label-v107">' + escapeHtml(metric[0]) + '</span>',
+                '<span class="goodos-project-settings-kpi-value-v107">' + escapeHtml(metric[1]) + '</span>',
+                '<span class="goodos-project-settings-kpi-change-v107">' + escapeHtml(metric[2] || "") + '</span>',
+              '</div>'
+            ].join("");
+          }).join(""),
+        '</div>',
+        config.chartType === "bars" ? renderBars(config) : renderLineChart(config),
+      '</div>'
+    ].join("");
+  }
+
+  function addCharts() {
+    if (!document.body || !isProjectSettingsPage()) return;
+
+    Object.keys(SECTIONS_V107).forEach(function (title) {
+      var card = findCardForTitle(title);
+      if (!card) return;
+
+      if (card.querySelector('.goodos-project-settings-chart-v107[data-project-settings-chart-title="' + title + '"]')) return;
+      if (card.querySelector(".goodos-project-settings-panel-v107")) return;
+
+      var wrapper = document.createElement("div");
+      wrapper.innerHTML = chartHtml(SECTIONS_V107[title]);
+
+      var chart = wrapper.firstElementChild;
+      chart.setAttribute("data-project-settings-chart-title", title);
+
+      card.appendChild(chart);
+    });
+  }
+
+  function removePanel() {
+    if (activePanel && activePanel.parentNode) {
+      activePanel.parentNode.removeChild(activePanel);
+    }
+
+    if (activeCard) {
+      activeCard.classList.remove("goodos-project-settings-selected-v107");
+      activeCard.removeAttribute("data-goodos-project-settings-active-v107");
+    }
+
+    activeCard = null;
+    activeKey = null;
+    activePanel = null;
+  }
+
+  function panelShell(section) {
+    var panel = document.createElement("section");
+    panel.className = "goodos-project-settings-panel-v107";
+    panel.setAttribute("data-goodos-project-settings-panel-key", section.key);
+
+    panel.innerHTML = [
+      '<div class="goodos-project-settings-panel-inner-v107">',
+        '<div class="goodos-project-settings-panel-head-v107">',
+          '<div>',
+            '<div class="goodos-project-settings-eyebrow-v107">Project Settings Live Section</div>',
+            '<h2 class="goodos-project-settings-title-v107">' + escapeHtml(section.label) + '</h2>',
+            '<p class="goodos-project-settings-subtitle-v107">Loading live data from <strong>' + escapeHtml(section.endpoint) + '</strong>.</p>',
+          '</div>',
+          '<div class="goodos-project-settings-actions-v107">',
+            '<button class="goodos-project-settings-btn-v107" type="button" data-project-settings-action="refresh">Refresh Section</button>',
+            '<button class="goodos-project-settings-btn-v107" type="button" data-project-settings-action="copy">Copy JSON</button>',
+            '<button class="goodos-project-settings-btn-v107" type="button" data-project-settings-action="open-api">Open API</button>',
+            '<button class="goodos-project-settings-btn-v107 goodos-project-settings-btn-danger-v107" type="button" data-project-settings-action="deselect">Deselect</button>',
+          '</div>',
+        '</div>',
+        '<div data-project-settings-panel-body><div class="goodos-project-settings-loading-v107">Loading live project settings data...</div></div>',
+      '</div>'
+    ].join("");
+
+    panel.__goodosProjectSettingsSection = section;
+    panel.__goodosProjectSettingsPayload = null;
+
+    panel.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-project-settings-action]");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var action = button.getAttribute("data-project-settings-action");
+
+      if (action === "deselect") {
+        removePanel();
+        return;
+      }
+
+      if (action === "refresh") {
+        loadPanelData(panel, section);
+        return;
+      }
+
+      if (action === "copy") {
+        copyPanelJson(panel);
+        return;
+      }
+
+      if (action === "open-api") {
+        window.open(section.endpoint, "_blank", "noopener,noreferrer");
+      }
+    });
+
+    return panel;
+  }
+
+  function renderMetrics(metrics) {
+    if (!metrics || !metrics.length) {
+      return '<div class="goodos-project-settings-empty-v107">No metrics returned.</div>';
+    }
+
+    return [
+      '<div class="goodos-project-settings-metrics-v107">',
+        metrics.map(function (item) {
+          return [
+            '<div class="goodos-project-settings-metric-v107">',
+              '<span class="goodos-project-settings-metric-label-v107">' + escapeHtml(item.label) + '</span>',
+              '<span class="goodos-project-settings-metric-value-v107">' + escapeHtml(item.value) + '</span>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderTable(table) {
+    var columns = table.columns || [];
+    var rows = table.rows || [];
+
+    if (!columns.length && rows.length) columns = Object.keys(rows[0]);
+
+    return [
+      '<section class="goodos-project-settings-table-section-v107">',
+        '<div class="goodos-project-settings-table-title-v107">' + escapeHtml(table.title || "Data") + '</div>',
+        rows.length ? [
+          '<div class="goodos-project-settings-table-wrap-v107">',
+            '<table class="goodos-project-settings-table-v107">',
+              '<thead><tr>',
+                columns.map(function (column) {
+                  return '<th>' + escapeHtml(column) + '</th>';
+                }).join(""),
+              '</tr></thead>',
+              '<tbody>',
+                rows.slice(0, 70).map(function (row) {
+                  return [
+                    '<tr>',
+                      columns.map(function (column) {
+                        return '<td>' + escapeHtml(row && row[column] != null ? row[column] : "") + '</td>';
+                      }).join(""),
+                    '</tr>'
+                  ].join("");
+                }).join(""),
+              '</tbody>',
+            '</table>',
+          '</div>',
+          rows.length > 70 ? '<div class="goodos-project-settings-empty-v107">Showing first 70 rows of ' + rows.length + '.</div>' : ''
+        ].join("") : '<div class="goodos-project-settings-empty-v107">No rows returned.</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function renderNotes(notes) {
+    if (!notes || !notes.length) return "";
+
+    return [
+      '<div class="goodos-project-settings-notes-v107">',
+        notes.map(function (note) {
+          return '<div class="goodos-project-settings-note-v107">' + escapeHtml(note) + '</div>';
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderPanelData(panel, payload) {
+    var body = panel.querySelector("[data-project-settings-panel-body]");
+    var subtitle = panel.querySelector(".goodos-project-settings-subtitle-v107");
+
+    if (subtitle) {
+      subtitle.innerHTML = escapeHtml(payload.subtitle || "Live project settings data loaded.") +
+        '<br><span style="color:rgba(203,213,225,.62);font-size:12px;">Generated: ' +
+        escapeHtml(payload.generatedAt || new Date().toISOString()) +
+        '</span>';
+    }
+
+    body.innerHTML = [
+      renderMetrics(payload.metrics || []),
+      (payload.tables || []).map(renderTable).join(""),
+      renderNotes(payload.notes || [])
+    ].join("");
+
+    panel.__goodosProjectSettingsPayload = payload;
+  }
+
+  function renderPanelError(panel, err) {
+    var body = panel.querySelector("[data-project-settings-panel-body]");
+    var message = err && err.message ? err.message : "Project Settings section failed to load.";
+
+    body.innerHTML = [
+      '<div class="goodos-project-settings-error-v107">',
+        '<strong>Load failed:</strong> ' + escapeHtml(message),
+        err && err.status === 401 ? '<br><br>Your login token was not accepted. Log out and log back in, then reopen this tab.' : '',
+      '</div>'
+    ].join("");
+  }
+
+  function loadPanelData(panel, section) {
+    var body = panel.querySelector("[data-project-settings-panel-body]");
+    body.innerHTML = '<div class="goodos-project-settings-loading-v107">Loading live ' + escapeHtml(section.label) + ' data...</div>';
+
+    apiFetch(section.endpoint)
+      .then(function (payload) {
+        renderPanelData(panel, payload || {});
+      })
+      .catch(function (err) {
+        renderPanelError(panel, err);
+      });
+  }
+
+  function copyPanelJson(panel) {
+    var payload = panel.__goodosProjectSettingsPayload;
+    if (!payload) return;
+
+    var text = JSON.stringify(payload, null, 2);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+  }
+
+  function openPanelForCard(card, section) {
+    if (activeCard === card && activeKey === section.key) {
+      removePanel();
+      return;
+    }
+
+    removePanel();
+
+    activeCard = card;
+    activeKey = section.key;
+
+    card.classList.add("goodos-project-settings-selected-v107");
+    card.setAttribute("data-goodos-project-settings-active-v107", "true");
+
+    var panel = panelShell(section);
+    activePanel = panel;
+
+    card.insertAdjacentElement("afterend", panel);
+
+    setTimeout(function () {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }, 80);
+
+    loadPanelData(panel, section);
+  }
+
+  function enhanceCard(title, section) {
+    var card = findCardForTitle(title);
+    if (!card) return;
+
+    var marker = "true:" + section.key;
+
+    if (card.getAttribute("data-goodos-project-settings-functional-v107") === marker) return;
+
+    card.setAttribute("data-goodos-project-settings-functional-v107", marker);
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", function (event) {
+      if (!isProjectSettingsPage()) return;
+
+      if (
+        event.target.closest("button") ||
+        event.target.closest("a") ||
+        event.target.closest("input") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea") ||
+        event.target.closest(".goodos-project-settings-panel-v107")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      openPanelForCard(card, section);
+    });
+  }
+
+  function enhanceProjectSettingsV107() {
+    if (!document.body || !isProjectSettingsPage()) return;
+
+    addCharts();
+
+    Object.keys(SECTIONS_V107).forEach(function (title) {
+      enhanceCard(title, SECTIONS_V107[title]);
+    });
+  }
+
+  function scheduleEnhance() {
+    clearTimeout(timer);
+    timer = setTimeout(enhanceProjectSettingsV107, 120);
+  }
+
+  window.goodosEnhanceProjectSettingsV107 = enhanceProjectSettingsV107;
+  window.goodosCloseProjectSettingsPanelV107 = removePanel;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhanceProjectSettingsV107, 700);
+    setTimeout(enhanceProjectSettingsV107, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    removePanel();
+    setTimeout(enhanceProjectSettingsV107, 150);
+    setTimeout(enhanceProjectSettingsV107, 800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhanceProjectSettingsV107, 300);
+  setTimeout(enhanceProjectSettingsV107, 1200);
 })();
 </script>
 

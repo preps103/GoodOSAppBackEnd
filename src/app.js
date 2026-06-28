@@ -11,6 +11,22 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS PROJECT SETTINGS V107 API MOUNT */
+try {
+  const goodosProjectSettingsRouterV107 = require('./routes/project-settings-console.routes');
+
+  app.use('/api/admin/project-settings-console', goodosProjectSettingsRouterV107);
+  app.use('/api/admin/project-settings', goodosProjectSettingsRouterV107);
+  app.use('/api/project-settings-console', goodosProjectSettingsRouterV107);
+
+  console.log('GOODOS V107 Project Settings API mounted');
+} catch (err) {
+  console.error('GOODOS V107 Project Settings API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS PROJECT SETTINGS V107 API MOUNT */
+
+
+
 /* GOODOS OBSERVABILITY V105 MISSING CARDS API MOUNT */
 try {
   const goodosObservabilityV105Router = require('./routes/observability-v105.routes');
