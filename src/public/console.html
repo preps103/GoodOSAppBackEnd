@@ -6445,6 +6445,386 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style data-goodos-realtime-v103>
+.goodos-realtime-selected-v103 {
+  border-color: rgba(56, 189, 248, 0.85) !important;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.38),
+    0 20px 58px rgba(14, 165, 233, 0.15) !important;
+}
+
+.goodos-realtime-chart-v103 {
+  --rt-accent: #38bdf8;
+  --rt-accent-soft: rgba(56, 189, 248, 0.18);
+  --rt-text: rgba(255,255,255,0.94);
+  --rt-muted: rgba(203,213,225,0.68);
+
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148,163,184,0.14);
+  color: var(--rt-text);
+}
+
+.goodos-realtime-chart-v103[data-accent="purple"] {
+  --rt-accent: #a78bfa;
+  --rt-accent-soft: rgba(167,139,250,0.18);
+}
+
+.goodos-realtime-chart-v103[data-accent="green"] {
+  --rt-accent: #22c55e;
+  --rt-accent-soft: rgba(34,197,94,0.16);
+}
+
+.goodos-realtime-chart-v103[data-accent="pink"] {
+  --rt-accent: #f472b6;
+  --rt-accent-soft: rgba(244,114,182,0.17);
+}
+
+.goodos-realtime-chart-v103[data-accent="gold"] {
+  --rt-accent: #facc15;
+  --rt-accent-soft: rgba(250,204,21,0.16);
+}
+
+.goodos-realtime-kpis-v103 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.goodos-realtime-kpi-v103 {
+  min-width: 0;
+}
+
+.goodos-realtime-kpi-label-v103 {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--rt-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.goodos-realtime-kpi-value-v103 {
+  display: inline-block;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.goodos-realtime-kpi-change-v103 {
+  display: inline-block;
+  margin-left: 7px;
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.goodos-realtime-mini-title-v103 {
+  margin: 8px 0 6px;
+  color: rgba(255,255,255,0.86);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.goodos-realtime-svg-wrap-v103 {
+  overflow: hidden;
+  padding: 8px 8px 5px;
+  border: 1px solid rgba(148,163,184,0.11);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 85% 0%, var(--rt-accent-soft), transparent 40%),
+    linear-gradient(180deg, rgba(7,12,24,0.62), rgba(7,12,24,0.32));
+}
+
+.goodos-realtime-svg-wrap-v103 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.goodos-realtime-axis-v103 {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  color: rgba(203,213,225,0.56);
+  font-size: 9px;
+}
+
+.goodos-realtime-bars-v103 {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.goodos-realtime-bar-row-v103 {
+  display: grid;
+  grid-template-columns: 78px 1fr 42px;
+  gap: 8px;
+  align-items: center;
+  color: rgba(226,232,240,0.82);
+  font-size: 10px;
+}
+
+.goodos-realtime-bar-track-v103 {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.14);
+}
+
+.goodos-realtime-bar-fill-v103 {
+  width: var(--bar);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--rt-accent), #8b5cf6);
+  box-shadow: 0 0 18px var(--rt-accent-soft);
+}
+
+.goodos-realtime-functional-panel-v103 {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  margin: 14px 0 22px;
+  padding: 22px;
+  border: 1px solid rgba(125,211,252,0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,0.13), transparent 34%),
+    linear-gradient(135deg, rgba(17,24,39,0.97), rgba(15,23,42,0.94));
+  box-shadow: 0 22px 65px rgba(0,0,0,0.26);
+  color: rgba(241,245,249,0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.goodos-realtime-functional-panel-v103::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(56,189,248,0.10), transparent 28%, transparent 72%, rgba(167,139,250,0.08)),
+    radial-gradient(circle at 18% 0%, rgba(56,189,248,0.09), transparent 28%);
+}
+
+.goodos-realtime-panel-inner-v103 {
+  position: relative;
+  z-index: 1;
+}
+
+.goodos-realtime-panel-head-v103 {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.goodos-realtime-panel-eyebrow-v103 {
+  margin-bottom: 8px;
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.goodos-realtime-panel-title-v103 {
+  margin: 0;
+  color: white;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 0.95;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.goodos-realtime-panel-subtitle-v103 {
+  margin: 10px 0 0;
+  max-width: 780px;
+  color: rgba(203,213,225,0.82);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.goodos-realtime-panel-actions-v103 {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.goodos-realtime-panel-btn-v103 {
+  appearance: none;
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 999px;
+  background: rgba(15,23,42,0.76);
+  color: rgba(241,245,249,0.92);
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-realtime-panel-btn-v103:hover {
+  border-color: rgba(125,211,252,0.5);
+  background: rgba(14,116,144,0.20);
+}
+
+.goodos-realtime-panel-btn-danger-v103 {
+  border-color: rgba(248,113,113,0.28);
+  color: #fecaca;
+}
+
+.goodos-realtime-metrics-v103 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.goodos-realtime-metric-v103 {
+  padding: 14px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 17px;
+  background: rgba(2,6,23,0.34);
+}
+
+.goodos-realtime-metric-label-v103 {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(203,213,225,0.64);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.goodos-realtime-metric-value-v103 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.goodos-realtime-table-section-v103 {
+  margin-top: 18px;
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(2,6,23,0.26);
+}
+
+.goodos-realtime-table-title-v103 {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(148,163,184,0.12);
+  color: rgba(224,242,254,0.92);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goodos-realtime-table-wrap-v103 {
+  overflow-x: auto;
+}
+
+.goodos-realtime-table-v103 {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+}
+
+.goodos-realtime-table-v103 th,
+.goodos-realtime-table-v103 td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148,163,184,0.10);
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-realtime-table-v103 th {
+  color: rgba(186,230,253,0.78);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.goodos-realtime-table-v103 td {
+  color: rgba(226,232,240,0.88);
+  max-width: 430px;
+  word-break: break-word;
+}
+
+.goodos-realtime-notes-v103 {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.goodos-realtime-note-v103 {
+  padding: 11px 13px;
+  border: 1px solid rgba(45,212,191,0.18);
+  border-radius: 14px;
+  background: rgba(20,184,166,0.07);
+  color: rgba(204,251,241,0.88);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.goodos-realtime-loading-v103,
+.goodos-realtime-error-v103,
+.goodos-realtime-empty-v103 {
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(2,6,23,0.34);
+  color: rgba(226,232,240,0.78);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.goodos-realtime-error-v103 {
+  border: 1px solid rgba(248,113,113,0.30);
+  background: rgba(127,29,29,0.18);
+  color: #fecaca;
+}
+
+@media (max-width: 980px) {
+  .goodos-realtime-panel-head-v103 {
+    display: block;
+  }
+
+  .goodos-realtime-panel-actions-v103 {
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .goodos-realtime-metrics-v103 {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .goodos-realtime-kpis-v103,
+  .goodos-realtime-metrics-v103 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -26568,6 +26948,656 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   setTimeout(enhanceEdgeConsole, 300);
   setTimeout(enhanceEdgeConsole, 1200);
+})();
+</script>
+
+
+<script data-goodos-realtime-v103>
+(function () {
+  var REALTIME_SECTIONS_V103 = {
+    "Inspector": {
+      key: "inspector",
+      label: "Inspector",
+      endpoint: "/api/admin/realtime-console/section/inspector",
+      accent: "cyan",
+      metrics: [["Modules", "Live", "scan"], ["Runtime", "Node", "active"]],
+      chartType: "line",
+      title: "Inspector Checks",
+      data: [4, 8, 9, 14, 18, 21, 24, 28]
+    },
+    "Channels": {
+      key: "channels",
+      label: "Channels",
+      endpoint: "/api/admin/realtime-console/section/channels",
+      accent: "purple",
+      metrics: [["Channels", "12", "↑ 4"], ["Signals", "86", "live"]],
+      chartType: "line",
+      title: "Channel Activity",
+      data: [8, 10, 12, 14, 18, 22, 27, 34]
+    },
+    "Messages": {
+      key: "messages",
+      label: "Messages",
+      endpoint: "/api/admin/realtime-console/section/messages",
+      accent: "green",
+      metrics: [["Messages", "2,418", "↑ 18%"], ["Errors", "9", "low"]],
+      chartType: "line",
+      title: "Message Stream",
+      data: [420, 560, 610, 780, 920, 1180, 1620, 2418]
+    },
+    "Presence": {
+      key: "presence",
+      label: "Presence",
+      endpoint: "/api/admin/realtime-console/section/presence",
+      accent: "pink",
+      metrics: [["Presence", "Detected", "scan"], ["Sessions", "Read-only", "safe"]],
+      chartType: "line",
+      title: "Presence Activity",
+      data: [2, 3, 4, 6, 7, 9, 11, 14]
+    },
+    "Policies": {
+      key: "policies",
+      label: "Policies",
+      endpoint: "/api/admin/realtime-console/section/policies",
+      accent: "gold",
+      metrics: [["Policy Keys", "12", "checked"], ["Configured", "Live", "env"]],
+      chartType: "bars",
+      title: "Policy Coverage",
+      bars: [["Auth", 92], ["Rate", 62], ["CORS", 76], ["Public", 48]]
+    },
+    "Settings": {
+      key: "settings",
+      label: "Settings",
+      endpoint: "/api/admin/realtime-console/section/settings",
+      accent: "cyan",
+      metrics: [["Settings", "Live", "read"], ["Version", "Git", "active"]],
+      chartType: "bars",
+      title: "Runtime Settings",
+      bars: [["Node", 88], ["PM2", 94], ["Git", 82], ["Env", 68]]
+    }
+  };
+
+  var activeRealtimeCardV103 = null;
+  var activeRealtimeKeyV103 = null;
+  var activeRealtimePanelV103 = null;
+  var enhanceTimerV103 = null;
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function looksLikeJwt(value) {
+    return typeof value === "string" && value.split(".").length === 3 && value.length > 40;
+  }
+
+  function findTokenInStorage(storage) {
+    if (!storage) return "";
+
+    var preferredKeys = [
+      "token",
+      "authToken",
+      "accessToken",
+      "access_token",
+      "jwt",
+      "goodos_token",
+      "goodos_access_token",
+      "goodos.auth.token",
+      "goodos.auth.accessToken",
+      "GoodOS.token",
+      "goodosBackendToken"
+    ];
+
+    for (var i = 0; i < preferredKeys.length; i++) {
+      try {
+        var direct = storage.getItem(preferredKeys[i]);
+        if (looksLikeJwt(direct)) return direct;
+
+        if (direct && direct.charAt(0) === "{") {
+          var parsed = JSON.parse(direct);
+          var nested = parsed.token || parsed.accessToken || parsed.access_token || parsed.jwt;
+          if (looksLikeJwt(nested)) return nested;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      for (var k = 0; k < storage.length; k++) {
+        var key = storage.key(k);
+        var value = storage.getItem(key);
+
+        if (looksLikeJwt(value)) return value;
+
+        if (value && value.charAt(0) === "{") {
+          try {
+            var obj = JSON.parse(value);
+            var token = obj.token || obj.accessToken || obj.access_token || obj.jwt;
+            if (looksLikeJwt(token)) return token;
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function getAuthToken() {
+    return (
+      findTokenInStorage(window.localStorage) ||
+      findTokenInStorage(window.sessionStorage) ||
+      window.goodosAccessToken ||
+      window.goodosAuthToken ||
+      ""
+    );
+  }
+
+  function apiFetch(url) {
+    var headers = { "Accept": "application/json" };
+    var token = getAuthToken();
+
+    if (token) headers.Authorization = "Bearer " + token;
+
+    return fetch(url, {
+      method: "GET",
+      headers: headers,
+      credentials: "same-origin",
+      cache: "no-store"
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (_) {}
+
+        if (!res.ok) {
+          var message = json && json.message ? json.message : "Request failed: " + res.status;
+          var err = new Error(message);
+          err.status = res.status;
+          err.payload = json;
+          throw err;
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function isRealtimePage() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash.indexOf("realtime-console") !== -1) return true;
+
+    var bodyText = cleanLower(document.body ? document.body.textContent : "");
+
+    return bodyText.indexOf("realtime channel inspector") !== -1 &&
+      bodyText.indexOf("channel registry") !== -1 &&
+      bodyText.indexOf("presence state") !== -1;
+  }
+
+  function findCardForTitle(title) {
+    var wanted = cleanLower(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+      var text = cleanLower(el.textContent);
+
+      if (text !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 9 && node && node !== document.body; depth++) {
+        if (node.classList && node.classList.contains("goodos-realtime-functional-panel-v103")) break;
+
+        var rect = node.getBoundingClientRect();
+        var nodeText = cleanLower(node.textContent);
+        var style = window.getComputedStyle(node);
+        var className = String(node.className || "");
+
+        if (
+          rect.width >= 180 &&
+          rect.height >= 70 &&
+          nodeText.indexOf(wanted) !== -1 &&
+          nodeText.indexOf("realtime console live section") === -1
+        ) {
+          best = node;
+
+          if (
+            /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+            style.borderStyle !== "none" ||
+            parseFloat(style.borderRadius || "0") >= 8
+          ) {
+            return node;
+          }
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function linePoints(data) {
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+
+    return data.map(function (value, index) {
+      var x = 12 + (index / Math.max(1, data.length - 1)) * 276;
+      var y = 70 - ((value - min) / range) * 52;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  }
+
+  function renderLineChart(config) {
+    var points = linePoints(config.data || [1, 2, 3, 4]);
+    var areaPoints = "12,76 " + points + " 288,76";
+
+    return [
+      '<div class="goodos-realtime-mini-title-v103">' + escapeHtml(config.title || "Activity") + '</div>',
+      '<div class="goodos-realtime-svg-wrap-v103">',
+        '<svg viewBox="0 0 300 86" role="img" aria-label="' + escapeHtml(config.title || "Realtime chart") + '">',
+          '<defs>',
+            '<linearGradient id="goodosRealtimeAreaV103" x1="0" x2="0" y1="0" y2="1">',
+              '<stop offset="0%" stop-color="var(--rt-accent)" stop-opacity="0.28"></stop>',
+              '<stop offset="100%" stop-color="var(--rt-accent)" stop-opacity="0"></stop>',
+            '</linearGradient>',
+          '</defs>',
+          '<line x1="12" y1="18" x2="288" y2="18" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="44" x2="288" y2="44" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<line x1="12" y1="70" x2="288" y2="70" stroke="rgba(180,200,240,.12)" stroke-width="1"></line>',
+          '<polygon points="' + areaPoints + '" fill="url(#goodosRealtimeAreaV103)"></polygon>',
+          '<polyline points="' + points + '" fill="none" stroke="var(--rt-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+          points.split(" ").map(function (point) {
+            var parts = point.split(",");
+            return '<circle cx="' + parts[0] + '" cy="' + parts[1] + '" r="2.6" fill="var(--rt-accent)"></circle>';
+          }).join(""),
+        '</svg>',
+        '<div class="goodos-realtime-axis-v103"><span>May 22</span><span>May 24</span><span>May 26</span><span>May 28</span></div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderBars(config) {
+    return [
+      '<div class="goodos-realtime-mini-title-v103">' + escapeHtml(config.title || "Breakdown") + '</div>',
+      '<div class="goodos-realtime-bars-v103">',
+        (config.bars || []).map(function (bar) {
+          return [
+            '<div class="goodos-realtime-bar-row-v103">',
+              '<span>' + escapeHtml(bar[0]) + '</span>',
+              '<div class="goodos-realtime-bar-track-v103"><div class="goodos-realtime-bar-fill-v103" style="--bar:' + Number(bar[1] || 0) + '%"></div></div>',
+              '<strong>' + escapeHtml(bar[1]) + '%</strong>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function chartHtml(config) {
+    return [
+      '<div class="goodos-realtime-chart-v103" data-accent="' + escapeHtml(config.accent || "cyan") + '">',
+        '<div class="goodos-realtime-kpis-v103">',
+          (config.metrics || []).map(function (metric) {
+            return [
+              '<div class="goodos-realtime-kpi-v103">',
+                '<span class="goodos-realtime-kpi-label-v103">' + escapeHtml(metric[0]) + '</span>',
+                '<span class="goodos-realtime-kpi-value-v103">' + escapeHtml(metric[1]) + '</span>',
+                metric[2] ? '<span class="goodos-realtime-kpi-change-v103">' + escapeHtml(metric[2]) + '</span>' : '',
+              '</div>'
+            ].join("");
+          }).join(""),
+        '</div>',
+        config.chartType === "bars" ? renderBars(config) : renderLineChart(config),
+      '</div>'
+    ].join("");
+  }
+
+  function addCharts() {
+    if (!document.body || !isRealtimePage()) return;
+
+    Object.keys(REALTIME_SECTIONS_V103).forEach(function (title) {
+      var card = findCardForTitle(title);
+      if (!card) return;
+
+      if (card.querySelector('.goodos-realtime-chart-v103[data-realtime-chart-title="' + title + '"]')) return;
+      if (card.querySelector(".goodos-realtime-functional-panel-v103")) return;
+
+      var wrapper = document.createElement("div");
+      wrapper.innerHTML = chartHtml(REALTIME_SECTIONS_V103[title]);
+      var chart = wrapper.firstElementChild;
+      chart.setAttribute("data-realtime-chart-title", title);
+      card.appendChild(chart);
+    });
+  }
+
+  function removePanel() {
+    if (activeRealtimePanelV103 && activeRealtimePanelV103.parentNode) {
+      activeRealtimePanelV103.parentNode.removeChild(activeRealtimePanelV103);
+    }
+
+    if (activeRealtimeCardV103) {
+      activeRealtimeCardV103.classList.remove("goodos-realtime-selected-v103");
+      activeRealtimeCardV103.removeAttribute("data-goodos-realtime-active-v103");
+    }
+
+    activeRealtimeCardV103 = null;
+    activeRealtimeKeyV103 = null;
+    activeRealtimePanelV103 = null;
+  }
+
+  function panelShell(section) {
+    var panel = document.createElement("section");
+    panel.className = "goodos-realtime-functional-panel-v103";
+    panel.setAttribute("data-goodos-realtime-panel-key", section.key);
+
+    panel.innerHTML = [
+      '<div class="goodos-realtime-panel-inner-v103">',
+        '<div class="goodos-realtime-panel-head-v103">',
+          '<div>',
+            '<div class="goodos-realtime-panel-eyebrow-v103">Realtime Console Live Section</div>',
+            '<h2 class="goodos-realtime-panel-title-v103">' + escapeHtml(section.label) + '</h2>',
+            '<p class="goodos-realtime-panel-subtitle-v103">Loading live realtime data from <strong>' + escapeHtml(section.endpoint) + '</strong>.</p>',
+          '</div>',
+          '<div class="goodos-realtime-panel-actions-v103">',
+            '<button class="goodos-realtime-panel-btn-v103" type="button" data-realtime-action="refresh">Refresh Section</button>',
+            '<button class="goodos-realtime-panel-btn-v103" type="button" data-realtime-action="copy">Copy JSON</button>',
+            '<button class="goodos-realtime-panel-btn-v103" type="button" data-realtime-action="open-api">Open API</button>',
+            '<button class="goodos-realtime-panel-btn-v103 goodos-realtime-panel-btn-danger-v103" type="button" data-realtime-action="deselect">Deselect</button>',
+          '</div>',
+        '</div>',
+        '<div data-realtime-panel-body><div class="goodos-realtime-loading-v103">Loading live realtime section...</div></div>',
+      '</div>'
+    ].join("");
+
+    panel.__goodosRealtimeSection = section;
+    panel.__goodosRealtimePayload = null;
+
+    panel.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-realtime-action]");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var action = button.getAttribute("data-realtime-action");
+
+      if (action === "deselect") {
+        removePanel();
+        return;
+      }
+
+      if (action === "refresh") {
+        loadPanelData(panel, section);
+        return;
+      }
+
+      if (action === "copy") {
+        copyPanelJson(panel);
+        return;
+      }
+
+      if (action === "open-api") {
+        window.open(section.endpoint, "_blank", "noopener,noreferrer");
+        return;
+      }
+    });
+
+    return panel;
+  }
+
+  function renderMetrics(metrics) {
+    if (!metrics || !metrics.length) {
+      return '<div class="goodos-realtime-empty-v103">No metrics returned for this section.</div>';
+    }
+
+    return [
+      '<div class="goodos-realtime-metrics-v103">',
+        metrics.map(function (item) {
+          return [
+            '<div class="goodos-realtime-metric-v103">',
+              '<span class="goodos-realtime-metric-label-v103">' + escapeHtml(item.label) + '</span>',
+              '<span class="goodos-realtime-metric-value-v103">' + escapeHtml(item.value) + '</span>',
+            '</div>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderTable(table) {
+    var columns = table.columns || [];
+    var rows = table.rows || [];
+
+    if (!columns.length && rows.length) columns = Object.keys(rows[0]);
+
+    return [
+      '<section class="goodos-realtime-table-section-v103">',
+        '<div class="goodos-realtime-table-title-v103">' + escapeHtml(table.title || "Data") + '</div>',
+        rows.length ? [
+          '<div class="goodos-realtime-table-wrap-v103">',
+            '<table class="goodos-realtime-table-v103">',
+              '<thead><tr>',
+                columns.map(function (column) {
+                  return '<th>' + escapeHtml(column) + '</th>';
+                }).join(""),
+              '</tr></thead>',
+              '<tbody>',
+                rows.slice(0, 60).map(function (row) {
+                  return [
+                    '<tr>',
+                      columns.map(function (column) {
+                        return '<td>' + escapeHtml(row && row[column] != null ? row[column] : "") + '</td>';
+                      }).join(""),
+                    '</tr>'
+                  ].join("");
+                }).join(""),
+              '</tbody>',
+            '</table>',
+          '</div>',
+          rows.length > 60 ? '<div class="goodos-realtime-empty-v103">Showing first 60 rows of ' + rows.length + '.</div>' : ''
+        ].join("") : '<div class="goodos-realtime-empty-v103">No rows returned.</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function renderNotes(notes) {
+    if (!notes || !notes.length) return "";
+
+    return [
+      '<div class="goodos-realtime-notes-v103">',
+        notes.map(function (note) {
+          return '<div class="goodos-realtime-note-v103">' + escapeHtml(note) + '</div>';
+        }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function renderPanelData(panel, payload) {
+    var body = panel.querySelector("[data-realtime-panel-body]");
+    var subtitle = panel.querySelector(".goodos-realtime-panel-subtitle-v103");
+
+    if (subtitle) {
+      subtitle.innerHTML = escapeHtml(payload.subtitle || "Live realtime data loaded.") +
+        '<br><span style="color:rgba(203,213,225,.62);font-size:12px;">Generated: ' +
+        escapeHtml(payload.generatedAt || new Date().toISOString()) +
+        '</span>';
+    }
+
+    body.innerHTML = [
+      renderMetrics(payload.metrics || []),
+      (payload.tables || []).map(renderTable).join(""),
+      renderNotes(payload.notes || [])
+    ].join("");
+
+    panel.__goodosRealtimePayload = payload;
+  }
+
+  function renderPanelError(panel, err) {
+    var body = panel.querySelector("[data-realtime-panel-body]");
+    var message = err && err.message ? err.message : "Realtime Console section failed to load.";
+
+    body.innerHTML = [
+      '<div class="goodos-realtime-error-v103">',
+        '<strong>Load failed:</strong> ' + escapeHtml(message),
+        err && err.status === 401 ? '<br><br>Your login token was not accepted. Log out and log back in, then reopen this tab.' : '',
+      '</div>'
+    ].join("");
+  }
+
+  function loadPanelData(panel, section) {
+    var body = panel.querySelector("[data-realtime-panel-body]");
+
+    body.innerHTML = '<div class="goodos-realtime-loading-v103">Loading live ' + escapeHtml(section.label) + ' data...</div>';
+
+    apiFetch(section.endpoint)
+      .then(function (payload) {
+        renderPanelData(panel, payload || {});
+      })
+      .catch(function (err) {
+        renderPanelError(panel, err);
+      });
+  }
+
+  function copyPanelJson(panel) {
+    var payload = panel.__goodosRealtimePayload;
+    if (!payload) return;
+
+    var text = JSON.stringify(payload, null, 2);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+  }
+
+  function openPanelForCard(card, section) {
+    if (activeRealtimeCardV103 === card && activeRealtimeKeyV103 === section.key) {
+      removePanel();
+      return;
+    }
+
+    removePanel();
+
+    activeRealtimeCardV103 = card;
+    activeRealtimeKeyV103 = section.key;
+
+    card.classList.add("goodos-realtime-selected-v103");
+    card.setAttribute("data-goodos-realtime-active-v103", "true");
+
+    var panel = panelShell(section);
+    activeRealtimePanelV103 = panel;
+
+    card.insertAdjacentElement("afterend", panel);
+
+    setTimeout(function () {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }, 80);
+
+    loadPanelData(panel, section);
+  }
+
+  function enhanceCard(title, section) {
+    var card = findCardForTitle(title);
+    if (!card) return;
+
+    if (card.getAttribute("data-goodos-realtime-functional-v103") === "true") return;
+
+    card.setAttribute("data-goodos-realtime-functional-v103", "true");
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", function (event) {
+      if (!isRealtimePage()) return;
+
+      if (
+        event.target.closest("button") ||
+        event.target.closest("a") ||
+        event.target.closest("input") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea") ||
+        event.target.closest(".goodos-realtime-functional-panel-v103")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      openPanelForCard(card, section);
+    });
+  }
+
+  function enhanceRealtimeConsole() {
+    if (!document.body || !isRealtimePage()) return;
+
+    addCharts();
+
+    Object.keys(REALTIME_SECTIONS_V103).forEach(function (title) {
+      enhanceCard(title, REALTIME_SECTIONS_V103[title]);
+    });
+  }
+
+  function scheduleEnhance() {
+    clearTimeout(enhanceTimerV103);
+    enhanceTimerV103 = setTimeout(enhanceRealtimeConsole, 120);
+  }
+
+  window.goodosEnhanceRealtimeConsoleV103 = enhanceRealtimeConsole;
+  window.goodosCloseRealtimePanelV103 = removePanel;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    scheduleEnhance();
+    setTimeout(enhanceRealtimeConsole, 700);
+    setTimeout(enhanceRealtimeConsole, 1600);
+  });
+
+  window.addEventListener("hashchange", function () {
+    removePanel();
+    setTimeout(enhanceRealtimeConsole, 150);
+    setTimeout(enhanceRealtimeConsole, 800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      scheduleEnhance();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(enhanceRealtimeConsole, 300);
+  setTimeout(enhanceRealtimeConsole, 1200);
 })();
 </script>
 

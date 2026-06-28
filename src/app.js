@@ -11,6 +11,22 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS REALTIME CONSOLE V103 API MOUNT */
+try {
+  const goodosRealtimeConsoleRouterV103 = require('./routes/realtime-console.routes');
+
+  app.use('/api/admin/realtime-console', goodosRealtimeConsoleRouterV103);
+  app.use('/api/admin/realtime', goodosRealtimeConsoleRouterV103);
+  app.use('/api/realtime-console', goodosRealtimeConsoleRouterV103);
+
+  console.log('GOODOS V103 Realtime Console API mounted');
+} catch (err) {
+  console.error('GOODOS V103 Realtime Console API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS REALTIME CONSOLE V103 API MOUNT */
+
+
+
 /* GOODOS EDGE FUNCTIONS CONSOLE V102 API MOUNT */
 try {
   const goodosEdgeFunctionsConsoleRouterV102 = require('./routes/edge-functions-console.routes');
