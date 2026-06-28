@@ -11,6 +11,21 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+/* GOODOS OPERATE CONSOLES V104 API MOUNT */
+try {
+  const goodosOperateConsolesRouterV104 = require('./routes/operate-consoles.routes');
+
+  app.use('/api/admin/operate-console', goodosOperateConsolesRouterV104);
+  app.use('/api/operate-console', goodosOperateConsolesRouterV104);
+
+  console.log('GOODOS V104 Operate Consoles API mounted');
+} catch (err) {
+  console.error('GOODOS V104 Operate Consoles API mount failed:', err && err.message ? err.message : err);
+}
+/* END GOODOS OPERATE CONSOLES V104 API MOUNT */
+
+
+
 /* GOODOS REALTIME CONSOLE V103 API MOUNT */
 try {
   const goodosRealtimeConsoleRouterV103 = require('./routes/realtime-console.routes');
