@@ -5234,6 +5234,190 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
 }
 </style>
 
+
+<style id="goodos-auth-console-functional-v97">
+.goodos-auth-card-active-v97 {
+  border-color: rgba(34,211,238,.75) !important;
+  box-shadow: 0 0 0 1px rgba(34,211,238,.22), 0 18px 45px rgba(34,211,238,.10) !important;
+}
+
+.goodos-auth-functional-v97 {
+  grid-column: 1 / -1;
+  margin: 8px 0 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(148,163,184,.18);
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.10), transparent 34%),
+    linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.94));
+  padding: 24px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.goodos-auth-functional-v97.is-hidden-v97 {
+  display: none !important;
+}
+
+.goodos-auth-functional-head-v97 {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.goodos-auth-functional-title-v97 {
+  color: #f8fafc;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.05em;
+  margin: 0 0 8px;
+}
+
+.goodos-auth-functional-copy-v97 {
+  color: rgba(203,213,225,.76);
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 900px;
+}
+
+.goodos-auth-functional-actions-v97 {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.goodos-auth-btn-v97 {
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(15,23,42,.70);
+  color: #e0f2fe;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goodos-auth-btn-v97:hover {
+  border-color: rgba(34,211,238,.55);
+}
+
+.goodos-auth-stat-row-v97 {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.goodos-auth-stat-v97 {
+  border: 1px solid rgba(148,163,184,.13);
+  background: rgba(2,6,23,.28);
+  border-radius: 16px;
+  padding: 13px;
+}
+
+.goodos-auth-stat-label-v97 {
+  color: rgba(148,163,184,.78);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.goodos-auth-stat-value-v97 {
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.goodos-auth-table-wrap-v97 {
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(2,6,23,.30);
+  border-radius: 18px;
+  overflow: auto;
+  max-height: 460px;
+}
+
+.goodos-auth-table-v97 {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.goodos-auth-table-v97 th,
+.goodos-auth-table-v97 td {
+  border-bottom: 1px solid rgba(148,163,184,.10);
+  padding: 12px;
+  text-align: left;
+  color: #e2e8f0;
+  font-size: 13px;
+  vertical-align: top;
+  max-width: 440px;
+  overflow-wrap: anywhere;
+}
+
+.goodos-auth-table-v97 th {
+  color: rgba(203,213,225,.80);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  background: rgba(15,23,42,.92);
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.goodos-auth-status-v97 {
+  margin-top: 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.13);
+  background: rgba(15,23,42,.54);
+  color: rgba(203,213,225,.82);
+  padding: 13px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.goodos-auth-status-v97.is-error-v97 {
+  border-color: rgba(244,63,94,.28);
+  color: #fecdd3;
+  background: rgba(127,29,29,.20);
+}
+
+.goodos-auth-empty-v97 {
+  color: rgba(203,213,225,.66);
+  padding: 28px;
+  text-align: center;
+}
+
+@media (max-width: 1350px) {
+  .goodos-auth-stat-row-v97 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .goodos-auth-functional-head-v97 {
+    display: block;
+  }
+
+  .goodos-auth-functional-actions-v97 {
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .goodos-auth-stat-row-v97 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -23339,6 +23523,421 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   } else {
     boot();
   }
+})();
+</script>
+
+
+<script id="goodos-auth-console-functional-v97-js">
+(function () {
+  if (window.__goodosAuthConsoleFunctionalV97) return;
+  window.__goodosAuthConsoleFunctionalV97 = true;
+
+  var activeSlug = "";
+  var isLoadingSection = false;
+  var isLoadingSummary = false;
+  var summaryLoaded = false;
+  var observerTimer = null;
+
+  var sectionMap = {
+    "users": "users",
+    "oauth apps": "oauth-apps",
+    "emails": "emails",
+    "policies": "policies",
+    "sign in / providers": "sign-in-providers",
+    "passkeys": "passkeys",
+    "oauth server": "oauth-server",
+    "sessions": "sessions",
+    "rate limits": "rate-limits",
+    "multi-factor": "multi-factor",
+    "url configuration": "url-configuration",
+    "attack protection": "attack-protection",
+    "auth hooks": "auth-hooks",
+    "audit logs": "audit-logs",
+    "performance": "performance"
+  };
+
+  function isRoute() {
+    return String(window.location.hash || "").toLowerCase() === "#authentication-console";
+  }
+
+  function esc(value) {
+    return String(value == null ? "" : value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function compact(value) {
+    var n = Number(value || 0);
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(".0", "") + "M";
+    if (n >= 1000) return n.toLocaleString();
+    return String(n);
+  }
+
+  function normalize(value) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function api(path) {
+    return fetch("/api/admin/authentication-console" + path, {
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Accept": "application/json" }
+    }).then(function (res) {
+      return res.text().then(function (body) {
+        var json = null;
+
+        try {
+          json = body ? JSON.parse(body) : null;
+        } catch (err) {
+          json = { raw: body };
+        }
+
+        if (!res.ok || !json || json.success === false) {
+          throw new Error((json && json.error) || ("Request failed: " + res.status));
+        }
+
+        return json;
+      });
+    });
+  }
+
+  function getCardTitle(card) {
+    var headings = card.querySelectorAll("h1,h2,h3,h4,strong,b,.goodos-auth-card-title-v97");
+    for (var i = 0; i < headings.length; i++) {
+      var t = normalize(headings[i].textContent);
+      if (sectionMap[t]) return t;
+    }
+
+    var text = normalize(card.textContent);
+    var keys = Object.keys(sectionMap);
+
+    for (var j = 0; j < keys.length; j++) {
+      if (text.indexOf(keys[j]) === 0 || text.indexOf(keys[j] + " ") !== -1) return keys[j];
+    }
+
+    return "";
+  }
+
+  function getCardSlug(card) {
+    return sectionMap[getCardTitle(card)] || "";
+  }
+
+  function findCardBySlug(slug) {
+    var found = null;
+    document.querySelectorAll("[data-auth-section-v97]").forEach(function (card) {
+      if (!found && card.getAttribute("data-auth-section-v97") === slug) found = card;
+    });
+    return found;
+  }
+
+  function ensurePanel() {
+    var panel = document.querySelector("[data-auth-functional-v97]");
+    if (panel) return panel;
+
+    panel = document.createElement("section");
+    panel.className = "goodos-auth-functional-v97 is-hidden-v97";
+    panel.setAttribute("data-auth-functional-v97", "true");
+    panel.setAttribute("data-auth-loaded-slug-v97", "");
+    panel.innerHTML = '' +
+      '<div class="goodos-auth-functional-head-v97">' +
+        '<div>' +
+          '<h2 class="goodos-auth-functional-title-v97" data-auth-title-v97>Authentication Console</h2>' +
+          '<p class="goodos-auth-functional-copy-v97" data-auth-copy-v97>Select any card to load live authentication data directly underneath that card.</p>' +
+        '</div>' +
+        '<div class="goodos-auth-functional-actions-v97">' +
+          '<button class="goodos-auth-btn-v97" data-auth-refresh-v97>Refresh Section</button>' +
+          '<button class="goodos-auth-btn-v97" data-auth-close-v97>Deselect</button>' +
+          '<button class="goodos-auth-btn-v97" data-auth-open-auth-v97>Auth</button>' +
+          '<button class="goodos-auth-btn-v97" data-auth-open-settings-v97>Settings</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="goodos-auth-stat-row-v97" data-auth-summary-v97></div>' +
+      '<div class="goodos-auth-table-wrap-v97" data-auth-table-v97>' +
+        '<div class="goodos-auth-empty-v97">Select a card above.</div>' +
+      '</div>' +
+      '<div class="goodos-auth-status-v97" data-auth-status-v97>Ready.</div>';
+
+    document.body.appendChild(panel);
+
+    panel.querySelector("[data-auth-refresh-v97]").addEventListener("click", function () {
+      if (activeSlug) loadSection(activeSlug, true);
+    });
+
+    panel.querySelector("[data-auth-close-v97]").addEventListener("click", function () {
+      deselectPanel();
+    });
+
+    panel.querySelector("[data-auth-open-auth-v97]").addEventListener("click", function () {
+      window.location.hash = "#auth";
+    });
+
+    panel.querySelector("[data-auth-open-settings-v97]").addEventListener("click", function () {
+      window.location.hash = "#settings";
+    });
+
+    return panel;
+  }
+
+  function placePanelUnderCard(card) {
+    var panel = ensurePanel();
+    if (!panel || !card || !card.parentNode) return panel;
+
+    card.parentNode.insertBefore(panel, card.nextSibling);
+    panel.classList.remove("is-hidden-v97");
+
+    return panel;
+  }
+
+  function deselectPanel() {
+    activeSlug = "";
+
+    document.querySelectorAll("[data-auth-section-v97]").forEach(function (card) {
+      card.classList.remove("goodos-auth-card-active-v97");
+    });
+
+    var panel = document.querySelector("[data-auth-functional-v97]");
+    if (panel) {
+      panel.classList.add("is-hidden-v97");
+      panel.setAttribute("data-auth-loaded-slug-v97", "");
+    }
+  }
+
+  function setStatus(message, isError) {
+    var el = document.querySelector("[data-auth-status-v97]");
+    if (!el) return;
+
+    el.textContent = message;
+    el.classList.toggle("is-error-v97", !!isError);
+  }
+
+  function renderSummary(summary) {
+    var box = document.querySelector("[data-auth-summary-v97]");
+    if (!box || !summary) return;
+
+    var keys = [
+      ["users", "Users"],
+      ["active_sessions", "Sessions"],
+      ["api_keys", "API Keys"],
+      ["roles", "Roles"],
+      ["permissions", "Permissions"],
+      ["user_roles", "User Roles"],
+      ["mfa_factors", "MFA"],
+      ["password_resets", "Resets"],
+      ["audit_events", "Audit"]
+    ];
+
+    box.innerHTML = keys.map(function (entry) {
+      return '' +
+        '<div class="goodos-auth-stat-v97">' +
+          '<div class="goodos-auth-stat-label-v97">' + esc(entry[1]) + '</div>' +
+          '<div class="goodos-auth-stat-value-v97">' + esc(compact(summary[entry[0]] || 0)) + '</div>' +
+        '</div>';
+    }).join("");
+  }
+
+  function renderTable(data) {
+    var wrap = document.querySelector("[data-auth-table-v97]");
+    if (!wrap) return;
+
+    var columns = data.columns || [];
+    var rows = data.rows || [];
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="goodos-auth-empty-v97">No records found for this section.</div>';
+      return;
+    }
+
+    if (!columns.length && rows[0]) columns = Object.keys(rows[0]);
+
+    wrap.innerHTML = '' +
+      '<table class="goodos-auth-table-v97">' +
+        '<thead><tr>' +
+          columns.map(function (col) {
+            return '<th>' + esc(String(col).replaceAll("_", " ")) + '</th>';
+          }).join("") +
+        '</tr></thead>' +
+        '<tbody>' +
+          rows.map(function (row) {
+            return '<tr>' +
+              columns.map(function (col) {
+                var value = row[col];
+                if (value && typeof value === "object") value = JSON.stringify(value);
+                return '<td>' + esc(value == null ? "" : value) + '</td>';
+              }).join("") +
+            '</tr>';
+          }).join("") +
+        '</tbody>' +
+      '</table>';
+  }
+
+  async function loadSummary(force) {
+    if (!isRoute()) return;
+    if (isLoadingSummary) return;
+    if (summaryLoaded && !force) return;
+
+    isLoadingSummary = true;
+
+    try {
+      var data = await api("/summary");
+      renderSummary(data.summary || {});
+      summaryLoaded = true;
+    } catch (err) {
+      setStatus("Summary failed: " + err.message, true);
+    } finally {
+      isLoadingSummary = false;
+    }
+  }
+
+  async function loadSection(slug, force) {
+    if (!isRoute()) return;
+    if (!slug) return;
+    if (isLoadingSection) return;
+
+    var card = findCardBySlug(slug);
+    var panel = placePanelUnderCard(card);
+    if (!panel) return;
+
+    var alreadyLoadedSlug = panel.getAttribute("data-auth-loaded-slug-v97") || "";
+    if (!force && alreadyLoadedSlug === slug) return;
+
+    activeSlug = slug;
+    isLoadingSection = true;
+    markActiveCard(slug);
+
+    try {
+      setStatus("Loading " + slug.replaceAll("-", " ") + "...");
+
+      var title = document.querySelector("[data-auth-title-v97]");
+      var copy = document.querySelector("[data-auth-copy-v97]");
+      var wrap = document.querySelector("[data-auth-table-v97]");
+
+      if (wrap) {
+        wrap.innerHTML = '<div class="goodos-auth-empty-v97">Loading live authentication data...</div>';
+      }
+
+      var data = await api("/section/" + encodeURIComponent(slug));
+
+      if (title) title.textContent = data.title || "Authentication Console";
+      if (copy) copy.textContent = data.description || "";
+
+      renderTable(data);
+
+      panel.setAttribute("data-auth-loaded-slug-v97", slug);
+
+      setStatus(
+        "Loaded " + (data.count || 0) + " records for " + (data.title || slug) + (data.error ? " — " + data.error : "") + ".",
+        !data.queryOk
+      );
+    } catch (err) {
+      panel.setAttribute("data-auth-loaded-slug-v97", slug);
+
+      var failedWrap = document.querySelector("[data-auth-table-v97]");
+      if (failedWrap) {
+        failedWrap.innerHTML = '<div class="goodos-auth-empty-v97">Load failed: ' + esc(err.message) + '</div>';
+      }
+
+      setStatus("Load failed: " + err.message, true);
+    } finally {
+      isLoadingSection = false;
+    }
+  }
+
+  function markActiveCard(slug) {
+    document.querySelectorAll("[data-auth-section-v97]").forEach(function (card) {
+      card.classList.toggle("goodos-auth-card-active-v97", card.getAttribute("data-auth-section-v97") === slug);
+    });
+  }
+
+  function wireCards() {
+    document.querySelectorAll("article, .card, .panel, .tile, div").forEach(function (card) {
+      if (card.getAttribute("data-auth-wired-v97") === "true") return;
+      if (card.closest("[data-auth-functional-v97]")) return;
+      if (card.querySelector("[data-auth-functional-v97]")) return;
+
+      var slug = getCardSlug(card);
+      if (!slug) return;
+
+      var rect = card.getBoundingClientRect();
+      if (rect.width < 180 || rect.height < 90 || rect.width > 900 || rect.height > 620) return;
+
+      var text = normalize(card.textContent);
+      if (text.indexOf("skeleton only") === -1 && text.indexOf("live chart") === -1) return;
+
+      card.setAttribute("data-auth-wired-v97", "true");
+      card.setAttribute("data-auth-section-v97", slug);
+      card.style.cursor = "pointer";
+
+      card.addEventListener("click", function (event) {
+        if (event.target && event.target.closest("button,a,input,select,textarea")) return;
+
+        var panel = document.querySelector("[data-auth-functional-v97]");
+        var loadedSlug = panel ? panel.getAttribute("data-auth-loaded-slug-v97") : "";
+
+        if (activeSlug === slug && loadedSlug === slug && panel && !panel.classList.contains("is-hidden-v97")) {
+          deselectPanel();
+          return;
+        }
+
+        loadSection(slug, false);
+
+        setTimeout(function () {
+          var currentPanel = document.querySelector("[data-auth-functional-v97]");
+          if (currentPanel) {
+            currentPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 100);
+      });
+    });
+  }
+
+  function boot() {
+    if (!isRoute()) return;
+
+    ensurePanel();
+    wireCards();
+    loadSummary(false);
+
+    if (activeSlug) {
+      var card = findCardBySlug(activeSlug);
+      if (card) placePanelUnderCard(card);
+      markActiveCard(activeSlug);
+    }
+  }
+
+  window.addEventListener("hashchange", function () {
+    if (!isRoute()) return;
+    setTimeout(boot, 100);
+    setTimeout(boot, 500);
+  });
+
+  window.addEventListener("pageshow", boot);
+
+  var observer = new MutationObserver(function () {
+    if (!isRoute()) return;
+    if (isLoadingSection || isLoadingSummary) return;
+
+    clearTimeout(observerTimer);
+    observerTimer = setTimeout(function () {
+      if (!isRoute()) return;
+      wireCards();
+    }, 250);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+  setTimeout(boot, 400);
+  setTimeout(boot, 1200);
 })();
 </script>
 

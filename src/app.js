@@ -111,4 +111,18 @@ try {
 }
 // GOODOS V94 DATABASE MANAGEMENT DIRECT API MOUNT END
 
+
+// GOODOS V97 AUTHENTICATION CONSOLE DIRECT API MOUNT START
+try {
+  const authenticationConsoleRoutes = require("./routes/authentication-console.routes");
+
+  if (app && typeof app.use === "function") {
+    app.use("/api/admin/authentication-console", authenticationConsoleRoutes);
+    console.log("GoodOS Authentication Console API mounted at /api/admin/authentication-console");
+  }
+} catch (err) {
+  console.error("GoodOS Authentication Console API mount failed:", err && err.message ? err.message : err);
+}
+// GOODOS V97 AUTHENTICATION CONSOLE DIRECT API MOUNT END
+
 module.exports = app;
