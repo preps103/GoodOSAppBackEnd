@@ -8401,6 +8401,149 @@ button[title*="Skeleton"] {
 }
 </style>
 
+
+<style data-goodos-layout-polish-v115>
+/* Main card sizing */
+.goodos-card-uniform-v115 {
+  box-sizing: border-box !important;
+  min-height: 332px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 24px !important;
+  padding-bottom: 24px !important;
+  align-self: stretch !important;
+}
+
+/* Card rows / grids */
+.goodos-card-row-uniform-v115 {
+  display: grid !important;
+  align-items: stretch !important;
+  gap: 18px !important;
+  row-gap: 18px !important;
+  min-height: unset !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin-bottom: 26px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Remove outer background wrappers that create double-card look */
+.goodos-remove-double-container-v115 {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep true cards visible */
+.goodos-card-uniform-v115 {
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.10), transparent 38%),
+    linear-gradient(135deg, rgba(31, 41, 59, 0.92), rgba(15, 23, 42, 0.84)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 18px !important;
+}
+
+/* Chart sizing so bottom padding matches sides */
+.goodos-card-uniform-v115 .goodos-core-chart-v108,
+.goodos-card-uniform-v115 .goodos-core-chart-v106 {
+  min-height: 118px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+  padding-bottom: 0 !important;
+}
+
+.goodos-card-uniform-v115 .goodos-core-chart-head-v108 {
+  margin-bottom: 7px !important;
+}
+
+.goodos-card-uniform-v115 .goodos-core-svg-wrap-v108,
+.goodos-card-uniform-v115 .goodos-core-progress-wrap-v108,
+.goodos-card-uniform-v115 .goodos-core-bars-v108 {
+  min-height: 98px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 10px !important;
+}
+
+.goodos-card-uniform-v115 .goodos-core-svg-wrap-v108 svg {
+  height: 74px !important;
+  min-height: 74px !important;
+  max-height: 74px !important;
+}
+
+.goodos-card-uniform-v115 .goodos-core-axis-v108 {
+  margin-top: 4px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Badge should stay inside its own card only */
+.goodos-card-uniform-v115 .goodos-card-insight-v112 {
+  top: 18px !important;
+  right: 18px !important;
+}
+
+.goodos-rogue-insight-v115 {
+  display: none !important;
+}
+
+/* Remove excessive old V113/V114 spacing */
+.goodos-core-dashboard-row-height-v113,
+.goodos-core-row-balanced-v114 {
+  min-height: unset !important;
+  margin-bottom: 26px !important;
+  padding-bottom: 0 !important;
+}
+
+.goodos-core-dashboard-card-height-v113,
+.goodos-core-card-balanced-v114 {
+  min-height: 332px !important;
+  padding-bottom: 24px !important;
+}
+
+.goodos-core-dashboard-after-row-spacer-v113,
+.goodos-core-next-section-balanced-v114 {
+  margin-top: 26px !important;
+}
+
+/* Table cards should not have a double inner shell look */
+.goodos-table-card-clean-v115 {
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.09), transparent 38%),
+    linear-gradient(135deg, rgba(31, 41, 59, 0.90), rgba(15, 23, 42, 0.82)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+
+.goodos-table-inner-clean-v115 {
+  background: rgba(2, 6, 23, 0.20) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.08) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 980px) {
+  .goodos-card-uniform-v115 {
+    min-height: 314px !important;
+    padding: 22px !important;
+  }
+
+  .goodos-card-row-uniform-v115 {
+    gap: 16px !important;
+    row-gap: 16px !important;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -32734,6 +32877,330 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
   setTimeout(applyFix, 250);
   setTimeout(applyFix, 1000);
   setTimeout(applyFix, 2200);
+})();
+</script>
+
+
+<script data-goodos-layout-polish-v115>
+(function () {
+  var timer = null;
+  var isRunning = false;
+
+  var PAGE_CARDS = {
+    dashboard: ["Organizations", "Projects", "Environments", "Module Scope"],
+    projects: ["Apps", "Active Apps", "Memberships", "Restricted Keys"],
+    database: ["Published Tables", "Writable Tables", "Rules", "Scope"]
+  };
+
+  var TABLE_CARDS = {
+    dashboard: ["Projects", "Environments"],
+    projects: ["Registered Apps"],
+    database: ["Published Table Rules"]
+  };
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function cleanLower(value) {
+    return cleanText(value).toLowerCase();
+  }
+
+  function compact(value) {
+    return cleanLower(value).replace(/[^a-z0-9]/g, "");
+  }
+
+  function currentPageKey() {
+    var hash = String(window.location.hash || "").toLowerCase();
+
+    if (hash.indexOf("dashboard") !== -1 || hash.indexOf("overview") !== -1) return "dashboard";
+    if (hash.indexOf("projects") !== -1) return "projects";
+    if (hash.indexOf("database") !== -1) return "database";
+
+    return "";
+  }
+
+  function looksLikeCard(node) {
+    if (!node || !node.getBoundingClientRect) return false;
+
+    var rect = node.getBoundingClientRect();
+    var style = window.getComputedStyle(node);
+    var className = String(node.className || "");
+
+    return rect.width >= 170 &&
+      rect.height >= 70 &&
+      (
+        /card|tile|panel|shell|module|resource|glass/i.test(className) ||
+        style.borderStyle !== "none" ||
+        parseFloat(style.borderRadius || "0") >= 8
+      );
+  }
+
+  function findCardForTitle(title) {
+    var wanted = compact(title);
+    var candidates = Array.prototype.slice.call(document.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,span,div,p"));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+
+      if (compact(el.textContent) !== wanted) continue;
+
+      var node = el;
+      var best = null;
+
+      for (var depth = 0; depth < 12 && node && node !== document.body; depth++) {
+        var nodeText = compact(node.textContent);
+
+        if (nodeText.indexOf(wanted) !== -1 && looksLikeCard(node)) {
+          best = node;
+          break;
+        }
+
+        node = node.parentElement;
+      }
+
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  function findBestRow(cards) {
+    if (!cards.length) return null;
+
+    var first = cards[0];
+    var node = first.parentElement;
+
+    while (node && node !== document.body) {
+      var style = window.getComputedStyle(node);
+      var containsAll = cards.every(function (card) {
+        return node.contains(card);
+      });
+
+      if (containsAll && (style.display.indexOf("grid") !== -1 || style.display.indexOf("flex") !== -1)) {
+        var directCardChildren = Array.prototype.slice.call(node.children).filter(function (child) {
+          return cards.some(function (card) {
+            return child === card || child.contains(card);
+          });
+        });
+
+        if (directCardChildren.length >= 2) {
+          return node;
+        }
+      }
+
+      node = node.parentElement;
+    }
+
+    return first.parentElement;
+  }
+
+  function resetOldHeightClasses(node) {
+    if (!node) return;
+
+    node.classList.remove("goodos-core-dashboard-card-height-v113");
+    node.classList.remove("goodos-core-card-balanced-v114");
+    node.classList.remove("goodos-core-card-fit-v110");
+  }
+
+  function applyUniformCard(card) {
+    if (!card) return;
+
+    resetOldHeightClasses(card);
+
+    card.classList.add("goodos-card-uniform-v115");
+
+    card.style.minHeight = "332px";
+    card.style.height = "auto";
+    card.style.maxHeight = "none";
+    card.style.overflow = "visible";
+    card.style.padding = "24px";
+    card.style.paddingBottom = "24px";
+
+    var chart = card.querySelector(".goodos-core-chart-v108, .goodos-core-chart-v106");
+
+    if (chart) {
+      chart.style.minHeight = "118px";
+      chart.style.height = "auto";
+      chart.style.maxHeight = "none";
+      chart.style.overflow = "visible";
+      chart.style.marginTop = "14px";
+      chart.style.paddingTop = "12px";
+      chart.style.paddingBottom = "0";
+    }
+  }
+
+  function applyUniformRow(row) {
+    if (!row) return;
+
+    row.classList.remove("goodos-core-dashboard-row-height-v113");
+    row.classList.remove("goodos-core-row-balanced-v114");
+    row.classList.remove("goodos-core-row-fit-v110");
+
+    row.classList.add("goodos-card-row-uniform-v115");
+
+    row.style.minHeight = "";
+    row.style.height = "auto";
+    row.style.maxHeight = "none";
+    row.style.overflow = "visible";
+    row.style.marginBottom = "26px";
+    row.style.padding = "0";
+    row.style.paddingBottom = "0";
+    row.style.background = "transparent";
+    row.style.boxShadow = "none";
+
+    var style = window.getComputedStyle(row);
+
+    if (style.display.indexOf("grid") !== -1) {
+      row.style.gridAutoRows = "minmax(332px, auto)";
+      row.style.alignItems = "stretch";
+    }
+
+    if (style.display.indexOf("flex") !== -1) {
+      row.style.alignItems = "stretch";
+    }
+  }
+
+  function removeDoubleContainerBackgrounds(row, cards) {
+    if (!row) return;
+
+    var node = row.parentElement;
+    var depth = 0;
+
+    while (node && node !== document.body && depth < 5) {
+      var rect = node.getBoundingClientRect();
+      var text = cleanLower(node.textContent);
+      var isActualCard = cards.some(function (card) {
+        return node === card;
+      });
+
+      if (!isActualCard && rect.width >= 600) {
+        var style = window.getComputedStyle(node);
+        var hasContainerLook =
+          style.borderStyle !== "none" ||
+          String(style.backgroundImage || "").indexOf("gradient") !== -1 ||
+          parseFloat(style.borderRadius || "0") >= 12;
+
+        if (
+          hasContainerLook &&
+          (
+            text.indexOf("project control center") !== -1 ||
+            text.indexOf("app control center") !== -1 ||
+            text.indexOf("generated database api") !== -1
+          )
+        ) {
+          node.classList.add("goodos-remove-double-container-v115");
+        }
+      }
+
+      node.style.overflow = "visible";
+      node.style.maxHeight = "none";
+
+      node = node.parentElement;
+      depth += 1;
+    }
+  }
+
+  function cleanRogueBadges() {
+    Array.prototype.slice.call(document.querySelectorAll(".goodos-card-insight-v112")).forEach(function (badge) {
+      var host = badge.closest(".goodos-card-uniform-v115");
+
+      if (!host) {
+        var rect = badge.getBoundingClientRect();
+        var parent = badge.parentElement;
+        var parentRect = parent && parent.getBoundingClientRect ? parent.getBoundingClientRect() : null;
+
+        if (!parentRect || rect.left < parentRect.left || rect.right > parentRect.right || rect.top < parentRect.top) {
+          badge.classList.add("goodos-rogue-insight-v115");
+        }
+      }
+    });
+  }
+
+  function cleanTableCards(page) {
+    var tableTitles = TABLE_CARDS[page] || [];
+
+    tableTitles.forEach(function (title) {
+      var card = findCardForTitle(title);
+
+      if (!card) return;
+
+      card.classList.add("goodos-table-card-clean-v115");
+      card.style.overflow = "hidden";
+      card.style.padding = "24px";
+
+      Array.prototype.slice.call(card.querySelectorAll("table")).forEach(function (table) {
+        var wrapper = table.parentElement;
+
+        if (wrapper) {
+          wrapper.classList.add("goodos-table-inner-clean-v115");
+        }
+      });
+    });
+  }
+
+  function applyLayoutPolish() {
+    if (isRunning) return;
+
+    var page = currentPageKey();
+    var titles = PAGE_CARDS[page] || [];
+
+    if (!titles.length) return;
+
+    isRunning = true;
+
+    try {
+      var cards = titles.map(findCardForTitle).filter(Boolean);
+
+      cards.forEach(applyUniformCard);
+
+      var row = findBestRow(cards);
+      applyUniformRow(row);
+      removeDoubleContainerBackgrounds(row, cards);
+
+      cleanTableCards(page);
+      cleanRogueBadges();
+    } finally {
+      setTimeout(function () {
+        isRunning = false;
+      }, 80);
+    }
+  }
+
+  function schedulePolish() {
+    clearTimeout(timer);
+    timer = setTimeout(applyLayoutPolish, 180);
+  }
+
+  window.goodosLayoutPolishV115 = applyLayoutPolish;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    schedulePolish();
+    setTimeout(applyLayoutPolish, 700);
+    setTimeout(applyLayoutPolish, 1600);
+    setTimeout(applyLayoutPolish, 2800);
+  });
+
+  window.addEventListener("hashchange", function () {
+    setTimeout(applyLayoutPolish, 150);
+    setTimeout(applyLayoutPolish, 800);
+    setTimeout(applyLayoutPolish, 1800);
+  });
+
+  if (document.body && window.MutationObserver) {
+    var observer = new MutationObserver(function () {
+      if (!isRunning) schedulePolish();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  setTimeout(applyLayoutPolish, 250);
+  setTimeout(applyLayoutPolish, 1000);
+  setTimeout(applyLayoutPolish, 2200);
 })();
 </script>
 
