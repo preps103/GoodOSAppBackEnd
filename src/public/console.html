@@ -10997,16 +10997,23 @@ html body [data-goodos-function-live-tracks-v238="true"] i b {
 
 .goodos-functions-chart-box-v124 {
   margin-top: auto;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  overflow: hidden;
-}
-
-.goodos-functions-chart-box-v124 {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  overflow: visible;
   display: block;
   width: 100%;
   height: 148px;
+}
+
+.goodos-functions-chart-box-v124 svg,
+.goodos-functions-chart-card-v124 svg {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .goodos-functions-chart-kpi-v124 {
@@ -19134,26 +19141,11 @@ function functionsView() {
 
     ${functionsChartGrid(functions, runs, counts)}
 
-    <div class="grid cards">
-      ${card("Functions", counts.functions ?? functions.length, "Registered functions")}
-      ${card("Active", counts.active ?? functions.filter(item => item.status === "active").length, "Executable")}
-      ${card("Runs", counts.runs ?? runs.length, "Execution logs")}
-      ${card("Failed Runs", counts.failedRuns ?? runs.filter(item => item.status === "failed").length, "Needs review")}
-    </div>
-
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Registered Functions</h3><span class="badge">Controlled Runtime</span></div>
       <table>
         <thead>
-          <tr>
-            <th>Function</th>
-            <th>Type</th>
-            <th>Trigger</th>
-            <th>Status</th>
-            <th>Runs</th>
-            <th>Last Run</th>
-            <th>Action</th>
-          </tr>
+          <tr><th>Function</th><th>Type</th><th>Trigger</th><th>Status</th><th>Runs</th><th>Last Run</th><th>Action</th></tr>
         </thead>
         <tbody>
           ${functions.map(fn => `
@@ -19178,15 +19170,7 @@ function functionsView() {
       <div class="section-head"><h3>Run Logs</h3><span class="badge">Newest First</span></div>
       <table>
         <thead>
-          <tr>
-            <th>Run</th>
-            <th>Function</th>
-            <th>Trigger</th>
-            <th>Status</th>
-            <th>Duration</th>
-            <th>Started</th>
-            <th>Action</th>
-          </tr>
+          <tr><th>Run</th><th>Function</th><th>Trigger</th><th>Status</th><th>Duration</th><th>Started</th><th>Action</th></tr>
         </thead>
         <tbody>
           ${runs.map(run => `
@@ -19205,7 +19189,6 @@ function functionsView() {
     </div>
   `;
 }
-
 
 function render() {
   const view = document.getElementById("view");
