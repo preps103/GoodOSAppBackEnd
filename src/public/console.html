@@ -6334,6 +6334,35 @@ body.goodos-sidebar-premium-v41 .goodos-sidebar-nav-item-v41[data-goodos-active-
   letter-spacing: -0.04em;
 }
 
+
+.goodos-edge-metric-chart-v125 {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,0.12);
+  background:
+    radial-gradient(circle at 78% 0%, rgba(34,211,238,0.11), transparent 42%),
+    linear-gradient(180deg, rgba(3,12,24,0.72), rgba(6,17,34,0.46));
+  overflow: hidden;
+}
+
+.goodos-edge-metric-chart-v125 svg {
+  display: block;
+  width: 100%;
+  height: 112px;
+}
+
+.goodos-edge-metric-chart-v125 .axis {
+  fill: rgba(203,213,225,0.58);
+}
+
+.goodos-edge-metric-chart-v125 .kpi {
+  fill: #a7ffd5;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 1.8px;
+}
+
 .goodos-edge-table-section-v102 {
   margin-top: 18px;
   border: 1px solid rgba(148,163,184,0.14);
@@ -31474,6 +31503,67 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
     return panel;
   }
 
+
+  function metricChartHtml(item, index) {
+    var label = cleanLower(item && item.label);
+    var value = escapeHtml(item && item.value != null ? item.value : "0");
+    var linePoints = "16,90 42,84 68,74 94,62 120,56 146,48 172,40 198,32";
+    var areaPoints = linePoints + " 198,104 16,104";
+
+    if (label.indexOf("route") !== -1 || index === 1) {
+      return [
+        '<div class="goodos-edge-metric-chart-v125">',
+          '<svg viewBox="0 0 220 112" role="img" aria-label="' + escapeHtml(item.label || "Metric") + ' activity chart">',
+            '<defs><linearGradient id="goodosEdgeMetricBarsV125" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#38d5ff"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>',
+            '<text x="12" y="18" class="axis" font-size="9" font-weight="950" letter-spacing="2.4">ROUTE ACTIVITY</text>',
+            '<text x="128" y="18" class="kpi">' + value + '</text>',
+            [34, 42, 50, 58, 66, 76, 86].map(function (height, i) {
+              var x = 34 + i * 22;
+              var y = 100 - height;
+              return '<rect x="' + x + '" y="' + y + '" width="13" height="' + height + '" rx="6" fill="url(#goodosEdgeMetricBarsV125)"></rect>';
+            }).join(""),
+          '</svg>',
+        '</div>'
+      ].join("");
+    }
+
+    if (label.indexOf("handler") !== -1 || label.indexOf("edge file") !== -1 || index === 3) {
+      return [
+        '<div class="goodos-edge-metric-chart-v125">',
+          '<svg viewBox="0 0 220 112" role="img" aria-label="' + escapeHtml(item.label || "Metric") + ' health chart">',
+            '<defs><linearGradient id="goodosEdgeMetricHealthV125" x1="0" x2="1"><stop offset="0%" stop-color="#34d399"></stop><stop offset="100%" stop-color="#a78bfa"></stop></linearGradient></defs>',
+            '<text x="12" y="18" class="axis" font-size="9" font-weight="950" letter-spacing="2.4">RUN HEALTH</text>',
+            '<text x="144" y="18" class="kpi">' + value + '</text>',
+            '<text x="12" y="48" fill="#cbd5e1" font-size="11" font-weight="850">Active</text>',
+            '<rect x="96" y="39" width="76" height="9" rx="5" fill="rgba(148,163,184,.18)"></rect>',
+            '<rect x="96" y="39" width="52" height="9" rx="5" fill="url(#goodosEdgeMetricHealthV125)"></rect>',
+            '<text x="184" y="48" fill="#cbd5e1" font-size="11" font-weight="850">67%</text>',
+            '<text x="12" y="74" fill="#cbd5e1" font-size="11" font-weight="850">Success</text>',
+            '<rect x="96" y="65" width="76" height="9" rx="5" fill="rgba(148,163,184,.18)"></rect>',
+            '<rect x="96" y="65" width="8" height="9" rx="5" fill="#38d5ff"></rect>',
+            '<text x="184" y="74" fill="#cbd5e1" font-size="11" font-weight="850">0%</text>',
+            '<text x="12" y="100" fill="#cbd5e1" font-size="11" font-weight="850">Total</text>',
+            '<rect x="96" y="91" width="76" height="9" rx="5" fill="rgba(148,163,184,.18)"></rect>',
+            '<rect x="96" y="91" width="76" height="9" rx="5" fill="url(#goodosEdgeMetricHealthV125)"></rect>',
+            '<text x="184" y="100" fill="#cbd5e1" font-size="11" font-weight="850">' + value + '</text>',
+          '</svg>',
+        '</div>'
+      ].join("");
+    }
+
+    return [
+      '<div class="goodos-edge-metric-chart-v125">',
+        '<svg viewBox="0 0 220 112" role="img" aria-label="' + escapeHtml(item.label || "Metric") + ' trend chart">',
+          '<defs><linearGradient id="goodosEdgeMetricLineV125" x1="0" x2="1"><stop offset="0%" stop-color="#38d5ff"></stop><stop offset="100%" stop-color="#a78bfa"></stop></linearGradient></defs>',
+          '<text x="12" y="18" class="axis" font-size="9" font-weight="950" letter-spacing="2.4">DEPLOY TREND</text>',
+          '<text x="144" y="18" class="kpi">' + value + '</text>',
+          '<polygon points="' + areaPoints + '" fill="rgba(56,213,255,.16)"></polygon>',
+          '<polyline points="' + linePoints + '" fill="none" stroke="url(#goodosEdgeMetricLineV125)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>',
+        '</svg>',
+      '</div>'
+    ].join("");
+  }
+
   function renderMetrics(metrics) {
     if (!metrics || !metrics.length) {
       return '<div class="goodos-edge-empty-v102">No metrics returned for this section.</div>';
@@ -31481,11 +31571,12 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     return [
       '<div class="goodos-edge-metrics-v102">',
-        metrics.map(function (item) {
+        metrics.map(function (item, index) {
           return [
             '<div class="goodos-edge-metric-v102">',
               '<span class="goodos-edge-metric-label-v102">' + escapeHtml(item.label) + '</span>',
               '<span class="goodos-edge-metric-value-v102">' + escapeHtml(item.value) + '</span>',
+              metricChartHtml(item, index),
             '</div>'
           ].join("");
         }).join(""),
