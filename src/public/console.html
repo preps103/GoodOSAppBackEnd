@@ -10965,6 +10965,9 @@ html body [data-goodos-function-live-tracks-v238="true"] i b {
 
 
 
+
+
+
 <style id="goodos-functions-intentional-cards-v124">
 .goodos-functions-chart-grid-v124 {
   display: grid !important;
@@ -11016,7 +11019,6 @@ html body [data-goodos-function-live-tracks-v238="true"] i b {
   .goodos-functions-chart-grid-v124 { grid-template-columns: 1fr !important; }
 }
 </style>
-
 
 </head>
 <body>
@@ -19033,52 +19035,26 @@ function edgeFunctionsV2Section() {
 
 
 
+
 function functionsChartCard(title, subtitle, value, metric, chartType) {
   const safeValue = safeText(String(value ?? 0));
   const linePoints = "16,118 44,110 72,98 100,84 128,76 156,66 184,56 212,46";
   const areaPoints = linePoints + " 212,130 16,130";
-
   const body = chartType === "bars"
-    ? `
-      <rect x="20" y="86" width="14" height="44" rx="6" fill="#48dfff"></rect>
-      <rect x="48" y="76" width="14" height="54" rx="6" fill="#5bd5ff"></rect>
-      <rect x="76" y="68" width="14" height="62" rx="6" fill="#6dcaff"></rect>
-      <rect x="104" y="58" width="14" height="72" rx="6" fill="#7fbdff"></rect>
-      <rect x="132" y="50" width="14" height="80" rx="6" fill="#8baeff"></rect>
-      <rect x="160" y="42" width="14" height="88" rx="6" fill="#948fff"></rect>
-      <rect x="188" y="34" width="14" height="96" rx="6" fill="#9b7cff"></rect>`
+    ? `<rect x="20" y="86" width="14" height="44" rx="6" fill="#48dfff"></rect><rect x="48" y="76" width="14" height="54" rx="6" fill="#5bd5ff"></rect><rect x="76" y="68" width="14" height="62" rx="6" fill="#6dcaff"></rect><rect x="104" y="58" width="14" height="72" rx="6" fill="#7fbdff"></rect><rect x="132" y="50" width="14" height="80" rx="6" fill="#8baeff"></rect><rect x="160" y="42" width="14" height="88" rx="6" fill="#948fff"></rect><rect x="188" y="34" width="14" height="96" rx="6" fill="#9b7cff"></rect>`
     : chartType === "health"
-      ? `
-        <text x="16" y="72" fill="#cbd5e1" font-size="12" font-weight="850">Active</text>
-        <rect x="112" y="62" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect>
-        <rect x="112" y="62" width="52" height="10" rx="5" fill="url(#goodosFnGradV124)"></rect>
-        <text x="200" y="72" fill="#cbd5e1" font-size="12" font-weight="850">67%</text>
-        <text x="16" y="102" fill="#cbd5e1" font-size="12" font-weight="850">Success</text>
-        <rect x="112" y="92" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect>
-        <rect x="112" y="92" width="8" height="10" rx="5" fill="#48dfff"></rect>
-        <text x="200" y="102" fill="#cbd5e1" font-size="12" font-weight="850">0%</text>
-        <text x="16" y="132" fill="#cbd5e1" font-size="12" font-weight="850">Failed</text>
-        <rect x="112" y="122" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect>
-        <rect x="112" y="122" width="76" height="10" rx="5" fill="url(#goodosFnGradV124)"></rect>
-        <text x="200" y="132" fill="#cbd5e1" font-size="12" font-weight="850">${safeValue}</text>`
-      : `
-        <polygon points="${areaPoints}" fill="rgba(72,223,255,.16)"></polygon>
-        <polyline points="${linePoints}" fill="none" stroke="url(#goodosFnGradV124)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
+      ? `<text x="16" y="72" fill="#cbd5e1" font-size="12" font-weight="850">Active</text><rect x="112" y="62" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect><rect x="112" y="62" width="52" height="10" rx="5" fill="url(#goodosFnGradV124)"></rect><text x="200" y="72" fill="#cbd5e1" font-size="12" font-weight="850">67%</text><text x="16" y="102" fill="#cbd5e1" font-size="12" font-weight="850">Success</text><rect x="112" y="92" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect><rect x="112" y="92" width="8" height="10" rx="5" fill="#48dfff"></rect><text x="200" y="102" fill="#cbd5e1" font-size="12" font-weight="850">0%</text><text x="16" y="132" fill="#cbd5e1" font-size="12" font-weight="850">Failed</text><rect x="112" y="122" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect><rect x="112" y="122" width="76" height="10" rx="5" fill="url(#goodosFnGradV124)"></rect><text x="200" y="132" fill="#cbd5e1" font-size="12" font-weight="850">${safeValue}</text>`
+      : `<polygon points="${areaPoints}" fill="rgba(72,223,255,.16)"></polygon><polyline points="${linePoints}" fill="none" stroke="url(#goodosFnGradV124)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
 
   return `
-    <div class="card goodos-functions-chart-card-v124" data-goodos-functions-primary-card-v124="${safeText(title)}">
+    <div class="card goodos-functions-chart-card-v124">
       <h3 class="goodos-functions-chart-title-v124">${safeText(title)}</h3>
       <div class="goodos-functions-chart-sub-v124">${safeText(subtitle)}</div>
       <svg class="goodos-functions-chart-box-v124" viewBox="0 0 228 150" role="img" aria-label="${safeText(title)} chart">
-          <defs>
-            <linearGradient id="goodosFnGradV124" x1="0" x2="1">
-              <stop offset="0%" stop-color="#38d5ff"></stop>
-              <stop offset="100%" stop-color="#a78bfa"></stop>
-            </linearGradient>
-          </defs>
-          <text x="16" y="24" fill="rgba(203,213,225,.74)" font-size="10" font-weight="950" letter-spacing="3">${safeText(metric)}</text>
-          <text x="148" y="24" class="goodos-functions-chart-kpi-v124">${safeValue}</text>
-          ${body}
+        <defs><linearGradient id="goodosFnGradV124" x1="0" x2="1"><stop offset="0%" stop-color="#38d5ff"></stop><stop offset="100%" stop-color="#a78bfa"></stop></linearGradient></defs>
+        <text x="16" y="24" fill="rgba(203,213,225,.74)" font-size="10" font-weight="950" letter-spacing="3">${safeText(metric)}</text>
+        <text x="148" y="24" class="goodos-functions-chart-kpi-v124">${safeValue}</text>
+        ${body}
       </svg>
     </div>`;
 }
@@ -19088,13 +19064,12 @@ function functionsChartGrid(functions, runs, counts) {
   const activeRoutes = counts.active ?? functions.filter(item => item.status === "active").length;
   const totalRuns = counts.runs ?? runs.length;
   const failedRuns = counts.failedRuns ?? runs.filter(item => item.status === "failed").length;
-
   return `
     <div class="goodos-functions-chart-grid-v124">
-      ${functionsChartCard("Function Deploy", "7 day trend", `${safeText(String(totalFunctions))} Functions`, "Deploy Trend", "line")}
-      ${functionsChartCard("Active Routes", "live execution routes", `${safeText(String(activeRoutes))} Active`, "Route Activity", "bars")}
-      ${functionsChartCard("Execution Logs", "newest function runs", `${safeText(String(totalRuns))} Runs`, "Run Volume", "line")}
-      ${functionsChartCard("Failed Runs", "needs review", `${safeText(String(failedRuns))} Failed`, "Run Health", "health")}
+      ${functionsChartCard("Function Deploy", "7 day trend", `${safeText(String(totalFunctions))}`, "Deploy Trend", "line")}
+      ${functionsChartCard("Active Routes", "live execution routes", `${safeText(String(activeRoutes))}`, "Route Activity", "bars")}
+      ${functionsChartCard("Execution Logs", "newest function runs", `${safeText(String(totalRuns))}`, "Run Volume", "line")}
+      ${functionsChartCard("Failed Runs", "needs review", `${safeText(String(failedRuns))}`, "Run Health", "health")}
     </div>`;
 }
 
@@ -19171,6 +19146,7 @@ function functionsView() {
     </div>
   `;
 }
+
 
 function render() {
   const view = document.getElementById("view");
