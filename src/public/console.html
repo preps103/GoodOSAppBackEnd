@@ -42590,5 +42590,123 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 
+
+<script id="goodos-functions-dedupe-v123">
+(function () {
+  if (window.__goodosFunctionsDedupeV123) return;
+  window.__goodosFunctionsDedupeV123 = true;
+
+  var LABELS = ["function deploy", "active routes", "execution logs", "failed runs"];
+  var timer = null;
+
+  function clean(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function isVisible(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var rect = el.getBoundingClientRect();
+    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+    return rect.width > 0 && rect.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
+  }
+
+  function isFunctionsPage() {
+    var hash = clean(window.location.hash);
+    var body = clean(document.body ? document.body.textContent : "");
+    return hash.indexOf("functions") !== -1 ||
+      (body.indexOf("function registry") !== -1 && body.indexOf("registered functions") !== -1);
+  }
+
+  function removeNode(el) {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
+  function removeLegacyV70Charts() {
+    Array.prototype.slice.call(document.querySelectorAll(
+      ".goodos-functions-chart-v70,.goodos-functions-trend-v70"
+    )).forEach(removeNode);
+
+    Array.prototype.slice.call(document.querySelectorAll(
+      ".goodos-functions-chart-card-v70"
+    )).forEach(function (card) {
+      card.classList.remove("goodos-functions-chart-card-v70");
+      card.removeAttribute("data-goodos-functions-type-v70");
+    });
+  }
+
+  function removeSingletonFunctionCardRows() {
+    Array.prototype.slice.call(document.querySelectorAll(".grid.cards, .cards, section, article, .card")).forEach(function (el) {
+      if (!isVisible(el)) return;
+
+      var text = clean(el.textContent);
+      if (text.indexOf("functions") === -1 || text.indexOf("registered functions") === -1 || text.indexOf("registry") === -1) return;
+      if (text.indexOf("registered functions controlled runtime") !== -1) return;
+      if (text.indexOf("function deploy") !== -1 || text.indexOf("active routes") !== -1) return;
+
+      var rect = el.getBoundingClientRect();
+      var cards = Array.prototype.slice.call(el.querySelectorAll(".card")).filter(isVisible);
+      var removeTarget = cards.length <= 1 ? el : cards.find(function (card) {
+        var cardText = clean(card.textContent);
+        return cardText.indexOf("functions") !== -1 &&
+          cardText.indexOf("registered functions") !== -1 &&
+          cardText.indexOf("registry") !== -1;
+      });
+
+      if (removeTarget && rect.top > 0) removeNode(removeTarget);
+    });
+  }
+
+  function removeSkinnyDuplicateChartCards() {
+    Array.prototype.slice.call(document.querySelectorAll(".card, section, article, div")).forEach(function (el) {
+      if (!isVisible(el)) return;
+
+      var rect = el.getBoundingClientRect();
+      if (rect.width > 185 || rect.height < 110 || rect.height > 430) return;
+
+      var text = clean(el.textContent);
+      var hasTargetLabel = LABELS.some(function (label) {
+        return text.indexOf(label) === 0 || text.indexOf(label + " ") !== -1;
+      });
+
+      if (!hasTargetLabel) return;
+      if (text.indexOf("registered functions") !== -1 || text.indexOf("function registry") !== -1) return;
+
+      removeNode(el);
+    });
+  }
+
+  function cleanup() {
+    if (!document.body || !isFunctionsPage()) return;
+    removeLegacyV70Charts();
+    removeSingletonFunctionCardRows();
+    removeSkinnyDuplicateChartCards();
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    timer = setTimeout(cleanup, 80);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    cleanup();
+    [250, 750, 1500, 3000, 6000, 12000, 24000, 36000].forEach(function (ms) {
+      setTimeout(cleanup, ms);
+    });
+  });
+
+  window.addEventListener("hashchange", function () {
+    [80, 250, 750, 1500, 3000, 6000, 12000, 24000, 36000].forEach(function (ms) {
+      setTimeout(cleanup, ms);
+    });
+  });
+
+  window.addEventListener("pageshow", cleanup);
+
+  try {
+    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+})();
+</script>
+
 </body>
 </html>
