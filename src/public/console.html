@@ -11473,6 +11473,8 @@ html body [data-goodos-function-live-tracks-v238="true"] i b {
 </style>
 
 
+
+
 <style id="goodos-functions-intentional-cards-v124">
 .goodos-functions-chart-grid-v124 {
   display: grid !important;
@@ -19555,6 +19557,7 @@ function edgeFunctionsV2Section() {
 }
 
 
+
 function functionsChartCard(title, subtitle, value, metric, chartType) {
   const safeValue = safeText(String(value ?? 0));
   const linePoints = "16,118 44,110 72,98 100,84 128,76 156,66 184,56 212,46";
@@ -19615,10 +19618,10 @@ function functionsChartGrid(functions, runs, counts) {
 
   return `
     <div class="goodos-functions-chart-grid-v124">
-      ${functionsChartCard("Function Deploy", "7 day trend", `${safeText(String(totalFunctions))}`, "Deploy Trend", "line")}
-      ${functionsChartCard("Active Routes", "live execution routes", `${safeText(String(activeRoutes))}`, "Route Activity", "bars")}
-      ${functionsChartCard("Execution Logs", "newest function runs", `${safeText(String(totalRuns))}`, "Run Volume", "line")}
-      ${functionsChartCard("Failed Runs", "needs review", `${safeText(String(failedRuns))}`, "Run Health", "health")}
+      ${functionsChartCard("Function Deploy", "7 day trend", `${safeText(String(totalFunctions))} Functions`, "Deploy Trend", "line")}
+      ${functionsChartCard("Active Routes", "live execution routes", `${safeText(String(activeRoutes))} Active`, "Route Activity", "bars")}
+      ${functionsChartCard("Execution Logs", "newest function runs", `${safeText(String(totalRuns))} Runs`, "Run Volume", "line")}
+      ${functionsChartCard("Failed Runs", "needs review", `${safeText(String(failedRuns))} Failed`, "Run Health", "health")}
     </div>`;
 }
 
@@ -42821,221 +42824,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 </script>
 
 
-<script id="goodos-functions-dedupe-v123">
-(function () {
-  if (window.__goodosFunctionsDedupeV123) return;
-  window.__goodosFunctionsDedupeV123 = true;
-
-  var LABELS = ["function deploy", "active routes", "execution logs", "failed runs"];
-  var timer = null;
-
-  function clean(value) {
-    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function isVisible(el) {
-    if (!el || !el.getBoundingClientRect) return false;
-    var rect = el.getBoundingClientRect();
-    var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-    return rect.width > 0 && rect.height > 0 && (!style || (style.display !== "none" && style.visibility !== "hidden"));
-  }
-
-  function isFunctionsPage() {
-    var hash = clean(window.location.hash);
-    var body = clean(document.body ? document.body.textContent : "");
-    return hash.indexOf("functions") !== -1 ||
-      (body.indexOf("function registry") !== -1 && body.indexOf("registered functions") !== -1);
-  }
-
-  function removeNode(el) {
-    if (el && el.parentNode) el.parentNode.removeChild(el);
-  }
-
-  function removeLegacyV70Charts() {
-    Array.prototype.slice.call(document.querySelectorAll(
-      ".goodos-functions-chart-v70,.goodos-functions-trend-v70"
-    )).forEach(removeNode);
-
-    Array.prototype.slice.call(document.querySelectorAll(
-      ".goodos-functions-chart-card-v70"
-    )).forEach(function (card) {
-      card.classList.remove("goodos-functions-chart-card-v70");
-      card.removeAttribute("data-goodos-functions-type-v70");
-    });
-  }
-
-  function removeSingletonFunctionCardRows() {
-    Array.prototype.slice.call(document.querySelectorAll(".grid.cards, .cards, section, article, .card")).forEach(function (el) {
-      if (!isVisible(el)) return;
-
-      var text = clean(el.textContent);
-      if (text.indexOf("functions") === -1 || text.indexOf("registered functions") === -1 || text.indexOf("registry") === -1) return;
-      if (text.indexOf("registered functions controlled runtime") !== -1) return;
-      if (text.indexOf("function deploy") !== -1 || text.indexOf("active routes") !== -1) return;
-
-      var rect = el.getBoundingClientRect();
-      var cards = Array.prototype.slice.call(el.querySelectorAll(".card")).filter(isVisible);
-      var removeTarget = cards.length <= 1 ? el : cards.find(function (card) {
-        var cardText = clean(card.textContent);
-        return cardText.indexOf("functions") !== -1 &&
-          cardText.indexOf("registered functions") !== -1 &&
-          cardText.indexOf("registry") !== -1;
-      });
-
-      if (removeTarget && rect.top > 0) removeNode(removeTarget);
-    });
-  }
-
-  function removeSkinnyDuplicateChartCards() {
-    Array.prototype.slice.call(document.querySelectorAll(".card, section, article, div")).forEach(function (el) {
-      if (!isVisible(el)) return;
-
-      var rect = el.getBoundingClientRect();
-      if (rect.width > 185 || rect.height < 110 || rect.height > 430) return;
-
-      var text = clean(el.textContent);
-      var hasTargetLabel = LABELS.some(function (label) {
-        return text.indexOf(label) === 0 || text.indexOf(label + " ") !== -1;
-      });
-
-      if (!hasTargetLabel) return;
-      if (text.indexOf("registered functions") !== -1 || text.indexOf("function registry") !== -1) return;
-
-      removeNode(el);
-    });
-  }
-
-  function cleanup() {
-    if (!document.body || !isFunctionsPage()) return;
-    removeLegacyV70Charts();
-    removeSingletonFunctionCardRows();
-    removeSkinnyDuplicateChartCards();
-  }
-
-  function schedule() {
-    clearTimeout(timer);
-    timer = setTimeout(cleanup, 80);
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    cleanup();
-    [250, 750, 1500, 3000, 6000, 12000, 24000, 36000].forEach(function (ms) {
-      setTimeout(cleanup, ms);
-    });
-  });
-
-  window.addEventListener("hashchange", function () {
-    [80, 250, 750, 1500, 3000, 6000, 12000, 24000, 36000].forEach(function (ms) {
-      setTimeout(cleanup, ms);
-    });
-  });
-
-  window.addEventListener("pageshow", cleanup);
-
-  try {
-    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-  } catch (e) {}
-})();
-</script>
 
 
-<script id="goodos-functions-ensure-chart-row-v126">
-(function () {
-  if (window.__goodosFunctionsEnsureChartRowV126) return;
-  window.__goodosFunctionsEnsureChartRowV126 = true;
-
-  var timer = null;
-
-  function text(el) {
-    return String((el && el.textContent) || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function isFunctionsPage() {
-    var hash = String(window.location.hash || "").toLowerCase();
-    var body = text(document.body);
-    return hash.indexOf("functions") !== -1 ||
-      (body.indexOf("function registry") !== -1 && body.indexOf("registered functions") !== -1);
-  }
-
-  function findRegisteredFunctionsCard() {
-    return Array.prototype.slice.call(document.querySelectorAll(".card")).find(function (card) {
-      var cardText = text(card);
-      return cardText.indexOf("registered functions") !== -1 &&
-        cardText.indexOf("controlled runtime") !== -1;
-    }) || null;
-  }
-
-  function buildCard(title, subtitle, metric, value, type) {
-    var line = "16,118 44,110 72,98 100,84 128,76 156,66 184,56 212,46";
-    var area = line + " 212,130 16,130";
-    var body = type === "bars"
-      ? '<rect x="20" y="86" width="14" height="44" rx="6" fill="#48dfff"></rect><rect x="48" y="76" width="14" height="54" rx="6" fill="#5bd5ff"></rect><rect x="76" y="68" width="14" height="62" rx="6" fill="#6dcaff"></rect><rect x="104" y="58" width="14" height="72" rx="6" fill="#7fbdff"></rect><rect x="132" y="50" width="14" height="80" rx="6" fill="#8baeff"></rect><rect x="160" y="42" width="14" height="88" rx="6" fill="#948fff"></rect><rect x="188" y="34" width="14" height="96" rx="6" fill="#9b7cff"></rect>'
-      : type === "health"
-        ? '<text x="16" y="72" fill="#cbd5e1" font-size="12" font-weight="850">Active</text><rect x="112" y="62" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect><rect x="112" y="62" width="52" height="10" rx="5" fill="url(#goodosFnEnsureGradV126)"></rect><text x="200" y="72" fill="#cbd5e1" font-size="12" font-weight="850">67%</text><text x="16" y="102" fill="#cbd5e1" font-size="12" font-weight="850">Success</text><rect x="112" y="92" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect><rect x="112" y="92" width="8" height="10" rx="5" fill="#48dfff"></rect><text x="200" y="102" fill="#cbd5e1" font-size="12" font-weight="850">0%</text><text x="16" y="132" fill="#cbd5e1" font-size="12" font-weight="850">Failed</text><rect x="112" y="122" width="76" height="10" rx="5" fill="rgba(148,163,184,.18)"></rect><rect x="112" y="122" width="76" height="10" rx="5" fill="url(#goodosFnEnsureGradV126)"></rect><text x="200" y="132" fill="#cbd5e1" font-size="12" font-weight="850">' + value + '</text>'
-        : '<polygon points="' + area + '" fill="rgba(72,223,255,.16)"></polygon><polyline points="' + line + '" fill="none" stroke="url(#goodosFnEnsureGradV126)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>';
-
-    return '<div class="card goodos-functions-chart-card-v124" data-goodos-functions-primary-card-v124="' + title + '">' +
-      '<h3 class="goodos-functions-chart-title-v124">' + title + '</h3>' +
-      '<div class="goodos-functions-chart-sub-v124">' + subtitle + '</div>' +
-      '<div class="goodos-functions-chart-box-v124"><svg viewBox="0 0 228 150" role="img" aria-label="' + title + ' chart">' +
-      '<defs><linearGradient id="goodosFnEnsureGradV126" x1="0" x2="1"><stop offset="0%" stop-color="#38d5ff"></stop><stop offset="100%" stop-color="#a78bfa"></stop></linearGradient></defs>' +
-      '<text x="16" y="24" fill="rgba(203,213,225,.74)" font-size="10" font-weight="950" letter-spacing="3">' + metric + '</text>' +
-      '<text x="148" y="24" class="goodos-functions-chart-kpi-v124">' + value + '</text>' +
-      body + '</svg></div></div>';
-  }
-
-  function ensureRow() {
-    if (!isFunctionsPage()) return;
-    if (document.querySelector(".goodos-functions-chart-grid-v124")) return;
-
-    var tableCard = findRegisteredFunctionsCard();
-    if (!tableCard || !tableCard.parentNode) return;
-
-    var rows = Array.prototype.slice.call(tableCard.querySelectorAll("tbody tr"));
-    var functionCount = rows.length || 3;
-    var activeCount = rows.filter(function (row) {
-      return text(row).indexOf("active") !== -1;
-    }).length || 2;
-    var runCount = rows.reduce(function (sum, row) {
-      var cells = row.querySelectorAll("td");
-      var last = cells[cells.length - 1];
-      var n = Number(String((last && last.textContent) || "0").replace(/[^0-9.-]/g, ""));
-      return sum + (isFinite(n) ? n : 0);
-    }, 0) || 0;
-    var failedCount = Array.prototype.slice.call(document.querySelectorAll("td,span")).filter(function (el) {
-      return text(el) === "failed";
-    }).length;
-
-    var row = document.createElement("div");
-    row.className = "goodos-functions-chart-grid-v124";
-    row.setAttribute("data-goodos-functions-ensured-v126", "true");
-    row.innerHTML =
-      buildCard("Function Deploy", "7 day trend", "Deploy Trend", String(functionCount) + " Functions", "line") +
-      buildCard("Active Routes", "live execution routes", "Route Activity", String(activeCount) + " Active", "bars") +
-      buildCard("Execution Logs", "newest function runs", "Run Volume", String(runCount) + " Runs", "line") +
-      buildCard("Failed Runs", "needs review", "Run Health", String(failedCount) + " Failed", "health");
-
-    tableCard.parentNode.insertBefore(row, tableCard);
-  }
-
-  function schedule() {
-    clearTimeout(timer);
-    timer = setTimeout(ensureRow, 120);
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    [100, 350, 900, 1800, 3500].forEach(function (ms) { setTimeout(ensureRow, ms); });
-  });
-
-  window.addEventListener("hashchange", function () {
-    [120, 400, 1000, 2200].forEach(function (ms) { setTimeout(ensureRow, ms); });
-  });
-
-  try {
-    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-  } catch (e) {}
-})();
-</script>
 
 </body>
 </html>
