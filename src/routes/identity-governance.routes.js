@@ -540,6 +540,82 @@ router.post(
           });
       }
 
+      if (
+        providerType === "oidc"
+      ) {
+        if (
+          !/^[a-z0-9][a-z0-9_-]{2,99}$/
+            .test(name)
+        ) {
+          return response
+            .status(400)
+            .json({
+              success: false,
+              message:
+                "OIDC provider name must be a lowercase identifier using letters, numbers, underscores, or hyphens.",
+            });
+        }
+
+        const issuerUrl =
+          cleanText(
+            body.issuerUrl,
+            1000
+          );
+
+        let parsedIssuer = null;
+
+        try {
+          parsedIssuer =
+            new URL(issuerUrl);
+        } catch {
+          parsedIssuer = null;
+        }
+
+        if (
+          !parsedIssuer ||
+          parsedIssuer.protocol !==
+            "https:"
+        ) {
+          return response
+            .status(400)
+            .json({
+              success: false,
+              message:
+                "OIDC issuer URL must be a valid HTTPS URL.",
+            });
+        }
+
+        if (
+          !cleanText(
+            body.clientId,
+            500
+          )
+        ) {
+          return response
+            .status(400)
+            .json({
+              success: false,
+              message:
+                "OIDC client ID is required.",
+            });
+        }
+
+        if (
+          !secretReference ||
+          !secretReference.startsWith(
+            "GOODOS_OIDC_"
+          )
+        ) {
+          return response
+            .status(400)
+            .json({
+              success: false,
+              message:
+                "OIDC secret reference must begin with GOODOS_OIDC_.",
+            });
+        }
+      }
+
       const domains =
         Array.isArray(body.domains)
           ? body.domains
