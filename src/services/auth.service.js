@@ -97,7 +97,11 @@ async function createSession({ userId, token, ipAddress, userAgent }) {
       $4,
       NOW() + ($5 || ' days')::interval
     )
-    RETURNING id, expires_at;
+    RETURNING
+      id,
+      expires_at,
+      auth_level,
+      mfa_verified;
     `,
     [userId, tokenHash, ipAddress || null, userAgent || null, env.sessionDays]
   );
@@ -113,6 +117,12 @@ async function validateSessionToken(token) {
     SELECT
       s.id AS session_id,
       s.expires_at,
+      s.auth_level
+        AS session_auth_level,
+      s.mfa_verified
+        AS session_mfa_verified,
+      s.risk_score
+        AS session_risk_score,
       u.*
     FROM sessions s
     JOIN users u ON u.id = s.user_id
@@ -255,7 +265,11 @@ async function login({ email, password, ipAddress, userAgent }) {
     token,
     session: {
       id: session.id,
-      expiresAt: session.expires_at
+      expiresAt: session.expires_at,
+      authLevel:
+        session.auth_level,
+      mfaVerified:
+        session.mfa_verified
     },
     user: publicUser(user),
     apps

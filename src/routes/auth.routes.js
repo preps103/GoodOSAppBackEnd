@@ -948,12 +948,49 @@ router.post("/login", loginLimiter, async (req, res) => {
       }
     });
 
+    const mfaRequired =
+      Boolean(
+        result.user.mfaRequired
+      );
+
+    const mfaEnabled =
+      Boolean(
+        result.user.mfaEnabled
+      );
+
     return success(res, {
-      message: "Login successful",
+      message:
+        mfaRequired
+          ? "Password verified. Complete MFA to continue."
+          : "Login successful",
       token: result.token,
       session: result.session,
       user: result.user,
-      apps: result.apps
+      apps:
+        mfaRequired
+          ? []
+          : result.apps,
+      mfa: {
+        required:
+          mfaRequired,
+        enabled:
+          mfaEnabled,
+        verified:
+          Boolean(
+            result.session
+              .mfaVerified
+          ),
+        nextAction:
+          mfaRequired
+            ? (
+                mfaEnabled
+                  ? "verify_mfa"
+                  : "enroll_mfa"
+              )
+            : null,
+        enrollmentUrl:
+          "https://backend.goodos.app/mfa-enroll"
+      }
     });
   } catch (err) {
     console.error("Login failed:", err.message);
@@ -1108,8 +1145,46 @@ router.get("/session", authRequired, async (req, res) => {
       session: sessionResult.rows[0] || null,
       roles: rolesResult.rows,
       mfa: {
-        enabled: factorsResult.rows.some((factor) => factor.status === "active"),
-        factors: factorsResult.rows.map(authV2PublicFactor),
+        enabled:
+          factorsResult.rows.some(
+            factor =>
+              factor.status ===
+              "active"
+          ),
+        required:
+          Boolean(
+            req.user.mfaRequired
+          ),
+        sessionVerified:
+          Boolean(
+            sessionResult
+              .rows[0]
+              ?.mfaVerified
+          ),
+        nextAction:
+          req.user.mfaRequired
+            ? (
+                factorsResult.rows.some(
+                  factor =>
+                    factor.status ===
+                    "active"
+                )
+                  ? (
+                      sessionResult
+                        .rows[0]
+                        ?.mfaVerified
+                        ? null
+                        : "verify_mfa"
+                    )
+                  : "enroll_mfa"
+              )
+            : null,
+        enrollmentUrl:
+          "https://backend.goodos.app/mfa-enroll",
+        factors:
+          factorsResult.rows.map(
+            authV2PublicFactor
+          ),
       },
       authSource: req.auth.source,
     });
