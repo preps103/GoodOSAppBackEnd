@@ -47,6 +47,9 @@ const storageV2AdminRoutes =
 const storageV2CdnRoutes =
   require("./storage-v2-cdn.routes");
 
+const updateSitesRoutes =
+  require("./update-sites.routes");
+
 /* GOODOS_ROLES_CONSOLE_V1 */
 const rolesConsoleRoutes =
   require("./roles-console.routes");
@@ -143,6 +146,16 @@ router.get("/console-v2.js", (req, res) => {
   res.sendFile(require("path").join(__dirname, "../public/console-v2.js"));
 });
 
+/* GOODOS_UPDATE_SITES_PAGE */
+router.get("/update-sites", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/update-sites.html"));
+});
+
+router.get("/update-sites.html", (req, res) => {
+  res.redirect("/update-sites");
+});
+/* END GOODOS_UPDATE_SITES_PAGE */
+
 
 router.get("/api", (req, res) => {
   return success(res, {
@@ -232,6 +245,13 @@ router.use(
   "/api/storage-v2",
   storageV2AdminRoutes
 );
+
+/* GOODOS_UPDATE_SITES_API */
+router.use(
+  "/api/update-sites",
+  updateSitesRoutes
+);
+/* END GOODOS_UPDATE_SITES_API */
 
 /* GOODOS_ROLES_CONSOLE_V1_MOUNT */
 router.use(
