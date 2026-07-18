@@ -9,6 +9,7 @@ const notificationService = require("../services/notification.service");
 const jobService = require("../services/job.service");
 const secretService = require("../services/secret.service");
 const sslCertificatesService = require("../services/ssl-certificates.service");
+const dashboardActivityService = require("../services/dashboard-activity.service");
 const goodosChartsDatabaseV28 = require("../config/database");
 
 const router = express.Router();
@@ -3143,6 +3144,25 @@ router.post("/projects/:id/environments/create-safe", async (req, res) => {
     return fail(res, "Failed to create project environment", 500, error.message);
   }
 });
+
+router.get("/dashboard-activity-page-data", async (req, res) => {
+  try {
+    const snapshot =
+      await dashboardActivityService.getDashboardActivitySnapshot({
+        limit: req.query?.limit,
+      });
+
+    return ok(res, snapshot);
+  } catch (error) {
+    return fail(
+      res,
+      "Failed to load dashboard activity data",
+      500,
+      error.message
+    );
+  }
+});
+
 
 router.get("/activity-center-page-data", async (req, res) => {
   try {
