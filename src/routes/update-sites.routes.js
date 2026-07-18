@@ -239,6 +239,31 @@ router.get("/discover", async (_request, response) => {
   }
 });
 
+
+router.get("/repositories", async (_request, response) => {
+  try {
+    const repositories =
+      await deployment
+        .discoverGithubRepositories();
+
+    return response.json({
+      success: true,
+      owner:
+        process.env
+          .GOODOS_GITHUB_OWNER ||
+        "preps103",
+      repositories,
+      total:
+        repositories.length,
+    });
+  } catch (error) {
+    return errorResponse(
+      response,
+      error
+    );
+  }
+});
+
 router.post("/sites/:siteId/test", async (request, response) => {
   try {
     const site = await deployment.loadSite(request.params.siteId);

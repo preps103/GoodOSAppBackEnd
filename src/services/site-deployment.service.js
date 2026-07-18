@@ -220,7 +220,16 @@ function runCommand(command, args, options = {}) {
     timeoutMs = 20 * 60 * 1000,
     onOutput = () => {},
     allowExitCodes = [0],
+    maxOutput = MAX_OUTPUT,
   } = options;
+
+  const outputLimit = Math.max(
+    1024,
+    Math.min(
+      Number(maxOutput) || MAX_OUTPUT,
+      5 * 1024 * 1024
+    )
+  );
 
   return new Promise((resolve, reject) => {
     const child = spawn(command, args || [], {
@@ -242,8 +251,11 @@ function runCommand(command, args, options = {}) {
 
     const capture = (kind) => (chunk) => {
       const text = String(chunk);
-      if (kind === "stdout") stdout = (stdout + text).slice(-MAX_OUTPUT);
-      else stderr = (stderr + text).slice(-MAX_OUTPUT);
+      if (kind === "stdout") {
+        stdout = (stdout + text).slice(-outputLimit);
+      } else {
+        stderr = (stderr + text).slice(-outputLimit);
+      }
       onOutput(kind, text);
     };
 
@@ -744,8 +756,65 @@ async function executeDeployment(runId) {
 }
 
 async function discoverServerApps() {
-  const result = await runCommand("pm2", ["jlist"], { timeoutMs: 60000 });
-  const rows = JSON.parse(result.stdout || "[]");
+  const result = await runCommand(
+    "pm2",
+    ["jlist"],
+    {
+      timeoutMs: 60000,
+      maxOutput: 5 * 1024 * 1024,
+    }
+  );
+
+  const rawOutput = String(
+    result.stdout || ""
+  ).trim();
+
+  let jsonPayload = rawOutput;
+
+  const arrayStart =
+    rawOutput.indexOf("[{");
+
+  const arrayEnd =
+    rawOutput.lastIndexOf("}]");
+
+  if (
+    arrayStart >= 0 &&
+    arrayEnd >= arrayStart
+  ) {
+    jsonPayload =
+      rawOutput.slice(
+        arrayStart,
+        arrayEnd + 2
+      );
+  } else if (
+    rawOutput.includes("[]")
+  ) {
+    jsonPayload = "[]";
+  }
+
+  let rows;
+
+  try {
+    rows = JSON.parse(
+      jsonPayload ||
+      "[]"
+    );
+  } catch (parseError) {
+    throw statusError(
+      502,
+      `PM2 application discovery returned malformed JSON: ${parseError.message}`,
+      "PM2_DISCOVERY_INVALID_JSON"
+    );
+  }
+
+  if (!Array.isArray(rows)) {
+    throw statusError(
+      502,
+      "PM2 application discovery did not return an array.",
+      "PM2_DISCOVERY_INVALID_PAYLOAD"
+    );
+  }
+
   const discovered = [];
 
   for (const item of rows) {
@@ -777,6 +846,129 @@ async function discoverServerApps() {
   return discovered.sort((a, b) => String(a.processName).localeCompare(String(b.processName)));
 }
 
+
+async function discoverGithubRepositories() {
+  const owner = String(
+    process.env.GOODOS_GITHUB_OWNER ||
+    "preps103"
+  ).trim();
+
+  try {
+    const result = await runCommand(
+      "gh",
+      [
+        "repo",
+        "list",
+        owner,
+        "--limit",
+        "250",
+        "--json",
+        "nameWithOwner,sshUrl,url,isPrivate",
+      ],
+      {
+        timeoutMs: 60000,
+      }
+    );
+
+    const rows = JSON.parse(
+      result.stdout ||
+      "[]"
+    );
+
+    return rows
+      .map((row) => ({
+        nameWithOwner:
+          row.nameWithOwner,
+        repositoryUrl:
+          row.sshUrl ||
+          row.url,
+        htmlUrl:
+          row.url ||
+          null,
+        private:
+          Boolean(
+            row.isPrivate
+          ),
+        source:
+          "github",
+      }))
+      .filter(
+        (row) =>
+          row.nameWithOwner &&
+          row.repositoryUrl
+      )
+      .sort((a, b) =>
+        String(
+          a.nameWithOwner
+        ).localeCompare(
+          String(
+            b.nameWithOwner
+          )
+        )
+      );
+  } catch (githubError) {
+    const processes =
+      await discoverServerApps();
+
+    const repositories =
+      new Map();
+
+    for (const process of processes) {
+      if (!process.repositoryUrl) {
+        continue;
+      }
+
+      const key =
+        comparableRepository(
+          process.repositoryUrl
+        );
+
+      if (
+        key &&
+        !repositories.has(key)
+      ) {
+        repositories.set(
+          key,
+          {
+            nameWithOwner:
+              key,
+            repositoryUrl:
+              process.repositoryUrl,
+            htmlUrl:
+              null,
+            private:
+              true,
+            source:
+              "server-fallback",
+          }
+        );
+      }
+    }
+
+    const fallback =
+      [...repositories.values()]
+        .sort((a, b) =>
+          String(
+            a.nameWithOwner
+          ).localeCompare(
+            String(
+              b.nameWithOwner
+            )
+          )
+        );
+
+    if (!fallback.length) {
+      throw statusError(
+        503,
+        `GitHub repository discovery failed: ${githubError.message}`,
+        "GITHUB_REPOSITORY_DISCOVERY_FAILED"
+      );
+    }
+
+    return fallback;
+  }
+}
+
 module.exports = {
   identifier,
   validateSiteInput,
@@ -791,5 +983,6 @@ module.exports = {
   addEvent,
   executeDeployment,
   discoverServerApps,
+  discoverGithubRepositories,
   runCommand,
 };

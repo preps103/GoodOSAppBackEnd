@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GoodOS Update Sites</title>
   <style>
-    :root{color-scheme:dark;--bg:#080b10;--panel:#10151e;--panel2:#151c27;--line:#263244;--text:#f5f7fb;--muted:#9ba9bd;--accent:#7ea7ff;--good:#4dd29c;--warn:#f0be5a;--bad:#ff7373}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#13213a 0,#080b10 42%);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    button,input,select{font:inherit}.shell{max-width:1500px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:22px}.title h1{margin:0;font-size:28px}.title p{margin:5px 0 0;color:var(--muted)}.top-actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{border:1px solid var(--line);background:#1b2636;color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:#07101f;border-color:var(--accent);font-weight:700}.btn.danger{border-color:#713a43;background:#28161a}.btn:disabled{opacity:.45;cursor:not-allowed}
-    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.stat,.panel{background:rgba(16,21,30,.93);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.22)}.stat{padding:16px}.stat strong{font-size:25px;display:block}.stat span{color:var(--muted)}
-    .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(360px,.8fr);gap:16px}.panel{overflow:hidden}.panel-head{display:flex;justify-content:space-between;align-items:center;padding:15px 17px;border-bottom:1px solid var(--line)}.panel-head h2{font-size:16px;margin:0}.panel-body{padding:16px}
-    table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #202a39;vertical-align:top}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}.muted{color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px}.badge.good{color:var(--good);border-color:#245f4b}.badge.warn{color:var(--warn);border-color:#705926}.badge.bad{color:var(--bad);border-color:#70333b}
-    .actions{display:flex;gap:7px;flex-wrap:wrap}.actions .btn{padding:7px 10px;font-size:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
+    :root{color-scheme:dark;--bg:#070b11;--panel:#101722;--line:#29384d;--text:#f6f8fc;--muted:#a7b4c7;--accent:#82aaff;--good:#4dd29c;--warn:#f0be5a;--bad:#ff7373}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#13213a 0,#070b11 42%);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
+    button,input,select{font:inherit}.shell{max-width:1540px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:18px}.title h1{margin:0;font-size:30px}.title p{margin:6px 0 0;color:var(--muted)}
+    .top-actions,.actions,.quick-actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#1b2738;color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:#07101f;border-color:var(--accent);font-weight:750}.btn:disabled{opacity:.45;cursor:not-allowed}
+    .panel,.stat{background:rgba(16,23,34,.95);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.22)}.panel{overflow:hidden}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line)}.panel-head h2{margin:0;font-size:17px}.panel-body{padding:16px}
+    .alert{display:none;margin-bottom:16px;border:1px solid #78404a;background:#2a171c;color:#ffd9de;padding:13px 15px;border-radius:12px}.alert.show{display:block}
+    .quick{margin-bottom:16px}.selector-grid{display:grid;grid-template-columns:1.15fr 1.35fr 1.1fr .65fr;gap:13px;align-items:end}.field{display:flex;flex-direction:column;gap:7px;min-width:0}.field label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}.field input,.field select{width:100%;background:#090f18;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:11px;min-height:43px}.manual{display:none;margin-top:12px}.manual.show{display:block}
+    .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.summary-item{background:#0a111b;border:1px solid #233146;border-radius:10px;padding:10px 12px;min-width:0}.summary-item span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}.summary-item strong{display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.quick-actions{justify-content:flex-end;margin-top:14px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.stat{padding:16px}.stat strong{display:block;font-size:25px}.stat span{color:var(--muted)}
+    .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(360px,.8fr);gap:16px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #202a39;vertical-align:top}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}.muted{color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px}.badge.good{color:var(--good);border-color:#245f4b}.badge.warn{color:var(--warn);border-color:#705926}.badge.bad{color:var(--bad);border-color:#70333b}.actions .btn{padding:7px 10px;font-size:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
     .log{height:580px;overflow:auto;background:#080c12;border:1px solid #202a39;border-radius:10px;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre-wrap}.log-line{padding:4px 0;border-bottom:1px dashed #18202c}.log-line.error{color:var(--bad)}.log-line.warning{color:var(--warn)}.log-line.log{color:#c0cbe0}
-    dialog{width:min(760px,calc(100vw - 30px));border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);padding:0}dialog::backdrop{background:rgba(0,0,0,.72)}.modal-head,.modal-foot{padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.modal-foot{border-top:1px solid var(--line);border-bottom:0;justify-content:flex-end}.modal-body{padding:18px;max-height:70vh;overflow:auto}.fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{color:var(--muted);font-size:12px}.field input,.field select{background:#0b1018;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px}.checks{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}.checks label{display:flex;align-items:center;gap:7px}.discover-list{display:grid;gap:10px}.discover-item{border:1px solid var(--line);padding:12px;border-radius:10px;display:grid;grid-template-columns:1fr auto;gap:10px}
-    .toast{position:fixed;right:22px;bottom:22px;max-width:420px;background:#151e2b;border:1px solid var(--line);border-radius:10px;padding:12px 15px;display:none;z-index:10}.toast.show{display:block}.toast.error{border-color:#7c3842;color:#ffd6d6}
-    @media(max-width:1050px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.shell{padding:14px}.top{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.fields{grid-template-columns:1fr}.field.full{grid-column:auto}.table-wrap{overflow:auto}}
+    dialog{width:min(760px,calc(100vw - 30px));border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);padding:0}dialog::backdrop{background:rgba(0,0,0,.72)}.modal-head,.modal-foot{padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.modal-foot{border-top:1px solid var(--line);border-bottom:0;justify-content:flex-end}.modal-body{padding:18px;max-height:70vh;overflow:auto}.fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field.full{grid-column:1/-1}.checks{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}.checks label{display:flex;align-items:center;gap:7px}
+    .toast{position:fixed;right:22px;bottom:22px;max-width:440px;background:#151e2b;border:1px solid var(--line);border-radius:10px;padding:12px 15px;display:none;z-index:10}.toast.show{display:block}.toast.error{border-color:#7c3842;color:#ffd6d6}
+    @media(max-width:1180px){.selector-grid{grid-template-columns:1fr 1fr}.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}@media(max-width:700px){.shell{padding:14px}.top{align-items:flex-start;flex-direction:column}.selector-grid,.summary,.stats,.fields{grid-template-columns:1fr}.field.full{grid-column:auto}}
   </style>
 </head>
 <body>
@@ -24,17 +26,66 @@
     <header class="top">
       <div class="title">
         <h1>Update Sites</h1>
-        <p>Save each GitHub repository once, then update, build, restart, verify, and roll back from one screen.</p>
+        <p>Select the application, select the GitHub repository, confirm the server target, and update it.</p>
       </div>
       <div class="top-actions">
         <a class="btn" href="/console">Back to Console</a>
-        <button class="btn" id="discoverButton">Discover Server Apps</button>
-        <button class="btn primary" id="newSiteButton">Add Site</button>
+        <button class="btn" id="refreshDiscoveryButton" type="button">Refresh Repositories & Targets</button>
+        <button class="btn primary" id="addSiteButton" type="button">Add Site</button>
       </div>
     </header>
 
+    <div class="alert" id="pageAlert"></div>
+
+    <section class="panel quick">
+      <div class="panel-head">
+        <h2>Quick Site Update</h2>
+        <span class="badge" id="workspaceStatus">Loading…</span>
+      </div>
+      <div class="panel-body">
+        <div class="selector-grid">
+          <div class="field">
+            <label for="siteSelector">1. Site or application</label>
+            <select id="siteSelector"><option value="">Loading sites…</option></select>
+          </div>
+          <div class="field">
+            <label for="repositorySelector">2. GitHub repository</label>
+            <select id="repositorySelector"><option value="">Loading repositories…</option></select>
+          </div>
+          <div class="field">
+            <label for="targetSelector">3. Server application target</label>
+            <select id="targetSelector"><option value="">Loading server targets…</option></select>
+          </div>
+          <div class="field">
+            <label for="branchInput">Branch</label>
+            <input id="branchInput" value="main" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="manual" id="manualRepositoryWrap">
+          <div class="field">
+            <label for="manualRepositoryInput">Manual GitHub repository URL</label>
+            <input id="manualRepositoryInput" placeholder="https://github.com/preps103/repository.git" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="summary-item"><span>Site</span><strong id="summarySite">None</strong></div>
+          <div class="summary-item"><span>Subdomain</span><strong id="summaryDomain">None</strong></div>
+          <div class="summary-item"><span>Application path</span><strong id="summaryPath">None</strong></div>
+          <div class="summary-item"><span>Process</span><strong id="summaryProcess">None</strong></div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn" id="saveMappingButton" type="button" disabled>Save Mapping</button>
+          <button class="btn" id="testMappingButton" type="button" disabled>Test Mapping</button>
+          <button class="btn primary" id="updateSelectedButton" type="button" disabled>Update Selected Site</button>
+        </div>
+      </div>
+    </section>
+
     <section class="stats">
-      <div class="stat"><strong id="siteCount">0</strong><span>Configured sites</span></div>
+      <div class="stat"><strong id="siteCount">0</strong><span>Registered sites</span></div>
       <div class="stat"><strong id="readyCount">0</strong><span>Ready to update</span></div>
       <div class="stat"><strong id="runningCount">0</strong><span>Updates running</span></div>
       <div class="stat"><strong id="failedCount">0</strong><span>Needs attention</span></div>
@@ -42,292 +93,51 @@
 
     <section class="grid">
       <div class="panel">
-        <div class="panel-head"><h2>Sites</h2><button class="btn" id="refreshButton">Refresh</button></div>
+        <div class="panel-head">
+          <h2>Registered Sites and Subdomains</h2>
+          <button class="btn" id="refreshButton" type="button">Refresh</button>
+        </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Site</th><th>Repository</th><th>Process</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="sitesBody"></tbody>
+            <thead><tr><th>Site / Subdomain</th><th>GitHub repository</th><th>Server target</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="sitesBody"><tr><td colspan="5" class="empty">Loading registered sites…</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <aside class="panel">
         <div class="panel-head"><h2>Deployment activity</h2><span class="badge" id="activeRunBadge">No run selected</span></div>
-        <div class="panel-body">
-          <div class="log" id="deploymentLog">Select a site or start an update to view live progress.</div>
-        </div>
+        <div class="panel-body"><div class="log" id="deploymentLog">Select a site or start an update to view live progress.</div></div>
       </aside>
     </section>
   </main>
 
   <dialog id="siteDialog">
-    <form method="dialog" id="siteForm">
+    <form method="dialog">
       <div class="modal-head"><strong id="dialogTitle">Configure Site</strong><button class="btn" value="cancel">Close</button></div>
       <div class="modal-body">
         <input type="hidden" id="siteId">
         <div class="fields">
-          <div class="field"><label>Site name</label><input id="siteName" required></div>
-          <div class="field"><label>Domain</label><input id="siteDomain" placeholder="app.goodos.app"></div>
-          <div class="field full"><label>GitHub repository</label><input id="repositoryUrl" required placeholder="https://github.com/owner/repository.git"></div>
-          <div class="field"><label>Branch</label><input id="branch" value="main" required></div>
-          <div class="field"><label>Process manager</label><select id="processManager"><option value="pm2">PM2</option><option value="systemd">systemd</option><option value="none">No restart</option></select></div>
-          <div class="field full"><label>Application path on VPS</label><input id="appPath" required placeholder="/home/user/application"></div>
-          <div class="field"><label>PM2 process or systemd service</label><input id="processName" placeholder="goodhub"></div>
-          <div class="field"><label>Health URL</label><input id="healthUrl" placeholder="https://app.goodos.app"></div>
+          <div class="field"><label for="siteName">Site name</label><input id="siteName" required></div>
+          <div class="field"><label for="siteDomain">Domain</label><input id="siteDomain"></div>
+          <div class="field full"><label for="siteRepository">GitHub repository</label><input id="siteRepository" required></div>
+          <div class="field"><label for="siteBranch">Branch</label><input id="siteBranch" value="main" required></div>
+          <div class="field"><label for="siteManager">Process manager</label><select id="siteManager"><option value="pm2">PM2</option><option value="systemd">systemd</option><option value="none">No restart</option></select></div>
+          <div class="field full"><label for="sitePath">Application path</label><input id="sitePath" required></div>
+          <div class="field"><label for="siteProcess">Process or service name</label><input id="siteProcess"></div>
+          <div class="field"><label for="siteHealth">Health URL</label><input id="siteHealth"></div>
         </div>
         <div class="checks">
-          <label><input type="checkbox" id="autoRollback" checked> Automatic rollback</label>
-          <label><input type="checkbox" id="installDependencies" checked> Install dependencies</label>
-          <label><input type="checkbox" id="runBuild" checked> Run build</label>
+          <label><input type="checkbox" id="siteRollback" checked> Automatic rollback</label>
+          <label><input type="checkbox" id="siteInstall" checked> Install dependencies</label>
+          <label><input type="checkbox" id="siteBuild" checked> Run build</label>
         </div>
       </div>
-      <div class="modal-foot"><button type="button" class="btn primary" id="saveSiteButton">Save Site</button></div>
+      <div class="modal-foot"><button class="btn primary" id="saveSiteButton" type="button">Save Site</button></div>
     </form>
   </dialog>
 
-  <dialog id="discoverDialog">
-    <div class="modal-head"><strong>Discovered PM2 applications</strong><button class="btn" onclick="document.getElementById('discoverDialog').close()">Close</button></div>
-    <div class="modal-body"><div class="discover-list" id="discoverList"></div></div>
-  </dialog>
-
   <div class="toast" id="toast"></div>
-
-  <script>
-    const state = { sites: [], runs: [], activeRunId: null, pollTimer: null, discovered: [] };
-    const $ = (id) => document.getElementById(id);
-
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
-    }
-
-    function toast(message, error = false) {
-      const node = $("toast");
-      node.textContent = message;
-      node.className = "toast show" + (error ? " error" : "");
-      clearTimeout(node.timer);
-      node.timer = setTimeout(() => node.className = "toast", 5000);
-    }
-
-    async function api(url, options = {}) {
-      const token = localStorage.getItem("goodos_token");
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers || {}),
-      };
-
-      const response = await fetch(url, {
-        ...options,
-        credentials: "include",
-        headers,
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Your backend session expired. Open the main console and sign in again.");
-        }
-        throw new Error(payload.message || `Request failed with HTTP ${response.status}`);
-      }
-      return payload;
-    }
-
-    function badge(status) {
-      const value = String(status || "setup_required");
-      const good = ["ready","success","no_change"].includes(value);
-      const bad = ["failed","rolled_back"].includes(value);
-      return `<span class="badge ${good ? "good" : bad ? "bad" : "warn"}">${escapeHtml(value.replaceAll("_"," "))}</span>`;
-    }
-
-    function shortCommit(value) {
-      return value ? String(value).slice(0, 9) : "—";
-    }
-
-    function renderSites() {
-      $("siteCount").textContent = state.sites.length;
-      $("readyCount").textContent = state.sites.filter(site => site.status === "ready").length;
-      $("runningCount").textContent = state.sites.filter(site => ["queued","deploying"].includes(site.status)).length;
-      $("failedCount").textContent = state.sites.filter(site => site.status === "failed" || site.lastRunStatus === "rolled_back").length;
-
-      $("sitesBody").innerHTML = state.sites.map(site => {
-        const configured = Boolean(site.repositoryUrl && site.appPath && (site.processManager === "none" || site.processName));
-        const running = ["queued","deploying"].includes(site.status);
-        return `
-          <tr>
-            <td><strong>${escapeHtml(site.name)}</strong><div class="muted">${escapeHtml(site.domain || "No domain")}</div><div class="mono">${escapeHtml(site.appPath || "Setup required")}</div></td>
-            <td><div class="mono">${escapeHtml(site.repositoryUrl || "Not configured")}</div><div class="muted">Branch: ${escapeHtml(site.branch || "main")} · Last: ${shortCommit(site.lastDeployedCommit)}</div></td>
-            <td>${escapeHtml(site.processManager || "pm2")}<div class="muted">${escapeHtml(site.processName || "Not configured")}</div></td>
-            <td>${badge(site.status)}${site.lastRunStatus ? `<div class="muted" style="margin-top:6px">Last run: ${escapeHtml(site.lastRunStatus)}</div>` : ""}</td>
-            <td><div class="actions">
-              <button class="btn" onclick="editSite('${site.id}')">Configure</button>
-              <button class="btn" onclick="testSite('${site.id}')" ${configured ? "" : "disabled"}>Test</button>
-              <button class="btn primary" onclick="updateSite('${site.id}')" ${configured && !running ? "" : "disabled"}>Update Site</button>
-              ${site.lastRunId ? `<button class="btn" onclick="viewRun('${site.lastRunId}')">Logs</button>` : ""}
-            </div></td>
-          </tr>
-        `;
-      }).join("") || `<tr><td colspan="5" class="empty">No sites found.</td></tr>`;
-    }
-
-    async function loadSites() {
-      const payload = await api("/api/update-sites/sites");
-      state.sites = payload.sites || [];
-      renderSites();
-    }
-
-    function siteById(id) {
-      return state.sites.find(site => site.id === id);
-    }
-
-    function openSiteDialog(site = {}) {
-      $("dialogTitle").textContent = site.id ? `Configure ${site.name}` : "Add Site";
-      $("siteId").value = site.id || "";
-      $("siteName").value = site.name || "";
-      $("siteDomain").value = site.domain || "";
-      $("repositoryUrl").value = site.repositoryUrl || "";
-      $("branch").value = site.branch || "main";
-      $("appPath").value = site.appPath || "";
-      $("processManager").value = site.processManager || "pm2";
-      $("processName").value = site.processName || "";
-      $("healthUrl").value = site.healthUrl || (site.domain ? `https://${site.domain}` : "");
-      $("autoRollback").checked = site.autoRollback !== false;
-      $("installDependencies").checked = site.installDependencies !== false;
-      $("runBuild").checked = site.runBuild !== false;
-      $("siteDialog").showModal();
-    }
-
-    window.editSite = (id) => openSiteDialog(siteById(id));
-
-    async function saveSite() {
-      const id = $("siteId").value;
-      const body = {
-        name: $("siteName").value,
-        domain: $("siteDomain").value,
-        repositoryUrl: $("repositoryUrl").value,
-        branch: $("branch").value,
-        appPath: $("appPath").value,
-        processManager: $("processManager").value,
-        processName: $("processName").value,
-        healthUrl: $("healthUrl").value,
-        autoRollback: $("autoRollback").checked,
-        installDependencies: $("installDependencies").checked,
-        runBuild: $("runBuild").checked,
-      };
-
-      try {
-        await api(id ? `/api/update-sites/sites/${encodeURIComponent(id)}` : "/api/update-sites/sites", {
-          method: id ? "PATCH" : "POST",
-          body: JSON.stringify(body),
-        });
-        $("siteDialog").close();
-        toast("Site configuration saved.");
-        await loadSites();
-      } catch (error) {
-        toast(error.message, true);
-      }
-    }
-
-    window.testSite = async (id) => {
-      try {
-        const payload = await api(`/api/update-sites/sites/${encodeURIComponent(id)}/test`, {
-          method: "POST",
-          body: "{}",
-        });
-        const detail = (payload.checks || []).map(check => `${check.passed ? "PASS" : "FAIL"}: ${check.name} — ${check.detail}`).join("\n");
-        $("deploymentLog").textContent = detail || "Configuration test passed.";
-        toast("Site configuration test passed.");
-      } catch (error) {
-        $("deploymentLog").textContent = error.message;
-        toast(error.message, true);
-      }
-    };
-
-    window.updateSite = async (id) => {
-      const site = siteById(id);
-      if (!confirm(`Update ${site?.name || "this site"} from GitHub now?`)) return;
-
-      try {
-        const payload = await api(`/api/update-sites/sites/${encodeURIComponent(id)}/update`, {
-          method: "POST",
-          body: "{}",
-        });
-        state.activeRunId = payload.runId;
-        toast("Site update queued.");
-        await loadSites();
-        await viewRun(payload.runId);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    window.viewRun = async (runId) => {
-      state.activeRunId = runId;
-      if (state.pollTimer) clearTimeout(state.pollTimer);
-
-      const poll = async () => {
-        try {
-          const payload = await api(`/api/update-sites/runs/${encodeURIComponent(runId)}`);
-          const run = payload.run || {};
-          $("activeRunBadge").textContent = `${run.status || "unknown"} · ${String(runId).slice(-10)}`;
-          $("deploymentLog").innerHTML = (payload.events || []).map(event =>
-            `<div class="log-line ${escapeHtml(event.level)}"><span class="muted">${escapeHtml(new Date(event.createdAt).toLocaleTimeString())}</span> [${escapeHtml(event.step)}] ${escapeHtml(event.message)}</div>`
-          ).join("") || "Waiting for deployment worker…";
-          $("deploymentLog").scrollTop = $("deploymentLog").scrollHeight;
-
-          if (["queued","running"].includes(run.status)) {
-            state.pollTimer = setTimeout(poll, 2000);
-          } else {
-            await loadSites();
-          }
-        } catch (error) {
-          $("deploymentLog").textContent = error.message;
-        }
-      };
-
-      await poll();
-    };
-
-    async function discover() {
-      try {
-        const payload = await api("/api/update-sites/discover");
-        state.discovered = payload.processes || [];
-        $("discoverList").innerHTML = state.discovered.map((item, index) => `
-          <div class="discover-item">
-            <div>
-              <strong>${escapeHtml(item.processName)}</strong> ${badge(item.status)}
-              <div class="mono">${escapeHtml(item.appPath || "Unknown path")}</div>
-              <div class="muted">${escapeHtml(item.repositoryUrl || "No Git origin detected")} · ${escapeHtml(item.branch || "main")}</div>
-            </div>
-            <button class="btn primary" onclick="useDiscovered(${index})">Use</button>
-          </div>
-        `).join("") || `<div class="empty">No PM2 applications were discovered.</div>`;
-        $("discoverDialog").showModal();
-      } catch (error) {
-        toast(error.message, true);
-      }
-    }
-
-    window.useDiscovered = (index) => {
-      const item = state.discovered[index] || {};
-      $("discoverDialog").close();
-      openSiteDialog({
-        name: item.processName,
-        repositoryUrl: item.repositoryUrl,
-        branch: item.branch,
-        appPath: item.appPath,
-        processManager: "pm2",
-        processName: item.processName,
-      });
-    };
-
-    $("newSiteButton").addEventListener("click", () => openSiteDialog());
-    $("saveSiteButton").addEventListener("click", saveSite);
-    $("refreshButton").addEventListener("click", () => loadSites().catch(error => toast(error.message, true)));
-    $("discoverButton").addEventListener("click", discover);
-
-    loadSites().catch(error => {
-      $("sitesBody").innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(error.message)}</td></tr>`;
-      toast(error.message, true);
-    });
-  </script>
+  <script src="/update-sites.js" defer></script>
 </body>
 </html>

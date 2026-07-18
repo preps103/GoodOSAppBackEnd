@@ -148,11 +148,40 @@ router.get("/console-v2.js", (req, res) => {
 
 /* GOODOS_UPDATE_SITES_PAGE */
 router.get("/update-sites", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/update-sites.html"));
+  res.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../public/update-sites.html"
+    )
+  );
 });
 
 router.get("/update-sites.html", (req, res) => {
   res.redirect("/update-sites");
+});
+
+
+router.get("/update-sites.js", (req, res) => {
+  res.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+
+  res.type(
+    "application/javascript"
+  );
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../public/update-sites.js"
+    )
+  );
 });
 /* END GOODOS_UPDATE_SITES_PAGE */
 
