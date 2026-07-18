@@ -32,6 +32,12 @@ const apiAccessRoutes =
   require("./api-access.routes");
 /* END GOODOS_API_ACCESS_LIVE_V1 */
 
+const apiGatewayV2PublicRoutes =
+  require("./api-gateway-v2-public.routes");
+
+const apiGatewayV2AdminRoutes =
+  require("./api-gateway-v2-admin.routes");
+
 /* GOODOS_ROLES_CONSOLE_V1 */
 const rolesConsoleRoutes =
   require("./roles-console.routes");
@@ -142,6 +148,11 @@ router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);
 router.use("/api/admin", adminRoutes);
 router.use("/api/v1", publicApiRoutes);
+
+router.use(
+  "/api/v2",
+  apiGatewayV2PublicRoutes
+);
 router.use("/api/voice", voiceRoutes);
 router.use("/api/teams", teamsRoutes);
 router.use("/storage", storageRoutes);
@@ -192,6 +203,11 @@ router.use(
   apiAccessRoutes
 );
 /* END GOODOS_API_ACCESS_LIVE_V1_MOUNT */
+
+router.use(
+  "/api/api-gateway-v2",
+  apiGatewayV2AdminRoutes
+);
 
 /* GOODOS_ROLES_CONSOLE_V1_MOUNT */
 router.use(
