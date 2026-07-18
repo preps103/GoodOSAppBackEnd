@@ -84,11 +84,13 @@ async function apiKeyRequired(req, res, next) {
           created_at AS "createdAt",
           last_used_at AS "lastUsedAt",
           revoked_at AS "revokedAt",
+          expires_at AS "expiresAt",
           organization_id AS "organizationId",
           project_id AS "projectId",
           environment_id AS "environmentId"
         FROM backend_api_keys
         WHERE key_hash = $1
+          AND expires_at > NOW()
         LIMIT 1
       `,
       [keyHash]
@@ -96,12 +98,29 @@ async function apiKeyRequired(req, res, next) {
 
     const apiKey = result.rows[0];
 
-    if (!apiKey || apiKey.status !== "active" || apiKey.revokedAt) {
+    /* GOODOS_API_ACCESS_EXPIRATION_V1 */
+    const apiKeyExpired =
+      Boolean(
+        apiKey?.expiresAt &&
+        new Date(apiKey.expiresAt) <=
+          new Date()
+      );
+
+    if (
+      !apiKey ||
+      apiKey.status !== "active" ||
+      apiKey.revokedAt ||
+      apiKeyExpired
+    ) {
       return res.status(401).json({
         success: false,
-        message: "Invalid or revoked API key.",
+        message:
+          apiKeyExpired
+            ? "API key has expired."
+            : "Invalid or revoked API key.",
       });
     }
+    /* END GOODOS_API_ACCESS_EXPIRATION_V1 */
 
     await dbQuery(
       `

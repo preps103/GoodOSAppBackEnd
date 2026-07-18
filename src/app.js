@@ -11,6 +11,61 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+// GOODOS_SECURITY_PHASE2_EARLY
+const goodosPhase2Security =
+  require("./middleware/phase2-security");
+
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+app.use(
+  goodosPhase2Security.originGate
+);
+
+app.use(
+  goodosPhase2Security.securityHeaders
+);
+
+app.use(
+  goodosPhase2Security.globalLimiter
+);
+
+app.use(
+  "/api/auth",
+  goodosPhase2Security.authLimiter
+);
+
+app.use(
+  "/api/admin",
+  goodosPhase2Security.adminBoundary
+);
+
+
+
+
+/* GOODTRUSTS HEALTH ALIAS */
+app.get("/api/goodtrusts/health", (req, res) => {
+  return res.json({
+    success: true,
+    status: "online",
+    service: "goodtrusts",
+    timestamp: new Date().toISOString()
+  });
+});
+/* END GOODTRUSTS HEALTH ALIAS */
+
+/* GOODOS GLOBAL HEALTH CHECK */
+app.get("/api/health", (req, res) => {
+  return res.json({
+    success: true,
+    status: "online",
+    service: "goodos-backend",
+    timestamp: new Date().toISOString()
+  });
+});
+/* END GOODOS GLOBAL HEALTH CHECK */
+
+
 /* GOODOS DATABASE CONSOLE V121 API MOUNT */
 try {
   const goodosDatabaseConsoleRouterV121 = require('./routes/database-console.routes');
@@ -306,20 +361,51 @@ app.set("trust proxy", 1);
 
 app.use(helmet());
 
+
+// GOODOS_SECURITY_PHASE2_CORS
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (env.isAllowedOrigin(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true
+    origin: true,
+    credentials: true,
+    methods: [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+    allowedHeaders: [
+      "Authorization",
+      "Content-Type",
+      "X-Requested-With",
+      "X-GoodOS-API-Key",
+      "X-Request-ID",
+      "Traceparent"
+    ]
   })
 );
 
 app.use(express.json({ limit: "10mb" }));
+
+// GOODOS_SECURITY_PHASE2_BODY
+app.use(
+  goodosPhase2Security.passwordPolicy
+);
+
+app.use(
+  "/api/auth/login",
+  goodosPhase2Security.loginGuard
+);
+
+app.use(
+  "/api/security",
+  require(
+    "./routes/security-foundation.routes"
+  )
+);
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 

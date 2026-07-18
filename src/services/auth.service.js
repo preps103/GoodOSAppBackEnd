@@ -197,6 +197,14 @@ async function login({ email, password, ipAddress, userAgent }) {
     throw err;
   }
 
+  if (!user.email_verified) {
+    const err = new Error(
+      "Verify your email before signing in."
+    );
+    err.statusCode = 403;
+    throw err;
+  }
+
   if (user.status !== "active") {
     const err = new Error("Account is not active.");
     err.statusCode = 403;

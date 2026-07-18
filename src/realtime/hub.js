@@ -69,6 +69,7 @@ async function authenticateRealtimeApiKey(rawKey) {
         environment_id AS "environmentId"
       FROM backend_api_keys
       WHERE key_hash = $1
+        AND expires_at > NOW()
         AND status = 'active'
       LIMIT 1
     `,

@@ -20,82 +20,236 @@ function hashToken(token) {
 }
 
 router.get("/signed/:token", async (req, res) => {
-  try {
-    const token = String(req.params.token || "").trim();
+  let consumedSignedUrlId = null;
 
-    if (!token) {
-      return res.status(400).send("Missing signed URL token.");
-    }
-
-    const tokenHash = hashToken(token);
-
-    const result = await dbQuery(
-      `
-        SELECT
-          s.id AS "signedUrlId",
-          s.status AS "signedUrlStatus",
-          s.expires_at AS "expiresAt",
-          s.max_downloads AS "maxDownloads",
-          s.download_count AS "downloadCount",
-          f.id AS "fileId",
-          f.filename,
-          f.original_filename AS "originalFilename",
-          f.mime_type AS "mimeType",
-          f.storage_path AS "storagePath",
-          f.status AS "fileStatus"
-        FROM backend_storage_signed_urls s
-        JOIN backend_storage_files f ON f.id = s.file_id
-        WHERE s.token_hash = $1
-        LIMIT 1
-      `,
-      [tokenHash]
-    );
-
-    const record = result.rows[0];
-
-    if (!record) return res.status(404).send("Signed URL not found.");
-    if (record.signedUrlStatus !== "active") return res.status(403).send("Signed URL is disabled.");
-    if (record.fileStatus !== "active") return res.status(403).send("File is not active.");
-    if (new Date(record.expiresAt).getTime() < Date.now()) return res.status(403).send("Signed URL expired.");
-
-    if (record.maxDownloads && Number(record.downloadCount || 0) >= Number(record.maxDownloads)) {
-      return res.status(403).send("Signed URL download limit reached.");
-    }
-
-    const storageRoot = path.resolve(process.cwd(), "storage");
-    const fullPath = path.resolve(record.storagePath || "");
-
-    if (!fullPath.startsWith(storageRoot)) {
-      return res.status(403).send("Invalid storage path.");
-    }
-
-    if (!fs.existsSync(fullPath)) {
-      return res.status(404).send("File missing on server.");
-    }
+  async function releaseConsumption() {
+    if (!consumedSignedUrlId) return;
 
     await dbQuery(
       `
         UPDATE backend_storage_signed_urls
-        SET download_count = download_count + 1,
-            last_used_at = NOW()
+        SET
+          download_count =
+            GREATEST(
+              download_count - 1,
+              0
+            )
         WHERE id = $1
       `,
-      [record.signedUrlId]
+      [consumedSignedUrlId]
+    ).catch(() => {});
+  }
+
+  try {
+    const token =
+      String(
+        req.params.token || ""
+      ).trim();
+
+    if (!token) {
+      return res
+        .status(400)
+        .send(
+          "Missing signed URL token."
+        );
+    }
+
+    const tokenHash =
+      hashToken(token);
+
+    const consumption =
+      await dbQuery(
+        `
+          UPDATE
+            backend_storage_signed_urls
+            AS signed_url
+
+          SET
+            download_count =
+              signed_url.download_count + 1,
+
+            last_used_at =
+              NOW()
+
+          WHERE signed_url.token_hash =
+                $1
+
+            AND signed_url.status =
+                'active'
+
+            AND signed_url.revoked_at
+                IS NULL
+
+            AND signed_url.expires_at >
+                NOW()
+
+            AND (
+              signed_url.max_downloads
+                IS NULL
+
+              OR signed_url.download_count <
+                 signed_url.max_downloads
+            )
+
+          RETURNING
+            signed_url.id
+              AS "signedUrlId",
+
+            signed_url.file_id
+              AS "fileId"
+        `,
+        [tokenHash]
+      );
+
+    const consumed =
+      consumption.rows[0];
+
+    if (!consumed) {
+      return res
+        .status(403)
+        .send(
+          "Signed URL is invalid, expired, disabled, or exhausted."
+        );
+    }
+
+    consumedSignedUrlId =
+      consumed.signedUrlId;
+
+    const fileResult =
+      await dbQuery(
+        `
+          SELECT
+            file_record.id,
+            file_record.filename,
+
+            file_record.original_filename
+              AS "originalFilename",
+
+            file_record.mime_type
+              AS "mimeType",
+
+            file_record.storage_path
+              AS "storagePath",
+
+            file_record.status,
+
+            file_record.file_deleted
+              AS "fileDeleted"
+
+          FROM backend_storage_files
+               AS file_record
+
+          WHERE file_record.id =
+                $1
+
+            AND file_record.status =
+                'active'
+
+            AND COALESCE(
+                  file_record.file_deleted,
+                  false
+                ) = false
+
+          LIMIT 1
+        `,
+        [consumed.fileId]
+      );
+
+    const file =
+      fileResult.rows[0];
+
+    if (!file) {
+      await releaseConsumption();
+
+      return res
+        .status(404)
+        .send(
+          "File is not available."
+        );
+    }
+
+    const storageRoot =
+      path.resolve(
+        process.cwd(),
+        "storage"
+      );
+
+    const fullPath =
+      path.resolve(
+        file.storagePath || ""
+      );
+
+    const insideStorage =
+      fullPath === storageRoot ||
+      fullPath.startsWith(
+        storageRoot + path.sep
+      );
+
+    if (!insideStorage) {
+      await releaseConsumption();
+
+      return res
+        .status(403)
+        .send(
+          "Invalid storage path."
+        );
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      await releaseConsumption();
+
+      return res
+        .status(404)
+        .send(
+          "File missing on server."
+        );
+    }
+
+    const downloadName =
+      String(
+        file.originalFilename ||
+        file.filename ||
+        "download"
+      )
+      .replace(/[\r\n"]/g, "");
+
+    res.setHeader(
+      "Content-Type",
+      file.mimeType ||
+      "application/octet-stream"
     );
 
-    const downloadName = String(record.originalFilename || record.filename || "download").replace(/"/g, "");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${downloadName}"`
+    );
 
-    res.setHeader("Content-Type", record.mimeType || "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
+    res.setHeader(
+      "Cache-Control",
+      "private, no-store"
+    );
+
+    res.setHeader(
+      "X-Content-Type-Options",
+      "nosniff"
+    );
 
     return res.sendFile(fullPath);
   } catch (error) {
-    console.error("Signed storage download failed:", error);
-    return res.status(500).send("Signed URL failed.");
+    await releaseConsumption();
+
+    console.error(
+      "Signed storage download failed:",
+      error
+    );
+
+    return res
+      .status(500)
+      .send(
+        "Signed URL failed."
+      );
   }
 });
-
-
 
 router.get("/public/:bucketName/*", async (req, res) => {
   try {
