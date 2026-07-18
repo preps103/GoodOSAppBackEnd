@@ -440,6 +440,40 @@ app.get("/mfa-enroll.js", (req, res) => {
   );
 });
 
+app.get("/oidc-admin", (req, res) => {
+  res.set(
+    "Cache-Control",
+    "no-store"
+  );
+
+  res.sendFile(
+    require("path").join(
+      __dirname,
+      "public",
+      "oidc-admin.html"
+    )
+  );
+});
+
+app.get("/oidc-admin.js", (req, res) => {
+  res.set(
+    "Cache-Control",
+    "no-store"
+  );
+
+  res.type(
+    "application/javascript"
+  );
+
+  res.sendFile(
+    require("path").join(
+      __dirname,
+      "public",
+      "oidc-admin.js"
+    )
+  );
+});
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
