@@ -38,6 +38,9 @@ const apiGatewayV2PublicRoutes =
 const apiGatewayV2AdminRoutes =
   require("./api-gateway-v2-admin.routes");
 
+const policyEngineV2AdminRoutes =
+  require("./policy-engine-v2-admin.routes");
+
 /* GOODOS_ROLES_CONSOLE_V1 */
 const rolesConsoleRoutes =
   require("./roles-console.routes");
@@ -207,6 +210,11 @@ router.use(
 router.use(
   "/api/api-gateway-v2",
   apiGatewayV2AdminRoutes
+);
+
+router.use(
+  "/api/policy-engine-v2",
+  policyEngineV2AdminRoutes
 );
 
 /* GOODOS_ROLES_CONSOLE_V1_MOUNT */
