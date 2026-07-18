@@ -636,7 +636,7 @@ router.get(
               'phase',
               '15C2',
               'callbackUrl',
-              $10
+              $10::text
             )
           )
         `,
