@@ -387,7 +387,17 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10mb" }));
+app.use(
+  express.json({
+    limit: "10mb",
+
+    type: [
+      "application/json",
+      "application/scim+json",
+      "application/*+json",
+    ],
+  })
+);
 
 // GOODOS_SECURITY_PHASE2_BODY
 app.use(
