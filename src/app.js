@@ -407,11 +407,35 @@ app.use(
 );
 
 app.get("/mfa-enroll", (req, res) => {
+  res.set(
+    "Cache-Control",
+    "no-store"
+  );
+
   res.sendFile(
     require("path").join(
       __dirname,
       "public",
       "mfa-enroll.html"
+    )
+  );
+});
+
+app.get("/mfa-enroll.js", (req, res) => {
+  res.set(
+    "Cache-Control",
+    "no-store"
+  );
+
+  res.type(
+    "application/javascript"
+  );
+
+  res.sendFile(
+    require("path").join(
+      __dirname,
+      "public",
+      "mfa-enroll.js"
     )
   );
 });
