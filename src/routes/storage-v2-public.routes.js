@@ -372,6 +372,7 @@ router.delete(
       const result = await storage.softDeleteObject({
         fileId: request.params.fileId,
         actorId: request.goodosApiKey?.id || null,
+        createdBy: null,
         reason: request.body?.reason || "Deleted through Storage V2 API",
       });
       await logResult(request, {

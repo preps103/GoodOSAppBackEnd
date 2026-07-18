@@ -967,7 +967,12 @@ async function releaseSignedConsumption(id) {
   ).catch(() => {});
 }
 
-async function softDeleteObject({ fileId, actorId = null, reason = "Deleted through Storage V2 API" }) {
+async function softDeleteObject({
+  fileId,
+  actorId = null,
+  createdBy = null,
+  reason = "Deleted through Storage V2 API",
+}) {
   const file = await getFileById(fileId);
   await withTransaction(async (client) => {
     await client.query(
@@ -1005,7 +1010,7 @@ async function softDeleteObject({ fileId, actorId = null, reason = "Deleted thro
         file.organization_id,
         file.project_id,
         file.environment_id,
-        actorId || null,
+        createdBy || null,
       ]
     );
   });
