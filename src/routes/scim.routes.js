@@ -679,6 +679,7 @@ async function ensureOrganizationMembership({
       `
         INSERT INTO
           backend_organization_memberships (
+            id,
             organization_id,
             user_id,
             role,
@@ -686,12 +687,14 @@ async function ensureOrganizationMembership({
           )
         VALUES (
           $1,
-          $2::uuid,
-          $3,
+          $2,
+          $3::uuid,
+          $4,
           'active'
         )
       `,
       [
+        identifier("orgmem"),
         organizationId,
         userId,
         normalizedRole,
