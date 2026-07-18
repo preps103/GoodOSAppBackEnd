@@ -1,6 +1,9 @@
 const express = require("express");
 const { success, error } = require("../utils/response");
 const { getAllApps, getAppById } = require("../services/apps.service");
+const {
+  getLiveAppsStatus,
+} = require("../services/apps-status.service");
 
 const router = express.Router();
 
@@ -17,6 +20,32 @@ router.get("/", async (req, res) => {
     console.error("Failed to load apps:", err);
 
     return error(res, "Failed to load app registry", 500);
+  }
+});
+
+
+router.get("/status", async (req, res) => {
+  try {
+    res.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate"
+    );
+
+    const status =
+      await getLiveAppsStatus();
+
+    return success(res, status);
+  } catch (err) {
+    console.error(
+      "Failed to load live application status:",
+      err
+    );
+
+    return error(
+      res,
+      "Failed to load live application status",
+      500
+    );
   }
 });
 
