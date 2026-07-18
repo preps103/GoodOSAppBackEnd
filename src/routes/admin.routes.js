@@ -1562,81 +1562,289 @@ async function dispatchWebhooksForEvent(eventPayload) {
 }
 
 async function processDueWebhookRetries(limit = 25) {
-  const result = await dbQuery(
-    `
-      SELECT
-        d.id AS "deliveryId",
-        d.request_body AS "requestBody",
-        d.request_headers AS "requestHeaders",
-        d.event_type AS "eventType",
-        w.id,
-        w.name,
-        w.url,
-        w.secret,
-        w.status,
-        w.events,
-        w.delivery_timeout_seconds,
-        w.max_retries,
-        w.retry_backoff_seconds
-      FROM backend_webhook_deliveries d
-      JOIN backend_webhooks w ON w.id = d.webhook_id
-      WHERE d.status IN ('failed', 'retrying')
-        AND d.next_retry_at IS NOT NULL
-        AND d.next_retry_at <= NOW()
-        AND w.status = 'active'
-        AND d.attempt_count < w.max_retries
-      ORDER BY d.next_retry_at ASC
-      LIMIT $1
-    `,
-    [Math.min(Math.max(Number(limit || 25), 1), 100)]
-  );
+  const safeLimit =
+    Math.min(
+      Math.max(
+        Number(limit || 25),
+        1
+      ),
+      100
+    );
 
-  const processed = [];
+  const workerId =
+    `webhook-retry-${process.pid}-${Date.now()}`;
 
-  for (const row of result.rows) {
-    const rawBody = JSON.stringify(row.requestBody || {});
-    const headers = row.requestHeaders || {
-      "Content-Type": "application/json",
-      "User-Agent": "GoodAppBackEnd-Webhooks/1.0",
-      "X-GoodOS-Event": row.eventType || "system.event",
-      "X-GoodOS-Webhook-Id": row.id,
-      "X-GoodOS-Delivery-Id": row.deliveryId,
-    };
+  const claimedResult =
+    await dbQuery(
+      `
+        WITH candidates AS (
+          SELECT delivery.id
 
-    const webhook = {
-      id: row.id,
-      name: row.name,
-      url: row.url,
-      secret: row.secret,
-      status: row.status,
-      events: row.events,
-      delivery_timeout_seconds: row.delivery_timeout_seconds,
-      max_retries: row.max_retries,
-      retry_backoff_seconds: row.retry_backoff_seconds,
-    };
+          FROM backend_webhook_deliveries
+               AS delivery
 
-    const eventPayload = row.requestBody || {};
+          JOIN backend_webhooks
+               AS webhook
+            ON webhook.id =
+               delivery.webhook_id
 
-    try {
-      const delivery = await sendWebhookDeliveryAttempt(row.deliveryId, webhook, eventPayload, rawBody, headers);
-      processed.push(delivery);
-    } catch (error) {
-      processed.push({
-        id: row.deliveryId,
-        status: "error",
-        error: error.message,
-      });
+          WHERE delivery.status IN (
+                  'failed',
+                  'retrying'
+                )
+
+            AND delivery.next_retry_at
+                IS NOT NULL
+
+            AND delivery.next_retry_at <=
+                NOW()
+
+            AND webhook.status =
+                'active'
+
+            AND (
+              delivery.locked_until
+                IS NULL
+
+              OR delivery.locked_until <
+                 NOW()
+            )
+
+          ORDER BY
+            delivery.next_retry_at ASC,
+            delivery.created_at ASC
+
+          FOR UPDATE OF delivery
+          SKIP LOCKED
+
+          LIMIT $1
+        )
+
+        UPDATE backend_webhook_deliveries
+               AS delivery
+
+        SET
+          locked_by =
+            $2,
+
+          locked_until =
+            NOW() +
+            INTERVAL '120 seconds'
+
+        FROM candidates
+
+        WHERE delivery.id =
+              candidates.id
+
+        RETURNING delivery.id
+      `,
+      [
+        safeLimit,
+        workerId,
+      ]
+    );
+
+  const claimedIds =
+    claimedResult.rows.map(
+      row => row.id
+    );
+
+  if (claimedIds.length === 0) {
+    return [];
+  }
+
+  const detailResult =
+    await dbQuery(
+      `
+        SELECT
+          delivery.id
+            AS "deliveryId",
+
+          delivery.request_body
+            AS "requestBody",
+
+          webhook.id
+            AS "webhookId",
+
+          webhook.name
+            AS "webhookName",
+
+          webhook.url
+            AS "webhookUrl",
+
+          webhook.events
+            AS "webhookEvents",
+
+          webhook.secret
+            AS "webhookSecret",
+
+          webhook.status
+            AS "webhookStatus",
+
+          webhook.delivery_timeout_seconds
+            AS "deliveryTimeoutSeconds",
+
+          webhook.max_retries
+            AS "maxRetries",
+
+          webhook.retry_backoff_seconds
+            AS "retryBackoffSeconds"
+
+        FROM backend_webhook_deliveries
+             AS delivery
+
+        JOIN backend_webhooks
+             AS webhook
+          ON webhook.id =
+             delivery.webhook_id
+
+        WHERE delivery.id =
+              ANY($1::text[])
+
+          AND delivery.locked_by =
+              $2
+
+          AND webhook.status =
+              'active'
+
+        ORDER BY
+          delivery.next_retry_at ASC,
+          delivery.created_at ASC
+      `,
+      [
+        claimedIds,
+        workerId,
+      ]
+    );
+
+  const detailedIds =
+    new Set(
+      detailResult.rows.map(
+        row => row.deliveryId
+      )
+    );
+
+  for (const claimedId of claimedIds) {
+    if (!detailedIds.has(claimedId)) {
+      await dbQuery(
+        `
+          UPDATE backend_webhook_deliveries
+          SET
+            locked_by = NULL,
+            locked_until = NULL
+          WHERE id = $1
+            AND locked_by = $2
+        `,
+        [
+          claimedId,
+          workerId,
+        ]
+      );
     }
   }
 
-  return {
-    processed: processed.length,
-    deliveries: processed,
-  };
+  const results = [];
+
+  for (const row of detailResult.rows) {
+    const eventPayload =
+      row.requestBody || {};
+
+    const rawBody =
+      JSON.stringify(
+        eventPayload
+      );
+
+    const webhook = {
+      id:
+        row.webhookId,
+
+      name:
+        row.webhookName,
+
+      url:
+        row.webhookUrl,
+
+      events:
+        row.webhookEvents || ["*"],
+
+      secret:
+        row.webhookSecret || "",
+
+      status:
+        row.webhookStatus,
+
+      delivery_timeout_seconds:
+        row.deliveryTimeoutSeconds,
+
+      max_retries:
+        row.maxRetries,
+
+      retry_backoff_seconds:
+        row.retryBackoffSeconds,
+    };
+
+    const headers = {
+      "Content-Type":
+        "application/json",
+
+      "User-Agent":
+        "GoodAppBackEnd-Webhooks/1.0",
+
+      "X-GoodOS-Webhook-Id":
+        webhook.id,
+
+      "X-GoodOS-Delivery-Id":
+        row.deliveryId,
+
+      "X-GoodOS-Signature":
+        webhookSignature(
+          webhook.secret,
+          rawBody
+        ),
+    };
+
+    try {
+      const delivery =
+        await sendWebhookDeliveryAttempt(
+          row.deliveryId,
+          webhook,
+          eventPayload,
+          rawBody,
+          headers
+        );
+
+      results.push(delivery);
+    } catch (error) {
+      results.push({
+        id:
+          row.deliveryId,
+
+        status:
+          "failed",
+
+        error:
+          error.message,
+      });
+    } finally {
+      await dbQuery(
+        `
+          UPDATE backend_webhook_deliveries
+          SET
+            locked_by = NULL,
+            locked_until = NULL
+          WHERE id = $1
+            AND locked_by = $2
+        `,
+        [
+          row.deliveryId,
+          workerId,
+        ]
+      ).catch(() => {});
+    }
+  }
+
+  return results;
 }
-
-
-
 async function getWebhookConsolePayloadDirect() {
   const webhooksResult = await dbQuery(`
     SELECT

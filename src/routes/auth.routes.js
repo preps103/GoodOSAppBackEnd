@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
 const notificationService = require("../services/notification.service");
+const transactionalEmailService = require("../services/transactional-email.service");
 
 
 const env = require("../config/env");
@@ -60,6 +61,141 @@ const passwordResetLimiter = rateLimit({
 });
 
 
+
+// GOODOS_PUBLIC_SIGNUP_V1
+
+const signupLimiter = rateLimit({
+  windowMs: 30 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many account creation attempts. Please try again later."
+  }
+});
+
+const verificationResendLimiter = rateLimit({
+  windowMs: 30 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many verification requests. Please try again later."
+  }
+});
+
+function normalizeSignupEmail(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function validSignupEmail(email) {
+  return (
+    email.length >= 3 &&
+    email.length <= 320 &&
+    /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)
+  );
+}
+
+function cleanSignupName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function strongSignupPassword(password) {
+  return (
+    typeof password === "string" &&
+    password.length >= 12 &&
+    password.length <= 128 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
+
+function signupDatabasePool() {
+  if (
+    database.pool &&
+    typeof database.pool.connect === "function"
+  ) {
+    return database.pool;
+  }
+
+  if (typeof database.getPool === "function") {
+    return database.getPool();
+  }
+
+  throw new Error(
+    "Database connection pool is unavailable."
+  );
+}
+
+async function createVerificationToken({
+  client,
+  userId,
+  ipAddress,
+  userAgent
+}) {
+  const rawToken = authV2Token("verify");
+
+  const tokenId =
+    `verify_${crypto.randomUUID().replace(/-/g, "")}`;
+
+  await client.query(
+    `
+      UPDATE backend_email_verification_tokens
+      SET status = 'revoked',
+          updated_at = NOW()
+      WHERE user_id = $1::uuid
+        AND status = 'active'
+    `,
+    [userId]
+  );
+
+  await client.query(
+    `
+      INSERT INTO backend_email_verification_tokens (
+        id,
+        user_id,
+        token_hash,
+        status,
+        requested_ip,
+        user_agent,
+        expires_at
+      )
+      VALUES (
+        $1,
+        $2::uuid,
+        $3,
+        'active',
+        $4,
+        $5,
+        NOW() + INTERVAL '24 hours'
+      )
+    `,
+    [
+      tokenId,
+      userId,
+      authV2Hash(rawToken),
+      ipAddress || null,
+      userAgent || null
+    ]
+  );
+
+  return {
+    rawToken,
+    tokenId
+  };
+}
+
+
 const router = express.Router();
 
 function authCookieOptions() {
@@ -96,11 +232,595 @@ const loginLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: {
     success: false,
     message: "Too many login attempts. Please try again later."
   }
 });
+
+
+router.post(
+  "/register",
+  signupLimiter,
+  async (req, res) => {
+    const email =
+      normalizeSignupEmail(req.body?.email);
+
+    const firstName =
+      cleanSignupName(req.body?.firstName);
+
+    const lastName =
+      cleanSignupName(req.body?.lastName);
+
+    const password =
+      String(req.body?.password || "");
+
+    const confirmPassword =
+      String(req.body?.confirmPassword || "");
+
+    if (!validSignupEmail(email)) {
+      return error(
+        res,
+        "Enter a valid email address.",
+        400
+      );
+    }
+
+    if (
+      firstName.length < 1 ||
+      firstName.length > 80 ||
+      lastName.length < 1 ||
+      lastName.length > 80
+    ) {
+      return error(
+        res,
+        "First and last name are required.",
+        400
+      );
+    }
+
+    if (
+      !strongSignupPassword(password) ||
+      password !== confirmPassword
+    ) {
+      return error(
+        res,
+        "Use 12–128 characters with uppercase, lowercase, a number, and a symbol.",
+        400
+      );
+    }
+
+    const pool = signupDatabasePool();
+    const client = await pool.connect();
+
+    let user = null;
+    let verification = null;
+
+    try {
+      await client.query("BEGIN");
+
+      const existingResult = await client.query(
+        `
+          SELECT
+            id,
+            email,
+            status,
+            email_verified
+          FROM users
+          WHERE lower(email) = lower($1)
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [email]
+      );
+
+      const existing = existingResult.rows[0];
+
+      if (existing) {
+        await client.query("ROLLBACK");
+
+        if (
+          !existing.email_verified ||
+          existing.status === "pending"
+        ) {
+          return error(
+            res,
+            "An account already exists but has not been verified. Use resend verification.",
+            409
+          );
+        }
+
+        return error(
+          res,
+          "An account already exists for that email address.",
+          409
+        );
+      }
+
+      const passwordHash =
+        await bcrypt.hash(password, 12);
+
+      const displayName =
+        `${firstName} ${lastName}`.trim();
+
+      const userResult = await client.query(
+        `
+          INSERT INTO users (
+            email,
+            password_hash,
+            first_name,
+            last_name,
+            display_name,
+            platform_role,
+            status,
+            email_verified,
+            password_updated_at,
+            auth_metadata_json
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            'user',
+            'pending',
+            false,
+            NOW(),
+            $6::jsonb
+          )
+          RETURNING
+            id,
+            email,
+            first_name,
+            last_name,
+            display_name,
+            platform_role,
+            status,
+            email_verified,
+            created_at,
+            updated_at
+        `,
+        [
+          email,
+          passwordHash,
+          firstName,
+          lastName,
+          displayName,
+          JSON.stringify({
+            registrationSource:
+              "goodos_public_signup",
+            registeredAt:
+              new Date().toISOString()
+          })
+        ]
+      );
+
+      user = userResult.rows[0];
+
+      await client.query(
+        `
+          INSERT INTO app_memberships (
+            user_id,
+            app_id,
+            role,
+            status,
+            organization_id,
+            project_id,
+            environment_id
+          )
+          SELECT
+            $1::uuid,
+            'goodos',
+            'member',
+            'pending',
+            'org_goodos',
+            'proj_goodos_platform',
+            'env_goodos_production'
+          WHERE EXISTS (
+            SELECT 1
+            FROM apps
+            WHERE id = 'goodos'
+              AND status = 'active'
+          )
+          ON CONFLICT (user_id, app_id)
+          DO UPDATE SET
+            role = 'member',
+            status = 'pending',
+            organization_id =
+              EXCLUDED.organization_id,
+            project_id =
+              EXCLUDED.project_id,
+            environment_id =
+              EXCLUDED.environment_id,
+            updated_at = NOW()
+        `,
+        [user.id]
+      );
+
+      verification =
+        await createVerificationToken({
+          client,
+          userId: user.id,
+          ipAddress: req.ip,
+          userAgent:
+            req.headers["user-agent"] || null
+        });
+
+      await client.query("COMMIT");
+    } catch (err) {
+      await client
+        .query("ROLLBACK")
+        .catch(() => {});
+
+      if (err.code === "23505") {
+        return error(
+          res,
+          "An account already exists for that email address.",
+          409
+        );
+      }
+
+      console.error(
+        "Public registration failed:",
+        err
+      );
+
+      return error(
+        res,
+        "The account could not be created.",
+        500
+      );
+    } finally {
+      client.release();
+    }
+
+    let emailSent = false;
+
+    try {
+      await transactionalEmailService
+        .sendVerificationEmail({
+          to: user.email,
+          firstName: user.first_name,
+          token: verification.rawToken
+        });
+
+      emailSent = true;
+    } catch (mailError) {
+      console.error(
+        "Registration verification email failed:",
+        mailError.message
+      );
+    }
+
+    await logAudit({
+      userId: user.id,
+      action: "auth.register",
+      entityType: "user",
+      entityId: user.id,
+      ipAddress: req.ip,
+      metadata: {
+        email: user.email,
+        emailSent,
+        membershipAppId: "goodos",
+        userAgent:
+          req.headers["user-agent"] || null
+      }
+    }).catch((auditError) => {
+      console.error(
+        "Registration audit failed:",
+        auditError.message
+      );
+    });
+
+    return success(
+      res,
+      {
+        message: emailSent
+          ? "Account created. Check your email to verify your account."
+          : "Account created, but the verification email could not be delivered. Use resend verification.",
+        accountCreated: true,
+        emailSent,
+        email: user.email
+      },
+      201
+    );
+  }
+);
+
+router.post(
+  "/verification/resend",
+  verificationResendLimiter,
+  async (req, res) => {
+    const email =
+      normalizeSignupEmail(req.body?.email);
+
+    const genericMessage =
+      "If an unverified account exists, a new verification email has been sent.";
+
+    if (!validSignupEmail(email)) {
+      return success(res, {
+        message: genericMessage
+      });
+    }
+
+    try {
+      const userResult = await authV2DbQuery(
+        `
+          SELECT
+            id,
+            email,
+            first_name,
+            status,
+            email_verified
+          FROM users
+          WHERE lower(email) = lower($1)
+          LIMIT 1
+        `,
+        [email]
+      );
+
+      const user = userResult.rows[0];
+
+      if (
+        !user ||
+        user.email_verified ||
+        user.status !== "pending"
+      ) {
+        return success(res, {
+          message: genericMessage
+        });
+      }
+
+      const pool = signupDatabasePool();
+      const client = await pool.connect();
+
+      let verification;
+
+      try {
+        await client.query("BEGIN");
+
+        verification =
+          await createVerificationToken({
+            client,
+            userId: user.id,
+            ipAddress: req.ip,
+            userAgent:
+              req.headers["user-agent"] || null
+          });
+
+        await client.query("COMMIT");
+      } catch (err) {
+        await client
+          .query("ROLLBACK")
+          .catch(() => {});
+
+        throw err;
+      } finally {
+        client.release();
+      }
+
+      await transactionalEmailService
+        .sendVerificationEmail({
+          to: user.email,
+          firstName: user.first_name,
+          token: verification.rawToken
+        });
+
+      await logAudit({
+        userId: user.id,
+        action:
+          "auth.verification_resent",
+        entityType:
+          "email_verification",
+        entityId:
+          verification.tokenId,
+        ipAddress: req.ip,
+        metadata: {
+          email: user.email
+        }
+      }).catch(() => {});
+    } catch (err) {
+      console.error(
+        "Verification resend failed:",
+        err.message
+      );
+    }
+
+    return success(res, {
+      message: genericMessage
+    });
+  }
+);
+
+router.get(
+  "/verify-email",
+  async (req, res) => {
+    const token =
+      String(req.query?.token || "").trim();
+
+    if (
+      token.length < 20 ||
+      token.length > 200
+    ) {
+      return error(
+        res,
+        "This verification link is invalid or has expired.",
+        400
+      );
+    }
+
+    const pool = signupDatabasePool();
+    const client = await pool.connect();
+
+    let verifiedUser = null;
+    let verificationId = null;
+
+    try {
+      await client.query("BEGIN");
+
+      const tokenResult = await client.query(
+        `
+          SELECT
+            token.id,
+            token.user_id,
+            user_record.email,
+            user_record.email_verified,
+            user_record.status
+          FROM backend_email_verification_tokens
+            AS token
+          JOIN users AS user_record
+            ON user_record.id = token.user_id
+          WHERE token.token_hash = $1
+            AND token.status = 'active'
+            AND token.used_at IS NULL
+            AND token.expires_at > NOW()
+          LIMIT 1
+          FOR UPDATE OF token, user_record
+        `,
+        [authV2Hash(token)]
+      );
+
+      const verification =
+        tokenResult.rows[0];
+
+      if (!verification) {
+        await client.query("ROLLBACK");
+
+        return error(
+          res,
+          "This verification link is invalid or has expired.",
+          400
+        );
+      }
+
+      verificationId = verification.id;
+
+      const userResult = await client.query(
+        `
+          UPDATE users
+          SET
+            email_verified = true,
+            status = 'active',
+            updated_at = NOW()
+          WHERE id = $1::uuid
+          RETURNING
+            id,
+            email,
+            first_name,
+            last_name,
+            display_name,
+            platform_role,
+            status,
+            email_verified,
+            created_at,
+            updated_at
+        `,
+        [verification.user_id]
+      );
+
+      verifiedUser = userResult.rows[0];
+
+      await client.query(
+        `
+          UPDATE app_memberships
+          SET
+            status = 'active',
+            updated_at = NOW()
+          WHERE user_id = $1::uuid
+            AND app_id = 'goodos'
+            AND status = 'pending'
+        `,
+        [verification.user_id]
+      );
+
+      await client.query(
+        `
+          UPDATE backend_email_verification_tokens
+          SET
+            status = 'used',
+            used_at = NOW(),
+            updated_at = NOW()
+          WHERE id = $1
+        `,
+        [verification.id]
+      );
+
+      await client.query(
+        `
+          UPDATE backend_email_verification_tokens
+          SET
+            status = 'revoked',
+            updated_at = NOW()
+          WHERE user_id = $1::uuid
+            AND id <> $2
+            AND status = 'active'
+        `,
+        [
+          verification.user_id,
+          verification.id
+        ]
+      );
+
+      await client.query("COMMIT");
+    } catch (err) {
+      await client
+        .query("ROLLBACK")
+        .catch(() => {});
+
+      console.error(
+        "Email verification failed:",
+        err
+      );
+
+      return error(
+        res,
+        "The email address could not be verified.",
+        500
+      );
+    } finally {
+      client.release();
+    }
+
+    await logAudit({
+      userId: verifiedUser.id,
+      action: "auth.email_verified",
+      entityType:
+        "email_verification",
+      entityId: verificationId,
+      ipAddress: req.ip,
+      metadata: {
+        email: verifiedUser.email
+      }
+    }).catch(() => {});
+
+    return success(res, {
+      message:
+        "Your email has been verified. You can now sign in.",
+      user: {
+        id: verifiedUser.id,
+        email: verifiedUser.email,
+        firstName:
+          verifiedUser.first_name,
+        lastName:
+          verifiedUser.last_name,
+        displayName:
+          verifiedUser.display_name,
+        platformRole:
+          verifiedUser.platform_role,
+        status: verifiedUser.status,
+        emailVerified:
+          verifiedUser.email_verified,
+        createdAt:
+          verifiedUser.created_at,
+        updatedAt:
+          verifiedUser.updated_at
+      }
+    });
+  }
+);
+
 
 router.post("/login", loginLimiter, async (req, res) => {
   try {
