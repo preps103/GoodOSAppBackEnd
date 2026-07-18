@@ -323,6 +323,65 @@ async function resolveAuthentication(req) {
   return authentication;
 }
 
+
+function phase2MfaCompletionPath(req) {
+  const pathname = String(
+    req.originalUrl ||
+    req.url ||
+    ""
+  ).split("?")[0];
+
+  return [
+    /^\/api\/security\/health\/?$/i,
+    /^\/api\/security\/mfa\/setup\/?$/i,
+    /^\/api\/security\/mfa\/verify\/?$/i,
+    /^\/api\/security\/mfa\/verify-session\/?$/i,
+    /^\/api\/security\/mfa\/recovery\/?$/i,
+  ].some(
+    pattern => pattern.test(pathname)
+  );
+}
+
+function phase2MfaStepUpResponse(
+  req,
+  res,
+  authentication
+) {
+  const enabled =
+    Boolean(
+      authentication.mfa_enabled
+    );
+
+  return res.status(428).json({
+    success: false,
+    code:
+      "MFA_VERIFICATION_REQUIRED",
+    message:
+      enabled
+        ? "Verify MFA before continuing."
+        : "Enroll in MFA before continuing.",
+    mfaRequired: true,
+    mfaEnabled: enabled,
+    mfaVerified: false,
+    authLevel:
+      authentication.auth_level ||
+      "password",
+    nextAction:
+      enabled
+        ? "verify_mfa"
+        : "enroll_mfa",
+    enrollmentUrl:
+      "https://backend.goodos.app/mfa-enroll",
+    requestedPath:
+      String(
+        req.originalUrl ||
+        req.url ||
+        ""
+      ).split("?")[0],
+  });
+}
+
+
 async function authenticateRequest(
   req,
   res,
@@ -342,7 +401,21 @@ async function authenticateRequest(
       });
     }
 
-    req.phase2Auth = authentication;
+    req.phase2Auth =
+      authentication;
+
+    if (
+      authentication.mfa_required &&
+      !authentication.mfa_verified &&
+      !phase2MfaCompletionPath(req)
+    ) {
+      return phase2MfaStepUpResponse(
+        req,
+        res,
+        authentication
+      );
+    }
+
     return next();
   } catch (error) {
     return next(error);
