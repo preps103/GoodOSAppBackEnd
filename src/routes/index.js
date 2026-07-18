@@ -64,6 +64,9 @@ const {
 const tenantRoutes = require("./tenant.routes");
 
 const identityGovernanceRoutes = require("./identity-governance.routes");
+const oidcLoginRoutes =
+  require("./oidc-login.routes");
+
 const oidcRoutes =
   require("./oidc.routes");
 
@@ -196,6 +199,11 @@ router.use(
 
 router.use("/api", tenantRoutes);
 router.use("/api/identity", identityGovernanceRoutes);
+router.use(
+  "/api/oidc",
+  oidcLoginRoutes
+);
+
 router.use(
   "/api/oidc",
   oidcRoutes
