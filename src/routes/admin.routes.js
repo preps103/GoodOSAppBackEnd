@@ -8,6 +8,7 @@ const database = require("../config/database");
 const notificationService = require("../services/notification.service");
 const jobService = require("../services/job.service");
 const secretService = require("../services/secret.service");
+const sslCertificatesService = require("../services/ssl-certificates.service");
 const goodosChartsDatabaseV28 = require("../config/database");
 
 const router = express.Router();
@@ -8153,6 +8154,29 @@ router.get("/settings-audit-page-data", async (req, res) => {
 
 
 
+
+
+router.get("/ssl-certificates-page-data", async (req, res) => {
+  try {
+    const force = ["1", "true", "yes"].includes(
+      String(req.query?.force || "").trim().toLowerCase()
+    );
+
+    const snapshot =
+      await sslCertificatesService.getSslCertificatesSnapshot({
+        force,
+      });
+
+    return ok(res, snapshot);
+  } catch (error) {
+    return fail(
+      res,
+      "Failed to load SSL certificate page data",
+      500,
+      error.message
+    );
+  }
+});
 
 
 router.get("/secrets-v2-page-data", async (req, res) => {
