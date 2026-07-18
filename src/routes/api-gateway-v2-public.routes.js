@@ -14,12 +14,21 @@ const gateway =
     "../services/api-gateway-v2.service"
   );
 
+const policyEngineV2Middleware =
+  require(
+    "./policy-engine-v2.middleware"
+  );
+
 const router =
   express.Router();
 
 router.use(
   gateway
     .authenticateAndEnforce
+);
+
+router.use(
+  policyEngineV2Middleware
 );
 
 router.get(
