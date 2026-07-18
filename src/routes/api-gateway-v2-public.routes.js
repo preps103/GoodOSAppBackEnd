@@ -19,6 +19,11 @@ const policyEngineV2Middleware =
     "./policy-engine-v2.middleware"
   );
 
+const storageV2PublicRoutes =
+  require(
+    "./storage-v2-public.routes"
+  );
+
 const router =
   express.Router();
 
@@ -29,6 +34,11 @@ router.use(
 
 router.use(
   policyEngineV2Middleware
+);
+
+router.use(
+  "/storage",
+  storageV2PublicRoutes
 );
 
 router.get(

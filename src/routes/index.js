@@ -41,6 +41,12 @@ const apiGatewayV2AdminRoutes =
 const policyEngineV2AdminRoutes =
   require("./policy-engine-v2-admin.routes");
 
+const storageV2AdminRoutes =
+  require("./storage-v2-admin.routes");
+
+const storageV2CdnRoutes =
+  require("./storage-v2-cdn.routes");
+
 /* GOODOS_ROLES_CONSOLE_V1 */
 const rolesConsoleRoutes =
   require("./roles-console.routes");
@@ -158,6 +164,11 @@ router.use(
 );
 router.use("/api/voice", voiceRoutes);
 router.use("/api/teams", teamsRoutes);
+router.use(
+  "/storage/v2",
+  storageV2CdnRoutes
+);
+
 router.use("/storage", storageRoutes);
 router.use("/webhook-test-receiver", webhookTestRoutes);
 
@@ -215,6 +226,11 @@ router.use(
 router.use(
   "/api/policy-engine-v2",
   policyEngineV2AdminRoutes
+);
+
+router.use(
+  "/api/storage-v2",
+  storageV2AdminRoutes
 );
 
 /* GOODOS_ROLES_CONSOLE_V1_MOUNT */
