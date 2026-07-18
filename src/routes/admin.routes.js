@@ -12,6 +12,8 @@ const sslCertificatesService = require("../services/ssl-certificates.service");
 const dashboardActivityService = require("../services/dashboard-activity.service");
 const goodosChartsDatabaseV28 = require("../config/database");
 
+const recentAppsService = require("../services/recent-apps.service");
+
 const router = express.Router();
 
 function ok(res, data = {}) {
@@ -12798,6 +12800,110 @@ router.get("/dashboard-live-charts-data", async (req, res) => {
     });
   }
 });
+
+
+
+/* GOODOS_RECENT_APPS_LIVE_V1 */
+
+router.get(
+  "/recent-apps-page-data",
+  async (req, res) => {
+    try {
+      const userId =
+        currentUserId(req);
+
+      if (!userId) {
+        return fail(
+          res,
+          "Authenticated user is required.",
+          401
+        );
+      }
+
+      const data =
+        await recentAppsService.getRecentApps({
+            userId,
+            limit:
+              req.query?.limit,
+          });
+
+      return ok(
+        res,
+        data
+      );
+    } catch (error) {
+      if (error.statusCode) {
+        return fail(
+          res,
+          error.message,
+          error.statusCode
+        );
+      }
+
+      console.error(
+        "[recent-apps] page-data failed:",
+        error
+      );
+
+      return fail(
+        res,
+        "Failed to load recently used applications.",
+        500
+      );
+    }
+  }
+);
+
+router.post(
+  "/recent-apps/:appId/open-safe",
+  async (req, res) => {
+    try {
+      const userId =
+        currentUserId(req);
+
+      if (!userId) {
+        return fail(
+          res,
+          "Authenticated user is required.",
+          401
+        );
+      }
+
+      const data =
+        await recentAppsService.recordAppOpen({
+            userId,
+            appId:
+              req.params.appId,
+          });
+
+      return ok(
+        res,
+        data
+      );
+    } catch (error) {
+      if (error.statusCode) {
+        return fail(
+          res,
+          error.message,
+          error.statusCode
+        );
+      }
+
+      console.error(
+        "[recent-apps] open tracking failed:",
+        error
+      );
+
+      return fail(
+        res,
+        "Failed to record application access.",
+        500
+      );
+    }
+  }
+);
+
+/* END GOODOS_RECENT_APPS_LIVE_V1 */
 
 
 module.exports = router;
