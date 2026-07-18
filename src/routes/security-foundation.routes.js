@@ -583,6 +583,32 @@ router.post("/mfa/verify", async (
             req.phase2Auth.session_id
           ]
         );
+
+        await client.query(
+          `
+            UPDATE sessions
+            SET
+              revoked_at = NOW(),
+              metadata_json =
+                COALESCE(
+                  metadata_json,
+                  '{}'::jsonb
+                ) ||
+                jsonb_build_object(
+                  'revokedBy',
+                  'mfa_enrollment',
+                  'keptSessionId',
+                  $2::text
+                )
+            WHERE user_id = $1
+              AND id <> $2
+              AND revoked_at IS NULL
+          `,
+          [
+            req.phase2Auth.user_id,
+            req.phase2Auth.session_id
+          ]
+        );
       }
     );
 

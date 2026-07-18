@@ -17,6 +17,8 @@ function publicUser(row) {
     platformRole: row.platform_role,
     status: row.status,
     emailVerified: row.email_verified,
+    mfaEnabled: Boolean(row.mfa_enabled),
+    mfaRequired: Boolean(row.mfa_required),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };

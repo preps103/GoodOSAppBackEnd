@@ -21,6 +21,108 @@ const authRequired = require("../middleware/authRequired");
 const database = require("../config/database");
 
 
+function authV2MfaKeyBuffer() {
+  const key = String(
+    process.env.MFA_ENCRYPTION_KEY || ""
+  );
+
+  if (!/^[a-f0-9]{64}$/i.test(key)) {
+    const error = new Error(
+      "MFA encryption is not configured."
+    );
+
+    error.statusCode = 503;
+    throw error;
+  }
+
+  return Buffer.from(key, "hex");
+}
+
+function authV2EncryptMfaSecret(value) {
+  const iv = crypto.randomBytes(12);
+
+  const cipher = crypto.createCipheriv(
+    "aes-256-gcm",
+    authV2MfaKeyBuffer(),
+    iv
+  );
+
+  const encrypted = Buffer.concat([
+    cipher.update(String(value), "utf8"),
+    cipher.final(),
+  ]);
+
+  return [
+    iv.toString("base64url"),
+    cipher.getAuthTag().toString("base64url"),
+    encrypted.toString("base64url"),
+  ].join(".");
+}
+
+function authV2DecryptMfaSecret(value) {
+  const parts = String(value || "").split(".");
+
+  if (parts.length !== 3) {
+    throw new Error(
+      "Stored MFA secret is not encrypted."
+    );
+  }
+
+  const [
+    ivValue,
+    tagValue,
+    encryptedValue,
+  ] = parts;
+
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    authV2MfaKeyBuffer(),
+    Buffer.from(ivValue, "base64url")
+  );
+
+  decipher.setAuthTag(
+    Buffer.from(tagValue, "base64url")
+  );
+
+  return Buffer.concat([
+    decipher.update(
+      Buffer.from(
+        encryptedValue,
+        "base64url"
+      )
+    ),
+    decipher.final(),
+  ]).toString("utf8");
+}
+
+function authV2RecoveryCode() {
+  const value = crypto
+    .randomBytes(8)
+    .toString("hex")
+    .toUpperCase();
+
+  return (
+    value.slice(0, 8) +
+    "-" +
+    value.slice(8)
+  );
+}
+
+function authV2RecoveryHash(value) {
+  return crypto
+    .createHmac(
+      "sha256",
+      authV2MfaKeyBuffer()
+    )
+    .update(
+      String(value || "")
+        .replace(/[^A-Za-z0-9]/g, "")
+        .toUpperCase()
+    )
+    .digest("hex");
+}
+
+
 function authV2DbQuery(sql, params = []) {
   if (typeof database.query === "function") return database.query(sql, params);
   if (database.pool && typeof database.pool.query === "function") return database.pool.query(sql, params);
@@ -1057,6 +1159,10 @@ router.post("/mfa/setup", authRequired, async (req, res) => {
 
     const factorId = `mfa_${crypto.randomUUID().replace(/-/g, "")}`;
     const secretHash = authV2Hash(secret.base32);
+    const recoveryCodes = Array.from(
+      { length: 10 },
+      authV2RecoveryCode
+    );
     const otpauthUrl = secret.otpauth_url;
     const qrDataUrl = await qrcode.toDataURL(otpauthUrl);
 
@@ -1071,12 +1177,13 @@ router.post("/mfa/setup", authRequired, async (req, res) => {
           secret_hash,
           secret_prefix,
           secret_encrypted,
+          recovery_codes_hash,
           metadata_json,
           organization_id,
           project_id,
           environment_id
         )
-        VALUES ($1,$2::uuid,'totp',$3,'pending',$4,$5,$6,$7::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
+        VALUES ($1,$2::uuid,'totp',$3,'pending',$4,$5,$6,$7::jsonb,$8::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production')
       `,
       [
         factorId,
@@ -1084,8 +1191,19 @@ router.post("/mfa/setup", authRequired, async (req, res) => {
         label,
         secretHash,
         secret.base32.slice(0, 6),
-        secret.base32,
-        JSON.stringify({ createdFrom: "Auth V2 setup", rawSecretReturnedOnce: true }),
+        authV2EncryptMfaSecret(
+          secret.base32
+        ),
+        JSON.stringify(
+          recoveryCodes.map(
+            authV2RecoveryHash
+          )
+        ),
+        JSON.stringify({
+          createdFrom: "Auth V2 setup",
+          encryptedAtRest: true,
+          recoveryCodesReturnedOnce: true,
+        }),
       ]
     );
 
@@ -1121,7 +1239,11 @@ router.post("/mfa/setup", authRequired, async (req, res) => {
       secret: secret.base32,
       otpauthUrl,
       qrDataUrl,
-      message: "Scan the QR code, then verify a TOTP code to activate MFA.",
+      recoveryCodes,
+      warning:
+        "Recovery codes are displayed only during setup.",
+      message:
+        "Scan the QR code, save the recovery codes, then verify a TOTP code to activate MFA.",
     });
   } catch (err) {
     console.error("MFA setup failed:", err);
@@ -1157,7 +1279,9 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
     }
 
     const verified = speakeasy.totp.verify({
-      secret: factor.secret_encrypted,
+      secret: authV2DecryptMfaSecret(
+        factor.secret_encrypted
+      ),
       encoding: "base32",
       token,
       window: 1,
@@ -1215,6 +1339,7 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
       `
         UPDATE users
         SET mfa_enabled = true,
+            mfa_required = true,
             auth_metadata_json = COALESCE(auth_metadata_json, '{}'::jsonb) || '{"mfa":"enabled"}'::jsonb,
             updated_at = NOW()
         WHERE id = $1::uuid
@@ -1225,7 +1350,32 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
     await authV2DbQuery(
       "UPDATE sessions SET mfa_verified = true, auth_level = 'mfa', last_seen_at = NOW() WHERE id = $1",
       [req.auth.sessionId]
-    ).catch(() => null);
+    );
+
+    await authV2DbQuery(
+      `
+        UPDATE sessions
+        SET revoked_at = NOW(),
+            metadata_json =
+              COALESCE(
+                metadata_json,
+                '{}'::jsonb
+              ) ||
+              jsonb_build_object(
+                'revokedBy',
+                'mfa_enrollment',
+                'keptSessionId',
+                $2::text
+              )
+        WHERE user_id = $1::uuid
+          AND id <> $2::uuid
+          AND revoked_at IS NULL
+      `,
+      [
+        req.user.id,
+        req.auth.sessionId,
+      ]
+    );
 
     return success(res, {
       verified: true,
@@ -1240,38 +1390,184 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
 
 router.post("/mfa/disable", authRequired, async (req, res) => {
   try {
-    const factorId = String(req.body?.factorId || req.body?.factor_id || "").trim();
+    const factorId = String(
+      req.body?.factorId ||
+      req.body?.factor_id ||
+      ""
+    ).trim();
+
+    const token = String(
+      req.body?.token || ""
+    ).replace(/\s+/g, "");
+
+    if (!token) {
+      return error(
+        res,
+        "A current authenticator code is required.",
+        400
+      );
+    }
+
+    const userResult = await authV2DbQuery(
+      `
+        SELECT mfa_required
+        FROM users
+        WHERE id = $1::uuid
+        LIMIT 1
+      `,
+      [req.user.id]
+    );
+
+    if (
+      userResult.rows[0]?.mfa_required
+    ) {
+      return error(
+        res,
+        "MFA is required for this account and cannot be disabled.",
+        409
+      );
+    }
+
+    const factorResult = await authV2DbQuery(
+      `
+        SELECT
+          id,
+          secret_encrypted
+        FROM backend_mfa_factors
+        WHERE user_id = $1::uuid
+          AND status = 'active'
+          AND (
+            $2::text = ''
+            OR id = $2
+          )
+        ORDER BY verified_at DESC
+        LIMIT 1
+      `,
+      [
+        req.user.id,
+        factorId,
+      ]
+    );
+
+    const factor =
+      factorResult.rows[0];
+
+    if (!factor) {
+      return error(
+        res,
+        "Active MFA factor was not found.",
+        404
+      );
+    }
+
+    const verified =
+      speakeasy.totp.verify({
+        secret:
+          authV2DecryptMfaSecret(
+            factor.secret_encrypted
+          ),
+        encoding: "base32",
+        token,
+        window: 1,
+      });
+
+    if (!verified) {
+      return error(
+        res,
+        "Invalid MFA code.",
+        401
+      );
+    }
 
     await authV2DbQuery(
       `
         UPDATE backend_mfa_factors
         SET status = 'disabled',
             updated_at = NOW()
-        WHERE user_id = $1::uuid
-          AND ($2::text = '' OR id = $2)
+        WHERE id = $1
+          AND user_id = $2::uuid
       `,
-      [req.user.id, factorId]
+      [
+        factor.id,
+        req.user.id,
+      ]
     );
 
-    const activeResult = await authV2DbQuery(
-      "SELECT COUNT(*)::int AS count FROM backend_mfa_factors WHERE user_id = $1::uuid AND status = 'active'",
-      [req.user.id]
-    );
+    const activeResult =
+      await authV2DbQuery(
+        `
+          SELECT COUNT(*)::int AS count
+          FROM backend_mfa_factors
+          WHERE user_id = $1::uuid
+            AND status = 'active'
+        `,
+        [req.user.id]
+      );
 
-    const enabled = Number(activeResult.rows[0]?.count || 0) > 0;
+    const enabled =
+      Number(
+        activeResult.rows[0]?.count || 0
+      ) > 0;
 
     await authV2DbQuery(
-      "UPDATE users SET mfa_enabled = $2, updated_at = NOW() WHERE id = $1::uuid",
-      [req.user.id, enabled]
+      `
+        UPDATE users
+        SET mfa_enabled = $2,
+            updated_at = NOW()
+        WHERE id = $1::uuid
+      `,
+      [
+        req.user.id,
+        enabled,
+      ]
     );
+
+    if (!enabled) {
+      await authV2DbQuery(
+        `
+          UPDATE sessions
+          SET mfa_verified = false,
+              auth_level = 'password',
+              last_seen_at = NOW()
+          WHERE id = $1::uuid
+        `,
+        [req.auth.sessionId]
+      );
+    }
+
+    await logAudit({
+      userId: req.user.id,
+      action: "auth.mfa.disabled",
+      entityType: "mfa_factor",
+      entityId: factor.id,
+      ipAddress: req.ip,
+      metadata: {
+        remainingActiveFactors:
+          Number(
+            activeResult.rows[0]?.count || 0
+          ),
+      },
+    });
 
     return success(res, {
       enabled,
-      message: enabled ? "MFA factor disabled." : "MFA disabled for user.",
+      message:
+        enabled
+          ? "MFA factor disabled."
+          : "MFA disabled for user.",
     });
   } catch (err) {
-    console.error("MFA disable failed:", err);
-    return error(res, "Failed to disable MFA", 500);
+    console.error(
+      "MFA disable failed:",
+      err
+    );
+
+    return error(
+      res,
+      err.message ||
+        "Failed to disable MFA",
+      err.statusCode || 500
+    );
   }
 });
 

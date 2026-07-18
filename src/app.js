@@ -406,6 +406,16 @@ app.use(
   )
 );
 
+app.get("/mfa-enroll", (req, res) => {
+  res.sendFile(
+    require("path").join(
+      __dirname,
+      "public",
+      "mfa-enroll.html"
+    )
+  );
+});
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
