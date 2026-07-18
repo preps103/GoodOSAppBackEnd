@@ -70,6 +70,9 @@ const oidcLoginRoutes =
 const oidcRoutes =
   require("./oidc.routes");
 
+const scimRoutes =
+  require("./scim.routes");
+
 
 const operationsRoutes = require("./operations.routes");
 
@@ -207,6 +210,11 @@ router.use(
 router.use(
   "/api/oidc",
   oidcRoutes
+);
+
+router.use(
+  "/",
+  scimRoutes
 );
 
 router.use("/api/operations", operationsRoutes);
