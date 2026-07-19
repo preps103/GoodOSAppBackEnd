@@ -1330,6 +1330,11 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
   try {
     const factorId = String(req.body?.factorId || req.body?.factor_id || "").trim();
     const token = String(req.body?.token || "").replace(/\s+/g, "");
+    const requireOnLogin =
+      req.body?.requireOnLogin === true ||
+      req.body?.require_on_login === true ||
+      req.body?.mfaRequired === true ||
+      req.body?.mfa_required === true;
 
     if (!factorId || !token) {
       return error(res, "factorId and token are required", 400);
@@ -1414,12 +1419,24 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
       `
         UPDATE users
         SET mfa_enabled = true,
-            mfa_required = true,
-            auth_metadata_json = COALESCE(auth_metadata_json, '{}'::jsonb) || '{"mfa":"enabled"}'::jsonb,
+            mfa_required = $2,
+            auth_metadata_json =
+              COALESCE(auth_metadata_json, '{}'::jsonb) ||
+              jsonb_build_object(
+                'mfa',
+                'enabled',
+                'mfaRequired',
+                $2,
+                'mfaPreferenceSource',
+                CASE WHEN $2 THEN 'user_selection' ELSE 'optional_enrollment' END
+              ),
             updated_at = NOW()
         WHERE id = $1::uuid
       `,
-      [req.user.id]
+      [
+        req.user.id,
+        requireOnLogin,
+      ]
     );
 
     await authV2DbQuery(
@@ -1455,7 +1472,12 @@ router.post("/mfa/verify", authRequired, async (req, res) => {
     return success(res, {
       verified: true,
       factorId,
-      message: "MFA factor verified and activated.",
+      required:
+        requireOnLogin,
+      message:
+        requireOnLogin
+          ? "MFA factor verified and will be required at sign-in."
+          : "MFA factor verified. MFA remains optional until you require it.",
     });
   } catch (err) {
     console.error("MFA verify failed:", err);

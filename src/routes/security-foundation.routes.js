@@ -498,6 +498,12 @@ router.post("/mfa/verify", async (
       req.body?.token || ""
     );
 
+    const requireOnLogin =
+      req.body?.requireOnLogin === true ||
+      req.body?.require_on_login === true ||
+      req.body?.mfaRequired === true ||
+      req.body?.mfa_required === true;
+
     const result = await database.query(
       `
         SELECT
@@ -561,12 +567,13 @@ router.post("/mfa/verify", async (
             UPDATE users
             SET
               mfa_enabled = true,
-              mfa_required = true,
+              mfa_required = $2,
               updated_at = NOW()
             WHERE id = $1
           `,
           [
-            req.phase2Auth.user_id
+            req.phase2Auth.user_id,
+            requireOnLogin
           ]
         );
 
