@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
@@ -24,7 +25,7 @@ function nowIso() {
 }
 
 function makeId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return `${prefix}_${crypto.randomUUID()}`;
 }
 
 function ensureDb() {
