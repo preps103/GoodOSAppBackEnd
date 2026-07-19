@@ -2,13 +2,23 @@
   "name": "goodapp-backend",
   "version": "1.0.0",
   "description": "GoodAppBackEnd - self-hosted backend for GoodOS",
+  "private": true,
   "main": "src/server.js",
+  "engines": {
+    "node": ">=22.22.3 <23",
+    "npm": ">=10.9.8 <11"
+  },
+  "packageManager": "npm@10.9.8",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "worker": "node src/workers/goodapp-worker.js",
+    "worker": "node src/workers/goodapp-worker-v3.js",
     "jobs:run-once": "node scripts/run-job-once.js",
     "jobs:health": "node -e \"require('./src/services/job.service').getJobsSnapshot().then(x=>console.log(JSON.stringify(x.counts,null,2))).catch(e=>{console.error(e);process.exit(1)})\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/preps103/GoodOSAppBackEnd.git"
   },
   "keywords": [
     "goodos",
@@ -16,7 +26,7 @@
     "self-hosted"
   ],
   "author": "GoodOS",
-  "license": "PRIVATE",
+  "license": "UNLICENSED",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
