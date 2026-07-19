@@ -5,7 +5,10 @@ const path = require("path");
 
 const router = express.Router();
 
-const DB_PATH = path.join(__dirname, "..", "data", "goodos-voice-db.json");
+const DB_PATH = path.resolve(
+  process.env.GOODOS_VOICE_DB_PATH ||
+  path.join(process.cwd(), "data", "goodos-voice-db.json")
+);
 
 const TABLES = {
   numbers: "voice_numbers",

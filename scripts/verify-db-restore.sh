@@ -9,7 +9,14 @@ if [ -z "$BACKUP_ID" ]; then
   exit 1
 fi
 
+if [[ ! "$BACKUP_ID" =~ ^[A-Za-z0-9_:-]+$ ]]; then
+  echo "STATUS=failed"
+  echo "ERROR=Invalid backup id"
+  exit 1
+fi
+
 APP_DB="goodos_backend"
+BACKUP_ROOT="/var/www/GoodAppBackEnd/backups/database"
 NOW="$(date -u +%Y%m%dT%H%M%SZ)"
 RAND="$(openssl rand -hex 4)"
 TEST_ID="restore_${NOW}_${RAND}"
@@ -25,6 +32,15 @@ if [ -z "$FILE_PATH" ]; then
   echo "ERROR=Backup not found"
   exit 1
 fi
+
+case "$FILE_PATH" in
+  "$BACKUP_ROOT"/*) ;;
+  *)
+    echo "STATUS=failed"
+    echo "ERROR=Backup path is outside the database backup root"
+    exit 1
+    ;;
+esac
 
 sudo -u postgres psql -d "$APP_DB" -v ON_ERROR_STOP=1 <<SQL
 INSERT INTO backend_backup_restore_tests (

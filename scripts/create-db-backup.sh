@@ -3,6 +3,7 @@ set -euo pipefail
 
 APP_DIR="/var/www/GoodAppBackEnd"
 BACKUP_DIR="$APP_DIR/backups/database"
+BACKUP_GROUP="${BACKUP_GROUP:-goodapp}"
 DB_NAME="goodos_backend"
 NOW="$(date -u +%Y%m%dT%H%M%SZ)"
 RAND="$(openssl rand -hex 4)"
@@ -11,8 +12,8 @@ FILE_NAME="${DB_NAME}_${NOW}_${RAND}.dump"
 FILE_PATH="$BACKUP_DIR/$FILE_NAME"
 
 mkdir -p "$BACKUP_DIR"
-chown postgres:postgres "$BACKUP_DIR"
-chmod 700 "$BACKUP_DIR"
+chown postgres:"$BACKUP_GROUP" "$BACKUP_DIR"
+chmod 750 "$BACKUP_DIR"
 
 sudo -u postgres psql -d "$DB_NAME" -v ON_ERROR_STOP=1 <<SQL
 INSERT INTO backend_backups (
@@ -83,7 +84,8 @@ SET
 WHERE id = '$BACKUP_ID';
 SQL
 
-chmod 600 "$FILE_PATH"
+chown postgres:"$BACKUP_GROUP" "$FILE_PATH"
+chmod 640 "$FILE_PATH"
 
 echo "BACKUP_ID=$BACKUP_ID"
 echo "STATUS=completed"

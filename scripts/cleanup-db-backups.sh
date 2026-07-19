@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP_DB="goodos_backend"
+BACKUP_ROOT="/var/www/GoodAppBackEnd/backups/database"
 RETENTION_DAYS="$(sudo -u postgres psql -d "$APP_DB" -t -A -P pager=off -c "
 SELECT COALESCE(NULLIF(value_json ->> 'value', '')::int, 30)
 FROM backend_platform_settings
@@ -37,6 +38,14 @@ for ROW in "${ROWS[@]}"; do
   FILE_DELETED="false"
 
   if [ -n "$FILE_PATH" ] && [ -f "$FILE_PATH" ]; then
+    case "$FILE_PATH" in
+      "$BACKUP_ROOT"/*) ;;
+      *)
+        ERRORS=$((ERRORS + 1))
+        continue
+        ;;
+    esac
+
     rm -f "$FILE_PATH" && FILE_DELETED="true"
   fi
 

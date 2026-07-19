@@ -8951,7 +8951,7 @@ router.post("/backups/create-real-safe", async (req, res) => {
     const childProcess = require("child_process");
     const scriptPath = "/var/www/GoodAppBackEnd/scripts/create-db-backup.sh";
 
-    const output = childProcess.execFileSync(scriptPath, {
+    const output = childProcess.execFileSync("/usr/bin/sudo", ["-n", scriptPath], {
       encoding: "utf8",
       timeout: 120000,
       stdio: ["ignore", "pipe", "pipe"],
@@ -9089,7 +9089,7 @@ router.post("/backups/:id/restore-verify-safe", async (req, res) => {
 
     if (!id) return fail(res, "Backup id is required", 400);
 
-    const output = childProcess.execFileSync(scriptPath, [id], {
+    const output = childProcess.execFileSync("/usr/bin/sudo", ["-n", scriptPath, id], {
       encoding: "utf8",
       timeout: 180000,
       stdio: ["ignore", "pipe", "pipe"],
@@ -9134,25 +9134,9 @@ router.post("/backups/:id/restore-verify-safe", async (req, res) => {
 });
 
 
-async function getBackupRetentionDays() {
-  try {
-    const result = await dbQuery(`
-      SELECT value_json ->> 'value' AS value
-      FROM backend_platform_settings
-      WHERE setting_key = 'backups.retention_days'
-      LIMIT 1
-    `);
-
-    const days = Number(result.rows[0]?.value || 30);
-    return Number.isFinite(days) && days > 0 ? days : 30;
-  } catch (error) {
-    return 30;
-  }
-}
-
 router.post("/backups/:id/delete-safe", async (req, res) => {
   try {
-    const fs = require("fs");
+    const childProcess = require("child_process");
 
     const id = String(req.params.id || "").trim();
     const reason = String(req.body?.reason || "Manual delete from GoodAppBackEnd console.").trim();
@@ -9174,10 +9158,13 @@ router.post("/backups/:id/delete-safe", async (req, res) => {
 
     let fileDeleted = false;
 
-    if (before.file_path && fs.existsSync(before.file_path)) {
-      fs.unlinkSync(before.file_path);
-      fileDeleted = true;
-    }
+    const deleteOutput = childProcess.execFileSync("/usr/bin/sudo", ["-n", "/var/www/GoodAppBackEnd/scripts/delete-db-backup.sh", id], {
+      encoding: "utf8",
+      timeout: 30000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    fileDeleted = deleteOutput.split("\n").some((line) => line.trim() === "FILE_DELETED=true");
 
     const result = await dbQuery(
       `
@@ -9254,66 +9241,23 @@ router.post("/backups/:id/delete-safe", async (req, res) => {
 
 router.post("/backups/retention-cleanup-safe", async (req, res) => {
   try {
-    const fs = require("fs");
+    const childProcess = require("child_process");
+    const output = childProcess.execFileSync("/usr/bin/sudo", ["-n", "/var/www/GoodAppBackEnd/scripts/cleanup-db-backups.sh"], {
+      encoding: "utf8",
+      timeout: 120000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
 
-    const retentionDays = await getBackupRetentionDays();
-
-    const result = await dbQuery(
-      `
-        SELECT *
-        FROM backend_backups
-        WHERE deleted_at IS NULL
-          AND created_at < NOW() - ($1::text || ' days')::interval
-        ORDER BY created_at ASC
-        LIMIT 250
-      `,
-      [String(retentionDays)]
+    const values = Object.fromEntries(
+      output
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const index = line.indexOf("=");
+          return index === -1 ? [line, ""] : [line.slice(0, index), line.slice(index + 1)];
+        })
     );
-
-    const candidates = result.rows;
-    const deleted = [];
-
-    for (const backup of candidates) {
-      let fileDeleted = false;
-
-      try {
-        if (backup.file_path && fs.existsSync(backup.file_path)) {
-          fs.unlinkSync(backup.file_path);
-          fileDeleted = true;
-        }
-
-        const updated = await dbQuery(
-          `
-            UPDATE backend_backups
-            SET
-              status = CASE WHEN status = 'completed' THEN 'deleted' ELSE status END,
-              deleted_at = NOW(),
-              deleted_by = $2,
-              deleted_reason = $3,
-              file_deleted = true
-            WHERE id = $1
-            RETURNING id, status, deleted_at AS "deletedAt", file_deleted AS "fileDeleted"
-          `,
-          [
-            backup.id,
-            req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
-            `Retention cleanup after ${retentionDays} days.`,
-          ]
-        );
-
-        deleted.push({
-          id: backup.id,
-          fileDeleted,
-          record: updated.rows[0],
-        });
-      } catch (deleteError) {
-        deleted.push({
-          id: backup.id,
-          fileDeleted: false,
-          error: deleteError.message,
-        });
-      }
-    }
 
     await dbQuery(
       `
@@ -9332,16 +9276,18 @@ router.post("/backups/retention-cleanup-safe", async (req, res) => {
       [
         `audit_${crypto.randomUUID().replace(/-/g, "")}`,
         req.user?.email || req.session?.user?.email || req.auth?.user?.email || "console-user",
-        JSON.stringify({ retentionDays, checked: candidates.length, deleted }),
+        JSON.stringify(values),
         req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
         req.headers["user-agent"] || null,
       ]
     );
 
     return ok(res, {
-      retentionDays,
-      checked: candidates.length,
-      deleted,
+      retentionDays: Number(values.RETENTION_DAYS || 0),
+      checked: Number(values.CHECKED || 0),
+      deleted: Number(values.DELETED || 0),
+      errors: Number(values.ERRORS || 0),
+      output,
       message: "Retention cleanup completed.",
     });
   } catch (error) {
