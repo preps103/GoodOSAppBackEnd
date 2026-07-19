@@ -1,6 +1,11 @@
 const express = require("express");
+const crypto = require("crypto");
 
 const router = express.Router();
+
+function secureId(prefix) {
+  return `${prefix}_${crypto.randomUUID()}`;
+}
 
 function resolveDb() {
   const candidates = [
@@ -189,7 +194,7 @@ router.post("/run", async (req, res) => {
     await db.query("set statement_timeout = '15000ms'");
     const result = await db.query(sql);
     const durationMs = Date.now() - started;
-    const runId = "sqlrun_" + Date.now().toString(36) + "_" + Math.random().toString(16).slice(2, 10);
+    const runId = secureId("sqlrun");
 
     await db.query(`
       insert into backend_sql_editor_query_runs
@@ -228,7 +233,7 @@ router.post("/run", async (req, res) => {
       const db = resolveDb();
       await ensureTables(db);
       const durationMs = Date.now() - started;
-      const runId = "sqlrun_" + Date.now().toString(36) + "_" + Math.random().toString(16).slice(2, 10);
+      const runId = secureId("sqlrun");
 
       await db.query(`
         insert into backend_sql_editor_query_runs
@@ -253,7 +258,7 @@ router.post("/saved-queries", async (req, res) => {
     const db = resolveDb();
     await ensureTables(db);
 
-    const id = req.body.id || ("sqlq_" + Date.now().toString(36) + "_" + Math.random().toString(16).slice(2, 10));
+    const id = req.body.id || secureId("sqlq");
     const name = String(req.body.name || "Untitled query").trim();
     const folder = String(req.body.folder || "private").trim();
     const sqlText = normalizeSql(req.body.sqlText || req.body.sql);
