@@ -55,7 +55,7 @@ function escapeHtml(value) {
 function publicAppUrl() {
   return (
     process.env.PUBLIC_APP_URL ||
-    "https://app.goodos.app"
+    "https://goodos.app"
   ).replace(/\/+$/, "");
 }
 

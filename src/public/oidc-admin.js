@@ -999,7 +999,7 @@ function startExternalLogin() {
 
   const returnTo =
     encodeURIComponent(
-      "https://app.goodos.app/"
+      "https://goodos.app/"
     );
 
   window.location.assign(

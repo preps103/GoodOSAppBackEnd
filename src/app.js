@@ -323,7 +323,7 @@ app.get("/console-v2.js", (req, res) => {
 });
 
 const allowedOrigins = [
-  "https://app.goodos.app",
+  "https://goodos.app",
   "https://backend.goodos.app",
   "https://fleet.goodos.app",
   "https://qr.goodos.app",

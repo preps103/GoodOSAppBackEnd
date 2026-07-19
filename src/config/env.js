@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const allowedOrigins = [
-  "https://app.goodos.app",
+  "https://goodos.app",
   "https://fleet.goodos.app",
   "https://qr.goodos.app",
   "https://ads.goodos.app",

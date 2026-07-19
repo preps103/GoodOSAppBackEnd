@@ -27,7 +27,7 @@ const CALLBACK_URL =
   "https://backend.goodos.app/api/oidc/callback";
 
 const DEFAULT_RETURN_TO =
-  "https://app.goodos.app/";
+  "https://goodos.app/";
 
 const PROJECT_ID =
   "proj_goodos_platform";
@@ -190,7 +190,7 @@ function safeReturnTo(value) {
       );
 
     const allowed = new Set([
-      "https://app.goodos.app",
+      "https://goodos.app",
       "https://backend.goodos.app",
     ]);
 
