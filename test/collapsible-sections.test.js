@@ -40,6 +40,8 @@ test("long tables receive a capped scroll region and accessible collapse control
   assert.match(styles, /overflow: auto !important/);
   assert.match(styles, /data-collapsed="true"/);
   assert.match(styles, /\.goodos-long-table-preview-hidden/);
+  assert.match(styles, /table:not\(\[data-goodos-long-table-primary="true"\]\)/);
+  assert.match(styles, /tr:nth-child\(n \+ 6\)/);
   assert.doesNotMatch(styles, /\.goodos-long-table-shell\[data-collapsed="true"\]\s*\{\s*display:\s*none/);
 });
 

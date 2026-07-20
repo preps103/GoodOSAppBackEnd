@@ -2,6 +2,12 @@
   --goodos-table-region-height: 460px;
 }
 
+/* Prevent a full-table flash before the enhancement script runs. */
+#view table:not([data-goodos-long-table-primary="true"]) > tbody > tr:nth-child(n + 6),
+.goodos-long-table-shell[data-collapsed="true"] > table > tbody > tr:nth-child(n + 6) {
+  display: none !important;
+}
+
 .goodos-long-table-control {
   display: flex;
   align-items: center;
