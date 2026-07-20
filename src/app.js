@@ -54,18 +54,6 @@ app.get("/api/goodtrusts/health", (req, res) => {
 });
 /* END GOODTRUSTS HEALTH ALIAS */
 
-/* GOODOS GLOBAL HEALTH CHECK */
-app.get("/api/health", (req, res) => {
-  return res.json({
-    success: true,
-    status: "online",
-    service: "goodos-backend",
-    timestamp: new Date().toISOString()
-  });
-});
-/* END GOODOS GLOBAL HEALTH CHECK */
-
-
 /* GOODOS DATABASE CONSOLE V121 API MOUNT */
 try {
   const goodosDatabaseConsoleRouterV121 = require('./routes/database-console.routes');

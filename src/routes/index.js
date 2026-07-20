@@ -217,6 +217,7 @@ router.get("/api", (req, res) => {
 });
 
 router.use("/health", healthRoutes);
+router.use("/api/health", healthRoutes);
 router.use("/api/apps", appsRoutes);
 router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);

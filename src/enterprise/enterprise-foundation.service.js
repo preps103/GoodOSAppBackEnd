@@ -2007,20 +2007,6 @@ function initializeEnterpriseFoundation() {
 
   startupTimer.unref();
 
-  for (
-    const signal
-    of [
-      "SIGTERM",
-      "SIGINT",
-    ]
-  ) {
-    process.once(
-      signal,
-      () => {
-        void flushMetrics();
-      }
-    );
-  }
 }
 
 module.exports = {

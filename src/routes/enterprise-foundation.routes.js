@@ -98,17 +98,14 @@ router.get(
         readiness.status ===
         "ready"
           ? 200
-          : readiness.status ===
-            "degraded"
-          ? 200
           : 503;
 
       return res
         .status(statusCode)
         .json({
           success:
-            readiness.status !==
-            "down",
+            readiness.status ===
+            "ready",
 
           status:
             readiness.status,
