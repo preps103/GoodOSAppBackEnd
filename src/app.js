@@ -40,6 +40,11 @@ app.use(
   goodosPhase2Security.adminBoundary
 );
 
+app.use(
+  "/admin",
+  goodosPhase2Security.adminBoundary
+);
+
 
 
 

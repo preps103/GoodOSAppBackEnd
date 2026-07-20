@@ -360,8 +360,10 @@ router.get("/console.html", (req, res) => {
 });
 
 router.use("/admin/table-editor", tableEditorRoutes);
+router.use("/api/admin/table-editor", tableEditorRoutes);
 
 router.use("/admin/sql-editor", sqlEditorRoutes);
+router.use("/api/admin/sql-editor", sqlEditorRoutes);
 
 router.use("/admin/database-management", databaseManagementRoutes);
 
