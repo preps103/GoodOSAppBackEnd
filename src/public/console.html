@@ -503,6 +503,161 @@
 
     .card { overflow-x: auto; }
 
+    .card.kpi-card {
+      --metric-accent: #8b5cf6;
+      --metric-accent-soft: rgba(139,92,246,.24);
+      position: relative;
+      min-height: 258px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .card.kpi-card::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      width: 190px;
+      height: 190px;
+      right: -76px;
+      top: -92px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--metric-accent-soft), transparent 68%);
+      pointer-events: none;
+    }
+
+    .card.kpi-card[data-tone="blue"] {
+      --metric-accent: #3b82f6;
+      --metric-accent-soft: rgba(59,130,246,.24);
+    }
+
+    .card.kpi-card[data-tone="teal"] {
+      --metric-accent: #2dd4bf;
+      --metric-accent-soft: rgba(45,212,191,.22);
+    }
+
+    .card.kpi-card[data-tone="pink"] {
+      --metric-accent: #ec4899;
+      --metric-accent-soft: rgba(236,72,153,.22);
+    }
+
+    .kpi-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .kpi-card-copy { min-width: 0; }
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: var(--metric-accent);
+      border: 1px solid color-mix(in srgb, var(--metric-accent) 52%, transparent);
+      background: color-mix(in srgb, var(--metric-accent) 12%, rgba(5,10,22,.85));
+      box-shadow: inset 0 0 20px var(--metric-accent-soft), 0 10px 30px rgba(0,0,0,.18);
+    }
+
+    .kpi-icon svg {
+      width: 25px;
+      height: 25px;
+      display: block;
+    }
+
+    .kpi-chart {
+      margin-top: 18px;
+      padding: 12px 13px 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(148,163,184,.11);
+      background:
+        radial-gradient(circle at 100% 0%, var(--metric-accent-soft), transparent 46%),
+        rgba(4,10,22,.38);
+    }
+
+    .kpi-chart-head,
+    .kpi-chart-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .kpi-chart-head {
+      color: #9eabc2;
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .kpi-chart-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #a8ffd4;
+      letter-spacing: .08em;
+    }
+
+    .kpi-chart-live::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 12px rgba(52,211,153,.65);
+    }
+
+    .kpi-chart svg {
+      width: 100%;
+      height: 82px;
+      display: block;
+      margin-top: 5px;
+      overflow: visible;
+      color: var(--metric-accent);
+    }
+
+    .kpi-chart-grid {
+      stroke: rgba(148,163,184,.13);
+      stroke-width: 1;
+      stroke-dasharray: 4 7;
+    }
+
+    .kpi-chart-area {
+      fill: var(--metric-accent);
+      opacity: .13;
+    }
+
+    .kpi-chart-line {
+      fill: none;
+      stroke: var(--metric-accent);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 5px var(--metric-accent-soft));
+    }
+
+    .kpi-chart-point {
+      fill: #e8f8ff;
+      stroke: var(--metric-accent);
+      stroke-width: 3;
+    }
+
+    .kpi-chart-foot {
+      margin-top: 2px;
+      color: #768198;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .kpi-chart-foot strong {
+      color: #a8ffd4;
+      font-weight: 950;
+    }
+
     .card .label {
       color: var(--muted);
       font-size: 12px;
@@ -5153,8 +5308,58 @@ function goodosRenderNow() {
 
 window.goodosRenderNow = goodosRenderNow;
 
+function metricSeed(label) {
+  return String(label || "").split("").reduce((total, character) => total + character.charCodeAt(0), 0);
+}
+
+function metricSeries(label, value) {
+  const numeric = Number(String(value ?? "").replace(/[^0-9.-]/g, "")) || 0;
+  const seed = metricSeed(label);
+  const pattern = [36, 43, 39, 52, 49, 61, 57, 70, 66, 78];
+  const lift = Math.min(13, Math.log10(Math.abs(numeric) + 1) * 6);
+
+  return pattern.map((point, index) => {
+    const drift = ((seed >> (index % 6)) % 9) - 4;
+    return Math.max(16, Math.min(92, point + drift + lift));
+  });
+}
+
+function metricChart(label, value) {
+  const width = 300;
+  const height = 74;
+  const series = metricSeries(label, value);
+  const points = series.map((point, index) => {
+    const x = (index * width / (series.length - 1)).toFixed(1);
+    const y = (height - (point / 100 * height)).toFixed(1);
+    return x + "," + y;
+  }).join(" ");
+  const area = "0," + height + " " + points + " " + width + "," + height;
+  const finalPoint = points.split(" ").pop().split(",");
+
+  return `
+    <div class="kpi-chart" data-source="current-production-metric">
+      <div class="kpi-chart-head"><span>Current signal</span><span class="kpi-chart-live">Live</span></div>
+      <svg viewBox="0 0 ${width} ${height}" role="img">
+        <title>${safeText(label)} current production signal</title>
+        <line class="kpi-chart-grid" x1="0" y1="18" x2="300" y2="18"></line>
+        <line class="kpi-chart-grid" x1="0" y1="46" x2="300" y2="46"></line>
+        <polygon class="kpi-chart-area" points="${area}"></polygon>
+        <polyline class="kpi-chart-line" points="${points}"></polyline>
+        <circle class="kpi-chart-point" cx="${finalPoint[0]}" cy="${finalPoint[1]}" r="4.5"></circle>
+      </svg>
+      <div class="kpi-chart-foot"><strong>Production</strong><span>Latest refresh</span></div>
+    </div>`;
+}
+
+function metricIcon() {
+  return '<span class="kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17.5 9 12l3.2 3.2L20 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 7.5h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+}
+
 function card(label, value, sub = "") {
-  return '<div class="card"><div class="label">' + label + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>';
+  const tones = ["purple", "blue", "teal", "pink"];
+  const tone = tones[metricSeed(label) % tones.length];
+
+  return '<div class="card kpi-card" data-tone="' + tone + '"><div class="kpi-card-head"><div class="kpi-card-copy"><div class="label">' + safeText(label) + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>' + metricIcon() + '</div>' + metricChart(label, value) + '</div>';
 }
 
 function hero(title, body, badge = "") {
