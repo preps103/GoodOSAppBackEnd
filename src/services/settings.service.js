@@ -11,7 +11,12 @@ const PROFILE_AVATAR_ROOT = path.resolve(
   process.env.GOODOS_PROFILE_AVATAR_DIR ||
     path.join(process.cwd(), "storage", "profile-avatars")
 );
-const PROFILE_AVATAR_PUBLIC_BASE = String(
+const BUSINESS_LOGO_MAX_BYTES = 4 * 1024 * 1024;
+const BUSINESS_LOGO_ROOT = path.resolve(
+  process.env.GOODOS_BUSINESS_LOGO_DIR ||
+    path.join(process.cwd(), "storage", "business-logos")
+);
+const PUBLIC_BACKEND_URL = String(
   process.env.PUBLIC_BACKEND_URL || "https://backend.goodos.app"
 ).replace(/\/+$/, "");
 
@@ -123,6 +128,67 @@ function nullableText(
     );
 
   return cleaned || null;
+}
+
+function nullableEmail(
+  value,
+  label = "Email"
+) {
+  const cleaned =
+    nullableText(
+      value,
+      320
+    );
+
+  if (
+    cleaned &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      cleaned
+    )
+  ) {
+    throw serviceError(
+      `${label} must be a valid email address.`
+    );
+  }
+
+  return cleaned;
+}
+
+function nullableWebUrl(
+  value
+) {
+  const cleaned =
+    nullableText(
+      value,
+      500
+    );
+
+  if (!cleaned) {
+    return null;
+  }
+
+  let parsed;
+
+  try {
+    parsed = new URL(cleaned);
+  } catch {
+    throw serviceError(
+      "Website must be a valid URL."
+    );
+  }
+
+  if (
+    ![
+      "http:",
+      "https:"
+    ].includes(parsed.protocol)
+  ) {
+    throw serviceError(
+      "Website must use http or https."
+    );
+  }
+
+  return parsed.toString();
 }
 
 function allowedValue(
@@ -336,6 +402,20 @@ async function getOrganizationForUser(
           organization.plan,
           organization.status,
           membership.role,
+          organization.legal_name,
+          organization.website_url,
+          organization.business_email,
+          organization.phone,
+          organization.industry,
+          organization.company_size,
+          organization.address_line_1,
+          organization.address_line_2,
+          organization.city,
+          organization.region,
+          organization.postal_code,
+          organization.country_code,
+          organization.logo_url,
+          organization.logo_updated_at,
           workspace.description,
           workspace.visibility,
           workspace.member_join_policy,
@@ -394,6 +474,34 @@ async function getOrganizationForUser(
       plan: row.plan,
       status: row.status,
       role: row.role,
+      legalName:
+        row.legal_name || "",
+      websiteUrl:
+        row.website_url || "",
+      businessEmail:
+        row.business_email || "",
+      phone:
+        row.phone || "",
+      industry:
+        row.industry || "",
+      companySize:
+        row.company_size || "",
+      addressLine1:
+        row.address_line_1 || "",
+      addressLine2:
+        row.address_line_2 || "",
+      city:
+        row.city || "",
+      region:
+        row.region || "",
+      postalCode:
+        row.postal_code || "",
+      countryCode:
+        row.country_code || "",
+      logoUrl:
+        row.logo_url || null,
+      logoUpdatedAt:
+        row.logo_updated_at || null,
       createdAt:
         row.created_at,
       updatedAt:
@@ -744,7 +852,7 @@ async function updateProfileForUser({
   );
 }
 
-function detectAvatarType(buffer) {
+function detectManagedImageType(buffer) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 12) {
     return null;
   }
@@ -787,7 +895,10 @@ function detectAvatarType(buffer) {
   return null;
 }
 
-function safeAvatarPath(fileName) {
+function safeManagedImagePath(
+  root,
+  fileName
+) {
   const normalized = path.basename(
     String(fileName || "")
   );
@@ -797,15 +908,29 @@ function safeAvatarPath(fileName) {
   }
 
   const filePath = path.join(
-    PROFILE_AVATAR_ROOT,
+    root,
     normalized
   );
 
   return filePath.startsWith(
-    PROFILE_AVATAR_ROOT + path.sep
+    root + path.sep
   )
     ? filePath
     : null;
+}
+
+function safeAvatarPath(fileName) {
+  return safeManagedImagePath(
+    PROFILE_AVATAR_ROOT,
+    fileName
+  );
+}
+
+function safeBusinessLogoPath(fileName) {
+  return safeManagedImagePath(
+    BUSINESS_LOGO_ROOT,
+    fileName
+  );
 }
 
 async function getAvatarForPublicUser(
@@ -902,7 +1027,7 @@ async function saveAvatarForUser({
   }
 
   const detected =
-    detectAvatarType(buffer);
+    detectManagedImageType(buffer);
 
   if (!detected) {
     throw serviceError(
@@ -959,7 +1084,7 @@ async function saveAvatarForUser({
   );
 
   const avatarUrl =
-    `${PROFILE_AVATAR_PUBLIC_BASE}/api/settings/avatars/${userId}?v=${Date.now()}`;
+    `${PUBLIC_BACKEND_URL}/api/settings/avatars/${userId}?v=${Date.now()}`;
 
   try {
     await dbQuery(
@@ -1089,6 +1214,570 @@ async function removeAvatarForUser({
   });
 
   return getProfile(userId);
+}
+
+function requireBusinessAdministrator(
+  organization,
+  platformRole
+) {
+  if (!organization) {
+    throw serviceError(
+      "No active business profile was found.",
+      404
+    );
+  }
+
+  const permitted =
+    ["owner", "admin"].includes(
+      organization.role
+    ) ||
+    ["owner", "admin"].includes(
+      platformRole
+    );
+
+  if (!permitted) {
+    throw serviceError(
+      "Business profile administration requires owner or administrator access.",
+      403
+    );
+  }
+}
+
+async function getBusinessLogoForPublicOrganization(
+  organizationId
+) {
+  const normalizedId =
+    cleanText(
+      organizationId,
+      160
+    );
+
+  if (
+    !normalizedId ||
+    !/^[a-zA-Z0-9_-]+$/.test(
+      normalizedId
+    )
+  ) {
+    throw serviceError(
+      "Business logo was not found.",
+      404
+    );
+  }
+
+  const result = await dbQuery(
+    `
+      SELECT
+        logo_file_name,
+        logo_content_type,
+        logo_size_bytes,
+        logo_updated_at
+      FROM backend_organizations
+      WHERE
+        id = $1
+        AND status = 'active'
+      LIMIT 1
+    `,
+    [normalizedId]
+  );
+
+  const row = result.rows[0];
+  const filePath =
+    safeBusinessLogoPath(
+      row?.logo_file_name
+    );
+
+  if (!row || !filePath) {
+    throw serviceError(
+      "Business logo was not found.",
+      404
+    );
+  }
+
+  try {
+    await fileSystem.access(
+      filePath,
+      fs.constants.R_OK
+    );
+  } catch {
+    throw serviceError(
+      "Business logo was not found.",
+      404
+    );
+  }
+
+  return {
+    filePath,
+    contentType:
+      row.logo_content_type ||
+      "application/octet-stream",
+    sizeBytes:
+      Number(
+        row.logo_size_bytes || 0
+      ),
+    updatedAt:
+      row.logo_updated_at || null
+  };
+}
+
+async function saveBusinessLogoForUser({
+  userId,
+  platformRole,
+  buffer,
+  ipAddress
+}) {
+  if (
+    !Buffer.isBuffer(buffer) ||
+    buffer.length === 0
+  ) {
+    throw serviceError(
+      "Choose a business logo to upload.",
+      400
+    );
+  }
+
+  if (
+    buffer.length >
+    BUSINESS_LOGO_MAX_BYTES
+  ) {
+    throw serviceError(
+      "Business logos must be 4 MB or smaller.",
+      413
+    );
+  }
+
+  const detected =
+    detectManagedImageType(
+      buffer
+    );
+
+  if (!detected) {
+    throw serviceError(
+      "Use a JPEG, PNG, or WebP business logo.",
+      415
+    );
+  }
+
+  const current =
+    await getOrganizationForUser(
+      userId
+    );
+
+  requireBusinessAdministrator(
+    current.organization,
+    platformRole
+  );
+
+  const organizationId =
+    current.organization.id;
+
+  const currentResult =
+    await dbQuery(
+      `
+        SELECT logo_file_name
+        FROM backend_organizations
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [organizationId]
+    );
+
+  await fileSystem.mkdir(
+    BUSINESS_LOGO_ROOT,
+    {
+      recursive: true,
+      mode: 0o750
+    }
+  );
+
+  const fileName =
+    `${organizationId}-${crypto.randomUUID()}.${detected.extension}`;
+  const finalPath =
+    safeBusinessLogoPath(
+      fileName
+    );
+  const temporaryPath =
+    `${finalPath}.uploading`;
+
+  await fileSystem.writeFile(
+    temporaryPath,
+    buffer,
+    {
+      mode: 0o640,
+      flag: "wx"
+    }
+  );
+
+  await fileSystem.rename(
+    temporaryPath,
+    finalPath
+  );
+
+  const logoUrl =
+    `${PUBLIC_BACKEND_URL}/api/settings/business-logos/${organizationId}?v=${Date.now()}`;
+
+  try {
+    await dbQuery(
+      `
+        UPDATE backend_organizations
+        SET
+          logo_url = $2,
+          logo_file_name = $3,
+          logo_content_type = $4,
+          logo_size_bytes = $5,
+          logo_updated_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [
+        organizationId,
+        logoUrl,
+        fileName,
+        detected.contentType,
+        buffer.length
+      ]
+    );
+  } catch (requestError) {
+    await fileSystem.unlink(
+      finalPath
+    ).catch(() => {});
+    throw requestError;
+  }
+
+  const previousPath =
+    safeBusinessLogoPath(
+      currentResult.rows[0]
+        ?.logo_file_name
+    );
+
+  if (
+    previousPath &&
+    previousPath !== finalPath
+  ) {
+    await fileSystem.unlink(
+      previousPath
+    ).catch(() => {});
+  }
+
+  await logAudit({
+    userId,
+    action:
+      "settings.business.logo_updated",
+    entityType:
+      "organization",
+    entityId:
+      organizationId,
+    ipAddress,
+    metadata: {
+      contentType:
+        detected.contentType,
+      sizeBytes:
+        buffer.length
+    }
+  });
+
+  return getOrganizationForUser(
+    userId
+  );
+}
+
+async function removeBusinessLogoForUser({
+  userId,
+  platformRole,
+  ipAddress
+}) {
+  const current =
+    await getOrganizationForUser(
+      userId
+    );
+
+  requireBusinessAdministrator(
+    current.organization,
+    platformRole
+  );
+
+  const organizationId =
+    current.organization.id;
+  const result = await dbQuery(
+    `
+      WITH previous AS (
+        SELECT id, logo_file_name
+        FROM backend_organizations
+        WHERE id = $1
+        FOR UPDATE
+      ),
+      updated AS (
+        UPDATE backend_organizations
+        SET
+          logo_url = NULL,
+          logo_file_name = NULL,
+          logo_content_type = NULL,
+          logo_size_bytes = NULL,
+          logo_updated_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING id
+      )
+      SELECT previous.logo_file_name
+      FROM previous
+      JOIN updated USING (id)
+    `,
+    [organizationId]
+  );
+
+  const previousPath =
+    safeBusinessLogoPath(
+      result.rows[0]
+        ?.logo_file_name
+    );
+
+  if (previousPath) {
+    await fileSystem.unlink(
+      previousPath
+    ).catch(() => {});
+  }
+
+  await logAudit({
+    userId,
+    action:
+      "settings.business.logo_removed",
+    entityType:
+      "organization",
+    entityId:
+      organizationId,
+    ipAddress,
+    metadata: {}
+  });
+
+  return getOrganizationForUser(
+    userId
+  );
+}
+
+async function updateBusinessProfileForUser({
+  userId,
+  platformRole,
+  input,
+  ipAddress
+}) {
+  const current =
+    await getOrganizationForUser(
+      userId
+    );
+  const organization =
+    current.organization;
+
+  requireBusinessAdministrator(
+    organization,
+    platformRole
+  );
+
+  const name =
+    cleanText(
+      input.name ??
+        organization.name,
+      100
+    );
+
+  if (name.length < 2) {
+    throw serviceError(
+      "Business name must contain at least two characters."
+    );
+  }
+
+  const legalName =
+    nullableText(
+      input.legalName ??
+        organization.legalName,
+      200
+    );
+  const websiteUrl =
+    nullableWebUrl(
+      input.websiteUrl ??
+        organization.websiteUrl
+    );
+  const businessEmail =
+    nullableEmail(
+      input.businessEmail ??
+        organization.businessEmail,
+      "Business email"
+    );
+  const phone =
+    nullableText(
+      input.phone ??
+        organization.phone,
+      50
+    );
+  const industry =
+    nullableText(
+      input.industry ??
+        organization.industry,
+      120
+    );
+  const companySize =
+    nullableText(
+      input.companySize ??
+        organization.companySize,
+      50
+    );
+  const addressLine1 =
+    nullableText(
+      input.addressLine1 ??
+        organization.addressLine1,
+      200
+    );
+  const addressLine2 =
+    nullableText(
+      input.addressLine2 ??
+        organization.addressLine2,
+      200
+    );
+  const city =
+    nullableText(
+      input.city ??
+        organization.city,
+      120
+    );
+  const region =
+    nullableText(
+      input.region ??
+        organization.region,
+      120
+    );
+  const postalCode =
+    nullableText(
+      input.postalCode ??
+        organization.postalCode,
+      30
+    );
+  const requestedCountry =
+    cleanText(
+      input.countryCode ??
+        organization.countryCode,
+      2
+    ).toUpperCase();
+  const countryCode =
+    requestedCountry || null;
+
+  if (
+    countryCode &&
+    !/^[A-Z]{2}$/.test(
+      countryCode
+    )
+  ) {
+    throw serviceError(
+      "Country must use a two-letter country code."
+    );
+  }
+
+  const workspace =
+    current.workspace || {};
+  const description =
+    nullableText(
+      input.description ??
+        workspace.description,
+      1000
+    );
+  const supportEmail =
+    nullableEmail(
+      input.supportEmail ??
+        workspace.supportEmail,
+      "Support email"
+    );
+
+  const client =
+    await getPool()
+      .connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `
+        UPDATE backend_organizations
+        SET
+          name = $2,
+          legal_name = $3,
+          website_url = $4,
+          business_email = $5,
+          phone = $6,
+          industry = $7,
+          company_size = $8,
+          address_line_1 = $9,
+          address_line_2 = $10,
+          city = $11,
+          region = $12,
+          postal_code = $13,
+          country_code = $14,
+          updated_at = NOW()
+        WHERE id = $1
+      `,
+      [
+        organization.id,
+        name,
+        legalName,
+        websiteUrl,
+        businessEmail,
+        phone,
+        industry,
+        companySize,
+        addressLine1,
+        addressLine2,
+        city,
+        region,
+        postalCode,
+        countryCode
+      ]
+    );
+    await client.query(
+      `
+        INSERT INTO backend_workspace_settings (
+          organization_id,
+          description,
+          support_email,
+          updated_at
+        )
+        VALUES ($1, $2, $3, NOW())
+        ON CONFLICT (organization_id)
+        DO UPDATE SET
+          description = EXCLUDED.description,
+          support_email = EXCLUDED.support_email,
+          updated_at = NOW()
+      `,
+      [
+        organization.id,
+        description,
+        supportEmail
+      ]
+    );
+    await client.query("COMMIT");
+  } catch (requestError) {
+    await client.query("ROLLBACK");
+    throw requestError;
+  } finally {
+    client.release();
+  }
+
+  await logAudit({
+    userId,
+    action:
+      "settings.business.profile_updated",
+    entityType:
+      "organization",
+    entityId:
+      organization.id,
+    ipAddress,
+    metadata: {
+      name,
+      countryCode,
+      websiteConfigured:
+        Boolean(websiteUrl),
+      businessEmailConfigured:
+        Boolean(businessEmail)
+    }
+  });
+
+  return getOrganizationForUser(
+    userId
+  );
 }
 
 async function updatePreferencesForUser({
@@ -1988,10 +2677,20 @@ module.exports = {
   getAvatarForPublicUser,
   saveAvatarForUser,
   removeAvatarForUser,
+  getBusinessLogoForPublicOrganization,
+  saveBusinessLogoForUser,
+  removeBusinessLogoForUser,
+  updateBusinessProfileForUser,
   updatePreferencesForUser,
   resetPreferencesForUser,
   updateWorkspaceForUser,
   changePasswordForUser,
   revokeUserSession,
-  createSettingsExport
+  createSettingsExport,
+  __test: {
+    detectManagedImageType,
+    safeManagedImagePath,
+    nullableEmail,
+    nullableWebUrl
+  }
 };

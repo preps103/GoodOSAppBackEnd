@@ -32,6 +32,16 @@ const avatarUpload = multer({
   }
 });
 
+const businessLogoUpload = multer({
+  storage:
+    multer.memoryStorage(),
+  limits: {
+    files: 1,
+    fileSize:
+      4 * 1024 * 1024
+  }
+});
+
 function receiveAvatar(
   req,
   res,
@@ -60,6 +70,40 @@ function receiveAvatar(
         res,
         uploadError.message ||
           "Profile photo upload failed.",
+        400
+      );
+    }
+  );
+}
+
+function receiveBusinessLogo(
+  req,
+  res,
+  next
+) {
+  businessLogoUpload.single("logo")(
+    req,
+    res,
+    uploadError => {
+      if (!uploadError) {
+        return next();
+      }
+
+      if (
+        uploadError.code ===
+        "LIMIT_FILE_SIZE"
+      ) {
+        return error(
+          res,
+          "Business logos must be 4 MB or smaller.",
+          413
+        );
+      }
+
+      return error(
+        res,
+        uploadError.message ||
+          "Business logo upload failed.",
         400
       );
     }
@@ -160,7 +204,16 @@ router.get(
                   table_schema = 'public'
                   AND table_name = 'users'
                   AND column_name = 'avatar_url'
-              ) AS avatar_ready
+              ) AS avatar_ready,
+
+              EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE
+                  table_schema = 'public'
+                  AND table_name = 'backend_organizations'
+                  AND column_name = 'logo_url'
+              ) AS business_profile_ready
           `
         );
 
@@ -179,11 +232,16 @@ router.get(
               row.preferences_ready &&
               row.workspace_ready &&
               row.exports_ready &&
-              row.avatar_ready
+              row.avatar_ready &&
+              row.business_profile_ready
             ),
           avatarReady:
             Boolean(
               row.avatar_ready
+            ),
+          businessProfileReady:
+            Boolean(
+              row.business_profile_ready
             )
         }
       );
@@ -237,6 +295,47 @@ router.get(
         res,
         requestError,
         "Profile avatar was not found"
+      );
+    }
+  }
+);
+
+router.get(
+  "/business-logos/:organizationId",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const logo =
+        await settingsService
+          .getBusinessLogoForPublicOrganization(
+            req.params.organizationId
+          );
+
+      res.set({
+        "Content-Type":
+          logo.contentType,
+        "Content-Length":
+          String(logo.sizeBytes),
+        "Cache-Control":
+          "public, max-age=31536000, immutable",
+        "X-Content-Type-Options":
+          "nosniff",
+        "Cross-Origin-Resource-Policy":
+          "cross-origin"
+      });
+
+      return res.sendFile(
+        logo.filePath
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Business logo was not found"
       );
     }
   }
@@ -316,6 +415,85 @@ router.delete(
         res,
         requestError,
         "Failed to remove profile photo"
+      );
+    }
+  }
+);
+
+router.post(
+  "/business-logo",
+  receiveBusinessLogo,
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await settingsService
+          .saveBusinessLogoForUser({
+            userId:
+              req.user.id,
+            platformRole:
+              req.user.platformRole,
+            buffer:
+              req.file?.buffer,
+            ipAddress:
+              req.ip
+          });
+
+      return success(
+        res,
+        {
+          ...result,
+          message:
+            "Business logo saved."
+        }
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Failed to save business logo"
+      );
+    }
+  }
+);
+
+router.delete(
+  "/business-logo",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await settingsService
+          .removeBusinessLogoForUser({
+            userId:
+              req.user.id,
+            platformRole:
+              req.user.platformRole,
+            ipAddress:
+              req.ip
+          });
+
+      return success(
+        res,
+        {
+          ...result,
+          message:
+            "Business logo removed."
+        }
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Failed to remove business logo"
       );
     }
   }
@@ -500,6 +678,46 @@ router.patch(
         res,
         requestError,
         "Failed to update workspace"
+      );
+    }
+  }
+);
+
+router.patch(
+  "/business-profile",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await settingsService
+          .updateBusinessProfileForUser({
+            userId:
+              req.user.id,
+            platformRole:
+              req.user.platformRole,
+            input:
+              req.body || {},
+            ipAddress:
+              req.ip
+          });
+
+      return success(
+        res,
+        {
+          ...result,
+          message:
+            "Business profile saved."
+        }
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Failed to update business profile"
       );
     }
   }

@@ -1104,6 +1104,74 @@
           }
         }
       }
+    },
+    "/api/settings/overview": {
+      "get": {
+        "summary": "Current user and business settings overview",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Profile, preferences, organization, workspace, sessions, and audit activity"}, "401": {"description": "Authorization required"}}
+      }
+    },
+    "/api/settings/profile": {
+      "patch": {
+        "summary": "Update current user profile",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "User profile updated"}, "400": {"description": "Invalid profile data"}, "401": {"description": "Authorization required"}}
+      }
+    },
+    "/api/settings/avatar": {
+      "post": {
+        "summary": "Upload current user profile photo",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"type": "object", "required": ["avatar"], "properties": {"avatar": {"type": "string", "format": "binary"}}}}}},
+        "responses": {"200": {"description": "Profile photo saved"}, "413": {"description": "Profile photo is too large"}, "415": {"description": "Unsupported image type"}}
+      },
+      "delete": {
+        "summary": "Remove current user profile photo",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Profile photo removed"}, "401": {"description": "Authorization required"}}
+      }
+    },
+    "/api/settings/business-profile": {
+      "patch": {
+        "summary": "Update the current organization business profile",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Business profile updated"}, "400": {"description": "Invalid business profile data"}, "403": {"description": "Owner or administrator access required"}}
+      }
+    },
+    "/api/settings/business-logo": {
+      "post": {
+        "summary": "Upload the current organization business logo",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"type": "object", "required": ["logo"], "properties": {"logo": {"type": "string", "format": "binary"}}}}}},
+        "responses": {"200": {"description": "Business logo saved"}, "403": {"description": "Owner or administrator access required"}, "413": {"description": "Business logo is too large"}, "415": {"description": "Unsupported image type"}}
+      },
+      "delete": {
+        "summary": "Remove the current organization business logo",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Business logo removed"}, "403": {"description": "Owner or administrator access required"}}
+      }
+    },
+    "/api/settings/preferences": {
+      "patch": {
+        "summary": "Update current user preferences",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Preferences updated"}, "400": {"description": "Invalid preference data"}}
+      },
+      "delete": {
+        "summary": "Reset current user preferences",
+        "tags": ["Account Settings"],
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Preferences reset to defaults"}}
+      }
     }
   }
 }

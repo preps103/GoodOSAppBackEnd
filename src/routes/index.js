@@ -146,6 +146,16 @@ router.get("/console-v2.js", (req, res) => {
   res.sendFile(require("path").join(__dirname, "../public/console-v2.js"));
 });
 
+router.get("/account-settings.js", (req, res) => {
+  res.type("application/javascript");
+  res.sendFile(path.join(__dirname, "../public/account-settings.js"));
+});
+
+router.get("/account-settings.css", (req, res) => {
+  res.type("text/css");
+  res.sendFile(path.join(__dirname, "../public/account-settings.css"));
+});
+
 /* GOODOS_UPDATE_SITES_PAGE */
 router.get("/update-sites", (req, res) => {
   res.set(

@@ -5135,6 +5135,7 @@
   overflow-wrap: normal !important;
 }
 </style>
+<link rel="stylesheet" href="/account-settings.css" />
 </head>
 <body>
   <div id="login" class="login hidden">
@@ -5186,6 +5187,13 @@
           <button data-view="backups">Backups</button>
           <button data-view="settings">Settings</button>
         </div>
+
+        <div class="nav-section">
+          <div class="nav-title">Account</div>
+          <button data-view="profile">User Profile</button>
+          <button data-view="business-profile">Business Profile</button>
+          <button data-view="preferences">My Settings</button>
+        </div>
       </div>
     </aside>
 
@@ -5197,7 +5205,7 @@
         </div>
         <div class="session">
           <div class="pill"><span class="status-dot"></span>Production</div>
-          <div class="pill" id="userPill">Loading...</div>
+          <button class="pill account-pill" id="userPill" data-view="profile" type="button">Loading...</button>
           <button class="logout" id="logoutBtn">Logout</button>
         </div>
       </div>
@@ -5223,6 +5231,10 @@ const state = {
   buckets: [],
   events: [],
   view: "dashboard",
+  accountOverview: null,
+  accountSettingsLoaded: false,
+  accountSettingsLoading: false,
+  accountSettingsError: "",
 };
 
 async function request(path, options = {}) {
@@ -5276,7 +5288,11 @@ async function checkSession() {
     state.user = data.user;
     document.getElementById("login").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
-    document.getElementById("userPill").textContent = state.user.displayName || state.user.email;
+    if (typeof window.goodosUpdateUserPill === "function") {
+      window.goodosUpdateUserPill();
+    } else {
+      document.getElementById("userPill").textContent = state.user.displayName || state.user.email;
+    }
 
     try {
       await loadData();
@@ -5407,6 +5423,9 @@ function goodosRenderNow() {
   else if (state.view === "security") view.innerHTML = securityView();
   else if (state.view === "backups") view.innerHTML = backupsView();
   else if (state.view === "settings") view.innerHTML = settingsView();
+  else if (state.view === "profile") view.innerHTML = window.goodosUserProfileView();
+  else if (state.view === "business-profile") view.innerHTML = window.goodosBusinessProfileView();
+  else if (state.view === "preferences") view.innerHTML = window.goodosPreferencesView();
 }
 
 window.goodosRenderNow = goodosRenderNow;
@@ -13685,6 +13704,9 @@ function render() {
   else if (state.view === "security") view.innerHTML = securityView();
   else if (state.view === "backups") view.innerHTML = backupsView();
   else if (state.view === "settings") view.innerHTML = settingsView();
+  else if (state.view === "profile") view.innerHTML = window.goodosUserProfileView();
+  else if (state.view === "business-profile") view.innerHTML = window.goodosBusinessProfileView();
+  else if (state.view === "preferences") view.innerHTML = window.goodosPreferencesView();
 }
 
 
@@ -22066,6 +22088,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 })();
 </script>
 <script src="/console-voice-link.js" defer></script>
+<script src="/account-settings.js"></script>
 
 <!-- GOODOS_UPDATE_SITES_FLOATING_LINK -->
 <a class="update-sites-link" href="/update-sites">Update Sites</a>
