@@ -42,7 +42,15 @@
     });
 
     rows.forEach(function (row, index) {
-      row.classList.toggle("goodos-long-table-preview-hidden", collapsed && index >= COLLAPSED_ROW_LIMIT);
+      var shouldHide = collapsed && index >= COLLAPSED_ROW_LIMIT;
+      row.classList.toggle("goodos-long-table-preview-hidden", shouldHide);
+      row.toggleAttribute("data-goodos-collapsed-row", shouldHide);
+      row.hidden = shouldHide;
+      if (shouldHide) {
+        row.style.setProperty("display", "none", "important");
+      } else {
+        row.style.removeProperty("display");
+      }
     });
   }
 
@@ -115,8 +123,11 @@
   }
 
   function scheduleScan() {
-    window.clearTimeout(scanTimer);
-    scanTimer = window.setTimeout(scanLongTables, 80);
+    if (scanTimer) return;
+    scanTimer = window.setTimeout(function () {
+      scanTimer = 0;
+      scanLongTables();
+    }, 32);
   }
 
   function setupMobileNavigation() {

@@ -12,8 +12,8 @@ test("backend console loads the long-table and mobile layout assets", () => {
   const consoleHtml = read("src/public/console.html");
   const routes = read("src/routes/index.js");
 
-  assert.match(consoleHtml, /href="\/backend-collapsible-sections\.css"/);
-  assert.match(consoleHtml, /src="\/backend-collapsible-sections\.js"/);
+  assert.match(consoleHtml, /href="\/backend-collapsible-sections\.css\?v=\d+-\d+"/);
+  assert.match(consoleHtml, /src="\/backend-collapsible-sections\.js\?v=\d+-\d+"/);
   assert.match(routes, /router\.get\("\/backend-collapsible-sections\.css"/);
   assert.match(routes, /router\.get\("\/backend-collapsible-sections\.js"/);
 });
@@ -25,6 +25,8 @@ test("long tables receive a capped scroll region and accessible collapse control
   assert.match(client, /COLLAPSED_ROW_LIMIT = 5/);
   assert.match(client, /MINIMUM_ROWS = COLLAPSED_ROW_LIMIT \+ 1/);
   assert.match(client, /goodos-long-table-preview-hidden/);
+  assert.match(client, /data-goodos-collapsed-row/);
+  assert.match(client, /style\.setProperty\("display", "none", "important"\)/);
   assert.match(client, /Show first 5 rows/);
   assert.match(client, /Show all rows/);
   assert.match(client, /setCollapsed\(region, true\)/);
@@ -32,6 +34,7 @@ test("long tables receive a capped scroll region and accessible collapse control
   assert.match(client, /aria-expanded/);
   assert.match(client, /aria-controls/);
   assert.match(client, /MutationObserver/);
+  assert.match(client, /if \(scanTimer\) return/);
   assert.match(styles, /--goodos-table-region-height: 460px/);
   assert.match(styles, /max-height: min\(var\(--goodos-table-region-height\)/);
   assert.match(styles, /overflow: auto !important/);

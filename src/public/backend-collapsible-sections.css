@@ -88,7 +88,8 @@
   overflow-y: hidden !important;
 }
 
-.goodos-long-table-shell[data-collapsed="true"] .goodos-long-table-preview-hidden {
+.goodos-long-table-shell[data-collapsed="true"] .goodos-long-table-preview-hidden,
+.goodos-long-table-shell[data-collapsed="true"] [data-goodos-collapsed-row="true"] {
   display: none !important;
 }
 
