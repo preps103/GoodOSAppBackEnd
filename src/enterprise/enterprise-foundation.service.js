@@ -229,7 +229,7 @@ function observeRequest({
   );
 }
 
-async function flushMetrics() {
+async function flushMetricBuckets() {
   const entries = [
     ...metricBuckets.entries(),
   ];
@@ -394,6 +394,20 @@ async function flushMetrics() {
       );
     }
   }
+}
+
+let metricsFlushPromise = null;
+
+function flushMetrics() {
+  if (!metricsFlushPromise) {
+    metricsFlushPromise =
+      flushMetricBuckets()
+        .finally(() => {
+          metricsFlushPromise = null;
+        });
+  }
+
+  return metricsFlushPromise;
 }
 
 async function persistDependencyCheck(
