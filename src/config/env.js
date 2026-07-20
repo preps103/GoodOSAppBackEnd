@@ -43,6 +43,12 @@ const env = {
   version: process.env.VERSION || "1.0.0",
   databaseUrl: process.env.DATABASE_URL,
 
+  requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS || 60000),
+  headersTimeoutMs: Number(process.env.HEADERS_TIMEOUT_MS || 15000),
+  keepAliveTimeoutMs: Number(process.env.KEEP_ALIVE_TIMEOUT_MS || 5000),
+  maxRequestsPerSocket: Number(process.env.MAX_REQUESTS_PER_SOCKET || 1000),
+  maxHeadersCount: Number(process.env.MAX_HEADERS_COUNT || 100),
+
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   sessionDays: Number(process.env.SESSION_DAYS || 7),

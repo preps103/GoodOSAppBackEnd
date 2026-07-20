@@ -9,6 +9,12 @@ const server = app.listen(env.port, "127.0.0.1", () => {
   console.log(`${env.serviceName} running on http://127.0.0.1:${env.port}`);
 });
 
+server.requestTimeout = env.requestTimeoutMs;
+server.headersTimeout = env.headersTimeoutMs;
+server.keepAliveTimeout = env.keepAliveTimeoutMs;
+server.maxRequestsPerSocket = env.maxRequestsPerSocket;
+server.maxHeadersCount = env.maxHeadersCount;
+
 const realtimeServer = attachRealtimeWebSocketServer(server);
 const shutdownController = createShutdownController({
   server,
