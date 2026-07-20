@@ -2656,6 +2656,60 @@ async function safeActivityRows(label, sql, params = []) {
   }
 }
 
+async function safeActivityTimeline(tableName, dateColumn = "created_at", days = 30, cumulative = false, whereClause = "") {
+  try {
+    const safeTable = String(tableName || "").trim();
+    const safeColumn = String(dateColumn || "").trim();
+    const safeDays = Math.max(7, Math.min(90, Number(days) || 30));
+
+    if (!/^[a-zA-Z0-9_]+$/.test(safeTable) || !/^[a-zA-Z0-9_]+$/.test(safeColumn)) {
+      return [];
+    }
+
+    const exists = await dbQuery("SELECT to_regclass($1) AS table_name", [`public.${safeTable}`]);
+    if (!exists.rows[0]?.table_name) return [];
+
+    const startOffset = safeDays - 1;
+    const filterSql = whereClause ? ` AND (${whereClause})` : "";
+    const valueExpression = cumulative
+      ? "prior.total + SUM(COALESCE(daily.count, 0)) OVER (ORDER BY days.day)"
+      : "COALESCE(daily.count, 0)";
+
+    const result = await dbQuery(`
+      WITH days AS (
+        SELECT generate_series(
+          CURRENT_DATE - $1::int,
+          CURRENT_DATE,
+          INTERVAL '1 day'
+        )::date AS day
+      ),
+      daily AS (
+        SELECT ${safeColumn}::date AS day, COUNT(*)::int AS count
+        FROM ${safeTable}
+        WHERE ${safeColumn} >= CURRENT_DATE - $1::int${filterSql}
+        GROUP BY ${safeColumn}::date
+      ),
+      prior AS (
+        SELECT COUNT(*)::int AS total
+        FROM ${safeTable}
+        WHERE ${safeColumn} < CURRENT_DATE - $1::int${filterSql}
+      )
+      SELECT
+        TO_CHAR(days.day, 'YYYY-MM-DD') AS date,
+        (${valueExpression})::int AS value
+      FROM days
+      CROSS JOIN prior
+      LEFT JOIN daily ON daily.day = days.day
+      ORDER BY days.day ASC
+    `, [startOffset]);
+
+    return result.rows || [];
+  } catch (error) {
+    console.warn(`[activity-center] ${tableName} timeline failed:`, error.message);
+    return [];
+  }
+}
+
 async function activityCenterCounts() {
   return {
     users: await safeActivityCount("users"),
@@ -3249,6 +3303,25 @@ router.get("/activity-center-page-data", async (req, res) => {
   try {
     const counts = await activityCenterCounts();
     const readiness = buildModuleReadiness(counts);
+    const generatedAt = new Date().toISOString();
+
+    const [
+      usersTimeline,
+      appsTimeline,
+      membershipsTimeline,
+      apiKeysTimeline,
+      webhooksTimeline,
+      realtimeTimeline,
+      functionRunsTimeline,
+    ] = await Promise.all([
+      safeActivityTimeline("users", "created_at", 30, true, "status = 'active'"),
+      safeActivityTimeline("apps", "created_at", 30, true, "status = 'active'"),
+      safeActivityTimeline("app_memberships", "created_at", 30, true, "status = 'active'"),
+      safeActivityTimeline("backend_api_keys", "created_at", 30, true, "status = 'active'"),
+      safeActivityTimeline("backend_webhooks", "created_at", 30, true, "status = 'active'"),
+      safeActivityTimeline("backend_realtime_events", "created_at", 30, false),
+      safeActivityTimeline("backend_edge_function_runs", "created_at", 30, false),
+    ]);
 
     const events = await safeActivityRows("backend_events", `
       SELECT
@@ -3308,6 +3381,18 @@ router.get("/activity-center-page-data", async (req, res) => {
     return ok(res, {
       counts,
       readiness,
+      charts: {
+        generatedAt,
+        timelines: {
+          users: usersTimeline,
+          apps: appsTimeline,
+          memberships: membershipsTimeline,
+          apiKeys: apiKeysTimeline,
+          webhooks: webhooksTimeline,
+          realtimeEvents: realtimeTimeline,
+          functionRuns: functionRunsTimeline,
+        },
+      },
       events,
       auditLogs,
       logs,

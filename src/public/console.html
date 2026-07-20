@@ -489,6 +489,7 @@
 
     .grid { display: grid; gap: 18px; min-width: 0; }
     .cards { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); }
+    .cards[data-card-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .cards[data-card-count="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
     .module-grid { grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
@@ -511,6 +512,16 @@
       min-height: 258px;
       overflow: hidden;
       isolation: isolate;
+    }
+
+    .native-live-metric {
+      min-height: 296px;
+    }
+
+    .native-live-metric > [class*="goodos-"][class*="chart"],
+    .native-live-metric > [data-project-settings-chart-title],
+    .goodos-api-keys-page-v60 .goodos-project-settings-chart-v107 {
+      display: none !important;
     }
 
     .card.kpi-card::before {
@@ -937,6 +948,7 @@
       .shell { grid-template-columns: 240px minmax(0, 1fr); }
       .sidebar { width: 240px; padding-inline: 12px; }
       .two { grid-template-columns: 1fr; }
+      .cards[data-card-count="4"],
       .cards[data-card-count="5"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .topbar { padding: 0 16px; }
       .content { padding: 20px; }
@@ -945,6 +957,7 @@
 
     @media (max-width: 820px) {
       .shell { display: block; }
+      .cards[data-card-count="4"],
       .cards[data-card-count="5"] { grid-template-columns: 1fr; }
       .sidebar {
         position: static;
@@ -5380,6 +5393,131 @@ function card(label, value, sub = "") {
   return '<div class="card"><div class="label">' + safeText(label) + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>';
 }
 
+function metricDailySeries(rows, dateFields = ["createdAt", "created_at"], days = 14, cumulative = false, totalCount = null) {
+  const safeDays = Math.max(7, Math.min(30, Number(days) || 14));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(today);
+  start.setDate(start.getDate() - safeDays + 1);
+  const buckets = new Map();
+
+  for (let offset = 0; offset < safeDays; offset += 1) {
+    const day = new Date(start);
+    day.setDate(start.getDate() + offset);
+    buckets.set(day.toISOString().slice(0, 10), 0);
+  }
+
+  let beforeWindow = 0;
+  (Array.isArray(rows) ? rows : []).forEach(row => {
+    const raw = dateFields.map(field => row?.[field]).find(Boolean);
+    const date = new Date(raw || "");
+    if (Number.isNaN(date.getTime())) return;
+    date.setHours(0, 0, 0, 0);
+    const key = date.toISOString().slice(0, 10);
+    if (date < start) beforeWindow += 1;
+    else if (buckets.has(key)) buckets.set(key, buckets.get(key) + 1);
+  });
+
+  let running = beforeWindow;
+  const series = Array.from(buckets.entries()).map(([date, count]) => {
+    if (cumulative) running += count;
+    return { date, value: cumulative ? running : count };
+  });
+
+  if (cumulative && totalCount != null && series.length) {
+    const gap = Math.max(0, Number(totalCount || 0) - Number(series[series.length - 1].value || 0));
+    if (gap) series.forEach(point => { point.value += gap; });
+  }
+
+  return series;
+}
+
+function metricStatusBreakdown(rows, fallbackLabel = "Records") {
+  const counts = new Map();
+  (Array.isArray(rows) ? rows : []).forEach(row => {
+    const label = String(row?.status || row?.state || fallbackLabel).trim() || fallbackLabel;
+    counts.set(label, (counts.get(label) || 0) + 1);
+  });
+  return Array.from(counts.entries()).map(([label, value]) => ({ label, value }));
+}
+
+function liveMetricChart(spec = {}) {
+  const type = spec.type || "bars";
+  const title = safeText(spec.title || "Live snapshot");
+  const generatedAt = spec.generatedAt || state.activityCharts?.generatedAt || new Date().toISOString();
+  let body = "";
+
+  if (type === "trend") {
+    const series = (Array.isArray(spec.series) ? spec.series : []).map((point, index) => ({
+      label: point?.date || point?.label || String(index + 1),
+      value: Math.max(0, Number(point?.value ?? point?.total ?? point ?? 0)),
+    }));
+    if (!series.length) series.push({ label: "Now", value: 0 });
+    const max = Math.max(1, ...series.map(point => point.value));
+    const points = series.map((point, index) => {
+      const x = 8 + (index * 284 / Math.max(1, series.length - 1));
+      const y = 68 - (point.value / max * 50);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    const area = `8,70 ${points} 292,70`;
+    const firstDate = new Date(String(series[0].label || "") + "T00:00:00");
+    const lastDate = new Date(String(series[series.length - 1].label || "") + "T00:00:00");
+    const labelFor = (date, fallback) => Number.isNaN(date.getTime()) ? fallback : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    body = `<svg viewBox="0 0 300 88" role="img" aria-label="${title}">
+      <line class="kpi-chart-grid" x1="8" y1="18" x2="292" y2="18"></line>
+      <line class="kpi-chart-grid" x1="8" y1="44" x2="292" y2="44"></line>
+      <line class="kpi-chart-grid" x1="8" y1="70" x2="292" y2="70"></line>
+      <polygon class="kpi-chart-area" points="${area}"></polygon>
+      <polyline class="kpi-chart-line" points="${points}"></polyline>
+      <text x="8" y="86" class="kpi-chart-caption">${safeText(labelFor(firstDate, series[0].label))}</text>
+      <text x="292" y="86" text-anchor="end" class="kpi-chart-caption">${safeText(labelFor(lastDate, series[series.length - 1].label))}</text>
+    </svg>`;
+  } else if (type === "progress" || type === "ring") {
+    const total = Math.max(0, Number(spec.total || 0));
+    const current = Math.max(0, Number(spec.current ?? spec.value ?? 0));
+    const percent = Math.max(0, Math.min(100, Number(spec.percent ?? (total ? current / total * 100 : 0)) || 0));
+    if (type === "ring") {
+      const circumference = 201.06;
+      const filled = (circumference * percent / 100).toFixed(2);
+      body = `<svg viewBox="0 0 300 92" role="img" aria-label="${Math.round(percent)} percent ${title}">
+        <circle class="kpi-donut-track" cx="48" cy="46" r="32"></circle>
+        <circle class="kpi-donut-value" cx="48" cy="46" r="32" stroke="var(--metric-accent)" stroke-dasharray="${filled} ${circumference}" transform="rotate(-90 48 46)"></circle>
+        <text x="48" y="51" text-anchor="middle" class="kpi-chart-value">${Math.round(percent)}%</text>
+        <text x="112" y="40" class="kpi-chart-caption">CURRENT</text>
+        <text x="286" y="40" text-anchor="end" class="kpi-chart-value">${safeText(current)}</text>
+        <text x="112" y="66" class="kpi-chart-caption">TOTAL</text>
+        <text x="286" y="66" text-anchor="end" class="kpi-chart-caption">${safeText(total)}</text>
+      </svg>`;
+    } else {
+      body = `<div class="kpi-scope-track" role="img" aria-label="${Math.round(percent)} percent ${title}"><div class="kpi-scope-value" style="width:${percent}%"></div></div>
+        <div class="kpi-scope-stats"><strong>${Math.round(percent)}%</strong><span>${safeText(current)} of ${safeText(total || 100)}</span></div>`;
+    }
+  } else {
+    const items = (Array.isArray(spec.items) ? spec.items : []).slice(0, 4).map((item, index) => ({
+      label: safeText(item?.label || `Group ${index + 1}`),
+      value: Math.max(0, Number(item?.value ?? item ?? 0)),
+    }));
+    if (!items.length) items.push({ label: "Records", value: 0 });
+    const max = Math.max(1, ...items.map(item => item.value));
+    body = `<div style="display:grid;gap:9px;margin:16px 0 12px;">${items.map(item => `<div style="display:grid;grid-template-columns:minmax(64px,auto) 1fr auto;align-items:center;gap:9px;font-size:10px;color:#9aa6bb;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.label}</span><span style="height:8px;border-radius:999px;background:rgba(148,163,184,.15);overflow:hidden;"><i style="display:block;height:100%;width:${item.value / max * 100}%;border-radius:inherit;background:var(--metric-accent);"></i></span><strong style="color:#eef6ff;">${safeText(item.value)}</strong></div>`).join("")}</div>`;
+  }
+
+  return `<div class="kpi-chart" data-chart-kind="${safeText(type)}" data-source="live-module-data">
+    <div class="kpi-chart-head"><span>${title}</span><span class="kpi-chart-live">Live</span></div>
+    ${body}
+    <div class="kpi-chart-foot"><strong>Live API</strong><span>${safeText(chartRefreshLabel(generatedAt))}</span></div>
+  </div>`;
+}
+
+function liveMetricCard(label, value, sub, spec = {}, tone = "blue") {
+  return `<div class="card kpi-card native-live-metric" data-native-live-metric="${safeText(label)}" data-tone="${safeText(tone)}">
+    <div class="label">${safeText(label)}</div>
+    <div class="value">${safeText(value)}</div>
+    <div class="sub">${safeText(sub)}</div>
+    ${liveMetricChart(spec)}
+  </div>`;
+}
+
 function projectMetricCard(label, value, sub, tone, chart) {
   return '<div class="card kpi-card" data-tone="' + safeText(tone) + '"><div class="label">' + safeText(label) + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div>' + chart + '</div>';
 }
@@ -5850,6 +5988,7 @@ window.loadActivityCenter = async function loadActivityCenter() {
     state.activityReadiness = data.readiness || {};
     state.activityRuntime = data.runtime || {};
     state.activityCounts = data.counts || {};
+    state.activityCharts = data.charts || {};
     state.activityLoaded = true;
     state.activityLoading = false;
     state.activityError = "";
@@ -5999,6 +6138,7 @@ window.loadPolicyRulesCenter = async function loadPolicyRulesCenter() {
     state.policyEvaluations = Array.isArray(data.evaluations) ? data.evaluations : [];
     state.policySummary = Array.isArray(data.summary) ? data.summary : [];
     state.policyCounts = data.counts || {};
+    state.policyUpdatedAt = new Date().toISOString();
     state.policyRulesLoaded = true;
     state.policyRulesLoading = false;
     state.policyRulesError = "";
@@ -6179,6 +6319,10 @@ function policyRulesSection() {
   const rules = Array.isArray(state.policyRules) ? state.policyRules : [];
   const evaluations = Array.isArray(state.policyEvaluations) ? state.policyEvaluations : [];
   const counts = state.policyCounts || {};
+  const policyTotal = counts.rules ?? rules.length;
+  const activeRules = counts.activeRules ?? rules.filter(rule => rule.status === "active").length;
+  const denyRules = counts.denyRules ?? rules.filter(rule => rule.effect === "deny").length;
+  const policyUpdatedAt = state.policyUpdatedAt;
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -6193,11 +6337,11 @@ function policyRulesSection() {
     ${state.policyRulesLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading policy rules...</p></div>` : ""}
     ${state.policyRulesError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Policy error: ${safeText(state.policyRulesError)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Policy Rules", counts.rules ?? rules.length, "Central allow/deny controls")}
-      ${card("Active Rules", counts.activeRules ?? rules.filter(rule => rule.status === "active").length, "Currently enforced")}
-      ${card("Deny Rules", counts.denyRules ?? rules.filter(rule => rule.effect === "deny").length, "Blocking controls")}
-      ${card("Evaluations", counts.evaluations ?? evaluations.length, "Recent decisions")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="policy" style="margin-top:18px;">
+      ${liveMetricCard("Policy Rules", policyTotal, "Central allow/deny controls", { type: "bars", title: "Rule status", items: metricStatusBreakdown(rules, "active"), generatedAt: policyUpdatedAt }, "blue")}
+      ${liveMetricCard("Active Rules", activeRules, "Currently enforced", { type: "ring", title: "Active rule share", current: activeRules, total: policyTotal, generatedAt: policyUpdatedAt }, "teal")}
+      ${liveMetricCard("Deny Rules", denyRules, "Blocking controls", { type: "ring", title: "Deny rule share", current: denyRules, total: policyTotal, generatedAt: policyUpdatedAt }, "pink")}
+      ${liveMetricCard("Evaluations", counts.evaluations ?? evaluations.length, "Recent decisions", { type: "trend", title: "14-day evaluation volume", series: metricDailySeries(evaluations, ["createdAt", "created_at"], 14, false), generatedAt: policyUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -6274,6 +6418,9 @@ function dashboard() {
   const activityLogs = Array.isArray(state.activityLogs) ? state.activityLogs : [];
   const runtime = state.activityRuntime || state.overview?.runtime || {};
   const searchResults = Array.isArray(state.globalSearchResults) ? state.globalSearchResults : [];
+  const activityCharts = state.activityCharts || {};
+  const timelines = activityCharts.timelines || {};
+  const generatedAt = activityCharts.generatedAt;
 
   return `
     ${hero("Backend Console", "GoodOS Cloud command center for live production modules, activity, readiness, logs, audit trail, and global search.", state.overview?.status || "operational")}
@@ -6293,18 +6440,18 @@ function dashboard() {
 
     ${policyRulesSection()}
 
-    <div class="grid cards">
-      ${card("Users", counts.activeUsers ?? stats.users ?? state.users.length, "Active GoodOS users")}
-      ${card("Apps", counts.activeApps ?? stats.activeApps ?? state.apps.length, "Active registered apps")}
-      ${card("Memberships", counts.activeMemberships ?? stats.activeMemberships ?? state.memberships.length, "Active access grants")}
-      ${card("Readiness", `${safeText(String(readinessScore.percent || 0))}%`, "Platform completion")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="overview-core">
+      ${liveMetricCard("Users", counts.activeUsers ?? stats.users ?? state.users.length, "Active GoodOS users", { type: "trend", title: "30-day account total", series: timelines.users, generatedAt }, "blue")}
+      ${liveMetricCard("Apps", counts.activeApps ?? stats.activeApps ?? state.apps.length, "Active registered apps", { type: "trend", title: "30-day app total", series: timelines.apps, generatedAt }, "teal")}
+      ${liveMetricCard("Memberships", counts.activeMemberships ?? stats.activeMemberships ?? state.memberships.length, "Active access grants", { type: "trend", title: "30-day access total", series: timelines.memberships, generatedAt }, "pink")}
+      ${liveMetricCard("Readiness", `${safeText(String(readinessScore.percent || 0))}%`, "Platform completion", { type: "progress", title: "Module readiness", current: readinessScore.ready || 0, total: readinessScore.total || 0, percent: readinessScore.percent || 0, generatedAt }, "teal")}
     </div>
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("API Keys", counts.activeApiKeys ?? stats.apiKeys ?? 0, "Active scoped keys")}
-      ${card("Webhooks", counts.activeWebhooks ?? stats.webhooks ?? 0, "Active endpoints")}
-      ${card("Realtime", counts.realtimeEvents ?? 0, "Realtime events")}
-      ${card("Function Runs", counts.functionRuns ?? 0, "Edge executions")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="overview-services" style="margin-top:18px;">
+      ${liveMetricCard("API Keys", counts.activeApiKeys ?? stats.apiKeys ?? 0, "Active scoped keys", { type: "trend", title: "30-day key total", series: timelines.apiKeys, generatedAt }, "blue")}
+      ${liveMetricCard("Webhooks", counts.activeWebhooks ?? stats.webhooks ?? 0, "Active endpoints", { type: "trend", title: "30-day endpoint total", series: timelines.webhooks, generatedAt }, "teal")}
+      ${liveMetricCard("Realtime", counts.realtimeEvents ?? 0, "Realtime events", { type: "trend", title: "30-day event volume", series: timelines.realtimeEvents, generatedAt }, "pink")}
+      ${liveMetricCard("Function Runs", counts.functionRuns ?? 0, "Edge executions", { type: "trend", title: "30-day run volume", series: timelines.functionRuns, generatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -6498,6 +6645,7 @@ window.loadLiveUsers = async function loadLiveUsers() {
     state.authInvites = Array.isArray(data.invites) ? data.invites : [];
     state.authAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
     state.authCounts = data.counts || {};
+    state.authUpdatedAt = new Date().toISOString();
     state.usersLiveLoaded = true;
     state.usersLiveLoading = false;
     state.usersLiveError = "";
@@ -6781,6 +6929,7 @@ window.loadAuthV2Center = async function loadAuthV2Center() {
     state.authV2PasswordResets = Array.isArray(data.passwordResets) ? data.passwordResets : [];
     state.authV2AuditEvents = Array.isArray(data.auditEvents) ? data.auditEvents : [];
     state.authV2Counts = data.counts || {};
+    state.authV2UpdatedAt = new Date().toISOString();
     state.authV2Loaded = true;
     state.authV2Loading = false;
     state.authV2Error = "";
@@ -6910,6 +7059,9 @@ function authV2Section() {
   const sessions = Array.isArray(state.authV2Sessions) ? state.authV2Sessions : [];
   const passwordResets = Array.isArray(state.authV2PasswordResets) ? state.authV2PasswordResets : [];
   const counts = state.authV2Counts || {};
+  const authV2UpdatedAt = state.authV2UpdatedAt;
+  const mfaEnabled = counts.mfaEnabled ?? users.filter(user => user.mfaEnabled).length;
+  const activeSessionsV2 = counts.activeSessions ?? sessions.filter(item => item.status === "active").length;
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -6922,11 +7074,11 @@ function authV2Section() {
     ${state.authV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Auth V2...</p></div>` : ""}
     ${state.authV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Auth V2 error: ${safeText(state.authV2Error)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Roles", counts.roles ?? roles.length, "Role matrix")}
-      ${card("Permissions", counts.permissions ?? permissions.length, "Permission catalog")}
-      ${card("MFA Enabled", counts.mfaEnabled ?? users.filter(user => user.mfaEnabled).length, "Protected accounts")}
-      ${card("Active Sessions", counts.activeSessions ?? sessions.filter(item => item.status === "active").length, "Live sessions")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="auth-v2" style="margin-top:18px;">
+      ${liveMetricCard("Roles", counts.roles ?? roles.length, "Role matrix", { type: "bars", title: "Role status", items: metricStatusBreakdown(roles, "active"), generatedAt: authV2UpdatedAt }, "blue")}
+      ${liveMetricCard("Permissions", counts.permissions ?? permissions.length, "Permission catalog", { type: "bars", title: "Permissions by resource", items: Object.entries(permissions.reduce((map, item) => { const key = item.resource || item.category || "Other"; map[key] = (map[key] || 0) + 1; return map; }, {})).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 4), generatedAt: authV2UpdatedAt }, "teal")}
+      ${liveMetricCard("MFA Enabled", mfaEnabled, "Protected accounts", { type: "ring", title: "MFA enrollment share", current: mfaEnabled, total: users.length, generatedAt: authV2UpdatedAt }, "pink")}
+      ${liveMetricCard("Active Sessions", activeSessionsV2, "Live sessions", { type: "ring", title: "Active session share", current: activeSessionsV2, total: sessions.length, generatedAt: authV2UpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -7029,6 +7181,11 @@ function usersView() {
   const invites = Array.isArray(state.authInvites) ? state.authInvites : [];
   const auditLogs = Array.isArray(state.authAuditLogs) ? state.authAuditLogs : [];
   const counts = state.authCounts || {};
+  const totalUsers = counts.users ?? users.length;
+  const activeUsers = counts.activeUsers ?? users.filter(user => user.status === "active").length;
+  const activeMemberships = counts.activeMemberships ?? memberships.filter(item => item.status === "active").length;
+  const pendingInvites = counts.pendingInvites ?? invites.filter(item => item.status === "pending").length;
+  const authUpdatedAt = state.authUpdatedAt;
 
   return `
     ${hero("Auth / Users", "Manage GoodOS accounts, invites, platform roles, app memberships, and session state.")}
@@ -7045,11 +7202,11 @@ function usersView() {
     ${state.usersLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Auth / Users data...</p></div>` : ""}
     ${state.usersLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Auth / Users load error: ${safeText(state.usersLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Users", counts.users ?? users.length, "GoodOS accounts")}
-      ${card("Active Users", counts.activeUsers ?? users.filter(user => user.status === "active").length, "Can sign in")}
-      ${card("Memberships", counts.activeMemberships ?? memberships.filter(item => item.status === "active").length, "Active app access")}
-      ${card("Pending Invites", counts.pendingInvites ?? invites.filter(item => item.status === "pending").length, "Awaiting acceptance")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="auth">
+      ${liveMetricCard("Users", totalUsers, "GoodOS accounts", { type: "trend", title: "14-day account total", series: metricDailySeries(users, ["createdAt", "created_at"], 14, true, totalUsers), generatedAt: authUpdatedAt }, "blue")}
+      ${liveMetricCard("Active Users", activeUsers, "Can sign in", { type: "ring", title: "Active account share", current: activeUsers, total: totalUsers, generatedAt: authUpdatedAt }, "teal")}
+      ${liveMetricCard("Memberships", activeMemberships, "Active app access", { type: "ring", title: "Active grant share", current: activeMemberships, total: memberships.length, generatedAt: authUpdatedAt }, "pink")}
+      ${liveMetricCard("Pending Invites", pendingInvites, "Awaiting acceptance", { type: "bars", title: "Invitation status", items: metricStatusBreakdown(invites, "pending"), generatedAt: authUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -7245,6 +7402,7 @@ window.loadLiveApps = async function loadLiveApps() {
     state.appRegistryApiKeys = Array.isArray(data.apiKeys) ? data.apiKeys : [];
     state.appRegistryAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
     state.appRegistryCounts = data.counts || {};
+    state.appsUpdatedAt = new Date().toISOString();
     state.appsLiveLoaded = true;
     state.appsLiveLoading = false;
     state.appsLiveError = "";
@@ -7442,6 +7600,11 @@ function appsView() {
   const apiKeys = Array.isArray(state.appRegistryApiKeys) ? state.appRegistryApiKeys : [];
   const auditLogs = Array.isArray(state.appRegistryAuditLogs) ? state.appRegistryAuditLogs : [];
   const counts = state.appRegistryCounts || {};
+  const totalApps = counts.apps ?? apps.length;
+  const activeApps = counts.activeApps ?? apps.filter(app => app.status === "active").length;
+  const activeMemberships = counts.activeMemberships ?? memberships.filter(item => item.status === "active").length;
+  const restrictedKeys = counts.appRestrictedKeys ?? apiKeys.filter(key => Array.isArray(key.allowedAppIds) && !key.allowedAppIds.includes("*")).length;
+  const appsUpdatedAt = state.appsUpdatedAt;
 
   return `
     ${hero("App Registry", "Manage GoodOS apps, domains, status, app memberships, API key restrictions, and app audit history.")}
@@ -7456,11 +7619,11 @@ function appsView() {
     ${state.appsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading App Registry...</p></div>` : ""}
     ${state.appsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">App Registry load error: ${safeText(state.appsLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Apps", counts.apps ?? apps.length, "Registered GoodOS apps")}
-      ${card("Active Apps", counts.activeApps ?? apps.filter(app => app.status === "active").length, "Live apps")}
-      ${card("Memberships", counts.activeMemberships ?? memberships.filter(item => item.status === "active").length, "Active app access")}
-      ${card("Restricted Keys", counts.appRestrictedKeys ?? apiKeys.filter(key => Array.isArray(key.allowedAppIds) && !key.allowedAppIds.includes("*")).length, "App scoped API keys")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="projects">
+      ${liveMetricCard("Apps", totalApps, "Registered GoodOS apps", { type: "trend", title: "14-day app total", series: metricDailySeries(apps, ["createdAt", "created_at"], 14, true, totalApps), generatedAt: appsUpdatedAt }, "blue")}
+      ${liveMetricCard("Active Apps", activeApps, "Live apps", { type: "ring", title: "Active app share", current: activeApps, total: totalApps, generatedAt: appsUpdatedAt }, "teal")}
+      ${liveMetricCard("Memberships", activeMemberships, "Active app access", { type: "ring", title: "Active grant share", current: activeMemberships, total: memberships.length, generatedAt: appsUpdatedAt }, "pink")}
+      ${liveMetricCard("Restricted Keys", restrictedKeys, "App scoped API keys", { type: "ring", title: "Restricted key share", current: restrictedKeys, total: apiKeys.length, generatedAt: appsUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -7593,6 +7756,7 @@ window.loadLiveDatabase = async function loadLiveDatabase() {
 
     const data = payload.data || payload;
     state.tables = Array.isArray(data.tables) ? data.tables : [];
+    state.databaseUpdatedAt = new Date().toISOString();
     state.databaseLiveLoaded = true;
     state.databaseLiveLoading = false;
     state.databaseLiveError = "";
@@ -8228,6 +8392,7 @@ window.loadDbApiCenter = async function loadDbApiCenter() {
     state.dbApiRules = Array.isArray(data.rules) ? data.rules : [];
     state.dbApiTables = Array.isArray(data.tables) ? data.tables : [];
     state.dbApiCounts = data.counts || {};
+    state.dbApiUpdatedAt = new Date().toISOString();
     state.dbApiLoaded = true;
     state.dbApiLoading = false;
     state.dbApiError = "";
@@ -8368,6 +8533,10 @@ function dbApiCenterSection() {
 
   const rules = Array.isArray(state.dbApiRules) ? state.dbApiRules : [];
   const counts = state.dbApiCounts || {};
+  const dbApiUpdatedAt = state.dbApiUpdatedAt;
+  const totalRules = counts.totalRules ?? rules.length;
+  const publishedTables = counts.publishedTables ?? rules.filter(rule => rule.readEnabled).length;
+  const writableTables = counts.writableTables ?? rules.filter(rule => rule.writeEnabled).length;
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -8381,11 +8550,11 @@ function dbApiCenterSection() {
     ${state.dbApiLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading generated Database API rules...</p></div>` : ""}
     ${state.dbApiError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Database API error: ${safeText(state.dbApiError)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Published Tables", counts.publishedTables ?? rules.filter(rule => rule.readEnabled).length, "Public REST tables")}
-      ${card("Writable Tables", counts.writableTables ?? rules.filter(rule => rule.writeEnabled).length, "Write-enabled rules")}
-      ${card("Rules", counts.totalRules ?? rules.length, "Table API policies")}
-      ${card("Scope", "read:db", "Public DB API permission")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="database-api" style="margin-top:18px;">
+      ${liveMetricCard("Published Tables", publishedTables, "Public REST tables", { type: "ring", title: "Readable rule share", current: publishedTables, total: totalRules, generatedAt: dbApiUpdatedAt }, "blue")}
+      ${liveMetricCard("Writable Tables", writableTables, "Write-enabled rules", { type: "ring", title: "Writable rule share", current: writableTables, total: totalRules, generatedAt: dbApiUpdatedAt }, "teal")}
+      ${liveMetricCard("Rules", totalRules, "Table API policies", { type: "bars", title: "Rule status", items: metricStatusBreakdown(rules, "active"), generatedAt: dbApiUpdatedAt }, "pink")}
+      ${liveMetricCard("Scope", "read:db", "Public DB API permission", { type: "bars", title: "Access coverage", items: [{ label: "Read", value: publishedTables }, { label: "Write", value: writableTables }], generatedAt: dbApiUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -8433,6 +8602,8 @@ function databaseView() {
   const selectedColumns = Array.isArray(state.selectedDbColumns) ? state.selectedDbColumns : [];
   const selectedRows = Array.isArray(state.selectedDbRows) ? state.selectedDbRows : [];
   const selectedPagination = state.selectedDbPagination || {};
+  const databaseUpdatedAt = state.databaseUpdatedAt;
+  const tableRowItems = tables.slice().sort((a, b) => Number(b.rowCount || b.rows || 0) - Number(a.rowCount || a.rows || 0)).slice(0, 4).map(table => ({ label: table.tableName || table.name || "Table", value: Number(table.rowCount || table.rows || 0) }));
 
   const inlineRowViewer = (tableName) => {
     if (selectedTable !== tableName) return "";
@@ -8580,11 +8751,11 @@ function databaseView() {
     ${state.databaseLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live database data...</p></div>` : ""}
     ${state.databaseLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Database load error: ${safeText(state.databaseLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Tables", tables.length, "Public database tables")}
-      ${card("Rows", totalRows, "Total tracked rows")}
-      ${card("Database", "Postgres", "Production database")}
-      ${card("Status", "Connected", "Live metadata")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="database">
+      ${liveMetricCard("Tables", tables.length, "Public database tables", { type: "bars", title: "Table status", items: metricStatusBreakdown(tables, "available"), generatedAt: databaseUpdatedAt }, "blue")}
+      ${liveMetricCard("Rows", totalRows, "Total tracked rows", { type: "bars", title: "Largest tables", items: tableRowItems, generatedAt: databaseUpdatedAt }, "teal")}
+      ${liveMetricCard("Database", "Postgres", "Production database", { type: "progress", title: "Database availability", current: state.databaseLiveError ? 0 : 1, total: 1, generatedAt: databaseUpdatedAt }, "pink")}
+      ${liveMetricCard("Status", "Connected", "Live metadata", { type: "ring", title: "Metadata connection", current: state.databaseLiveError ? 0 : 1, total: 1, generatedAt: databaseUpdatedAt }, "teal")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -8807,6 +8978,7 @@ window.loadLiveLogs = async function loadLiveLogs() {
     state.logCounts = data.counts || {};
     state.logFiles = data.files || {};
     state.logFilters = data.filters || {};
+    state.logsUpdatedAt = new Date().toISOString();
     state.logsLiveLoaded = true;
     state.logsLiveLoading = false;
     state.logsLiveError = "";
@@ -8844,6 +9016,8 @@ function logsView() {
   const errors = logs.filter(log => log.level === "error");
   const outputs = logs.filter(log => log.level === "output");
   const databaseLogs = logs.filter(log => !String(log.id || "").startsWith("pm2_") && !String(log.id || "").startsWith("output_") && !String(log.id || "").startsWith("error_"));
+  const logTotal = Math.max(logs.length, Number(counts.errors || 0) + Number(counts.output || 0) + Number(counts.databaseLogs || 0));
+  const logsUpdatedAt = state.logsUpdatedAt;
 
   return `
     ${hero("Logs & Monitoring", "Live PM2 log visibility, database log records, severity filters, details, and retention cleanup.")}
@@ -8860,11 +9034,11 @@ function logsView() {
     ${state.logsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live log data...</p></div>` : ""}
     ${state.logsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Logs load error: ${safeText(state.logsLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Log Files", counts.logFiles ?? 2, "Detected PM2 log files")}
-      ${card("Errors", counts.errors ?? errors.length, "Error streams")}
-      ${card("Output", counts.output ?? outputs.length, "Output streams")}
-      ${card("Database Logs", counts.databaseLogs ?? databaseLogs.length, "Stored log records")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="logs">
+      ${liveMetricCard("Log Files", counts.logFiles ?? 2, "Detected PM2 log files", { type: "bars", title: "Log source mix", items: [{ label: "Error", value: counts.errors ?? errors.length }, { label: "Output", value: counts.output ?? outputs.length }, { label: "Database", value: counts.databaseLogs ?? databaseLogs.length }], generatedAt: logsUpdatedAt }, "blue")}
+      ${liveMetricCard("Errors", counts.errors ?? errors.length, "Error streams", { type: "ring", title: "Error share", current: counts.errors ?? errors.length, total: logTotal, generatedAt: logsUpdatedAt }, "pink")}
+      ${liveMetricCard("Output", counts.output ?? outputs.length, "Output streams", { type: "ring", title: "Output share", current: counts.output ?? outputs.length, total: logTotal, generatedAt: logsUpdatedAt }, "teal")}
+      ${liveMetricCard("Database Logs", counts.databaseLogs ?? databaseLogs.length, "Stored log records", { type: "trend", title: "14-day stored volume", series: metricDailySeries(databaseLogs, ["createdAt", "created_at"], 14, false), generatedAt: logsUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -8950,6 +9124,7 @@ window.loadLiveSecurity = async function loadLiveSecurity() {
     state.securitySessions = Array.isArray(data.sessions) ? data.sessions : [];
     state.securityAuditLogs = Array.isArray(data.auditLogs) ? data.auditLogs : [];
     state.securityCounts = data.counts || {};
+    state.securityUpdatedAt = new Date().toISOString();
     state.securityLiveLoaded = true;
     state.securityLiveLoading = false;
     state.securityLiveError = "";
@@ -9113,6 +9288,9 @@ function securityView() {
   const sessions = Array.isArray(state.securitySessions) ? state.securitySessions : [];
   const auditLogs = Array.isArray(state.securityAuditLogs) ? state.securityAuditLogs : [];
   const counts = state.securityCounts || {};
+  const activeSessions = counts.activeSessions ?? sessions.filter(item => item.isActive).length;
+  const securityUpdatedAt = state.securityUpdatedAt;
+  const rateLimitReady = ["active", "enabled", "ready", "operational"].includes(String(rateLimit.status || "").toLowerCase());
 
   return `
     ${hero("Security Rules", "Live security headers, SSO configuration, session controls, security settings, and audit visibility.")}
@@ -9127,11 +9305,11 @@ function securityView() {
     ${state.securityLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading security rules...</p></div>` : ""}
     ${state.securityLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Security load error: ${safeText(state.securityLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Cookie", auth.cookieName || "goodos_session", "SSO cookie")}
-      ${card("Active Sessions", counts.activeSessions ?? sessions.filter(item => item.isActive).length, "Currently valid")}
-      ${card("API Keys", counts.activeApiKeys ?? 0, "Active API keys")}
-      ${card("Rate Limit", rateLimit.status || "planned", "Security throttle")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="security">
+      ${liveMetricCard("Cookie", auth.cookieName || "goodos_session", "SSO cookie", { type: "bars", title: "SSO configuration", items: [{ label: "Cookie", value: auth.cookieName ? 1 : 0 }, { label: "Domain", value: auth.cookieDomain ? 1 : 0 }, { label: "SameSite", value: cors.sameSite ? 1 : 0 }, { label: "Credentials", value: cors.credentials !== false ? 1 : 0 }], generatedAt: securityUpdatedAt }, "blue")}
+      ${liveMetricCard("Active Sessions", activeSessions, "Currently valid", { type: "ring", title: "Valid session share", current: activeSessions, total: sessions.length, generatedAt: securityUpdatedAt }, "teal")}
+      ${liveMetricCard("API Keys", counts.activeApiKeys ?? 0, "Active API keys", { type: "bars", title: "Active credentials", items: [{ label: "Active", value: counts.activeApiKeys ?? 0 }, { label: "Settings", value: settings.length }], generatedAt: securityUpdatedAt }, "pink")}
+      ${liveMetricCard("Rate Limit", rateLimit.status || "planned", "Security throttle", { type: "progress", title: "Throttle readiness", current: rateLimitReady ? 1 : 0, total: 1, generatedAt: securityUpdatedAt }, "blue")}
     </div>
 
     <div class="grid two" style="margin-top:18px;">
@@ -9274,6 +9452,7 @@ window.loadLiveBackups = async function loadLiveBackups() {
     state.backups = Array.isArray(data.backups) ? data.backups : [];
     state.backupCounts = data.counts || {};
     state.restoreTests = Array.isArray(data.restoreTests) ? data.restoreTests : [];
+    state.backupsUpdatedAt = new Date().toISOString();
     state.backupsLiveLoaded = true;
     state.backupsLiveLoading = false;
     state.backupsLiveError = "";
@@ -9504,6 +9683,10 @@ function backupsView() {
 
   const backups = Array.isArray(state.backups) ? state.backups : [];
   const counts = state.backupCounts || {};
+  const backupTotal = counts.backups ?? backups.length;
+  const completedBackups = counts.completed ?? backups.filter(item => item.status === "completed").length;
+  const failedBackups = counts.failed ?? backups.filter(item => item.status === "failed").length;
+  const backupsUpdatedAt = state.backupsUpdatedAt;
 
   return `
     ${hero("Backups", "Database backup records, restore points, and retention visibility.")}
@@ -9520,11 +9703,11 @@ function backupsView() {
     ${state.backupsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live backup data...</p></div>` : ""}
     ${state.backupsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Backups load error: ${safeText(state.backupsLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Backups", counts.backups ?? backups.length, "Total backup records")}
-      ${card("Completed", counts.completed ?? backups.filter(item => item.status === "completed").length, "Ready restore points")}
-      ${card("Failed", counts.failed ?? backups.filter(item => item.status === "failed").length, "Failed backup records")}
-      ${card("Retention", "Next", "Retention rules")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="backups">
+      ${liveMetricCard("Backups", backupTotal, "Total backup records", { type: "trend", title: "14-day backup total", series: metricDailySeries(backups, ["createdAt", "created_at"], 14, true, backupTotal), generatedAt: backupsUpdatedAt }, "blue")}
+      ${liveMetricCard("Completed", completedBackups, "Ready restore points", { type: "ring", title: "Completed backup share", current: completedBackups, total: backupTotal, generatedAt: backupsUpdatedAt }, "teal")}
+      ${liveMetricCard("Failed", failedBackups, "Failed backup records", { type: "ring", title: "Failed backup share", current: failedBackups, total: backupTotal, generatedAt: backupsUpdatedAt }, "pink")}
+      ${liveMetricCard("Retention", "Live", "Retention rules", { type: "bars", title: "Backup status", items: metricStatusBreakdown(backups, "recorded"), generatedAt: backupsUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -9638,6 +9821,7 @@ window.loadLiveSettings = async function loadLiveSettings() {
       state.usageCounts = state.usageCounts || {};
     }
 
+    state.settingsUpdatedAt = new Date().toISOString();
     state.settingsLiveLoaded = true;
     state.settingsLiveLoading = false;
     state.settingsLiveError = "";
@@ -10578,6 +10762,10 @@ function settingsView() {
   const readinessChecks = Array.isArray(readiness.checks) ? readiness.checks : [];
   const readinessScore = readiness.score || {};
   const auditLogs = Array.isArray(state.settingsAuditLogs) ? state.settingsAuditLogs : [];
+  const settingsUpdatedAt = state.settingsUpdatedAt;
+  const settingsTotal = counts.settings ?? settings.length;
+  const activeSettings = counts.active ?? settings.filter(item => item.status === "active").length;
+  const plannedSettings = counts.planned ?? settings.filter(item => item.status === "planned").length;
 
   const byCategory = {};
   settings.forEach(setting => {
@@ -10619,28 +10807,28 @@ function settingsView() {
     ${state.settingsLiveLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live settings data...</p></div>` : ""}
     ${state.settingsLiveError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Settings load error: ${safeText(state.settingsLiveError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Environment", runtime.environment || "production", "Runtime mode")}
-      ${card("Service", runtime.service || "GoodOS Cloud", "Backend service")}
-      ${card("Node", runtime.node || "-", "Node runtime")}
-      ${card("PID", runtime.pid || "-", "Process ID")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="settings-runtime">
+      ${liveMetricCard("Environment", runtime.environment || "production", "Runtime mode", { type: "progress", title: "Environment availability", current: runtime.environment ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "blue")}
+      ${liveMetricCard("Service", runtime.service || "GoodOS Cloud", "Backend service", { type: "progress", title: "Service availability", current: runtime.service ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "teal")}
+      ${liveMetricCard("Node", runtime.node || "-", "Node runtime", { type: "progress", title: "Runtime availability", current: runtime.node ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "pink")}
+      ${liveMetricCard("PID", runtime.pid || "-", "Process ID", { type: "progress", title: "Process availability", current: runtime.pid ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "blue")}
     </div>
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Settings", counts.settings ?? settings.length, "Registered controls")}
-      ${card("Categories", counts.categories ?? categories.length, "Platform sections")}
-      ${card("Active", counts.active ?? settings.filter(item => item.status === "active").length, "Production-ready settings")}
-      ${card("Planned", counts.planned ?? settings.filter(item => item.status === "planned").length, "Roadmap controls")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="settings-controls" style="margin-top:18px;">
+      ${liveMetricCard("Settings", settingsTotal, "Registered controls", { type: "trend", title: "14-day setting total", series: metricDailySeries(settings, ["createdAt", "created_at"], 14, true, settingsTotal), generatedAt: settingsUpdatedAt }, "blue")}
+      ${liveMetricCard("Categories", counts.categories ?? categories.length, "Platform sections", { type: "bars", title: "Largest categories", items: Object.entries(byCategory).map(([label, items]) => ({ label, value: items.length })).sort((a, b) => b.value - a.value).slice(0, 4), generatedAt: settingsUpdatedAt }, "teal")}
+      ${liveMetricCard("Active", activeSettings, "Production-ready settings", { type: "ring", title: "Active control share", current: activeSettings, total: settingsTotal, generatedAt: settingsUpdatedAt }, "pink")}
+      ${liveMetricCard("Planned", plannedSettings, "Roadmap controls", { type: "ring", title: "Planned control share", current: plannedSettings, total: settingsTotal, generatedAt: settingsUpdatedAt }, "blue")}
     </div>
 
 
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Platform Readiness</h3><span class="badge">${safeText(String(readinessScore.percent || 0))}% Ready</span></div>
-      <div class="grid cards" style="margin-bottom:18px;">
-        ${card("Ready", readinessScore.ready || 0, "Production-ready checks")}
-        ${card("Partial", readinessScore.partial || 0, "Needs improvement")}
-        ${card("Missing", readinessScore.missing || 0, "Not connected yet")}
-        ${card("Total", readinessScore.total || readinessChecks.length || 0, "Backend checks")}
+      <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="settings-readiness" style="margin-bottom:18px;">
+        ${liveMetricCard("Ready", readinessScore.ready || 0, "Production-ready checks", { type: "ring", title: "Ready check share", current: readinessScore.ready || 0, total: readinessScore.total || readinessChecks.length || 0, generatedAt: settingsUpdatedAt }, "teal")}
+        ${liveMetricCard("Partial", readinessScore.partial || 0, "Needs improvement", { type: "ring", title: "Partial check share", current: readinessScore.partial || 0, total: readinessScore.total || readinessChecks.length || 0, generatedAt: settingsUpdatedAt }, "blue")}
+        ${liveMetricCard("Missing", readinessScore.missing || 0, "Not connected yet", { type: "ring", title: "Missing check share", current: readinessScore.missing || 0, total: readinessScore.total || readinessChecks.length || 0, generatedAt: settingsUpdatedAt }, "pink")}
+        ${liveMetricCard("Total", readinessScore.total || readinessChecks.length || 0, "Backend checks", { type: "bars", title: "Readiness distribution", items: [{ label: "Ready", value: readinessScore.ready || 0 }, { label: "Partial", value: readinessScore.partial || 0 }, { label: "Missing", value: readinessScore.missing || 0 }], generatedAt: settingsUpdatedAt }, "blue")}
       </div>
       <table>
         <thead>
@@ -10693,11 +10881,11 @@ function settingsView() {
 
     <div class="card" style="margin-top:18px;">
       <div class="section-head"><h3>Usage Metering + Quotas</h3><span class="badge">${safeText(String(usageCounts.metrics || usageMetrics.length || 0))} Metrics</span></div>
-      <div class="grid cards" style="margin-bottom:18px;">
-        ${card("OK", usageCounts.ok || 0, "Healthy usage")}
-        ${card("Warning", usageCounts.warning || 0, "Near limit")}
-        ${card("Over Limit", usageCounts.overLimit || 0, "Needs action")}
-        ${card("Enforced", usageCounts.enforced || 0, "Hard limits")}
+      <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="settings-usage" style="margin-bottom:18px;">
+        ${liveMetricCard("OK", usageCounts.ok || 0, "Healthy usage", { type: "ring", title: "Healthy metric share", current: usageCounts.ok || 0, total: usageCounts.metrics || usageMetrics.length || 0, generatedAt: settingsUpdatedAt }, "teal")}
+        ${liveMetricCard("Warning", usageCounts.warning || 0, "Near limit", { type: "ring", title: "Warning metric share", current: usageCounts.warning || 0, total: usageCounts.metrics || usageMetrics.length || 0, generatedAt: settingsUpdatedAt }, "blue")}
+        ${liveMetricCard("Over Limit", usageCounts.overLimit || 0, "Needs action", { type: "ring", title: "Over-limit share", current: usageCounts.overLimit || 0, total: usageCounts.metrics || usageMetrics.length || 0, generatedAt: settingsUpdatedAt }, "pink")}
+        ${liveMetricCard("Enforced", usageCounts.enforced || 0, "Hard limits", { type: "ring", title: "Enforced quota share", current: usageCounts.enforced || 0, total: usageCounts.metrics || usageMetrics.length || 0, generatedAt: settingsUpdatedAt }, "blue")}
       </div>
       <table>
         <thead>
@@ -10808,6 +10996,7 @@ window.loadStorageManager = async function loadStorageManager() {
     state.storageSignedUrls = Array.isArray(data.signedUrls) ? data.signedUrls : [];
     state.storageBucketStats = data.bucketStats || {};
     state.storageCounts = data.counts || {};
+    state.storageUpdatedAt = new Date().toISOString();
     state.storageManagerLoaded = true;
     state.storageManagerLoading = false;
     state.storageManagerError = "";
@@ -11153,6 +11342,7 @@ window.loadStorageV2Center = async function loadStorageV2Center() {
     state.storageV2Files = Array.isArray(data.files) ? data.files : [];
     state.storageV2Versions = Array.isArray(data.versions) ? data.versions : [];
     state.storageV2Counts = data.counts || {};
+    state.storageV2UpdatedAt = new Date().toISOString();
     state.storageV2Loaded = true;
     state.storageV2Loading = false;
     state.storageV2Error = "";
@@ -11315,6 +11505,9 @@ function storageV2Section() {
   const files = Array.isArray(state.storageV2Files) ? state.storageV2Files : [];
   const versions = Array.isArray(state.storageV2Versions) ? state.storageV2Versions : [];
   const counts = state.storageV2Counts || {};
+  const storageV2UpdatedAt = state.storageV2UpdatedAt;
+  const cdnBuckets = counts.cdnEnabledBuckets ?? buckets.filter(bucket => bucket.cdn_enabled).length;
+  const publicBuckets = counts.publicBuckets ?? buckets.filter(bucket => bucket.public_read_enabled || bucket.visibility === "public").length;
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -11328,11 +11521,11 @@ function storageV2Section() {
     ${state.storageV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Storage V2...</p></div>` : ""}
     ${state.storageV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Storage V2 error: ${safeText(state.storageV2Error)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Providers", counts.providers ?? providers.length, "Local / S3-compatible configs")}
-      ${card("CDN Buckets", counts.cdnEnabledBuckets ?? buckets.filter(bucket => bucket.cdn_enabled).length, "CDN URL enabled")}
-      ${card("Public Buckets", counts.publicBuckets ?? buckets.filter(bucket => bucket.public_read_enabled || bucket.visibility === "public").length, "Public object routing")}
-      ${card("Versions", counts.versions ?? versions.length, "Object version records")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="storage-v2" style="margin-top:18px;">
+      ${liveMetricCard("Providers", counts.providers ?? providers.length, "Local / S3-compatible configs", { type: "bars", title: "Provider status", items: metricStatusBreakdown(providers, "active"), generatedAt: storageV2UpdatedAt }, "blue")}
+      ${liveMetricCard("CDN Buckets", cdnBuckets, "CDN URL enabled", { type: "ring", title: "CDN-enabled share", current: cdnBuckets, total: buckets.length, generatedAt: storageV2UpdatedAt }, "teal")}
+      ${liveMetricCard("Public Buckets", publicBuckets, "Public object routing", { type: "ring", title: "Public bucket share", current: publicBuckets, total: buckets.length, generatedAt: storageV2UpdatedAt }, "pink")}
+      ${liveMetricCard("Versions", counts.versions ?? versions.length, "Object version records", { type: "trend", title: "14-day version volume", series: metricDailySeries(versions, ["createdAt", "created_at"], 14, false), generatedAt: storageV2UpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -11439,6 +11632,10 @@ function storageView() {
   const selectedBucket = state.selectedStorageBucket || (buckets[0]?.id || "");
   const searchTerm = String(state.storageSearch || "").toLowerCase().trim();
   const selectedFolder = state.selectedStorageFolder || "";
+  const storageUpdatedAt = state.storageUpdatedAt;
+  const storageSignedUrls = Array.isArray(state.storageSignedUrls) ? state.storageSignedUrls : [];
+  const bucketFileItems = buckets.slice(0, 4).map(bucket => ({ label: bucket.name || bucket.id || "Bucket", value: files.filter(file => String(file.bucketId || file.bucket_id || "") === String(bucket.id)).length }));
+  const bucketByteItems = buckets.slice(0, 4).map(bucket => ({ label: bucket.name || bucket.id || "Bucket", value: files.filter(file => String(file.bucketId || file.bucket_id || "") === String(bucket.id)).reduce((sum, file) => sum + Number(file.sizeBytes || file.size_bytes || 0), 0) }));
 
   const filesForBucket = (bucketId) => files.filter(file => {
     return String(file.bucketId || file.bucket_id || "") === String(bucketId);
@@ -11585,11 +11782,11 @@ function storageView() {
     ${state.storageManagerLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live storage data...</p></div>` : ""}
     ${state.storageManagerError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Storage error: ${safeText(state.storageManagerError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Buckets", counts.buckets ?? buckets.length, "Active storage buckets")}
-      ${card("Files", counts.files ?? files.length, "Tracked files")}
-      ${card("Storage Bytes", counts.totalBytes ?? files.reduce((sum, file) => sum + Number(file.sizeBytes || file.size_bytes || 0), 0), "Total file bytes")}
-      ${card("Signed URLs", counts.signedUrls ?? (state.storageSignedUrls || []).length, "Private file delivery")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="storage">
+      ${liveMetricCard("Buckets", counts.buckets ?? buckets.length, "Active storage buckets", { type: "bars", title: "Bucket status", items: metricStatusBreakdown(buckets, "active"), generatedAt: storageUpdatedAt }, "blue")}
+      ${liveMetricCard("Files", counts.files ?? files.length, "Tracked files", { type: "bars", title: "Files by bucket", items: bucketFileItems, generatedAt: storageUpdatedAt }, "teal")}
+      ${liveMetricCard("Storage Bytes", counts.totalBytes ?? files.reduce((sum, file) => sum + Number(file.sizeBytes || file.size_bytes || 0), 0), "Total file bytes", { type: "bars", title: "Bytes by bucket", items: bucketByteItems, generatedAt: storageUpdatedAt }, "pink")}
+      ${liveMetricCard("Signed URLs", counts.signedUrls ?? storageSignedUrls.length, "Private file delivery", { type: "bars", title: "Signed URL status", items: metricStatusBreakdown(storageSignedUrls, "active"), generatedAt: storageUpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -11671,6 +11868,7 @@ window.loadLiveWebhooks = async function loadLiveWebhooks() {
       state.webhookReceipts = Array.isArray(state.webhookReceipts) ? state.webhookReceipts : [];
       state.webhookReceiptCounts = state.webhookReceiptCounts || {};
     }
+    state.webhooksUpdatedAt = new Date().toISOString();
     state.webhooksLoaded = true;
     state.webhooksLoading = false;
     state.webhooksError = "";
@@ -12089,6 +12287,9 @@ function webhooksView() {
   const counts = state.webhookCounts || {};
   const activeWebhooks = webhooks.filter(item => item.status === "active");
   const failedDeliveries = deliveries.filter(item => item.status === "failed");
+  const webhookTotal = counts.webhooks ?? webhooks.length;
+  const deliveryTotal = counts.deliveries ?? deliveries.length;
+  const webhooksUpdatedAt = state.webhooksUpdatedAt;
 
   return `
     ${hero("Webhooks", "Event subscriptions, signing secrets, delivery logs, retries, and replay controls.")}
@@ -12105,12 +12306,12 @@ function webhooksView() {
     ${state.webhooksLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live webhook data...</p></div>` : ""}
     ${state.webhooksError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Webhook error: ${safeText(state.webhooksError)}</p></div>` : ""}
 
-    <div class="grid cards" data-card-count="5">
-      ${card("Webhooks", counts.webhooks ?? webhooks.length, "Total endpoints")}
-      ${card("Active", counts.active ?? activeWebhooks.length, "Receiving events")}
-      ${card("Deliveries", counts.deliveries ?? deliveries.length, "Logged delivery attempts")}
-      ${card("Failed", counts.failed ?? failedDeliveries.length, "Needs attention")}
-      ${card("Receipts", receipts.length, "Built-in receiver logs")}
+    <div class="grid cards native-metric-grid" data-card-count="5" data-metric-section="webhooks">
+      ${liveMetricCard("Webhooks", webhookTotal, "Total endpoints", { type: "trend", title: "14-day endpoint total", series: metricDailySeries(webhooks, ["createdAt", "created_at"], 14, true, webhookTotal), generatedAt: webhooksUpdatedAt }, "blue")}
+      ${liveMetricCard("Active", counts.active ?? activeWebhooks.length, "Receiving events", { type: "ring", title: "Active endpoint share", current: counts.active ?? activeWebhooks.length, total: webhookTotal, generatedAt: webhooksUpdatedAt }, "teal")}
+      ${liveMetricCard("Deliveries", deliveryTotal, "Logged delivery attempts", { type: "trend", title: "14-day delivery volume", series: metricDailySeries(deliveries, ["createdAt", "created_at", "deliveredAt"], 14, false), generatedAt: webhooksUpdatedAt }, "blue")}
+      ${liveMetricCard("Failed", counts.failed ?? failedDeliveries.length, "Needs attention", { type: "ring", title: "Failed delivery share", current: counts.failed ?? failedDeliveries.length, total: deliveryTotal, generatedAt: webhooksUpdatedAt }, "pink")}
+      ${liveMetricCard("Receipts", receipts.length, "Built-in receiver logs", { type: "trend", title: "14-day receipt volume", series: metricDailySeries(receipts, ["createdAt", "created_at", "receivedAt"], 14, false), generatedAt: webhooksUpdatedAt }, "teal")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -12233,6 +12434,7 @@ window.loadRealtimePageData = async function loadRealtimePageData() {
     state.realtimeChannels = Array.isArray(data.channels) ? data.channels : [];
     state.realtimeClients = Array.isArray(data.clients) ? data.clients : [];
     state.realtimeCounts = data.counts || {};
+    state.realtimeUpdatedAt = new Date().toISOString();
     state.realtimeLoaded = true;
     state.realtimeLoading = false;
     state.realtimeError = "";
@@ -12502,6 +12704,7 @@ window.loadRealtimeV2Center = async function loadRealtimeV2Center() {
     state.realtimeV2Presence = Array.isArray(data.presence) ? data.presence : [];
     state.realtimeV2Policies = Array.isArray(data.policies) ? data.policies : [];
     state.realtimeV2Counts = data.counts || {};
+    state.realtimeV2UpdatedAt = new Date().toISOString();
     state.realtimeV2Loaded = true;
     state.realtimeV2Loading = false;
     state.realtimeV2Error = "";
@@ -12576,6 +12779,9 @@ function realtimeV2Section() {
   const subscriptions = Array.isArray(state.realtimeV2Subscriptions) ? state.realtimeV2Subscriptions : [];
   const presence = Array.isArray(state.realtimeV2Presence) ? state.realtimeV2Presence : [];
   const counts = state.realtimeV2Counts || {};
+  const realtimeV2UpdatedAt = state.realtimeV2UpdatedAt;
+  const connectedV2 = counts.connected ?? connections.filter(c => c.status === "connected").length;
+  const presenceOnline = counts.presenceOnline ?? presence.filter(p => p.presenceState === "online").length;
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -12589,11 +12795,11 @@ function realtimeV2Section() {
     ${state.realtimeV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Realtime V2...</p></div>` : ""}
     ${state.realtimeV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Realtime V2 error: ${safeText(state.realtimeV2Error)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Channels", counts.channels ?? channels.length, "Registered channels")}
-      ${card("Messages", counts.messages ?? messages.length, "Realtime message log")}
-      ${card("Connected", counts.connected ?? connections.filter(c => c.status === "connected").length, "Live clients")}
-      ${card("Presence", counts.presenceOnline ?? presence.filter(p => p.presenceState === "online").length, "Online presence")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="realtime-v2" style="margin-top:18px;">
+      ${liveMetricCard("Channels", counts.channels ?? channels.length, "Registered channels", { type: "bars", title: "Channel status", items: metricStatusBreakdown(channels, "active"), generatedAt: realtimeV2UpdatedAt }, "blue")}
+      ${liveMetricCard("Messages", counts.messages ?? messages.length, "Realtime message log", { type: "trend", title: "14-day message volume", series: metricDailySeries(messages, ["createdAt", "created_at"], 14, false), generatedAt: realtimeV2UpdatedAt }, "teal")}
+      ${liveMetricCard("Connected", connectedV2, "Live clients", { type: "ring", title: "Connected client share", current: connectedV2, total: connections.length, generatedAt: realtimeV2UpdatedAt }, "pink")}
+      ${liveMetricCard("Presence", presenceOnline, "Online presence", { type: "ring", title: "Online presence share", current: presenceOnline, total: presence.length, generatedAt: realtimeV2UpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -12692,6 +12898,7 @@ function realtimeView() {
   const liveStatus = state.realtimeLiveStatus || "disconnected";
   const realtimeSearch = String(state.realtimeSearch || "").toLowerCase().trim();
   const filterChannel = state.realtimeFilterChannel || "";
+  const realtimeUpdatedAt = state.realtimeUpdatedAt;
   const filteredEvents = events.filter(event => {
     const channelMatch = !filterChannel || event.channel === filterChannel;
     const searchable = `${event.id || ""} ${event.eventType || event.event_type || ""} ${event.source || ""} ${event.channel || ""} ${event.message || ""}`.toLowerCase();
@@ -12717,11 +12924,11 @@ function realtimeView() {
     ${state.realtimeLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading realtime events...</p></div>` : ""}
     ${state.realtimeError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Realtime error: ${safeText(state.realtimeError)}</p></div>` : ""}
 
-    <div class="grid cards">
-      ${card("Events", counts.events ?? events.length, "Recorded realtime events")}
-      ${card("Channels", counts.channels ?? channels.length, "Active channel names")}
-      ${card("Consumers", counts.consumers ?? clients.length, "Connected SSE clients")}
-      ${card("Live Stream", liveStatus, "Current browser connection")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="realtime">
+      ${liveMetricCard("Events", counts.events ?? events.length, "Recorded realtime events", { type: "trend", title: "14-day event volume", series: metricDailySeries(events, ["createdAt", "created_at"], 14, false), generatedAt: realtimeUpdatedAt }, "blue")}
+      ${liveMetricCard("Channels", counts.channels ?? channels.length, "Active channel names", { type: "bars", title: "Events by channel", items: channels.slice(0, 4).map(channel => ({ label: channel.channel || "Channel", value: Number(channel.count || 0) })), generatedAt: realtimeUpdatedAt }, "teal")}
+      ${liveMetricCard("Consumers", counts.consumers ?? clients.length, "Connected SSE clients", { type: "bars", title: "Consumer status", items: metricStatusBreakdown(clients, "connected"), generatedAt: realtimeUpdatedAt }, "pink")}
+      ${liveMetricCard("Live Stream", liveStatus, "Current browser connection", { type: "progress", title: "Browser stream status", current: String(liveStatus).toLowerCase() === "connected" ? 1 : 0, total: 1, generatedAt: realtimeUpdatedAt }, "blue")}
     </div>
 
     <div class="grid two" style="margin-top:18px;">
@@ -12832,6 +13039,7 @@ window.loadEdgeFunctions = async function loadEdgeFunctions() {
     state.edgeFunctions = Array.isArray(data.functions) ? data.functions : [];
     state.edgeFunctionRuns = Array.isArray(data.runs) ? data.runs : [];
     state.edgeFunctionCounts = data.counts || {};
+    state.functionsUpdatedAt = new Date().toISOString();
     state.edgeFunctionsLoaded = true;
     state.edgeFunctionsLoading = false;
     state.edgeFunctionsError = "";
@@ -13019,6 +13227,7 @@ window.loadEdgeFunctionsV2Center = async function loadEdgeFunctionsV2Center() {
     state.edgeFunctionsV2Secrets = Array.isArray(data.secrets) ? data.secrets : [];
     state.edgeFunctionsV2Runs = Array.isArray(data.runs) ? data.runs : [];
     state.edgeFunctionsV2Counts = data.counts || {};
+    state.functionsV2UpdatedAt = new Date().toISOString();
     state.edgeFunctionsV2Loaded = true;
     state.edgeFunctionsV2Loading = false;
     state.edgeFunctionsV2Error = "";
@@ -13211,6 +13420,8 @@ function edgeFunctionsV2Section() {
   const secrets = Array.isArray(state.edgeFunctionsV2Secrets) ? state.edgeFunctionsV2Secrets : [];
   const runs = Array.isArray(state.edgeFunctionsV2Runs) ? state.edgeFunctionsV2Runs : [];
   const counts = state.edgeFunctionsV2Counts || {};
+  const functionsV2UpdatedAt = state.functionsV2UpdatedAt;
+  const v2Ready = counts.v2Ready ?? functions.filter(fn => fn.currentVersionId && fn.deploymentId).length;
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -13223,11 +13434,11 @@ function edgeFunctionsV2Section() {
     ${state.edgeFunctionsV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Edge Functions V2...</p></div>` : ""}
     ${state.edgeFunctionsV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Edge Functions V2 error: ${safeText(state.edgeFunctionsV2Error)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("V2 Ready", counts.v2Ready ?? functions.filter(fn => fn.currentVersionId && fn.deploymentId).length, "Versioned functions")}
-      ${card("Versions", counts.versions ?? versions.length, "Function versions")}
-      ${card("Deployments", counts.deployments ?? deployments.length, "Deployment records")}
-      ${card("Secrets", counts.secrets ?? secrets.length, "Secret refs only")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="functions-v2" style="margin-top:18px;">
+      ${liveMetricCard("V2 Ready", v2Ready, "Versioned functions", { type: "ring", title: "Versioned function share", current: v2Ready, total: functions.length, generatedAt: functionsV2UpdatedAt }, "blue")}
+      ${liveMetricCard("Versions", counts.versions ?? versions.length, "Function versions", { type: "trend", title: "14-day version volume", series: metricDailySeries(versions, ["createdAt", "created_at"], 14, false), generatedAt: functionsV2UpdatedAt }, "teal")}
+      ${liveMetricCard("Deployments", counts.deployments ?? deployments.length, "Deployment records", { type: "trend", title: "14-day deployment volume", series: metricDailySeries(deployments, ["createdAt", "created_at", "deployedAt"], 14, false), generatedAt: functionsV2UpdatedAt }, "pink")}
+      ${liveMetricCard("Secrets", counts.secrets ?? secrets.length, "Secret refs only", { type: "bars", title: "Secret status", items: metricStatusBreakdown(secrets, "active"), generatedAt: functionsV2UpdatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
@@ -13324,12 +13535,13 @@ function functionsChartGrid(functions, runs, counts) {
   const activeRoutes = counts.active ?? functions.filter(item => item.status === "active").length;
   const totalRuns = counts.runs ?? runs.length;
   const failedRuns = counts.failedRuns ?? runs.filter(item => item.status === "failed").length;
+  const functionsUpdatedAt = state.functionsUpdatedAt;
   return `
-    <div class="goodos-functions-chart-grid-v124">
-      ${functionsChartCard("Function Deploy", "7 day trend", `${safeText(String(totalFunctions))}`, "Deploy Trend", "line")}
-      ${functionsChartCard("Active Routes", "live execution routes", `${safeText(String(activeRoutes))}`, "Route Activity", "bars")}
-      ${functionsChartCard("Execution Logs", "newest function runs", `${safeText(String(totalRuns))}`, "Run Volume", "line")}
-      ${functionsChartCard("Failed Runs", "needs review", `${safeText(String(failedRuns))}`, "Run Health", "health")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="functions">
+      ${liveMetricCard("Function Deploy", totalFunctions, "Registered functions", { type: "trend", title: "14-day function total", series: metricDailySeries(functions, ["createdAt", "created_at"], 14, true, totalFunctions), generatedAt: functionsUpdatedAt }, "blue")}
+      ${liveMetricCard("Active Routes", activeRoutes, "Live execution routes", { type: "ring", title: "Active route share", current: activeRoutes, total: totalFunctions, generatedAt: functionsUpdatedAt }, "teal")}
+      ${liveMetricCard("Execution Logs", totalRuns, "Recorded function runs", { type: "trend", title: "14-day run volume", series: metricDailySeries(runs, ["createdAt", "created_at", "startedAt"], 14, false), generatedAt: functionsUpdatedAt }, "blue")}
+      ${liveMetricCard("Failed Runs", failedRuns, "Needs review", { type: "ring", title: "Failed run share", current: failedRuns, total: totalRuns, generatedAt: functionsUpdatedAt }, "pink")}
     </div>`;
 }
 
@@ -13404,6 +13616,20 @@ function functionsView() {
         </tbody>
       </table>
     </div>
+  `;
+}
+
+
+function apiKeysView() {
+  setTimeout(() => {
+    if (typeof window.goodosRenderApiKeysPageV60 === "function") {
+      window.goodosRenderApiKeysPageV60();
+    }
+  }, 0);
+
+  return `
+    ${hero("API Keys", "Loading live key records, scopes, restrictions, and status metrics.")}
+    <div class="card"><p class="muted">Loading API key data...</p></div>
   `;
 }
 
@@ -13577,6 +13803,11 @@ document.querySelectorAll("[data-view]").forEach(btn => {
     document.querySelectorAll("[data-view]").forEach(x => x.classList.remove("active"));
     btn.classList.add("active");
     state.view = btn.dataset.view;
+    if (state.view === "api" && window.location.hash !== "#api-keys") {
+      window.location.hash = "api-keys";
+    } else if (state.view !== "api" && window.location.hash === "#api-keys") {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
     render();
   });
 });
@@ -13914,10 +14145,14 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
   function countRestricted(keys) {
     return keys.filter(function (key) {
-      var text = JSON.stringify(key || {}).toLowerCase();
-      return text.indexOf("restricted") !== -1 ||
-        text.indexOf("scoped") !== -1 ||
-        text.indexOf("scope") !== -1;
+      var allowedApps = key.allowedAppIds || key.allowed_app_ids;
+      if (Array.isArray(allowedApps)) {
+        return allowedApps.length > 0 && allowedApps.indexOf("*") === -1;
+      }
+
+      return key.restricted === true ||
+        key.isRestricted === true ||
+        String(key.accessMode || key.access_mode || "").toLowerCase() === "restricted";
     }).length;
   }
 
@@ -14020,6 +14255,17 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
       restricted = data.summary.restricted || restricted;
     }
 
+    var apiKeysUpdatedAt = new Date().toISOString();
+    var apiKeyStatusItems = metricStatusBreakdown(keys, "active");
+    var apiKeyScopeCounts = {};
+    keys.forEach(function (key) {
+      var scope = keyScope(key);
+      apiKeyScopeCounts[scope] = (apiKeyScopeCounts[scope] || 0) + 1;
+    });
+    var apiKeyScopeItems = Object.keys(apiKeyScopeCounts).map(function (label) {
+      return { label: label, value: apiKeyScopeCounts[label] };
+    }).sort(function (a, b) { return b.value - a.value; }).slice(0, 4);
+
     var errorHtml = result.error ? '<div class="goodos-api-keys-error-v60">Live API key data could not be loaded: ' + escapeHtml(result.error) + '</div>' : "";
 
     getRoot().innerHTML = '' +
@@ -14039,11 +14285,11 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
         errorHtml +
 
-        '<div class="goodos-api-keys-grid-v60">' +
-          '<article class="goodos-api-keys-kpi-v60"><small>API Keys</small><strong>' + escapeHtml(total) + '</strong><span>Live key records</span></article>' +
-          '<article class="goodos-api-keys-kpi-v60"><small>Active Keys</small><strong>' + escapeHtml(active) + '</strong><span>Currently usable keys</span></article>' +
-          '<article class="goodos-api-keys-kpi-v60"><small>Restricted Keys</small><strong>' + escapeHtml(restricted) + '</strong><span>Scoped or limited keys</span></article>' +
-          '<article class="goodos-api-keys-kpi-v60"><small>Scopes</small><strong>' + escapeHtml(scopes.size || 0) + '</strong><span>Detected permission groups</span></article>' +
+        '<div class="goodos-api-keys-grid-v60 native-metric-grid" data-card-count="4" data-metric-section="api-keys">' +
+          liveMetricCard("API Keys", total, "Live key records", { type: "trend", title: "14-day key total", series: metricDailySeries(keys, ["createdAt", "created_at"], 14, true, total), generatedAt: apiKeysUpdatedAt }, "blue") +
+          liveMetricCard("Active Keys", active, "Currently usable keys", { type: "ring", title: "Active key share", current: active, total: total, generatedAt: apiKeysUpdatedAt }, "teal") +
+          liveMetricCard("Restricted Keys", restricted, "Scoped or limited keys", { type: "ring", title: "Restricted key share", current: restricted, total: total, generatedAt: apiKeysUpdatedAt }, "pink") +
+          liveMetricCard("Scopes", scopes.size || 0, "Detected permission groups", { type: "bars", title: "Key scope distribution", items: apiKeyScopeItems, generatedAt: apiKeysUpdatedAt }, "blue") +
         '</div>' +
 
         '<div class="goodos-api-keys-section-head-v60">' +
@@ -14061,6 +14307,8 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 
     markApiKeysActive();
   }
+
+  window.goodosRenderApiKeysPageV60 = renderApiKeysPage;
 
   function run() {
     lockApiKeysRow();
