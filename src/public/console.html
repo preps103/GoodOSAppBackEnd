@@ -10545,6 +10545,7 @@ window.loadJobsV2Center = async function loadJobsV2Center() {
     state.jobsV2Heartbeats = Array.isArray(data.heartbeats) ? data.heartbeats : [];
     state.jobsV2QueueItems = Array.isArray(data.queueItems) ? data.queueItems : [];
     state.jobsV2Counts = data.counts || {};
+    state.jobsV2UpdatedAt = new Date().toISOString();
     state.jobsV2Loaded = true;
     state.jobsV2Loading = false;
     state.jobsV2Error = "";
@@ -10655,6 +10656,18 @@ function jobsV2Section() {
   const heartbeats = Array.isArray(state.jobsV2Heartbeats) ? state.jobsV2Heartbeats : [];
   const queueItems = Array.isArray(state.jobsV2QueueItems) ? state.jobsV2QueueItems : [];
   const counts = state.jobsV2Counts || {};
+  const jobsTotal = counts.jobs ?? jobs.length;
+  const activeJobs = counts.activeJobs ?? jobs.filter(item => item.status === "active").length;
+  const onlineWorkers = counts.onlineWorkers ?? heartbeats.filter(item => item.status === "online").length;
+  const failedRuns = counts.failedRuns ?? runs.filter(item => item.status === "failed").length;
+  const generatedAt = state.jobsV2UpdatedAt || state.settingsUpdatedAt;
+  const jobStatuses = metricStatusBreakdown(jobs, "Scheduled");
+  const failedRunSeries = metricDailySeries(
+    runs.filter(item => item.status === "failed"),
+    ["startedAt", "started_at", "createdAt", "created_at"],
+    14,
+    false
+  );
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -10668,11 +10681,11 @@ function jobsV2Section() {
     ${state.jobsV2Loading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading Jobs V2...</p></div>` : ""}
     ${state.jobsV2Error ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Jobs V2 error: ${safeText(state.jobsV2Error)}</p></div>` : ""}
 
-    <div class="grid cards" style="margin-top:18px;">
-      ${card("Jobs", counts.jobs ?? jobs.length, "Scheduled handlers")}
-      ${card("Active Jobs", counts.activeJobs ?? jobs.filter(item => item.status === "active").length, "Enabled schedules")}
-      ${card("Online Workers", counts.onlineWorkers ?? heartbeats.filter(item => item.status === "online").length, "PM2 worker heartbeat")}
-      ${card("Failed Runs", counts.failedRuns ?? runs.filter(item => item.status === "failed").length, "Needs review")}
+    <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="settings-jobs" style="margin-top:18px;">
+      ${liveMetricCard("Jobs", jobsTotal, "Scheduled handlers", { type: "bars", title: "Schedule status", items: jobStatuses, generatedAt }, "blue")}
+      ${liveMetricCard("Active Jobs", activeJobs, "Enabled schedules", { type: "ring", title: "Active schedule share", current: activeJobs, total: jobsTotal, generatedAt }, "teal")}
+      ${liveMetricCard("Online Workers", onlineWorkers, "PM2 worker heartbeat", { type: "progress", title: "Worker availability", current: onlineWorkers, total: heartbeats.length, generatedAt }, "pink")}
+      ${liveMetricCard("Failed Runs", failedRuns, "Needs review", { type: "trend", title: "14-day failure trend", series: failedRunSeries, generatedAt }, "blue")}
     </div>
 
     <div class="card" style="margin-top:18px;">
