@@ -1,0 +1,419 @@
+:root {
+  --backend-ada-accent: #7c6cff;
+  --backend-ada-cyan: #47d7ef;
+  --backend-ada-surface: rgba(12, 17, 30, 0.985);
+  --backend-ada-border: rgba(137, 151, 192, 0.2);
+}
+
+.backend-ada-root {
+  position: relative;
+  z-index: 10000;
+}
+
+.backend-ada-trigger {
+  position: fixed;
+  right: 22px;
+  bottom: 76px;
+  z-index: 10000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 92px;
+  height: 56px;
+  padding: 0 17px;
+  border: 1px solid rgba(171, 163, 255, 0.5);
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(145deg, #7768ff, #5145cd 60%, #3069bd);
+  box-shadow: 0 18px 44px rgba(38, 30, 112, 0.42), inset 0 1px rgba(255, 255, 255, 0.24);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.backend-ada-trigger:hover {
+  filter: brightness(1.08);
+  transform: translateY(-3px);
+  box-shadow: 0 23px 52px rgba(38, 30, 112, 0.52), inset 0 1px rgba(255, 255, 255, 0.28);
+}
+
+.backend-ada-trigger:active {
+  transform: translateY(-1px);
+}
+
+.backend-ada-trigger svg,
+.backend-ada-heading-icon svg,
+.backend-ada-setting-icon svg,
+.backend-ada-close svg,
+.backend-ada-reset svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.backend-ada-trigger-label {
+  line-height: 1;
+}
+
+.backend-ada-active-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  color: #332a86;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.backend-ada-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 144px;
+  z-index: 10001;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  width: min(390px, calc(100vw - 32px));
+  max-height: min(690px, calc(100vh - 168px));
+  border: 1px solid var(--backend-ada-border);
+  border-radius: 22px;
+  color: #edf1ff;
+  background:
+    radial-gradient(circle at 100% 0, rgba(83, 103, 207, 0.2), transparent 38%),
+    linear-gradient(155deg, var(--backend-ada-surface), rgba(8, 12, 23, 0.995));
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.58), inset 0 1px rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(24px) saturate(125%);
+  animation: backend-ada-panel-enter 220ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.backend-ada-panel[hidden] {
+  display: none;
+}
+
+.backend-ada-panel-header,
+.backend-ada-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 18px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.backend-ada-panel-header {
+  border-bottom: 1px solid rgba(137, 151, 192, 0.13);
+}
+
+.backend-ada-panel-footer {
+  border-top: 1px solid rgba(137, 151, 192, 0.13);
+  color: #8c96ac;
+  font-size: 10px;
+}
+
+.backend-ada-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.backend-ada-heading-icon,
+.backend-ada-setting-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(124, 108, 255, 0.28);
+  color: #a9a1ff;
+  background: rgba(124, 108, 255, 0.11);
+}
+
+.backend-ada-heading-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+}
+
+.backend-ada-title,
+.backend-ada-subtitle,
+.backend-ada-setting-title,
+.backend-ada-setting-description {
+  display: block;
+}
+
+.backend-ada-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.backend-ada-subtitle {
+  margin-top: 3px;
+  color: #919aae;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.backend-ada-close,
+.backend-ada-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(137, 151, 192, 0.16);
+  color: #aab2c5;
+  background: rgba(255, 255, 255, 0.035);
+  font: inherit;
+  cursor: pointer;
+}
+
+.backend-ada-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+}
+
+.backend-ada-panel-content {
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.backend-ada-section {
+  padding: 14px;
+  border: 1px solid rgba(137, 151, 192, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.backend-ada-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 11px;
+  color: #aab2c5;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.backend-ada-section-heading strong {
+  color: var(--backend-ada-cyan);
+}
+
+.backend-ada-text-sizes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.backend-ada-text-sizes button {
+  min-height: 42px;
+  padding: 0 8px;
+  border: 1px solid rgba(137, 151, 192, 0.14);
+  border-radius: 11px;
+  color: #9ca6bb;
+  background: rgba(255, 255, 255, 0.025);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.backend-ada-text-sizes button:hover,
+.backend-ada-text-sizes button.is-active {
+  color: #fff;
+  border-color: rgba(124, 108, 255, 0.54);
+  background: rgba(124, 108, 255, 0.15);
+}
+
+.backend-ada-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.backend-ada-setting {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px 11px;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #edf1ff;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.backend-ada-setting:hover {
+  border-color: rgba(137, 151, 192, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.backend-ada-setting.is-active {
+  border-color: rgba(124, 108, 255, 0.25);
+  background: rgba(124, 108, 255, 0.075);
+}
+
+.backend-ada-setting-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+.backend-ada-setting-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.backend-ada-setting-copy {
+  min-width: 0;
+}
+
+.backend-ada-setting-title {
+  color: #edf1ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.backend-ada-setting-description {
+  margin-top: 3px;
+  color: #828ca2;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.backend-ada-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border: 1px solid rgba(137, 151, 192, 0.18);
+  border-radius: 999px;
+  background: #293146;
+}
+
+.backend-ada-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #a9b1c1;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.backend-ada-switch.is-active {
+  border-color: rgba(124, 108, 255, 0.68);
+  background: #6658e8;
+}
+
+.backend-ada-switch.is-active span {
+  background: #fff;
+  transform: translateX(16px);
+}
+
+.backend-ada-reset {
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.backend-ada-reset svg {
+  width: 15px;
+  height: 15px;
+}
+
+.backend-ada-close:hover,
+.backend-ada-reset:hover {
+  color: #fff;
+  border-color: rgba(169, 161, 255, 0.42);
+  background: rgba(124, 108, 255, 0.12);
+}
+
+.backend-ada-trigger:focus-visible,
+.backend-ada-panel button:focus-visible {
+  outline: 3px solid rgba(71, 215, 239, 0.55);
+  outline-offset: 3px;
+}
+
+html.ada-high-contrast #app,
+html.ada-high-contrast #login {
+  filter: contrast(1.2);
+}
+
+html.ada-grayscale #app,
+html.ada-grayscale #login {
+  filter: grayscale(1);
+}
+
+html.ada-high-contrast.ada-grayscale #app,
+html.ada-high-contrast.ada-grayscale #login {
+  filter: grayscale(1) contrast(1.2);
+}
+
+html.ada-reduce-motion *,
+html.ada-reduce-motion *::before,
+html.ada-reduce-motion *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+html.ada-highlight-links #app a,
+html.ada-highlight-links #login a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+}
+
+html.ada-focus-indicators #app :focus-visible,
+html.ada-focus-indicators #login :focus-visible {
+  outline: 3px solid var(--backend-ada-cyan) !important;
+  outline-offset: 3px !important;
+}
+
+@keyframes backend-ada-panel-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 760px) {
+  .backend-ada-trigger {
+    right: 14px;
+    bottom: 70px;
+    min-width: 84px;
+    height: 52px;
+    padding: 0 14px;
+  }
+
+  .backend-ada-panel {
+    right: 14px;
+    bottom: 132px;
+    width: calc(100vw - 28px);
+    max-height: calc(100vh - 152px);
+    border-radius: 19px;
+  }
+}

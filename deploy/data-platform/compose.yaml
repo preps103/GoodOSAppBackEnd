@@ -19,6 +19,7 @@ services:
       PGRST_DB_MAX_ROWS: "1000"
       PGRST_SERVER_HOST: 127.0.0.1
       PGRST_SERVER_PORT: "8300"
+      PGRST_ADMIN_SERVER_PORT: "8301"
       PGRST_SERVER_TIMING_ENABLED: "true"
       PGRST_LOG_LEVEL: info
       PGRST_OPENAPI_MODE: follow-privileges
