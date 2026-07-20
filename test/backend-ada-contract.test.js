@@ -10,8 +10,11 @@ const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "u
 
 test("backend console loads the themed ADA control", () => {
   const consoleHtml = read("src/public/console.html");
+  const routes = read("src/routes/index.js");
   assert.match(consoleHtml, /href="\/backend-ada\.css"/);
   assert.match(consoleHtml, /src="\/backend-ada\.js"/);
+  assert.match(routes, /router\.get\("\/backend-ada\.css"/);
+  assert.match(routes, /router\.get\("\/backend-ada\.js"/);
 });
 
 test("ADA control preserves the GoodOS accessibility contract", () => {

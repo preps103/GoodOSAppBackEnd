@@ -159,6 +159,16 @@ router.get("/account-settings.css", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/account-settings.css"));
 });
 
+router.get("/backend-ada.js", (req, res) => {
+  res.type("application/javascript");
+  res.sendFile(path.join(__dirname, "../public/backend-ada.js"));
+});
+
+router.get("/backend-ada.css", (req, res) => {
+  res.type("text/css");
+  res.sendFile(path.join(__dirname, "../public/backend-ada.css"));
+});
+
 /* GOODOS_UPDATE_SITES_PAGE */
 router.get("/update-sites", (req, res) => {
   res.set(
