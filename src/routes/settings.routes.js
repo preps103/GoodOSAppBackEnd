@@ -222,7 +222,9 @@ router.get(
         "Cache-Control":
           "public, max-age=31536000, immutable",
         "X-Content-Type-Options":
-          "nosniff"
+          "nosniff",
+        "Cross-Origin-Resource-Policy":
+          "cross-origin"
       });
 
       return res.sendFile(
