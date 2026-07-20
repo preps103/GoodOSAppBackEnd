@@ -17,6 +17,7 @@ test("data-plane migration creates restricted roles, session checks, RLS, and an
   assert.match(migration, /CREATE ROLE goodos_authenticated NOLOGIN NOINHERIT NOBYPASSRLS/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION goodos_auth\.check_session/);
   assert.match(migration, /ALTER TABLE public_goodos_demo_items ENABLE ROW LEVEL SECURITY/);
+  assert.match(migration, /CREATE POLICY goodos_demo_items_backend_service/);
   assert.match(migration, /security_invoker = true/);
   assert.match(migration, /REVOKE ALL ON goodos_api\.demo_items FROM goodos_anon/);
 });

@@ -135,6 +135,16 @@ CREATE POLICY goodos_demo_items_authenticated
     organization_id = goodos_auth.organization_id()
   );
 
+DROP POLICY IF EXISTS goodos_demo_items_backend_service
+  ON public_goodos_demo_items;
+
+CREATE POLICY goodos_demo_items_backend_service
+  ON public_goodos_demo_items
+  FOR ALL
+  TO goodapp_backend_user
+  USING (true)
+  WITH CHECK (true);
+
 CREATE OR REPLACE VIEW goodos_api.demo_items
 WITH (security_invoker = true, security_barrier = true)
 AS
