@@ -1,0 +1,217 @@
+:root {
+  --goodos-table-region-height: 460px;
+}
+
+.goodos-long-table-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 44px;
+  margin: -4px 0 12px;
+}
+
+.goodos-long-table-count {
+  color: rgba(203, 213, 225, 0.58);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goodos-long-table-toggle,
+.goodos-mobile-nav-toggle {
+  min-height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.82);
+  color: rgba(241, 245, 249, 0.94);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  touch-action: manipulation;
+}
+
+.goodos-long-table-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 13px;
+}
+
+.goodos-long-table-toggle:hover,
+.goodos-long-table-toggle:focus-visible,
+.goodos-mobile-nav-toggle:hover,
+.goodos-mobile-nav-toggle:focus-visible {
+  border-color: rgba(129, 140, 248, 0.72);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+.goodos-long-table-toggle-icon {
+  width: 16px;
+  text-align: center;
+  color: #a5b4fc;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.goodos-long-table-shell {
+  width: 100%;
+  max-width: 100%;
+  max-height: min(var(--goodos-table-region-height), calc(100vh - 250px)) !important;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 14px;
+}
+
+.goodos-long-table-shell > table {
+  min-width: 720px;
+}
+
+.goodos-long-table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #171d31;
+  box-shadow: 0 1px 0 rgba(148, 163, 184, 0.16);
+}
+
+.goodos-long-table-shell[data-collapsed="true"] {
+  display: none !important;
+}
+
+.goodos-mobile-nav-toggle {
+  display: none;
+  margin-left: auto;
+  padding: 9px 12px;
+}
+
+@media (max-width: 820px) {
+  :root {
+    --goodos-table-region-height: 400px;
+  }
+
+  .sidebar {
+    position: sticky !important;
+    top: 0;
+    z-index: 80;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+  }
+
+  .sidebar .brand {
+    align-items: center;
+    padding: 0 !important;
+  }
+
+  .goodos-mobile-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar[data-mobile-menu-open="false"] .nav {
+    display: none !important;
+  }
+
+  .sidebar[data-mobile-menu-open="true"] .nav {
+    display: grid !important;
+    padding-top: 10px;
+  }
+
+  .topbar {
+    padding-inline: 14px !important;
+  }
+
+  .session {
+    width: 100%;
+    margin-left: 0 !important;
+    justify-content: space-between !important;
+  }
+
+  .section-head > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .goodos-long-table-shell > table {
+    min-width: 680px;
+  }
+}
+
+@media (max-width: 540px) {
+  :root {
+    --goodos-table-region-height: 340px;
+  }
+
+  .sidebar {
+    padding: 12px 14px !important;
+  }
+
+  .sidebar .brand .logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+  }
+
+  .sidebar .brand p {
+    display: none;
+  }
+
+  .topbar .session {
+    gap: 8px;
+  }
+
+  .topbar .account-pill {
+    max-width: min(58vw, 230px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .content {
+    padding: 14px 12px 90px !important;
+  }
+
+  .goodos-long-table-control {
+    align-items: stretch;
+    flex-direction: column;
+    margin-bottom: 10px;
+  }
+
+  .goodos-long-table-count {
+    order: 2;
+    padding-left: 2px;
+  }
+
+  .goodos-long-table-toggle {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .goodos-long-table-shell > table {
+    min-width: 640px;
+  }
+
+  .update-sites-link {
+    right: 12px !important;
+    bottom: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goodos-long-table-toggle,
+  .goodos-mobile-nav-toggle {
+    transition: none !important;
+  }
+}
