@@ -2,6 +2,8 @@
 
 const express =
   require("express");
+const multer =
+  require("multer");
 
 const authRequired =
   require("../middleware/authRequired");
@@ -19,6 +21,50 @@ const settingsService =
 
 const router =
   express.Router();
+
+const avatarUpload = multer({
+  storage:
+    multer.memoryStorage(),
+  limits: {
+    files: 1,
+    fileSize:
+      2 * 1024 * 1024
+  }
+});
+
+function receiveAvatar(
+  req,
+  res,
+  next
+) {
+  avatarUpload.single("avatar")(
+    req,
+    res,
+    uploadError => {
+      if (!uploadError) {
+        return next();
+      }
+
+      if (
+        uploadError.code ===
+        "LIMIT_FILE_SIZE"
+      ) {
+        return error(
+          res,
+          "Profile photos must be 2 MB or smaller.",
+          413
+        );
+      }
+
+      return error(
+        res,
+        uploadError.message ||
+          "Profile photo upload failed.",
+        400
+      );
+    }
+  );
+}
 
 function dbQuery(
   sql,
@@ -105,7 +151,16 @@ router.get(
               to_regclass(
                 'public.backend_settings_export_requests'
               ) IS NOT NULL
-                AS exports_ready
+                AS exports_ready,
+
+              EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE
+                  table_schema = 'public'
+                  AND table_name = 'users'
+                  AND column_name = 'avatar_url'
+              ) AS avatar_ready
           `
         );
 
@@ -123,7 +178,12 @@ router.get(
             Boolean(
               row.preferences_ready &&
               row.workspace_ready &&
-              row.exports_ready
+              row.exports_ready &&
+              row.avatar_ready
+            ),
+          avatarReady:
+            Boolean(
+              row.avatar_ready
             )
         }
       );
@@ -139,8 +199,124 @@ router.get(
   }
 );
 
+router.get(
+  "/avatars/:userId",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const avatar =
+        await settingsService
+          .getAvatarForPublicUser(
+            req.params.userId
+          );
+
+      res.set({
+        "Content-Type":
+          avatar.contentType,
+        "Content-Length":
+          String(
+            avatar.sizeBytes
+          ),
+        "Cache-Control":
+          "public, max-age=31536000, immutable",
+        "X-Content-Type-Options":
+          "nosniff"
+      });
+
+      return res.sendFile(
+        avatar.filePath
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Profile avatar was not found"
+      );
+    }
+  }
+);
+
 router.use(
   authRequired
+);
+
+router.post(
+  "/avatar",
+  receiveAvatar,
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const profile =
+        await settingsService
+          .saveAvatarForUser({
+            userId:
+              req.user.id,
+            buffer:
+              req.file?.buffer,
+            ipAddress:
+              req.ip
+          });
+
+      return success(
+        res,
+        {
+          profile,
+          message:
+            "Profile photo saved."
+        }
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Failed to save profile photo"
+      );
+    }
+  }
+);
+
+router.delete(
+  "/avatar",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const profile =
+        await settingsService
+          .removeAvatarForUser({
+            userId:
+              req.user.id,
+            ipAddress:
+              req.ip
+          });
+
+      return success(
+        res,
+        {
+          profile,
+          message:
+            "Profile photo removed."
+        }
+      );
+    } catch (
+      requestError
+    ) {
+      return sendFailure(
+        res,
+        requestError,
+        "Failed to remove profile photo"
+      );
+    }
+  }
 );
 
 router.get(

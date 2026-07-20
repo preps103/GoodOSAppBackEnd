@@ -14,6 +14,9 @@ function publicUser(row) {
     firstName: row.first_name,
     lastName: row.last_name,
     displayName: row.display_name,
+    avatarUrl: row.avatar_url || null,
+    avatarUpdatedAt:
+      row.avatar_updated_at || null,
     platformRole: row.platform_role,
     status: row.status,
     emailVerified: row.email_verified,

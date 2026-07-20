@@ -2,6 +2,18 @@
 
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const path = require("path");
+
+const fileSystem = fs.promises;
+const PROFILE_AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+const PROFILE_AVATAR_ROOT = path.resolve(
+  process.env.GOODOS_PROFILE_AVATAR_DIR ||
+    path.join(process.cwd(), "storage", "profile-avatars")
+);
+const PROFILE_AVATAR_PUBLIC_BASE = String(
+  process.env.PUBLIC_BACKEND_URL || "https://backend.goodos.app"
+).replace(/\/+$/, "");
 
 const database =
   require("../config/database");
@@ -140,6 +152,10 @@ function publicProfile(row) {
       row.display_name || "",
     phone:
       row.phone || "",
+    avatarUrl:
+      row.avatar_url || null,
+    avatarUpdatedAt:
+      row.avatar_updated_at || null,
     platformRole:
       row.platform_role,
     status:
@@ -231,6 +247,8 @@ async function getProfile(
           last_name,
           display_name,
           phone,
+          avatar_url,
+          avatar_updated_at,
           platform_role,
           status,
           email_verified,
@@ -683,6 +701,8 @@ async function updateProfileForUser({
           last_name,
           display_name,
           phone,
+          avatar_url,
+          avatar_updated_at,
           platform_role,
           status,
           email_verified,
@@ -722,6 +742,353 @@ async function updateProfileForUser({
   return publicProfile(
     result.rows[0]
   );
+}
+
+function detectAvatarType(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) {
+    return null;
+  }
+
+  if (
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[2] === 0xff
+  ) {
+    return {
+      contentType: "image/jpeg",
+      extension: "jpg"
+    };
+  }
+
+  if (
+    buffer.subarray(0, 8).equals(
+      Buffer.from([
+        0x89, 0x50, 0x4e, 0x47,
+        0x0d, 0x0a, 0x1a, 0x0a
+      ])
+    )
+  ) {
+    return {
+      contentType: "image/png",
+      extension: "png"
+    };
+  }
+
+  if (
+    buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buffer.subarray(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return {
+      contentType: "image/webp",
+      extension: "webp"
+    };
+  }
+
+  return null;
+}
+
+function safeAvatarPath(fileName) {
+  const normalized = path.basename(
+    String(fileName || "")
+  );
+
+  if (!normalized || normalized !== fileName) {
+    return null;
+  }
+
+  const filePath = path.join(
+    PROFILE_AVATAR_ROOT,
+    normalized
+  );
+
+  return filePath.startsWith(
+    PROFILE_AVATAR_ROOT + path.sep
+  )
+    ? filePath
+    : null;
+}
+
+async function getAvatarForPublicUser(
+  userId
+) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      String(userId || "")
+    )
+  ) {
+    throw serviceError(
+      "Profile avatar was not found.",
+      404
+    );
+  }
+
+  const result = await dbQuery(
+    `
+      SELECT
+        avatar_file_name,
+        avatar_content_type,
+        avatar_size_bytes,
+        avatar_updated_at
+      FROM users
+      WHERE
+        id = $1::uuid
+        AND status = 'active'
+      LIMIT 1
+    `,
+    [userId]
+  );
+
+  const row = result.rows[0];
+  const filePath = safeAvatarPath(
+    row?.avatar_file_name
+  );
+
+  if (!row || !filePath) {
+    throw serviceError(
+      "Profile avatar was not found.",
+      404
+    );
+  }
+
+  try {
+    await fileSystem.access(
+      filePath,
+      fs.constants.R_OK
+    );
+  } catch {
+    throw serviceError(
+      "Profile avatar was not found.",
+      404
+    );
+  }
+
+  return {
+    filePath,
+    contentType:
+      row.avatar_content_type ||
+      "application/octet-stream",
+    sizeBytes:
+      Number(
+        row.avatar_size_bytes || 0
+      ),
+    updatedAt:
+      row.avatar_updated_at || null
+  };
+}
+
+async function saveAvatarForUser({
+  userId,
+  buffer,
+  ipAddress
+}) {
+  if (
+    !Buffer.isBuffer(buffer) ||
+    buffer.length === 0
+  ) {
+    throw serviceError(
+      "Choose a profile photo to upload.",
+      400
+    );
+  }
+
+  if (
+    buffer.length >
+    PROFILE_AVATAR_MAX_BYTES
+  ) {
+    throw serviceError(
+      "Profile photos must be 2 MB or smaller.",
+      413
+    );
+  }
+
+  const detected =
+    detectAvatarType(buffer);
+
+  if (!detected) {
+    throw serviceError(
+      "Use a JPEG, PNG, or WebP profile photo.",
+      415
+    );
+  }
+
+  const currentResult =
+    await dbQuery(
+      `
+        SELECT avatar_file_name
+        FROM users
+        WHERE id = $1::uuid
+        LIMIT 1
+      `,
+      [userId]
+    );
+
+  if (!currentResult.rows[0]) {
+    throw serviceError(
+      "User account was not found.",
+      404
+    );
+  }
+
+  await fileSystem.mkdir(
+    PROFILE_AVATAR_ROOT,
+    {
+      recursive: true,
+      mode: 0o750
+    }
+  );
+
+  const fileName =
+    `${userId}-${crypto.randomUUID()}.${detected.extension}`;
+  const finalPath =
+    safeAvatarPath(fileName);
+  const temporaryPath =
+    `${finalPath}.uploading`;
+
+  await fileSystem.writeFile(
+    temporaryPath,
+    buffer,
+    {
+      mode: 0o640,
+      flag: "wx"
+    }
+  );
+
+  await fileSystem.rename(
+    temporaryPath,
+    finalPath
+  );
+
+  const avatarUrl =
+    `${PROFILE_AVATAR_PUBLIC_BASE}/api/settings/avatars/${userId}?v=${Date.now()}`;
+
+  try {
+    await dbQuery(
+      `
+        UPDATE users
+        SET
+          avatar_url = $2,
+          avatar_file_name = $3,
+          avatar_content_type = $4,
+          avatar_size_bytes = $5,
+          avatar_updated_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1::uuid
+      `,
+      [
+        userId,
+        avatarUrl,
+        fileName,
+        detected.contentType,
+        buffer.length
+      ]
+    );
+  } catch (requestError) {
+    await fileSystem.unlink(
+      finalPath
+    ).catch(() => {});
+    throw requestError;
+  }
+
+  const previousPath =
+    safeAvatarPath(
+      currentResult.rows[0]
+        .avatar_file_name
+    );
+
+  if (
+    previousPath &&
+    previousPath !== finalPath
+  ) {
+    await fileSystem.unlink(
+      previousPath
+    ).catch(() => {});
+  }
+
+  await logAudit({
+    userId,
+    action:
+      "settings.profile.avatar_updated",
+    entityType:
+      "user",
+    entityId:
+      userId,
+    ipAddress,
+    metadata: {
+      contentType:
+        detected.contentType,
+      sizeBytes:
+        buffer.length
+    }
+  });
+
+  return getProfile(userId);
+}
+
+async function removeAvatarForUser({
+  userId,
+  ipAddress
+}) {
+  const result = await dbQuery(
+    `
+      WITH previous AS (
+        SELECT
+          id,
+          avatar_file_name
+        FROM users
+        WHERE id = $1::uuid
+        FOR UPDATE
+      ),
+      updated AS (
+        UPDATE users
+        SET
+          avatar_url = NULL,
+          avatar_file_name = NULL,
+          avatar_content_type = NULL,
+          avatar_size_bytes = NULL,
+          avatar_updated_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1::uuid
+        RETURNING id
+      )
+      SELECT previous.avatar_file_name
+      FROM previous
+      JOIN updated USING (id)
+    `,
+    [userId]
+  );
+
+  if (!result.rows[0]) {
+    throw serviceError(
+      "User account was not found.",
+      404
+    );
+  }
+
+  const previousPath =
+    safeAvatarPath(
+      result.rows[0]
+        .avatar_file_name
+    );
+
+  if (previousPath) {
+    await fileSystem.unlink(
+      previousPath
+    ).catch(() => {});
+  }
+
+  await logAudit({
+    userId,
+    action:
+      "settings.profile.avatar_removed",
+    entityType:
+      "user",
+    entityId:
+      userId,
+    ipAddress,
+    metadata: {}
+  });
+
+  return getProfile(userId);
 }
 
 async function updatePreferencesForUser({
@@ -1618,6 +1985,9 @@ async function createSettingsExport({
 module.exports = {
   getOverviewForUser,
   updateProfileForUser,
+  getAvatarForPublicUser,
+  saveAvatarForUser,
+  removeAvatarForUser,
   updatePreferencesForUser,
   resetPreferencesForUser,
   updateWorkspaceForUser,
