@@ -1,40 +1,10 @@
 (function goodosCollapsibleSections() {
   "use strict";
 
-  var MINIMUM_ROWS = 7;
-  var MINIMUM_RENDERED_HEIGHT = 520;
   var COLLAPSED_ROW_LIMIT = 5;
+  var MINIMUM_ROWS = COLLAPSED_ROW_LIMIT + 1;
   var scanTimer = 0;
   var regionSequence = 0;
-
-  function storageKey(table) {
-    var activeView = document.querySelector(".nav button.active")?.dataset.view;
-    var view = String(activeView || window.location.hash || "console");
-    var headings = Array.from(table.querySelectorAll("thead th"))
-      .slice(0, 5)
-      .map(function (cell) { return String(cell.textContent || "").trim(); })
-      .filter(Boolean)
-      .join("-");
-    var card = table.closest(".card, section, [class*='panel']");
-    var title = card?.querySelector("h1, h2, h3, h4, .section-head")?.textContent || "table";
-    return "goodos-long-table-v1:" + view + ":" + String(title).trim().slice(0, 80) + ":" + headings;
-  }
-
-  function readCollapsed(key) {
-    try {
-      return window.localStorage.getItem(key) !== "open";
-    } catch (error) {
-      return true;
-    }
-  }
-
-  function writeCollapsed(key, collapsed) {
-    try {
-      window.localStorage.setItem(key, collapsed ? "collapsed" : "open");
-    } catch (error) {
-      // The layout remains functional when storage is disabled.
-    }
-  }
 
   function directRowCount(table) {
     return Array.from(table.tBodies || []).reduce(function (total, body) {
@@ -85,7 +55,6 @@
       : "Show first 5 rows";
     region.button.querySelector(".goodos-long-table-toggle-icon").textContent = collapsed ? "+" : "−";
     updatePreviewRows(region.table, collapsed);
-    writeCollapsed(region.key, collapsed);
   }
 
   function enhanceTable(table) {
@@ -93,8 +62,7 @@
     if (table.closest("[data-goodos-long-table-shell='true']") && !table.dataset.goodosLongTablePrimary) return;
 
     var rowCount = directRowCount(table);
-    var renderedHeight = table.getBoundingClientRect().height;
-    if (rowCount < MINIMUM_ROWS && renderedHeight < MINIMUM_RENDERED_HEIGHT) return;
+    if (rowCount < MINIMUM_ROWS) return;
 
     var shell = shellFor(table);
     if (shell.dataset.goodosLongTableShell === "true") {
@@ -109,7 +77,6 @@
 
     regionSequence += 1;
     var regionId = "goodos-long-table-region-" + regionSequence;
-    var key = storageKey(table);
     var control = document.createElement("div");
     var button = document.createElement("button");
     var count = document.createElement("span");
@@ -134,17 +101,17 @@
     control.appendChild(button);
     shell.parentNode.insertBefore(control, shell);
 
-    var region = { shell: shell, table: table, button: button, key: key };
-    setCollapsed(region, readCollapsed(key));
+    var region = { shell: shell, table: table, button: button };
+    setCollapsed(region, true);
     button.addEventListener("click", function () {
       setCollapsed(region, shell.dataset.collapsed !== "true");
     });
   }
 
   function scanLongTables() {
-    var view = document.getElementById("view");
-    if (!view) return;
-    Array.from(view.querySelectorAll("table")).forEach(enhanceTable);
+    var root = document.getElementById("view") || document.body;
+    if (!root) return;
+    Array.from(root.querySelectorAll("table")).forEach(enhanceTable);
   }
 
   function scheduleScan() {
@@ -191,9 +158,9 @@
     window.setTimeout(scanLongTables, 350);
     window.setTimeout(scanLongTables, 1000);
 
-    var view = document.getElementById("view");
-    if (view && window.MutationObserver) {
-      new MutationObserver(scheduleScan).observe(view, { childList: true, subtree: true });
+    var root = document.getElementById("view") || document.body;
+    if (root && window.MutationObserver) {
+      new MutationObserver(scheduleScan).observe(root, { childList: true, subtree: true });
     }
   }
 

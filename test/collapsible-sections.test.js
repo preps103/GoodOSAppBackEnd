@@ -22,15 +22,15 @@ test("long tables receive a capped scroll region and accessible collapse control
   const client = read("src/public/backend-collapsible-sections.js");
   const styles = read("src/public/backend-collapsible-sections.css");
 
-  assert.match(client, /MINIMUM_ROWS = 7/);
   assert.match(client, /COLLAPSED_ROW_LIMIT = 5/);
+  assert.match(client, /MINIMUM_ROWS = COLLAPSED_ROW_LIMIT \+ 1/);
   assert.match(client, /goodos-long-table-preview-hidden/);
   assert.match(client, /Show first 5 rows/);
   assert.match(client, /Show all rows/);
-  assert.match(client, /localStorage\.getItem\(key\) !== "open"/);
+  assert.match(client, /setCollapsed\(region, true\)/);
+  assert.doesNotMatch(client, /localStorage/);
   assert.match(client, /aria-expanded/);
   assert.match(client, /aria-controls/);
-  assert.match(client, /localStorage/);
   assert.match(client, /MutationObserver/);
   assert.match(styles, /--goodos-table-region-height: 460px/);
   assert.match(styles, /max-height: min\(var\(--goodos-table-region-height\)/);
