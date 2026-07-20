@@ -2851,6 +2851,59 @@ router.get("/projects-page-data", async (req, res) => {
     const projects = projectsResult.rows;
     const environments = environmentsResult.rows;
     const moduleMappings = mappingsResult.rows;
+    const generatedAt = new Date();
+    const dayMilliseconds = 24 * 60 * 60 * 1000;
+    const projectWindowDays = 30;
+    const projectWindowEnd = new Date(generatedAt);
+    projectWindowEnd.setUTCHours(23, 59, 59, 999);
+    const projectWindowStart = new Date(
+      projectWindowEnd.getTime() - ((projectWindowDays - 1) * dayMilliseconds)
+    );
+    projectWindowStart.setUTCHours(0, 0, 0, 0);
+    const projectCreatedDates = projects
+      .map((project) => new Date(project.createdAt))
+      .filter((date) => !Number.isNaN(date.getTime()));
+    const projectsWithoutDates = Math.max(0, projects.length - projectCreatedDates.length);
+    const projectSeries = Array.from({ length: projectWindowDays }, (_, index) => {
+      const date = new Date(projectWindowStart.getTime() + (index * dayMilliseconds));
+      const cutoff = new Date(date);
+      cutoff.setUTCHours(23, 59, 59, 999);
+
+      return {
+        date: date.toISOString().slice(0, 10),
+        total:
+          projectsWithoutDates +
+          projectCreatedDates.filter((createdAt) => createdAt.getTime() <= cutoff.getTime()).length,
+      };
+    });
+    const environmentTypes = environments.reduce(
+      (summary, environment) => {
+        const type = String(environment.type || "other").toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(summary, type)) {
+          summary[type] += 1;
+        } else {
+          summary.other += 1;
+        }
+        return summary;
+      },
+      {
+        development: 0,
+        staging: 0,
+        production: 0,
+        other: 0,
+      }
+    );
+    const totalScopedRecords = moduleMappings.reduce(
+      (total, item) => total + Number(item.scopedCount || 0),
+      0
+    );
+    const totalModuleRecords = moduleMappings.reduce(
+      (total, item) => total + Number(item.count || 0),
+      0
+    );
+    const recordScopePercent = totalModuleRecords
+      ? Math.round((totalScopedRecords / totalModuleRecords) * 100)
+      : 0;
 
     return ok(res, {
       organizations,
@@ -2859,6 +2912,29 @@ router.get("/projects-page-data", async (req, res) => {
       orgMemberships: orgMembershipsResult.rows,
       projectMemberships: projectMembershipsResult.rows,
       moduleMappings,
+      charts: {
+        generatedAt: generatedAt.toISOString(),
+        organizations: {
+          total: organizations.length,
+          active: organizations.filter((item) => item.status === "active").length,
+          inactive: organizations.filter((item) => item.status !== "active").length,
+        },
+        projects: {
+          windowDays: projectWindowDays,
+          series: projectSeries,
+        },
+        environments: environmentTypes,
+        moduleScope: {
+          scopedRecords: totalScopedRecords,
+          totalRecords: totalModuleRecords,
+          percent: recordScopePercent,
+          modules: moduleMappings.map((item) => ({
+            module: item.module,
+            scopedRecords: Number(item.scopedCount || 0),
+            totalRecords: Number(item.count || 0),
+          })),
+        },
+      },
       counts: {
         organizations: organizations.length,
         activeOrganizations: organizations.filter((item) => item.status === "active").length,
@@ -2868,6 +2944,9 @@ router.get("/projects-page-data", async (req, res) => {
         productionEnvironments: environments.filter((item) => item.type === "production").length,
         scopedModules: moduleMappings.filter((item) => Number(item.count || 0) === Number(item.scopedCount || 0)).length,
         totalModules: moduleMappings.length,
+        scopedRecords: totalScopedRecords,
+        totalRecords: totalModuleRecords,
+        recordScopePercent,
       },
     });
   } catch (error) {

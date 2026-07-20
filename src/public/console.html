@@ -489,6 +489,7 @@
 
     .grid { display: grid; gap: 18px; min-width: 0; }
     .cards { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); }
+    .cards[data-card-count="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
     .module-grid { grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
 
@@ -654,6 +655,71 @@
     }
 
     .kpi-chart-foot strong {
+      color: #a8ffd4;
+      font-weight: 950;
+    }
+
+    .kpi-chart[data-chart-kind="organizations"] svg,
+    .kpi-chart[data-chart-kind="environments"] svg {
+      height: 96px;
+    }
+
+    .kpi-chart-value {
+      fill: #f8fbff;
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .kpi-chart-caption {
+      fill: #8d98ad;
+      font-size: 9px;
+      font-weight: 850;
+    }
+
+    .kpi-donut-track {
+      fill: none;
+      stroke: rgba(148,163,184,.15);
+      stroke-width: 10;
+    }
+
+    .kpi-donut-value {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+    }
+
+    .kpi-env-baseline {
+      stroke: rgba(148,163,184,.22);
+      stroke-width: 1;
+    }
+
+    .kpi-scope-track {
+      height: 12px;
+      margin: 24px 0 15px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(148,163,184,.16);
+    }
+
+    .kpi-scope-value {
+      height: 100%;
+      min-width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #3b82f6, #22d3ee 58%, #8b5cf6);
+      box-shadow: 0 0 18px rgba(34,211,238,.28);
+    }
+
+    .kpi-scope-stats {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #7d879b;
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .kpi-scope-stats strong {
       color: #a8ffd4;
       font-weight: 950;
     }
@@ -871,6 +937,7 @@
       .shell { grid-template-columns: 240px minmax(0, 1fr); }
       .sidebar { width: 240px; padding-inline: 12px; }
       .two { grid-template-columns: 1fr; }
+      .cards[data-card-count="5"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .topbar { padding: 0 16px; }
       .content { padding: 20px; }
       .search { width: min(440px, 44vw); }
@@ -878,6 +945,7 @@
 
     @media (max-width: 820px) {
       .shell { display: block; }
+      .cards[data-card-count="5"] { grid-template-columns: 1fr; }
       .sidebar {
         position: static;
         width: 100%;
@@ -5308,58 +5376,134 @@ function goodosRenderNow() {
 
 window.goodosRenderNow = goodosRenderNow;
 
-function metricSeed(label) {
-  return String(label || "").split("").reduce((total, character) => total + character.charCodeAt(0), 0);
+function card(label, value, sub = "") {
+  return '<div class="card"><div class="label">' + safeText(label) + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>';
 }
 
-function metricSeries(label, value) {
-  const numeric = Number(String(value ?? "").replace(/[^0-9.-]/g, "")) || 0;
-  const seed = metricSeed(label);
-  const pattern = [36, 43, 39, 52, 49, 61, 57, 70, 66, 78];
-  const lift = Math.min(13, Math.log10(Math.abs(numeric) + 1) * 6);
-
-  return pattern.map((point, index) => {
-    const drift = ((seed >> (index % 6)) % 9) - 4;
-    return Math.max(16, Math.min(92, point + drift + lift));
-  });
+function projectMetricCard(label, value, sub, tone, chart) {
+  return '<div class="card kpi-card" data-tone="' + safeText(tone) + '"><div class="label">' + safeText(label) + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div>' + chart + '</div>';
 }
 
-function metricChart(label, value) {
-  const width = 300;
-  const height = 74;
-  const series = metricSeries(label, value);
-  const points = series.map((point, index) => {
-    const x = (index * width / (series.length - 1)).toFixed(1);
-    const y = (height - (point / 100 * height)).toFixed(1);
-    return x + "," + y;
-  }).join(" ");
-  const area = "0," + height + " " + points + " " + width + "," + height;
-  const finalPoint = points.split(" ").pop().split(",");
+function chartRefreshLabel(generatedAt) {
+  const timestamp = new Date(generatedAt || "");
+  return Number.isNaN(timestamp.getTime())
+    ? "Latest refresh"
+    : "Updated " + timestamp.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function organizationsMetricChart(total, active, generatedAt) {
+  const safeTotal = Math.max(0, Number(total || 0));
+  const safeActive = Math.max(0, Math.min(safeTotal, Number(active || 0)));
+  const percent = safeTotal ? Math.round((safeActive / safeTotal) * 100) : 0;
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (circumference * percent / 100).toFixed(2);
 
   return `
-    <div class="kpi-chart" data-source="current-production-metric">
-      <div class="kpi-chart-head"><span>Current signal</span><span class="kpi-chart-live">Live</span></div>
-      <svg viewBox="0 0 ${width} ${height}" role="img">
-        <title>${safeText(label)} current production signal</title>
-        <line class="kpi-chart-grid" x1="0" y1="18" x2="300" y2="18"></line>
-        <line class="kpi-chart-grid" x1="0" y1="46" x2="300" y2="46"></line>
-        <polygon class="kpi-chart-area" points="${area}"></polygon>
-        <polyline class="kpi-chart-line" points="${points}"></polyline>
-        <circle class="kpi-chart-point" cx="${finalPoint[0]}" cy="${finalPoint[1]}" r="4.5"></circle>
+    <div class="kpi-chart" data-chart-kind="organizations" data-source="organization-statuses">
+      <div class="kpi-chart-head"><span>Status distribution</span><span class="kpi-chart-live">Live</span></div>
+      <svg viewBox="0 0 300 96" role="img">
+        <title>${safeActive} active organizations out of ${safeTotal}</title>
+        <defs>
+          <linearGradient id="organizationMetricGradient" x1="0" x2="1">
+            <stop offset="0%" stop-color="#3b82f6"></stop>
+            <stop offset="55%" stop-color="#22d3ee"></stop>
+            <stop offset="100%" stop-color="#8b5cf6"></stop>
+          </linearGradient>
+        </defs>
+        <circle class="kpi-donut-track" cx="52" cy="48" r="${radius}"></circle>
+        <circle class="kpi-donut-value" cx="52" cy="48" r="${radius}" stroke="url(#organizationMetricGradient)" stroke-dasharray="${filled} ${circumference.toFixed(2)}" transform="rotate(-90 52 48)"></circle>
+        <text x="52" y="46" text-anchor="middle" class="kpi-chart-value">${safeTotal}</text>
+        <text x="52" y="61" text-anchor="middle" class="kpi-chart-caption">TOTAL</text>
+        <circle cx="126" cy="39" r="4" fill="#3b82f6"></circle>
+        <text x="137" y="43" class="kpi-chart-caption">ACTIVE</text>
+        <text x="286" y="43" text-anchor="end" class="kpi-chart-value">${safeActive} (${percent}%)</text>
+        <text x="126" y="67" class="kpi-chart-caption">INACTIVE</text>
+        <text x="286" y="67" text-anchor="end" class="kpi-chart-caption">${Math.max(0, safeTotal - safeActive)}</text>
       </svg>
-      <div class="kpi-chart-foot"><strong>Production</strong><span>Latest refresh</span></div>
+      <div class="kpi-chart-foot"><strong>Live API</strong><span>${safeText(chartRefreshLabel(generatedAt))}</span></div>
     </div>`;
 }
 
-function metricIcon() {
-  return '<span class="kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17.5 9 12l3.2 3.2L20 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 7.5h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+function projectsMetricChart(series, generatedAt) {
+  const rows = Array.isArray(series) ? series : [];
+  const samples = rows.map(row => Math.max(0, Number(row.total || 0)));
+  if (!samples.length) samples.push(0);
+  const maxValue = Math.max(1, ...samples);
+  const points = samples.map((value, index) => {
+    const x = (index * 300 / Math.max(1, samples.length - 1)).toFixed(1);
+    const y = (68 - (value / maxValue * 52)).toFixed(1);
+    return `${x},${y}`;
+  }).join(" ");
+  const finalPoint = points.split(" ").pop().split(",");
+  const area = `0,68 ${points} 300,68`;
+  const formatDate = value => {
+    const date = new Date(String(value || "") + "T00:00:00");
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+  const startLabel = formatDate(rows[0]?.date);
+  const endLabel = formatDate(rows[rows.length - 1]?.date);
+
+  return `
+    <div class="kpi-chart" data-chart-kind="projects" data-source="project-created-at">
+      <div class="kpi-chart-head"><span>30-day project total</span><span class="kpi-chart-live">Live</span></div>
+      <svg viewBox="0 0 300 86" role="img">
+        <title>Project count by creation date over the last 30 days</title>
+        <defs>
+          <linearGradient id="projectMetricFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity=".32"></stop>
+            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <line class="kpi-chart-grid" x1="0" y1="16" x2="300" y2="16"></line>
+        <line class="kpi-chart-grid" x1="0" y1="42" x2="300" y2="42"></line>
+        <line class="kpi-chart-grid" x1="0" y1="68" x2="300" y2="68"></line>
+        <polygon points="${area}" fill="url(#projectMetricFill)"></polygon>
+        <polyline class="kpi-chart-line" points="${points}"></polyline>
+        <circle class="kpi-chart-point" cx="${finalPoint[0]}" cy="${finalPoint[1]}" r="4.5"></circle>
+        <text x="0" y="84" class="kpi-chart-caption">${safeText(startLabel)}</text>
+        <text x="300" y="84" text-anchor="end" class="kpi-chart-caption">${safeText(endLabel)}</text>
+      </svg>
+      <div class="kpi-chart-foot"><strong>Live API</strong><span>${safeText(chartRefreshLabel(generatedAt))}</span></div>
+    </div>`;
 }
 
-function card(label, value, sub = "") {
-  const tones = ["purple", "blue", "teal", "pink"];
-  const tone = tones[metricSeed(label) % tones.length];
+function environmentsMetricChart(environmentCounts, generatedAt) {
+  const types = [
+    { key: "development", label: "Dev", color: "#22d3ee" },
+    { key: "staging", label: "Staging", color: "#3b82f6" },
+    { key: "production", label: "Production", color: "#8b5cf6" }
+  ];
+  const values = types.map(type => Math.max(0, Number(environmentCounts?.[type.key] || 0)));
+  const maxValue = Math.max(1, ...values);
 
-  return '<div class="card kpi-card" data-tone="' + tone + '"><div class="kpi-card-head"><div class="kpi-card-copy"><div class="label">' + safeText(label) + '</div><div class="value">' + safeText(value) + '</div><div class="sub">' + safeText(sub) + '</div></div>' + metricIcon() + '</div>' + metricChart(label, value) + '</div>';
+  return `
+    <div class="kpi-chart" data-chart-kind="environments" data-source="environment-types">
+      <div class="kpi-chart-head"><span>Environment mix</span><span class="kpi-chart-live">Live</span></div>
+      <svg viewBox="0 0 300 96" role="img">
+        <title>Development, staging, and production environment counts</title>
+        <line class="kpi-env-baseline" x1="12" y1="72" x2="288" y2="72"></line>
+        ${types.map((type, index) => {
+          const barHeight = values[index] ? Math.max(8, values[index] / maxValue * 48) : 0;
+          const x = 32 + (index * 96);
+          const y = 72 - barHeight;
+          return `<text x="${x + 22}" y="${Math.max(12, y - 7)}" text-anchor="middle" class="kpi-chart-value">${values[index]}</text><rect x="${x}" y="${y}" width="44" height="${barHeight}" rx="7" fill="${type.color}" opacity=".92"></rect><text x="${x + 22}" y="90" text-anchor="middle" class="kpi-chart-caption">${type.label}</text>`;
+        }).join("")}
+      </svg>
+      <div class="kpi-chart-foot"><strong>Live API</strong><span>${safeText(chartRefreshLabel(generatedAt))}</span></div>
+    </div>`;
+}
+
+function moduleScopeMetricChart(scopedRecords, totalRecords, percent, generatedAt) {
+  const safePercent = Math.max(0, Math.min(100, Number(percent || 0)));
+
+  return `
+    <div class="kpi-chart" data-chart-kind="module-scope" data-source="module-record-scope">
+      <div class="kpi-chart-head"><span>Record coverage</span><span class="kpi-chart-live">Live</span></div>
+      <div class="kpi-scope-track" role="img" aria-label="${safePercent}% of records mapped to an environment"><div class="kpi-scope-value" style="width:${safePercent}%"></div></div>
+      <div class="kpi-scope-stats"><strong>${safeText(scopedRecords)} scoped</strong><span>${safeText(totalRecords)} total records</span></div>
+      <div class="kpi-chart-foot"><strong>Live API</strong><span>${safeText(chartRefreshLabel(generatedAt))}</span></div>
+    </div>`;
 }
 
 function hero(title, body, badge = "") {
@@ -5387,6 +5531,12 @@ function appsTable() {
 
 
 window.loadProjectControlCenter = async function loadProjectControlCenter() {
+  if (state.projectCenterLoading && state.projectCenterLoaded) {
+    return;
+  }
+
+  state.projectCenterLoading = true;
+
   try {
     const response = await fetch("/api/admin/projects-page-data?t=" + Date.now(), {
       method: "GET",
@@ -5408,6 +5558,7 @@ window.loadProjectControlCenter = async function loadProjectControlCenter() {
     state.projectEnvironments = Array.isArray(data.environments) ? data.environments : [];
     state.projectModuleMappings = Array.isArray(data.moduleMappings) ? data.moduleMappings : [];
     state.projectCenterCounts = data.counts || {};
+    state.projectCenterCharts = data.charts || {};
     state.projectCenterLoaded = true;
     state.projectCenterLoading = false;
     state.projectCenterError = "";
@@ -5424,6 +5575,19 @@ window.loadProjectControlCenter = async function loadProjectControlCenter() {
     else if (typeof render === "function") render();
   }
 };
+
+if (!window.__goodosProjectMetricsRefresh) {
+  window.__goodosProjectMetricsRefresh = window.setInterval(() => {
+    if (
+      document.visibilityState === "visible" &&
+      state.view === "dashboard" &&
+      state.projectCenterLoaded &&
+      !state.projectCenterLoading
+    ) {
+      window.loadProjectControlCenter();
+    }
+  }, 30000);
+}
 
 window.refreshProjectControlCenterNow = async function refreshProjectControlCenterNow() {
   state.projectCenterLoaded = false;
@@ -5545,7 +5709,19 @@ function projectControlCenterSection() {
   const environments = Array.isArray(state.projectEnvironments) ? state.projectEnvironments : [];
   const mappings = Array.isArray(state.projectModuleMappings) ? state.projectModuleMappings : [];
   const counts = state.projectCenterCounts || {};
-  const scopedPercent = counts.totalModules ? Math.round((Number(counts.scopedModules || 0) / Number(counts.totalModules || 1)) * 100) : 0;
+  const charts = state.projectCenterCharts || {};
+  const generatedAt = charts.generatedAt || null;
+  const organizationChart = charts.organizations || {};
+  const projectChart = charts.projects || {};
+  const environmentChart = charts.environments || {};
+  const moduleScopeChart = charts.moduleScope || {};
+  const organizationTotal = Number(organizationChart.total ?? counts.organizations ?? organizations.length);
+  const activeOrganizations = Number(organizationChart.active ?? counts.activeOrganizations ?? organizations.filter(item => item.status === "active").length);
+  const projectTotal = Number(counts.projects ?? projects.length);
+  const environmentTotal = Number(counts.environments ?? environments.length);
+  const totalRecords = Number(moduleScopeChart.totalRecords ?? counts.totalRecords ?? mappings.reduce((total, item) => total + Number(item.count || 0), 0));
+  const scopedRecords = Number(moduleScopeChart.scopedRecords ?? counts.scopedRecords ?? mappings.reduce((total, item) => total + Number(item.scopedCount || 0), 0));
+  const scopedPercent = Number(moduleScopeChart.percent ?? counts.recordScopePercent ?? (totalRecords ? Math.round((scopedRecords / totalRecords) * 100) : 0));
 
   return `
     <div class="section-head" style="margin-top:18px;">
@@ -5560,10 +5736,10 @@ function projectControlCenterSection() {
     ${state.projectCenterError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Project Control Center error: ${safeText(state.projectCenterError)}</p></div>` : ""}
 
     <div class="grid cards" style="margin-top:18px;">
-      ${card("Organizations", counts.organizations ?? organizations.length, "Enterprise tenants")}
-      ${card("Projects", counts.projects ?? projects.length, "Project workspaces")}
-      ${card("Environments", counts.environments ?? environments.length, "Dev / staging / production")}
-      ${card("Module Scope", `${safeText(String(scopedPercent))}%`, "Records mapped to environments")}
+      ${projectMetricCard("Organizations", organizationTotal, "Enterprise tenants", "blue", organizationsMetricChart(organizationTotal, activeOrganizations, generatedAt))}
+      ${projectMetricCard("Projects", projectTotal, "Project workspaces", "blue", projectsMetricChart(projectChart.series, generatedAt))}
+      ${projectMetricCard("Environments", environmentTotal, "Dev / staging / production", "teal", environmentsMetricChart(environmentChart, generatedAt))}
+      ${projectMetricCard("Module Scope", `${scopedPercent}%`, "Records mapped to environments", "purple", moduleScopeMetricChart(scopedRecords, totalRecords, scopedPercent, generatedAt))}
     </div>
 
     <div class="grid two" style="margin-top:18px;">
@@ -11929,7 +12105,7 @@ function webhooksView() {
     ${state.webhooksLoading ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Loading live webhook data...</p></div>` : ""}
     ${state.webhooksError ? `<div class="card" style="margin-bottom:18px;"><p class="muted">Webhook error: ${safeText(state.webhooksError)}</p></div>` : ""}
 
-    <div class="grid cards">
+    <div class="grid cards" data-card-count="5">
       ${card("Webhooks", counts.webhooks ?? webhooks.length, "Total endpoints")}
       ${card("Active", counts.active ?? activeWebhooks.length, "Receiving events")}
       ${card("Deliveries", counts.deliveries ?? deliveries.length, "Logged delivery attempts")}
