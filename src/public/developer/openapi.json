@@ -1079,6 +1079,31 @@
           }
         }
       }
+    },
+    "/api/enterprise/readiness-program": {
+      "get": {
+        "summary": "Enterprise readiness program",
+        "description": "Returns live file and database evidence for the nine GoodOS enterprise control domains.",
+        "tags": [
+          "Enterprise"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enterprise readiness assessment"
+          },
+          "401": {
+            "description": "Authorization required"
+          },
+          "403": {
+            "description": "Owner or administrator access required"
+          }
+        }
+      }
     }
   }
 }

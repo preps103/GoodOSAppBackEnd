@@ -33,10 +33,10 @@ jobs:
         run: npm ci
 
       - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          find src scripts \
-            -type f \
-            -name '*.js' \
-            -print0 |
-          xargs -0 -n 1 node --check
+        run: npm run check:syntax
+
+      - name: Validate OpenAPI contract
+        run: npm run check:openapi
+
+      - name: Run automated tests
+        run: npm test

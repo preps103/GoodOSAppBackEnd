@@ -9,6 +9,9 @@ const authRequired =
 const enterprise =
   require("../enterprise/enterprise-foundation.service");
 
+const enterpriseReadiness =
+  require("../enterprise/enterprise-readiness.service");
+
 const router =
   express.Router();
 
@@ -261,6 +264,28 @@ router.get(
       return success(
         res,
         overview
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get(
+  "/readiness-program",
+  async (
+    req,
+    res,
+    next
+  ) => {
+    try {
+      const report =
+        await enterpriseReadiness
+          .assessEnterpriseReadiness();
+
+      return success(
+        res,
+        report
       );
     } catch (error) {
       next(error);
