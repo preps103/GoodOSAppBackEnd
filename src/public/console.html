@@ -5226,14 +5226,36 @@ const state = {
 };
 
 async function request(path, options = {}) {
-  const response = await fetch(path, {
+  const requestOptions = {
     ...options,
+    cache: "no-store",
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {})
     }
-  });
+  };
+
+  let response;
+
+  try {
+    response = await fetch(path, requestOptions);
+  } catch (networkError) {
+    if (path !== "/api/auth/login") throw networkError;
+
+    // A stale browser connection can fail before the request reaches GoodOS.
+    // Retry login once against the explicit same-origin URL before surfacing an error.
+    const retryUrl = new URL(path, window.location.origin).toString();
+
+    try {
+      response = await fetch(retryUrl, requestOptions);
+    } catch (retryError) {
+      const offlineMessage = navigator.onLine === false
+        ? "Your browser is offline. Reconnect and try again."
+        : "Unable to reach GoodOS Cloud. Refresh the page and try again.";
+      throw new Error(offlineMessage);
+    }
+  }
 
   const data = await response.json().catch(() => ({}));
 
