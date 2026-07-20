@@ -1105,6 +1105,57 @@
         }
       }
     },
+    "/api/data-platform/health": {
+      "get": {
+        "summary": "Automatic data-plane health",
+        "tags": ["Data Platform"],
+        "security": [],
+        "responses": {
+          "200": {"description": "PostgREST data plane is operational"},
+          "503": {"description": "The data plane is degraded or unavailable"}
+        }
+      }
+    },
+    "/api/data-platform/token": {
+      "post": {
+        "summary": "Issue a short-lived session-bound data token",
+        "tags": ["Data Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {
+          "200": {"description": "Five-minute database access token"},
+          "401": {"description": "A current GoodOS session is required"}
+        }
+      }
+    },
+    "/rest/v1/{resource}": {
+      "parameters": [
+        {"name": "resource", "in": "path", "required": true, "schema": {"type": "string"}, "description": "An explicitly published goodos_api table, view, or function"}
+      ],
+      "get": {
+        "summary": "Query an automatically generated REST resource",
+        "tags": ["Data Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "RLS-filtered records"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+      },
+      "post": {
+        "summary": "Insert into an automatically generated REST resource",
+        "tags": ["Data Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Record inserted"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+      },
+      "patch": {
+        "summary": "Update an automatically generated REST resource",
+        "tags": ["Data Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Record updated"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+      },
+      "delete": {
+        "summary": "Delete from an automatically generated REST resource",
+        "tags": ["Data Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Record deleted"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+      }
+    },
     "/api/settings/overview": {
       "get": {
         "summary": "Current user and business settings overview",

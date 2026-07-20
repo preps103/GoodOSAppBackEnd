@@ -1,6 +1,8 @@
 export interface GoodOSClientOptions {
   apiKey?: string;
+  accessToken?: string;
   baseUrl?: string;
+  rootUrl?: string;
   headers?: Record<string, string>;
 }
 
@@ -44,6 +46,13 @@ export class GoodOSError extends Error {
 export class GoodOSClient {
   constructor(options?: GoodOSClientOptions);
   setApiKey(apiKey: string): this;
+  setAccessToken(accessToken: string): this;
+  platformRequest<T = unknown>(path: string, options?: RequestInit & { body?: unknown }): Promise<T>;
+  issueDataToken(): Promise<{ success: true; token: string; tokenType: "Bearer"; expiresIn: string; endpoint: string }>;
+  dataRows<T = Record<string, unknown>>(resource: string, params?: Record<string, string | number | boolean>): Promise<T[]>;
+  createDataRow<T = Record<string, unknown>>(resource: string, row?: Record<string, unknown>): Promise<T[]>;
+  updateDataRows<T = Record<string, unknown>>(resource: string, filters?: Record<string, string>, changes?: Record<string, unknown>): Promise<T[]>;
+  deleteDataRows<T = Record<string, unknown>>(resource: string, filters?: Record<string, string>): Promise<T[]>;
   request<T = unknown>(path: string, options?: RequestInit & { body?: unknown }): Promise<GoodOSResponse<T>>;
   health(): Promise<GoodOSResponse>;
   apps(): Promise<GoodOSResponse<{ apps: GoodOSApp[] }>>;

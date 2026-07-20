@@ -18,12 +18,19 @@
   class GoodOSClient {
     constructor(options = {}) {
       this.apiKey = options.apiKey || "";
+      this.accessToken = options.accessToken || "";
       this.baseUrl = String(options.baseUrl || "https://backend.goodos.app/api/v1").replace(/\/+$/, "");
+      this.rootUrl = String(options.rootUrl || this.baseUrl.replace(/\/api\/v1$/, "")).replace(/\/+$/, "");
       this.defaultHeaders = options.headers || {};
     }
 
     setApiKey(apiKey) {
       this.apiKey = apiKey || "";
+      return this;
+    }
+
+    setAccessToken(accessToken) {
+      this.accessToken = accessToken || "";
       return this;
     }
 
@@ -36,6 +43,65 @@
 
       if (this.apiKey) headers["X-GoodOS-API-Key"] = this.apiKey;
       return headers;
+    }
+
+    async platformRequest(path, options = {}) {
+      const url = `${this.rootUrl}${path.startsWith("/") ? path : `/${path}`}`;
+      const body = options.body;
+      const headers = {
+        Accept: "application/json",
+        ...this.defaultHeaders,
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers || {}),
+      };
+      if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
+
+      const response = await fetch(url, {
+        method: options.method || "GET",
+        headers,
+        credentials: options.credentials || "include",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || (payload && payload.success === false)) {
+        const message = payload && payload.message ? payload.message : `GoodOS request failed with status ${response.status}`;
+        throw new GoodOSError(message, response, payload);
+      }
+      return payload;
+    }
+
+    async issueDataToken() {
+      const result = await this.platformRequest("/api/data-platform/token", { method: "POST" });
+      if (result && result.token) this.setAccessToken(result.token);
+      return result;
+    }
+
+    dataRows(resource, params = {}) {
+      const search = new URLSearchParams();
+      Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") search.set(key, String(value));
+      });
+      const query = search.toString();
+      return this.platformRequest(`/rest/v1/${encodeURIComponent(resource)}${query ? `?${query}` : ""}`);
+    }
+
+    createDataRow(resource, row = {}) {
+      return this.platformRequest(`/rest/v1/${encodeURIComponent(resource)}`, { method: "POST", body: row });
+    }
+
+    updateDataRows(resource, filters = {}, changes = {}) {
+      const search = new URLSearchParams(filters || {}).toString();
+      return this.platformRequest(`/rest/v1/${encodeURIComponent(resource)}${search ? `?${search}` : ""}`, {
+        method: "PATCH",
+        body: changes,
+      });
+    }
+
+    deleteDataRows(resource, filters = {}) {
+      const search = new URLSearchParams(filters || {}).toString();
+      return this.platformRequest(`/rest/v1/${encodeURIComponent(resource)}${search ? `?${search}` : ""}`, {
+        method: "DELETE",
+      });
     }
 
     async request(path, options = {}) {
