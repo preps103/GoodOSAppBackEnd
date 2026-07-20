@@ -3,6 +3,7 @@
 
   var MINIMUM_ROWS = 7;
   var MINIMUM_RENDERED_HEIGHT = 520;
+  var COLLAPSED_ROW_LIMIT = 5;
   var scanTimer = 0;
   var regionSequence = 0;
 
@@ -21,9 +22,9 @@
 
   function readCollapsed(key) {
     try {
-      return window.localStorage.getItem(key) === "collapsed";
+      return window.localStorage.getItem(key) !== "open";
     } catch (error) {
-      return false;
+      return true;
     }
   }
 
@@ -65,14 +66,25 @@
     return shell;
   }
 
+  function updatePreviewRows(table, collapsed) {
+    var rows = Array.from(table.tBodies || []).flatMap(function (body) {
+      return Array.from(body.rows);
+    });
+
+    rows.forEach(function (row, index) {
+      row.classList.toggle("goodos-long-table-preview-hidden", collapsed && index >= COLLAPSED_ROW_LIMIT);
+    });
+  }
+
   function setCollapsed(region, collapsed) {
     region.shell.dataset.collapsed = collapsed ? "true" : "false";
     region.button.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    region.button.setAttribute("aria-label", collapsed ? "Open table" : "Collapse table");
+    region.button.setAttribute("aria-label", collapsed ? "Show all rows" : "Collapse to first 5 rows");
     region.button.querySelector(".goodos-long-table-toggle-label").textContent = collapsed
-      ? "Open table"
-      : "Collapse table";
+      ? "Show all rows"
+      : "Show first 5 rows";
     region.button.querySelector(".goodos-long-table-toggle-icon").textContent = collapsed ? "+" : "−";
+    updatePreviewRows(region.table, collapsed);
     writeCollapsed(region.key, collapsed);
   }
 
@@ -91,6 +103,7 @@
       if (existingCount && existingCount.textContent !== nextCount) {
         existingCount.textContent = nextCount;
       }
+      updatePreviewRows(table, shell.dataset.collapsed === "true");
       return;
     }
 
@@ -121,7 +134,7 @@
     control.appendChild(button);
     shell.parentNode.insertBefore(control, shell);
 
-    var region = { shell: shell, button: button, key: key };
+    var region = { shell: shell, table: table, button: button, key: key };
     setCollapsed(region, readCollapsed(key));
     button.addEventListener("click", function () {
       setCollapsed(region, shell.dataset.collapsed !== "true");

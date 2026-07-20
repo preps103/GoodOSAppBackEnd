@@ -23,6 +23,11 @@ test("long tables receive a capped scroll region and accessible collapse control
   const styles = read("src/public/backend-collapsible-sections.css");
 
   assert.match(client, /MINIMUM_ROWS = 7/);
+  assert.match(client, /COLLAPSED_ROW_LIMIT = 5/);
+  assert.match(client, /goodos-long-table-preview-hidden/);
+  assert.match(client, /Show first 5 rows/);
+  assert.match(client, /Show all rows/);
+  assert.match(client, /localStorage\.getItem\(key\) !== "open"/);
   assert.match(client, /aria-expanded/);
   assert.match(client, /aria-controls/);
   assert.match(client, /localStorage/);
@@ -31,6 +36,8 @@ test("long tables receive a capped scroll region and accessible collapse control
   assert.match(styles, /max-height: min\(var\(--goodos-table-region-height\)/);
   assert.match(styles, /overflow: auto !important/);
   assert.match(styles, /data-collapsed="true"/);
+  assert.match(styles, /\.goodos-long-table-preview-hidden/);
+  assert.doesNotMatch(styles, /\.goodos-long-table-shell\[data-collapsed="true"\]\s*\{\s*display:\s*none/);
 });
 
 test("tablet and mobile styles preserve short tables and usable navigation", () => {
