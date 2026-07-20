@@ -45,6 +45,11 @@ app.use(
   goodosPhase2Security.adminBoundary
 );
 
+app.use(
+  "/api/authentication-console",
+  goodosPhase2Security.adminBoundary
+);
+
 
 
 

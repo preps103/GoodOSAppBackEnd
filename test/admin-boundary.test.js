@@ -13,6 +13,7 @@ test("both legacy and versioned admin paths require the administrator boundary",
 
   assert.match(app, /app\.use\(\s*"\/api\/admin",\s*goodosPhase2Security\.adminBoundary/);
   assert.match(app, /app\.use\(\s*"\/admin",\s*goodosPhase2Security\.adminBoundary/);
+  assert.match(app, /app\.use\(\s*"\/api\/authentication-console",\s*goodosPhase2Security\.adminBoundary/);
 });
 
 test("database consoles are mounted only behind protected admin prefixes", () => {
