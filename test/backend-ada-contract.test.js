@@ -33,6 +33,7 @@ test("ADA control preserves the GoodOS accessibility contract", () => {
     assert.ok(client.includes(setting), `${setting} must remain available`);
   }
   assert.match(client, /aria-haspopup="dialog"/);
+  assert.match(client, /setOpen\(panel\.hidden, false\)/);
   assert.match(client, /event\.key === "Escape"/);
   assert.match(styles, /html\.ada-reduce-motion/);
   assert.match(styles, /html\.ada-focus-indicators/);

@@ -133,7 +133,7 @@
   }
 
   function wire() {
-    trigger.addEventListener("click", function () { setOpen(!panel.hidden, false); });
+    trigger.addEventListener("click", function () { setOpen(panel.hidden, false); });
     root.querySelector(".backend-ada-close").addEventListener("click", function () { setOpen(false, true); });
     root.querySelector(".backend-ada-reset").addEventListener("click", function () {
       settings = Object.assign({}, DEFAULT_SETTINGS);
