@@ -25,6 +25,7 @@ MIGRATIONS=(
   "$APP_DIR/migrations/20260721_goodbase_phases16_20.sql"
   "$APP_DIR/migrations/20260721_goodbase_phases21_25.sql"
   "$APP_DIR/migrations/20260721_goodbase_phases26_30.sql"
+  "$APP_DIR/migrations/20260721_goodbase_phases31_38.sql"
 )
 
 fail() {

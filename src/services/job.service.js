@@ -12,6 +12,14 @@ const {
   dispatchMessaging,
   dispatchSms
 } = require("./goodbase-growth.service");
+const {
+  rollupAnalytics,
+  detectTelemetryRegressions,
+  evaluateExperiments,
+  dispatchProviderOperations,
+  dispatchDistributionOperations,
+  reconcileCommercial
+} = require("./goodbase-product.service");
 
 function dbQuery(sql, params = []) {
   if (typeof database.query === "function") return database.query(sql, params);
@@ -729,6 +737,18 @@ async function runHandler(handlerKey) {
       return dispatchSms();
     case "goodbase.messaging.dispatch":
       return dispatchMessaging();
+    case "goodbase.analytics.rollup":
+      return rollupAnalytics();
+    case "goodbase.telemetry.regressions":
+      return detectTelemetryRegressions();
+    case "goodbase.experiments.evaluate":
+      return evaluateExperiments();
+    case "goodbase.distribution.dispatch":
+      return dispatchDistributionOperations();
+    case "goodbase.cdn.dispatch":
+      return dispatchProviderOperations("cdn");
+    case "goodbase.commercial.reconcile":
+      return reconcileCommercial();
     default:
       return {
         skipped: true,

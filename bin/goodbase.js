@@ -146,7 +146,7 @@ function generateTypes() {
 
 async function main() {
   if (["help", "--help", "-h"].includes(command)) {
-    process.stdout.write(`Goodbase CLI ${VERSION}\n\nCommands:\n  login/logout/init/link/start/stop/status/reset\n  db diff|dump|push|pull|reset\n  migration new\n  seed\n  types generate\n  functions new|serve|deploy\n  secrets set|list\n  logs/deploy/projects list/branches create/backups list\n  domains list|add|verify\n  vectors collections|create|search\n  management operations|run\n  infrastructure status\n  production status|verify\n  recovery status|backup|restore\n  sdk list\n  sync collections|create\n  controllers list|probe\n  assurance status|run\n  imports analyze|apply\n  auth-providers list\n  attestation policies\n  messaging providers\n`);
+    process.stdout.write(`Goodbase CLI ${VERSION}\n\nCommands:\n  login/logout/init/link/start/stop/status/reset\n  db diff|dump|push|pull|reset\n  migration new\n  seed\n  types generate\n  functions new|serve|deploy\n  secrets set|list\n  logs/deploy/projects list/branches create/backups list\n  domains list|add|verify\n  vectors collections|create|search\n  management operations|run\n  infrastructure status\n  production status|verify\n  recovery status|backup|restore\n  sdk list\n  sync collections|create\n  controllers list|probe\n  assurance status|run\n  imports analyze|apply\n  auth-providers list\n  attestation policies\n  messaging providers\n  product overview\n  analytics metrics\n  telemetry issues\n  config publish\n  experiments start|pause|stop\n  distribution provider-verify\n  cdn provider-verify\n  regions exercise\n  commerce spend-limit\n  public-status\n`);
     return;
   }
   if (["--version", "version"].includes(command)) return process.stdout.write(`${VERSION}\n`);
@@ -217,6 +217,16 @@ async function main() {
   if (command === "auth-providers" && subcommand === "list") return api("/api/goodbase/v1/growth/auth/provider-configs");
   if (command === "attestation" && subcommand === "policies") return api("/api/goodbase/v1/growth/attestation/policies");
   if (command === "messaging" && subcommand === "providers") return api("/api/goodbase/v1/growth/messaging/providers");
+  if (command === "product" && subcommand === "overview") return api("/api/goodbase/v1/product/overview");
+  if (command === "analytics" && subcommand === "metrics") return api(`/api/goodbase/v1/product/analytics/metrics?days=${encodeURIComponent(option("days",30))}`);
+  if (command === "telemetry" && subcommand === "issues") return api("/api/goodbase/v1/product/telemetry/issues");
+  if (command === "config" && subcommand === "publish") return api(`/api/goodbase/v1/product/config/versions/${encodeURIComponent(args[2]||"")}/publish`,{method:"POST",body:{}});
+  if (command === "experiments" && ["start","pause","stop"].includes(subcommand)) return api(`/api/goodbase/v1/product/experiments/${encodeURIComponent(args[2]||"")}/status`,{method:"POST",body:{status:subcommand==="start"?"running":subcommand==="pause"?"paused":"completed"}});
+  if (command === "distribution" && subcommand === "provider-verify") return api(`/api/goodbase/v1/product/distribution/providers/${encodeURIComponent(args[2]||"")}/verify`,{method:"POST",body:{}});
+  if (command === "cdn" && subcommand === "provider-verify") return api(`/api/goodbase/v1/product/cdn/providers/${encodeURIComponent(args[2]||"")}/verify`,{method:"POST",body:{}});
+  if (command === "regions" && subcommand === "exercise") return api("/api/goodbase/v1/product/regions/exercises",{method:"POST",body:{exerciseType:option("type"),primaryRegionId:option("primary"),secondaryRegionId:option("secondary")}});
+  if (command === "commerce" && subcommand === "spend-limit") return api("/api/goodbase/v1/product/commerce/spend-limit",{method:"PUT",body:{monthlyLimit:Number(option("monthly-limit")),warningPercent:Number(option("warning-percent",80)),hardStop:has("hard-stop")}});
+  if (command === "public-status") return api("/api/goodbase/v1/product/status");
   fail(`Unknown command: ${args.join(" ")}`);
 }
 

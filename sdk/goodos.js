@@ -290,6 +290,30 @@
       return new WebSocket(this.realtimeWebSocketUrl(channel, options));
     }
 
+    track(appId, events, context = {}) {
+      return this.platformRequest("/api/goodbase/v1/product/analytics/events", {
+        method: "POST", body: { appId, events: Array.isArray(events) ? events : [events], ...context },
+      });
+    }
+
+    captureCrash(appId, crash) {
+      return this.platformRequest("/api/goodbase/v1/product/telemetry/crashes", { method: "POST", body: { appId, ...crash } });
+    }
+
+    recordTrace(appId, trace) {
+      return this.platformRequest("/api/goodbase/v1/product/telemetry/traces", { method: "POST", body: { appId, ...trace } });
+    }
+
+    remoteConfig(appId, context = {}) {
+      const search = new URLSearchParams(context).toString();
+      return this.platformRequest(`/api/goodbase/v1/product/config/${encodeURIComponent(appId)}${search ? `?${search}` : ""}`);
+    }
+
+    experimentAssignments(appId, anonymousId = "") {
+      const search = anonymousId ? `?anonymousId=${encodeURIComponent(anonymousId)}` : "";
+      return this.platformRequest(`/api/goodbase/v1/product/experiments/${encodeURIComponent(appId)}/assignments${search}`);
+    }
+
     callFunction(slug, input = {}, options = {}) {
       const method = String(options.method || "POST").toUpperCase();
 

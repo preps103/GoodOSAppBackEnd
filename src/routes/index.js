@@ -127,6 +127,9 @@ const goodbaseProductionRoutes =
 const goodbaseGrowthRoutes =
   require("./goodbase-growth.routes");
 
+const goodbaseProductRoutes =
+  require("./goodbase-product.routes");
+
 const router = express.Router();
 
 /* GOODOS_ENTERPRISE_FOUNDATION_V1_INITIALIZE */
@@ -420,6 +423,14 @@ router.use(
 router.use(
   "/api/goodbase/v1/growth",
   goodbaseGrowthRoutes.authenticatedRouter
+);
+router.use(
+  "/api/goodbase/v1/product",
+  goodbaseProductRoutes.publicRouter
+);
+router.use(
+  "/api/goodbase/v1/product",
+  goodbaseProductRoutes.authenticatedRouter
 );
 router.use("/api/releases", releaseGovernanceRoutes);
 router.use("/api/privacy", privacyGovernanceRoutes);

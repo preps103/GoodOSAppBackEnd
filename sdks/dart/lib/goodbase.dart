@@ -30,4 +30,10 @@ class GoodbaseClient {
 
   Future<Map<String, dynamic>> registerMessagingDevice({required String appId, required String platform, required String deviceToken, String? locale, String? timezone}) =>
       request('/api/goodbase/v1/growth/messaging/devices', method: 'POST', body: {'appId': appId, 'platform': platform, 'deviceToken': deviceToken, 'locale': locale, 'timezone': timezone});
+
+  Future<Map<String, dynamic>> track(Map<String, dynamic> payload) => request('/api/goodbase/v1/product/analytics/events', method: 'POST', body: payload);
+  Future<Map<String, dynamic>> captureCrash(Map<String, dynamic> payload) => request('/api/goodbase/v1/product/telemetry/crashes', method: 'POST', body: payload);
+  Future<Map<String, dynamic>> recordTrace(Map<String, dynamic> payload) => request('/api/goodbase/v1/product/telemetry/traces', method: 'POST', body: payload);
+  Future<Map<String, dynamic>> remoteConfig(String appId) => request('/api/goodbase/v1/product/config/$appId');
+  Future<Map<String, dynamic>> experimentAssignments(String appId) => request('/api/goodbase/v1/product/experiments/$appId/assignments');
 }

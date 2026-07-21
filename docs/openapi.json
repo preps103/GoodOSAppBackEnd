@@ -3173,6 +3173,24 @@
             }
           }
         }
+      },
+      "/api/goodbase/v1/product/status": {
+        "get": {"summary":"Read public Goodbase service status","tags":["Goodbase Product Platform"],"security":[],"responses":{"200":{"description":"Public component and incident status"}}}
+      },
+      "/api/goodbase/v1/product/config/{appId}": {
+        "get": {"summary":"Resolve typed Remote Config","tags":["Goodbase Product Platform"],"security":[],"responses":{"200":{"description":"Published configuration resolved for the client context"},"304":{"description":"Configuration is unchanged"}}}
+      },
+      "/api/goodbase/v1/product/analytics/events": {
+        "post": {"summary":"Ingest consent-aware analytics events","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Events accepted"},"400":{"description":"Invalid or missing consent"},"401":{"description":"Authentication required"}}}
+      },
+      "/api/goodbase/v1/product/telemetry/crashes": {
+        "post": {"summary":"Capture a client crash occurrence","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Crash accepted"},"400":{"description":"Invalid crash payload"}}}
+      },
+      "/api/goodbase/v1/product/experiments/{appId}/assignments": {
+        "get": {"summary":"Resolve sticky experiment assignments","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Stable assignments and variant payloads"}}}
+      },
+      "/api/goodbase/v1/product/overview": {
+        "get": {"summary":"Read phases 31–38 operational state","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Analytics, telemetry, experiment, distribution, CDN, regional and commercial metrics"},"403":{"description":"Administrator role required"}}}
       }
   }
 }
