@@ -4,6 +4,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const database = require("../src/config/database");
+const { preserveEvidence, validCommit } = require("./lib/goodbase-evidence");
 
 const root = path.resolve(__dirname, "..");
 const commit = process.env.GOODBASE_RELEASE_COMMIT || process.env.GITHUB_SHA || "unknown";
@@ -27,6 +28,10 @@ async function count(sql, parameters = []) {
   return Number(result.rows[0]?.count || 0);
 }
 
+async function evidenceCount(type) {
+  return count("SELECT COUNT(*) FROM goodbase_release_evidence WHERE evidence_type=$1 AND release_commit=$2 AND status='passed'", [type, commit]);
+}
+
 function phase(number, name, checks) {
   const passed = checks.every((check) => check.passed);
   return { phase: number, name, status: passed ? "certified" : "blocked", checks };
@@ -48,7 +53,7 @@ async function main() {
   ]);
 
   const values = {
-    readyControllers: await count("SELECT COUNT(*) FROM goodbase_controller_registrations WHERE status='ready'"),
+    readyControllers: await count("SELECT COUNT(DISTINCT controller_type) FROM goodbase_controller_registrations WHERE status='ready'"),
     enabledAuthProviders: await count("SELECT COUNT(*) FROM goodbase_consumer_auth_providers WHERE status='enabled'"),
     readyMessagingProviders: await count("SELECT COUNT(*) FROM goodbase_messaging_providers WHERE status='ready'"),
     enforcedAttestationProviders: await count("SELECT COUNT(DISTINCT provider) FROM goodbase_attestation_policies WHERE mode='enforce'"),
@@ -65,7 +70,16 @@ async function main() {
     passedFailoverExercises: await count("SELECT COUNT(DISTINCT event_type) FROM goodbase_failover_events WHERE status='completed'"),
     readyCdnProviders: await count("SELECT COUNT(*) FROM goodbase_cdn_providers WHERE status='ready' AND cardinality(regions)>1"),
     readyStorageReplications: await count("SELECT COUNT(*) FROM goodbase_storage_replications WHERE status='ready' AND last_verified_at IS NOT NULL"),
-    completedCdnOperations: await count("SELECT COUNT(DISTINCT operation_type) FROM goodbase_cdn_operations WHERE status='completed'")
+    completedCdnOperations: await count("SELECT COUNT(DISTINCT operation_type) FROM goodbase_cdn_operations WHERE status='completed'"),
+    readyDistributionProviders: await count("SELECT COUNT(DISTINCT provider_type) FROM goodbase_distribution_providers WHERE status='ready' AND last_health_at IS NOT NULL"),
+    passedDeviceProviders: await count("SELECT COUNT(DISTINCT provider_id) FROM goodbase_device_test_runs WHERE status='passed' AND cardinality(artifacts_json)>0"),
+    productionTelemetryFamilies: await count("SELECT ((CASE WHEN EXISTS(SELECT 1 FROM goodbase_analytics_events WHERE received_at>NOW()-INTERVAL '24 hours') THEN 1 ELSE 0 END)+(CASE WHEN EXISTS(SELECT 1 FROM goodbase_crash_occurrences WHERE received_at>NOW()-INTERVAL '24 hours') THEN 1 ELSE 0 END)+(CASE WHEN EXISTS(SELECT 1 FROM goodbase_performance_traces WHERE received_at>NOW()-INTERVAL '24 hours') THEN 1 ELSE 0 END))::int AS count"),
+    completedSymbolication: await count("SELECT COUNT(*) FROM goodbase_symbolication_jobs WHERE status='completed'"),
+    readyHostingProjects: await count("SELECT COUNT(*) FROM goodbase_hosting_projects WHERE status='ready' AND controller_id IS NOT NULL"),
+    readyHostingReleases: await count("SELECT COUNT(*) FROM goodbase_hosting_releases WHERE status='ready' AND artifact_checksum IS NOT NULL"),
+    readyCommercialProviders: await count("SELECT COUNT(DISTINCT provider_type) FROM goodbase_commercial_providers WHERE status='ready' AND last_health_at IS NOT NULL"),
+    verifiedComplianceFamilies: await count("SELECT COUNT(DISTINCT control_family) FROM goodbase_compliance_evidence WHERE status='verified' AND (expires_at IS NULL OR expires_at>NOW())"),
+    securityEvidence: await evidenceCount("security"), loadEvidence: await evidenceCount("load"), chaosEvidence: await evidenceCount("chaos"), ciEvidence: await evidenceCount("ci")
   };
 
   const phases = [
@@ -104,14 +118,31 @@ async function main() {
     ])
   ];
 
+  const requirements = [
+    phase(1,"deployed and certified release",[...phases[0].checks,{name:"security-gate-evidence",passed:values.securityEvidence>0,observed:values.securityEvidence,required:1},{name:"load-test-evidence",passed:values.loadEvidence>0,observed:values.loadEvidence,required:1},{name:"non-production-chaos-evidence",passed:values.chaosEvidence>0,observed:values.chaosEvidence,required:1}]),
+    phase(2,"real production controllers",[{name:"ready-controller-families",passed:values.readyControllers>=10,observed:values.readyControllers,required:10}]),
+    phase(3,"backup restore PITR and failover proof",phases[2].checks),
+    phase(4,"published official SDKs",phases[3].checks),
+    phase(5,"real offline-client validation",phases[4].checks),
+    phase(6,"second production region",phases[5].checks),
+    phase(7,"CDN and image delivery",phases[6].checks),
+    phase(8,"distribution and real-device providers",[{name:"ready-distribution-provider-families",passed:values.readyDistributionProviders>=4,observed:values.readyDistributionProviders,required:4},{name:"device-providers-with-artifacts",passed:values.passedDeviceProviders>=2,observed:values.passedDeviceProviders,required:2}]),
+    phase(9,"crash symbolication and performance collection",[{name:"live-telemetry-families",passed:values.productionTelemetryFamilies>=3,observed:values.productionTelemetryFamilies,required:3},{name:"completed-symbolication",passed:values.completedSymbolication>0,observed:values.completedSymbolication,required:1}]),
+    phase(10,"generalized application hosting",[{name:"ready-hosting-project",passed:values.readyHostingProjects>0,observed:values.readyHostingProjects,required:1},{name:"verified-hosting-release",passed:values.readyHostingReleases>0,observed:values.readyHostingReleases,required:1}]),
+    phase(11,"externally visible CI and release assurance",[{name:"commit-bound-ci-evidence",passed:values.ciEvidence>0,observed:values.ciEvidence,required:1}]),
+    phase(12,"commercial and compliance proof",[{name:"commercial-provider-families",passed:values.readyCommercialProviders>=4,observed:values.readyCommercialProviders,required:4},{name:"verified-compliance-families",passed:values.verifiedComplianceFamilies>=8,observed:values.verifiedComplianceFamilies,required:8}])
+  ];
+
   const report = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     releaseCommit: commit,
     canonicalOrigin,
-    status: phases.every((item) => item.status === "certified") ? "certified" : "blocked",
-    phases
+    status: requirements.every((item) => item.status === "certified") ? "certified" : "blocked",
+    phases,
+    requirements
   };
+  if (validCommit(commit)) report.evidence = await preserveEvidence({type:"certification",commit,status:report.status==="certified"?"passed":"blocked",report,database});
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   if (!reportOnly && report.status !== "certified") process.exitCode = 1;
 }

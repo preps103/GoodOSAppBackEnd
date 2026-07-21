@@ -29,6 +29,12 @@ publicRouter.get("/in-app/:appId",publicLimiter,async(request,response,next)=>{t
   response.set("Cache-Control","private, no-store");return response.json({success:true,subjectHash,campaigns:result.rows});
 }catch(error){return next(error);}});
 
+publicRouter.get("/evidence/releases/:commit",publicLimiter,async(request,response,next)=>{try{
+  const commit=clean(request.params.commit,64);if(!/^[0-9a-f]{7,64}$/.test(commit))return response.status(400).json({success:false,message:"A valid release commit is required."});
+  const result=await database.query(`SELECT evidence_type,release_commit,status,checksum_sha256,verified_at,expires_at FROM goodbase_release_evidence WHERE release_commit=$1 ORDER BY evidence_type,verified_at DESC`,[commit]);
+  return response.json({success:true,releaseCommit:commit,evidence:result.rows});
+}catch(error){return next(error);}});
+
 authenticatedRouter.use(authRequired,tenantContext);
 authenticatedRouter.post("/in-app/:campaignId/events",publicLimiter,async(request,response,next)=>{try{
   const tenant=scope(request),eventType=clean(request.body?.eventType,30);if(!["eligible","impression","click","dismiss","conversion"].includes(eventType))return response.status(400).json({success:false,message:"Invalid message event type."});

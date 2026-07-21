@@ -227,12 +227,11 @@ async function dispatchControllerOperations(limit = 10) {
           parameters: operation.request_json
         }
       });
-      await database.query(
-        `UPDATE goodbase_controller_operations SET status='succeeded',result_json=$2::jsonb,
-         controller_request_id=$3,completed_at=NOW(),error_message=NULL WHERE id=$1`,
-        [operation.id, JSON.stringify(result.payload), result.payload.requestId || null]
-      );
-      succeeded += 1;
+      if(result.payload.completed===true){
+        await database.query(`UPDATE goodbase_controller_operations SET status='succeeded',result_json=$2::jsonb,rollback_evidence_json=$3::jsonb,controller_request_id=$4,completed_at=NOW(),error_message=NULL WHERE id=$1`,[operation.id,JSON.stringify(result.payload.result||result.payload),JSON.stringify(result.payload.rollbackEvidence||{}),result.payload.requestId||null]);succeeded+=1;
+      }else if(result.payload.accepted===true&&result.payload.requestId){
+        await database.query(`UPDATE goodbase_controller_operations SET status='awaiting_callback',result_json=$2::jsonb,controller_request_id=$3,error_message=NULL WHERE id=$1`,[operation.id,JSON.stringify(result.payload),result.payload.requestId]);
+      }else throw new Error("Controller response must prove completion or accept a signed callback.");
     } catch (error) {
       await database.query(
         `UPDATE goodbase_controller_operations SET status='failed',error_message=$2,

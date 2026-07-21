@@ -132,6 +132,8 @@ const goodbaseProductRoutes =
 
 const goodbaseExperienceRoutes =
   require("./goodbase-experience.routes");
+const goodbaseControllerCallbackRoutes =
+  require("./goodbase-controller-callback.routes");
 
 const router = express.Router();
 
@@ -456,6 +458,10 @@ router.use(
 router.use(
   "/api/goodbase/v1/experience",
   goodbaseExperienceRoutes.publicRouter
+);
+router.use(
+  "/api/goodbase/v1/controller-callbacks",
+  goodbaseControllerCallbackRoutes
 );
 router.use(
   "/api/goodbase/v1/experience",

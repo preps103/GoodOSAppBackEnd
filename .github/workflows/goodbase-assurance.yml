@@ -1,5 +1,6 @@
 name: Goodbase Assurance
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -19,10 +20,14 @@ jobs:
           node-version: 22.22.3
           cache: npm
       - run: npm ci
+      - run: mkdir -p artifacts/release-evidence
       - run: npm run check
-      - run: npm run security:gate
+      - run: npm run security:gate | tee artifacts/release-evidence/security-gate.json
+        env:
+          GOODBASE_RELEASE_COMMIT: ${{ github.sha }}
+          GOODBASE_EVIDENCE_DIR: artifacts/release-evidence
       - run: npm audit --omit=dev --audit-level=high
-      - run: npm sbom --sbom-format cyclonedx > goodbase-sbom.cdx.json
+      - run: npm sbom --sbom-format cyclonedx > artifacts/release-evidence/goodbase-sbom.cdx.json
       - id: package
         shell: bash
         run: |
@@ -37,7 +42,7 @@ jobs:
         with:
           name: goodbase-release-evidence
           path: |
-            goodbase-sbom.cdx.json
+            artifacts/release-evidence/
             ${{ steps.package.outputs.path }}
   secret-scan:
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-name: GoodOS Backend CI
+name: Goodbase Required CI
 
 on:
   pull_request:
@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 concurrency:
   group: backend-ci-${{ github.ref }}
@@ -39,4 +40,26 @@ jobs:
         run: npm run check:openapi
 
       - name: Run automated tests
-        run: npm test
+        run: npm test 2>&1 | tee goodbase-tests.tap
+
+      - name: Run security gate
+        env:
+          GOODBASE_RELEASE_COMMIT: ${{ github.sha }}
+          GOODBASE_EVIDENCE_DIR: artifacts/release-evidence
+        run: npm run security:gate | tee goodbase-security.json
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Generate SBOM
+        run: mkdir -p artifacts/release-evidence && npm sbom --sbom-format cyclonedx > artifacts/release-evidence/goodbase-sbom.cdx.json
+
+      - name: Publish required-check evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: goodbase-required-ci-${{ github.sha }}
+          path: |
+            goodbase-tests.tap
+            goodbase-security.json
+            artifacts/release-evidence/
+          retention-days: 90
