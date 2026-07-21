@@ -32,6 +32,8 @@ async function evidenceCount(type) {
   return count("SELECT COUNT(*) FROM goodbase_release_evidence WHERE evidence_type=$1 AND release_commit=$2 AND status='passed'", [type, commit]);
 }
 
+const requiredControllerFamilies = ["infrastructure","recovery","hosting","domain","preview","regional","cdn","distribution","embedding","import"];
+
 function phase(number, name, checks) {
   const passed = checks.every((check) => check.passed);
   return { phase: number, name, status: passed ? "certified" : "blocked", checks };
@@ -53,7 +55,7 @@ async function main() {
   ]);
 
   const values = {
-    readyControllers: await count("SELECT COUNT(DISTINCT controller_type) FROM goodbase_controller_registrations WHERE status='ready'"),
+    readyControllers: await count("SELECT COUNT(DISTINCT controller_type) FROM goodbase_controller_registrations WHERE controller_type=ANY($1::text[]) AND status='ready' AND last_health_at>NOW()-INTERVAL '10 minutes' AND NULLIF(last_health_json->>'version','') IS NOT NULL AND jsonb_typeof(last_health_json->'capabilities')='array' AND jsonb_array_length(last_health_json->'capabilities')>0", [requiredControllerFamilies]),
     enabledAuthProviders: await count("SELECT COUNT(*) FROM goodbase_consumer_auth_providers WHERE status='enabled'"),
     readyMessagingProviders: await count("SELECT COUNT(*) FROM goodbase_messaging_providers WHERE status='ready'"),
     enforcedAttestationProviders: await count("SELECT COUNT(DISTINCT provider) FROM goodbase_attestation_policies WHERE mode='enforce'"),
@@ -61,10 +63,10 @@ async function main() {
     verifiedBackups: await count("SELECT COUNT(*) FROM goodbase_backup_artifacts_v2 WHERE status='verified'"),
     passedRestores: await count("SELECT COUNT(*) FROM goodbase_restore_exercises_v2 WHERE status='passed'"),
     streamingReplicas: await count("SELECT COUNT(DISTINCT region_id) FROM goodbase_replication_targets_v2 WHERE status IN('streaming','promoted')"),
-    activeSdkFamilies: await count("SELECT COUNT(DISTINCT language) FROM goodbase_sdk_releases WHERE status='active' AND signed=TRUE AND checksum_sha256 IS NOT NULL AND source_commit IS NOT NULL"),
-    passedSdkConformance: await count("SELECT COUNT(DISTINCT release_id) FROM goodbase_sdk_compatibility_runs WHERE status='passed'"),
+    activeSdkFamilies: await count("SELECT COUNT(DISTINCT language) FROM goodbase_sdk_releases WHERE status='active' AND signed=TRUE AND checksum_sha256 ~ '^[0-9a-f]{64}$' AND source_commit IS NOT NULL AND source_commit ~ '^[0-9a-f]{40}$' AND package_ref IS NOT NULL AND signature_ref IS NOT NULL AND sbom_ref IS NOT NULL AND changelog_ref IS NOT NULL AND compatibility_matrix_json<>'{}'::jsonb"),
+    passedSdkConformance: await count("SELECT COUNT(DISTINCT release_id) FROM goodbase_sdk_compatibility_runs WHERE status='passed' AND results_json @> '{\"rest\":\"passed\",\"graphql\":\"passed\",\"realtime\":\"passed\",\"offline\":\"passed\",\"storage\":\"passed\",\"auth\":\"passed\",\"attestation\":\"passed\",\"product\":\"passed\"}'::jsonb AND artifact_ref IS NOT NULL"),
     activeSyncCollections: await count("SELECT COUNT(*) FROM goodbase_sync_collections WHERE status='active'"),
-    passedOfflineClients: await count("SELECT COUNT(DISTINCT release_id) FROM goodbase_sdk_compatibility_runs WHERE status='passed' AND COALESCE(results_json->>'offlineScenario','')='passed'"),
+    passedOfflineClients: await count("SELECT COUNT(DISTINCT client_platform) FROM goodbase_sdk_compatibility_runs WHERE status='passed' AND client_platform=ANY(ARRAY['swift','kotlin','flutter']) AND encrypted_cache_verified=TRUE AND artifact_ref IS NOT NULL AND scenario_report_json @> '{\"backgroundSync\":\"passed\",\"offlineRestart\":\"passed\",\"largeQueue\":\"passed\",\"conflicts\":\"passed\",\"realtimeReplay\":\"passed\",\"multiDevice\":\"passed\",\"expiredToken\":\"passed\",\"cacheMigration\":\"passed\"}'::jsonb"),
     readyRegions: await count("SELECT COUNT(DISTINCT region_id) FROM goodbase_regional_deployments WHERE status='ready' AND ready_instances>=min_instances"),
     readyRegionalServices: await count("SELECT COUNT(DISTINCT service_type) FROM goodbase_regional_deployments WHERE status='ready' AND ready_instances>=min_instances"),
     passedFailoverExercises: await count("SELECT COUNT(DISTINCT event_type) FROM goodbase_failover_events WHERE status='completed'"),
@@ -85,7 +87,7 @@ async function main() {
   const phases = [
     phase(39, "canonical production cutover", [baseReady, canonicalHeader, legacyRedirect, canonicalSdk, legacySdk]),
     phase(40, "external providers and controllers", [
-      { name: "controllers", passed: values.readyControllers >= 8, observed: values.readyControllers, required: 8 },
+      { name: "controllers", passed: values.readyControllers >= 10, observed: values.readyControllers, required: 10 },
       { name: "authentication-providers", passed: values.enabledAuthProviders >= 10, observed: values.enabledAuthProviders, required: 10 },
       { name: "messaging-providers", passed: values.readyMessagingProviders >= 3, observed: values.readyMessagingProviders, required: 3 },
       { name: "attestation-providers", passed: values.enforcedAttestationProviders >= 4, observed: values.enforcedAttestationProviders, required: 4 }

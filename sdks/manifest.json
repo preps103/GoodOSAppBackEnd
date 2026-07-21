@@ -17,5 +17,11 @@
     "swift": "sdks/swift/Sources/Goodbase/GoodbaseClient.swift",
     "kotlin": "sdks/kotlin/src/main/kotlin/app/goodos/goodbase/GoodbaseClient.kt",
     "csharp": "sdks/csharp/Goodbase/GoodbaseClient.cs"
+  },
+  "offline": {
+    "web": "src/public/sdk/goodbase-offline.js",
+    "swift": "sdks/swift/Sources/Goodbase/GoodbaseOfflineStore.swift",
+    "kotlin": "sdks/kotlin/src/main/kotlin/app/goodos/goodbase/GoodbaseOfflineStore.kt",
+    "dart": "sdks/dart/lib/goodbase_offline.dart"
   }
 }

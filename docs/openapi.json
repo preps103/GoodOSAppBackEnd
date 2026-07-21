@@ -3191,6 +3191,33 @@
       },
       "/api/goodbase/v1/product/overview": {
         "get": {"summary":"Read phases 31–38 operational state","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Analytics, telemetry, experiment, distribution, CDN, regional and commercial metrics"},"403":{"description":"Administrator role required"}}}
+      },
+      "/api/goodbase/v1/ecosystem/overview": {
+        "get": {"summary":"Read IaC, extension marketplace, and AI operational state","tags":["Goodbase Ecosystem"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Tenant ecosystem metrics"},"403":{"description":"Administrator role required"}}}
+      },
+      "/api/goodbase/v1/ecosystem/iac/stacks": {
+        "get": {"summary":"List governed infrastructure stacks and runs","tags":["Goodbase IaC"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"IaC stacks and recent runs"}}},
+        "post": {"summary":"Register a locked Terraform or Pulumi stack","tags":["Goodbase IaC"],"security":[{"GoodOSBearer":[]}],"responses":{"201":{"description":"IaC stack registered"},"428":{"description":"Privileged MFA required"}}}
+      },
+      "/api/goodbase/v1/ecosystem/iac/stacks/{id}/runs": {
+        "post": {"summary":"Queue an idempotent controller-backed IaC run","tags":["Goodbase IaC"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"IaC run queued"},"409":{"description":"Rollback or state requirements are incomplete"},"503":{"description":"Verified controller unavailable"}}}
+      },
+      "/api/goodbase/v1/ecosystem/extensions": {
+        "get": {"summary":"List signed extension packages and versions","tags":["Goodbase Extensions"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Extension catalog"}}},
+        "post": {"summary":"Create a package for a verified publisher","tags":["Goodbase Extensions"],"security":[{"GoodOSBearer":[]}],"responses":{"201":{"description":"Draft extension package"}}}
+      },
+      "/api/goodbase/v1/ecosystem/extensions/{id}/install": {
+        "post": {"summary":"Install a reviewed signed extension through a verified controller","tags":["Goodbase Extensions"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Extension installation queued"},"503":{"description":"Verified controller unavailable"}}}
+      },
+      "/api/goodbase/v1/ecosystem/extensions/installations/{id}/rollback": {
+        "post": {"summary":"Roll back an extension through its verified controller and signed rollback manifest","tags":["Goodbase Extensions"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Extension rollback queued"},"409":{"description":"Installation has no verified rollback target"},"428":{"description":"Privileged MFA required"},"503":{"description":"Verified controller unavailable"}}}
+      },
+      "/api/goodbase/v1/ecosystem/ai/providers": {
+        "get": {"summary":"List governed AI providers and models","tags":["Goodbase AI"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"AI providers with secret references only"}}},
+        "post": {"summary":"Register an unverified AI provider","tags":["Goodbase AI"],"security":[{"GoodOSBearer":[]}],"responses":{"201":{"description":"Provider registered pending live verification"}}}
+      },
+      "/api/goodbase/v1/ecosystem/ai/generate": {
+        "post": {"summary":"Run an attested, quota and safety bounded AI generation","tags":["Goodbase AI"],"security":[{"GoodOSBearer":[]}],"responses":{"201":{"description":"Generation completed and metered"},"401":{"description":"Authentication or attestation required"},"429":{"description":"AI quota or rate limit exceeded"},"503":{"description":"Verified provider unavailable"}}}
       }
   }
 }
