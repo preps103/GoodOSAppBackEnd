@@ -14,7 +14,12 @@ DO $$
 DECLARE
   compatibility_role text;
 BEGIN
-  FOREACH compatibility_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role']
+  FOREACH compatibility_role IN ARRAY ARRAY[
+    'anon',
+    'authenticated',
+    'service_role',
+    'supabase_realtime_admin'
+  ]
   LOOP
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = compatibility_role) THEN
       EXECUTE format('CREATE ROLE %I NOLOGIN NOINHERIT NOBYPASSRLS', compatibility_role);
