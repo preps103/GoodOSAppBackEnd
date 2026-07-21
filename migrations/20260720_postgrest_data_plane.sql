@@ -191,7 +191,7 @@ VALUES
   (
     'data_plane_realtime',
     'supabase_realtime',
-    '2.100.0',
+    '2.112.9',
     'planned',
     'http://127.0.0.1:8400',
     '{"transport":"websocket","cdc":"logical_replication","walLevelRequired":"logical"}'::jsonb,

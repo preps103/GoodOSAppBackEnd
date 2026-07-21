@@ -2,7 +2,7 @@
 
 Production URL:
 
-`https://backend.goodos.app/update-sites`
+`https://base.goodos.app/update-sites`
 
 The center stores site deployment configuration and performs GitHub updates without requiring the operator to type Git, build, PM2, systemd, health-check, or rollback commands.
 

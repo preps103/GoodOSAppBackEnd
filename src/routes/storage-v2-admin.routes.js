@@ -167,8 +167,8 @@ router.get("/overview", async (request, response, next) => {
       success: true,
       organizationId,
       storage: result.rows[0] || {},
-      publicApiBase: "https://backend.goodos.app/api/v2/storage",
-      cdnBase: "https://backend.goodos.app/storage/v2",
+      publicApiBase: "https://base.goodos.app/api/v2/storage",
+      cdnBase: "https://base.goodos.app/storage/v2",
     });
   } catch (error) {
     return next(error);

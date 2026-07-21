@@ -346,7 +346,7 @@ router.get("/section/:slug", async (req, res) => {
         q = await safeQuery(db, `select * from backend_oauth_server_settings order by created_at desc nulls last limit 200`);
       } else {
         q = { ok: true, rows: [
-          { setting: "issuer", value: "https://backend.goodos.app", status: "planned" },
+          { setting: "issuer", value: "https://base.goodos.app", status: "planned" },
           { setting: "authorization_endpoint", value: "/oauth/authorize", status: "planned" },
           { setting: "token_endpoint", value: "/oauth/token", status: "planned" }
         ] };
@@ -415,7 +415,7 @@ router.get("/section/:slug", async (req, res) => {
         q = await safeQuery(db, `select * from backend_url_configurations order by created_at desc nulls last limit 200`);
       } else {
         q = { ok: true, rows: [
-          { type: "site_url", value: "https://backend.goodos.app", status: "active" },
+          { type: "site_url", value: "https://base.goodos.app", status: "active" },
           { type: "redirect_url", value: "planned", status: "planned" }
         ] };
       }

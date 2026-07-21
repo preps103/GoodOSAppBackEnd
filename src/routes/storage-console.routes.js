@@ -325,7 +325,7 @@ function getPackageInfo() {
 function parseNginxAccessLog() {
   const candidates = [
     "/var/log/nginx/access.log",
-    "/var/log/nginx/backend.goodos.app.access.log",
+    "/var/log/nginx/base.goodos.app.access.log",
     path.join(PROJECT_ROOT, "logs", "access.log")
   ];
 

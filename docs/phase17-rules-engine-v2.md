@@ -2,7 +2,7 @@
 
 ## Management base URL
 
-`https://backend.goodos.app/api/policy-engine-v2`
+`https://base.goodos.app/api/policy-engine-v2`
 
 ## Management endpoints
 

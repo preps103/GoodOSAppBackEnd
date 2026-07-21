@@ -177,7 +177,7 @@ router.get("/overview", async (request, response, next) => {
       stats: countsResult.rows[0] || {},
       decisions: decisionsResult.rows,
       managementBaseUrl:
-        "https://backend.goodos.app/api/policy-engine-v2",
+        "https://base.goodos.app/api/policy-engine-v2",
     });
   } catch (error) {
     return next(error);

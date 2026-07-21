@@ -169,7 +169,7 @@ VALUES (
     'file:///var/www/GoodAppBackEnd/storage/buckets',
     'local',
     'storage/buckets',
-    'https://backend.goodos.app/storage/v2/public',
+    'https://base.goodos.app/storage/v2/public',
     TRUE,
     TRUE,
     'healthy',

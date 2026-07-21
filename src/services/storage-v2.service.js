@@ -646,7 +646,7 @@ async function putObject(input) {
 
   const publicEnabled = bucket.public_read_enabled === true || bucket.visibility === "public";
   const publicUrl = publicEnabled
-    ? `https://backend.goodos.app/storage/v2/public/${encodeURIComponent(bucket.name)}/${objectKey.split("/").map(awsEncode).join("/")}`
+    ? `https://base.goodos.app/storage/v2/public/${encodeURIComponent(bucket.name)}/${objectKey.split("/").map(awsEncode).join("/")}`
     : null;
   const cdnUrl = bucket.cdn_enabled === true && bucket.cdnBaseUrl
     ? `${String(bucket.cdnBaseUrl).replace(/\/+$/, "")}/${objectKey.split("/").map(awsEncode).join("/")}`
@@ -919,7 +919,7 @@ async function createSignedUrl({ fileId, expiresSeconds, maxDownloads = 1, allow
       createdBy || null,
       allowedIp ? normalizeIp(allowedIp) : null,
       userAgentLimit || null,
-      `https://backend.goodos.app/storage/v2/signed/${token}`,
+      `https://base.goodos.app/storage/v2/signed/${token}`,
       file.cdn_url || null,
       JSON.stringify({ phase: 18, provider: file.provider }),
       organizationId || file.organization_id || "org_goodos",
@@ -931,7 +931,7 @@ async function createSignedUrl({ fileId, expiresSeconds, maxDownloads = 1, allow
   return {
     id: signedId,
     token,
-    url: `https://backend.goodos.app/storage/v2/signed/${token}`,
+    url: `https://base.goodos.app/storage/v2/signed/${token}`,
     expiresInSeconds: ttl,
     maxDownloads: maxDownloads === null ? null : Math.max(Number(maxDownloads || 1), 1),
   };

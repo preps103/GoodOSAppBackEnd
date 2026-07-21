@@ -354,7 +354,7 @@ router.get(
             .active_providers,
 
         callbackUrl:
-          "https://backend.goodos.app/api/oidc/callback",
+          "https://base.goodos.app/api/oidc/callback",
 
         ssoEnforced: false,
       });
@@ -509,7 +509,7 @@ router.get(
         success: true,
 
         callbackUrl:
-          "https://backend.goodos.app/api/oidc/callback",
+          "https://base.goodos.app/api/oidc/callback",
 
         providers:
           result.rows.map(
@@ -1170,7 +1170,7 @@ router.post(
                   'discoveryIssuer',
                   $6,
                   'callbackUrl',
-                  'https://backend.goodos.app/api/oidc/callback'
+                  'https://base.goodos.app/api/oidc/callback'
                 ),
 
               updated_by =
@@ -1457,7 +1457,7 @@ router.patch(
                 'mfaAcrValues',
                 $8::jsonb,
                 'callbackUrl',
-                'https://backend.goodos.app/api/oidc/callback',
+                'https://base.goodos.app/api/oidc/callback',
                 'phase15c1Ready',
                 true
               ),
@@ -1503,7 +1503,7 @@ router.patch(
         provider:
           result.rows[0],
         callbackUrl:
-          "https://backend.goodos.app/api/oidc/callback",
+          "https://base.goodos.app/api/oidc/callback",
         message:
           requestedStatus === "active"
             ? "OIDC provider activated."

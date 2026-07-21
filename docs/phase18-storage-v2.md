@@ -2,10 +2,10 @@
 
 ## Production endpoints
 
-- Public API: `https://backend.goodos.app/api/v2/storage`
-- Management API: `https://backend.goodos.app/api/storage-v2`
-- CDN/public objects: `https://backend.goodos.app/storage/v2/public/:bucketName/:objectKey`
-- Signed downloads: `https://backend.goodos.app/storage/v2/signed/:token`
+- Public API: `https://base.goodos.app/api/v2/storage`
+- Management API: `https://base.goodos.app/api/storage-v2`
+- CDN/public objects: `https://base.goodos.app/storage/v2/public/:bucketName/:objectKey`
+- Signed downloads: `https://base.goodos.app/storage/v2/signed/:token`
 
 ## Public API capabilities
 

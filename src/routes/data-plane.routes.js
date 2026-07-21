@@ -9,7 +9,9 @@ const { publicUser } = require("../services/auth.service");
 const { logAudit } = require("../services/audit.service");
 const {
   mintDataPlaneToken,
-  DATA_TOKEN_TTL
+  mintServiceDataPlaneToken,
+  DATA_TOKEN_TTL,
+  SERVICE_DATA_TOKEN_TTL
 } = require("../services/data-plane-token.service");
 
 const controlRouter = express.Router();
@@ -375,6 +377,74 @@ async function managementAudit(request, action, entityType, entityId, metadata =
   });
 }
 
+async function resolveTenantContext(request) {
+  const requestedOrganization = String(
+    request.get("x-goodbase-organization-id") ||
+    request.body?.organizationId ||
+    request.auth?.decoded?.organizationId ||
+    ""
+  ).trim();
+  const requestedProject = String(
+    request.get("x-goodbase-project-id") ||
+    request.body?.projectId ||
+    request.auth?.decoded?.projectId ||
+    ""
+  ).trim();
+  const requestedEnvironment = String(
+    request.get("x-goodbase-environment-id") ||
+    request.body?.environmentId ||
+    request.auth?.decoded?.environmentId ||
+    ""
+  ).trim();
+
+  const result = await database.query(
+    `
+      SELECT
+        organization.id AS organization_id,
+        project.id AS project_id,
+        environment.id AS environment_id
+      FROM backend_organization_memberships AS organization_membership
+      JOIN backend_organizations AS organization
+        ON organization.id = organization_membership.organization_id
+       AND organization.status = 'active'
+      JOIN backend_project_memberships AS project_membership
+        ON project_membership.user_id = organization_membership.user_id
+       AND project_membership.status = 'active'
+      JOIN backend_projects AS project
+        ON project.id = project_membership.project_id
+       AND project.organization_id = organization.id
+       AND project.status = 'active'
+      JOIN backend_project_environments AS environment
+        ON environment.project_id = project.id
+       AND environment.status = 'active'
+      WHERE organization_membership.user_id = $1::uuid
+        AND organization_membership.status = 'active'
+        AND ($2::text = '' OR organization.id = $2)
+        AND ($3::text = '' OR project.id = $3)
+        AND ($4::text = '' OR environment.id = $4)
+      ORDER BY
+        CASE environment.type WHEN 'production' THEN 1 WHEN 'staging' THEN 2 ELSE 3 END,
+        organization_membership.created_at ASC,
+        project_membership.created_at ASC
+      LIMIT 1
+    `,
+    [request.user.id, requestedOrganization, requestedProject, requestedEnvironment]
+  );
+
+  if (!result.rowCount) {
+    const error = new Error("No active Goodbase tenant scope matches this account and request.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  request.goodbaseTenantContext = {
+    organizationId: result.rows[0].organization_id,
+    projectId: result.rows[0].project_id,
+    environmentId: result.rows[0].environment_id
+  };
+  return request.goodbaseTenantContext;
+}
+
 async function logDataRequest(request, result) {
   const resourcePath = String(request.path || "/")
     .replace(/^\/+/, "")
@@ -634,9 +704,10 @@ controlRouter.get(
   }
 );
 
-controlRouter.post("/token", authRequired, (request, response) => {
+controlRouter.post("/token", authRequired, async (request, response) => {
   noStore(response);
   try {
+    await resolveTenantContext(request);
     return response.json({
       success: true,
       token: mintDataPlaneToken(request),
@@ -652,6 +723,36 @@ controlRouter.post("/token", authRequired, (request, response) => {
     });
   }
 });
+
+controlRouter.post(
+  "/token/service",
+  authRequired,
+  dataPlaneAdminRequired,
+  async (request, response, next) => {
+    try {
+      noStore(response);
+      await resolveTenantContext(request);
+      const token = mintServiceDataPlaneToken(request);
+      await managementAudit(
+        request,
+        "goodbase.data.service_token.issue",
+        "data_platform",
+        request.goodbaseTenantContext.projectId,
+        { expiresIn: SERVICE_DATA_TOKEN_TTL, ...request.goodbaseTenantContext }
+      );
+      return response.json({
+        success: true,
+        token,
+        tokenType: "Bearer",
+        expiresIn: SERVICE_DATA_TOKEN_TTL,
+        endpoint: `${PUBLIC_BASE_URL}/rest/v1`,
+        scope: request.goodbaseTenantContext
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+);
 
 controlRouter.get(
   "/publications",
@@ -835,7 +936,7 @@ async function dataPlaneAuth(request, response, next) {
 
   try {
     const decoded = jwt.verify(rawToken, env.jwtSecret);
-    if (decoded.tokenUse !== "data_plane") {
+    if (!["data_plane", "data_plane_service"].includes(decoded.tokenUse)) {
       return authRequired(request, response, next);
     }
 
@@ -938,6 +1039,7 @@ restRouter.use(async (request, response) => {
       }
     }
 
+    await resolveTenantContext(request);
     const token = mintDataPlaneToken(request);
     const headers = {
       authorization: `Bearer ${token}`,
@@ -1007,6 +1109,7 @@ module.exports = {
   restRouter,
   dataPlaneAuth,
   dataPlaneAdminRequired,
+  resolveTenantContext,
   __test: {
     postgrestRequest,
     dataPlaneAuth,

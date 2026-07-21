@@ -5839,7 +5839,7 @@ window.createProjectEnvironment = async function createProjectEnvironment(projec
         type,
         slug,
         status: "active",
-        apiBaseUrl: "https://backend.goodos.app"
+        apiBaseUrl: "https://base.goodos.app"
       })
     });
 
@@ -10977,7 +10977,7 @@ function settingsView() {
       <div class="section-head"><h3>Runtime Configuration</h3><span class="badge">Live</span></div>
       <table>
         <tbody>
-          <tr><td>Backend Domain</td><td>backend.goodos.app</td></tr>
+          <tr><td>Backend Domain</td><td>base.goodos.app</td></tr>
           <tr><td>SSO Domain</td><td>.goodos.app</td></tr>
           <tr><td>Cookie Name</td><td>goodos_session</td></tr>
           <tr><td>Session Length</td><td>7 days</td></tr>
@@ -11950,7 +11950,7 @@ window.createWebhook = async function createWebhook() {
   const name = prompt("Webhook name:", "New Webhook");
   if (!name) return;
 
-  const url = prompt("Webhook URL:", "https://backend.goodos.app/webhook-test-receiver");
+  const url = prompt("Webhook URL:", "https://base.goodos.app/webhook-test-receiver");
   if (!url) return;
 
   const eventsText = prompt("Events, comma-separated. Use * for all events:", "*") || "*";

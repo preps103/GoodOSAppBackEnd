@@ -17,7 +17,7 @@ const BUSINESS_LOGO_ROOT = path.resolve(
     path.join(process.cwd(), "storage", "business-logos")
 );
 const PUBLIC_BACKEND_URL = String(
-  process.env.PUBLIC_BACKEND_URL || "https://backend.goodos.app"
+  process.env.PUBLIC_BACKEND_URL || "https://base.goodos.app"
 ).replace(/\/+$/, "");
 
 const database =

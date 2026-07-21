@@ -1,5 +1,5 @@
 [Unit]
-Description=Goodbase hardened REST data platform
+Description=Goodbase REST, GraphQL, pooling, and Realtime data platform
 Requires=docker.service postgresql.service
 After=docker.service postgresql.service network-online.target
 
@@ -8,9 +8,9 @@ Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/var/www/GoodAppBackEnd/deploy/data-platform
 EnvironmentFile=/etc/goodos/data-platform.env
-ExecStart=/usr/bin/docker compose --env-file /etc/goodos/data-platform.env up -d --remove-orphans postgrest
-ExecReload=/usr/bin/docker compose --env-file /etc/goodos/data-platform.env up -d --remove-orphans postgrest
-ExecStop=/usr/bin/docker compose --env-file /etc/goodos/data-platform.env stop postgrest
+ExecStart=/usr/bin/docker compose --env-file /etc/goodos/data-platform.env up -d --remove-orphans postgrest pgbouncer-transaction pgbouncer-session realtime
+ExecReload=/usr/bin/docker compose --env-file /etc/goodos/data-platform.env up -d --remove-orphans postgrest pgbouncer-transaction pgbouncer-session realtime
+ExecStop=/usr/bin/docker compose --env-file /etc/goodos/data-platform.env stop postgrest pgbouncer-transaction pgbouncer-session realtime
 TimeoutStartSec=180
 TimeoutStopSec=60
 

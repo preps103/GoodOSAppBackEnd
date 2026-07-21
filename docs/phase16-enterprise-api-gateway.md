@@ -2,7 +2,7 @@
 
 ## Public base URL
 
-`https://backend.goodos.app/api/v2`
+`https://base.goodos.app/api/v2`
 
 Authentication accepts either:
 
@@ -19,7 +19,7 @@ Authentication accepts either:
 
 ## Management endpoint
 
-`https://backend.goodos.app/api/api-gateway-v2`
+`https://base.goodos.app/api/api-gateway-v2`
 
 Management requires an authenticated GoodOS owner or administrator with the existing privileged-MFA policy.
 

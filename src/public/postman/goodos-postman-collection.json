@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "https://backend.goodos.app/api/v1"
+      "value": "https://base.goodos.app/api/v1"
     },
     {
       "key": "GOODOS_API_KEY",
@@ -141,7 +141,7 @@
       "request": {
         "method": "GET",
         "header": [],
-        "url": "https://backend.goodos.app/storage/public/storage-v2-public/v2-public-health.txt"
+        "url": "https://base.goodos.app/storage/public/storage-v2-public/v2-public-health.txt"
       }
     },
     {
@@ -204,7 +204,7 @@
       "request": {
         "method": "GET",
         "header": [],
-        "url": "https://backend.goodos.app/api/auth/session"
+        "url": "https://base.goodos.app/api/auth/session"
       }
     },
     {
@@ -221,7 +221,7 @@
           "mode": "raw",
           "raw": "{\n  \"email\": \"owner@example.com\"\n}"
         },
-        "url": "https://backend.goodos.app/api/auth/password-reset/request"
+        "url": "https://base.goodos.app/api/auth/password-reset/request"
       }
     },
     {
@@ -284,7 +284,7 @@
       "request": {
         "method": "GET",
         "header": [],
-        "url": "https://backend.goodos.app/api/admin/jobs-page-data"
+        "url": "https://base.goodos.app/api/admin/jobs-page-data"
       }
     },
     {
@@ -301,7 +301,7 @@
           "mode": "raw",
           "raw": "{\n  \"limit\": 10\n}"
         },
-        "url": "https://backend.goodos.app/api/admin/jobs/run-due-safe"
+        "url": "https://base.goodos.app/api/admin/jobs/run-due-safe"
       }
     },
     {

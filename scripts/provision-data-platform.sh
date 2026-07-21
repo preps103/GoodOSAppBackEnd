@@ -15,6 +15,10 @@ PUBLIC_URL="${GOODBASE_PUBLIC_URL:-https://base.goodos.app}"
 MIGRATIONS=(
   "$APP_DIR/migrations/20260720_postgrest_data_plane.sql"
   "$APP_DIR/migrations/20260720_goodbase_rest_phase1.sql"
+  "$APP_DIR/migrations/20260721_goodbase_graphql_phase2.sql"
+  "$APP_DIR/migrations/20260721_goodbase_rls_phase3.sql"
+  "$APP_DIR/migrations/20260721_goodbase_pooling_phase4.sql"
+  "$APP_DIR/migrations/20260721_goodbase_realtime_phase5.sql"
 )
 
 fail() {
@@ -66,7 +70,7 @@ upsert_env_value() {
 
 [ "$(id -u)" -eq 0 ] || fail "Run this provisioning script as root."
 
-for command in node openssl psql docker curl systemctl awk sed; do
+for command in node openssl psql pg_dump docker curl systemctl awk sed; do
   require_command "$command"
 done
 
@@ -91,6 +95,35 @@ JWT_SECRET_VALUE="$(
 
 DB_PASSWORD="$(read_env_value "$ENV_FILE" PGRST_DB_PASSWORD)"
 [ -n "$DB_PASSWORD" ] || DB_PASSWORD="$(openssl rand -hex 32)"
+TRANSACTION_POOL_PASSWORD="$(read_env_value "$ENV_FILE" GOODBASE_TRANSACTION_POOL_PASSWORD)"
+[ -n "$TRANSACTION_POOL_PASSWORD" ] || TRANSACTION_POOL_PASSWORD="$(openssl rand -hex 32)"
+SESSION_POOL_PASSWORD="$(read_env_value "$ENV_FILE" GOODBASE_SESSION_POOL_PASSWORD)"
+[ -n "$SESSION_POOL_PASSWORD" ] || SESSION_POOL_PASSWORD="$(openssl rand -hex 32)"
+REALTIME_DB_PASSWORD="$(read_env_value "$ENV_FILE" REALTIME_DB_PASSWORD)"
+[ -n "$REALTIME_DB_PASSWORD" ] && [ "$REALTIME_DB_PASSWORD" != "not-provisioned" ] || REALTIME_DB_PASSWORD="$(openssl rand -hex 32)"
+REALTIME_API_JWT_SECRET="$(read_env_value "$ENV_FILE" REALTIME_API_JWT_SECRET)"
+[ -n "$REALTIME_API_JWT_SECRET" ] && [ "$REALTIME_API_JWT_SECRET" != "not-provisioned" ] || REALTIME_API_JWT_SECRET="$JWT_SECRET_VALUE"
+REALTIME_SECRET_KEY_BASE="$(read_env_value "$ENV_FILE" REALTIME_SECRET_KEY_BASE)"
+[ -n "$REALTIME_SECRET_KEY_BASE" ] && [ "$REALTIME_SECRET_KEY_BASE" != "not-provisioned" ] || REALTIME_SECRET_KEY_BASE="$(openssl rand -hex 64)"
+REALTIME_DB_ENC_KEY="$(read_env_value "$ENV_FILE" REALTIME_DB_ENC_KEY)"
+[ -n "$REALTIME_DB_ENC_KEY" ] || REALTIME_DB_ENC_KEY="$(openssl rand -hex 8)"
+
+install -d -o postgres -g postgres -m 0750 /var/backups/goodbase
+BACKUP_FILE="/var/backups/goodbase/pre-phase5-$(date -u +%Y%m%dT%H%M%SZ).dump"
+sudo -u postgres pg_dump -Fc -d "$DB_NAME" -f "$BACKUP_FILE"
+test -s "$BACKUP_FILE" || fail "Pre-Phase-5 database backup is empty."
+
+CURRENT_WAL_LEVEL="$(sudo -u postgres psql -Atqc "SHOW wal_level")"
+if [ "$CURRENT_WAL_LEVEL" != "logical" ]; then
+  sudo -u postgres psql -v ON_ERROR_STOP=1 <<'SQL'
+ALTER SYSTEM SET wal_level = 'logical';
+ALTER SYSTEM SET max_replication_slots = '10';
+ALTER SYSTEM SET max_wal_senders = '10';
+ALTER SYSTEM SET max_slot_wal_keep_size = '2GB';
+SQL
+  systemctl restart postgresql
+  systemctl is-active --quiet postgresql || fail "PostgreSQL failed after logical replication restart."
+fi
 
 for migration in "${MIGRATIONS[@]}"; do
   echo "APPLYING=$(basename "$migration")"
@@ -124,14 +157,36 @@ GRANT goodos_authenticated TO goodos_postgrest_authenticator;
 GRANT CONNECT ON DATABASE goodos_backend TO goodos_postgrest_authenticator;
 SQL
 
+sudo -u postgres psql \
+  -d "$DB_NAME" \
+  -v ON_ERROR_STOP=1 \
+  -v transaction_password="$TRANSACTION_POOL_PASSWORD" \
+  -v session_password="$SESSION_POOL_PASSWORD" \
+  -v realtime_password="$REALTIME_DB_PASSWORD" <<'SQL'
+SELECT format('ALTER ROLE goodbase_pool_transaction WITH LOGIN PASSWORD %L', :'transaction_password') \gexec
+SELECT format('ALTER ROLE goodbase_pool_session WITH LOGIN PASSWORD %L', :'session_password') \gexec
+SELECT format('ALTER ROLE goodbase_realtime WITH LOGIN REPLICATION PASSWORD %L', :'realtime_password') \gexec
+SQL
+
+HBA_FILE="$(sudo -u postgres psql -Atqc "SHOW hba_file")"
+[ -f "$HBA_FILE" ] || fail "PostgreSQL HBA file was not found."
+if ! grep -q "GOODBASE_MANAGED_POOL_AUTH" "$HBA_FILE"; then
+  HBA_TEMPORARY="$(mktemp)"
+  {
+    echo "# GOODBASE_MANAGED_POOL_AUTH"
+    echo "local ${DB_NAME} goodbase_pool_transaction scram-sha-256"
+    echo "local ${DB_NAME} goodbase_pool_session scram-sha-256"
+    cat "$HBA_FILE"
+  } > "$HBA_TEMPORARY"
+  install -o postgres -g postgres -m 0640 "$HBA_TEMPORARY" "$HBA_FILE"
+  rm -f "$HBA_TEMPORARY"
+  systemctl reload postgresql
+fi
+
 install -d -o root -g root -m 0750 "$ENV_DIR"
 
 REALTIME_DB_NAME="$(read_env_value "$ENV_FILE" REALTIME_DB_NAME)"
 REALTIME_DB_USER="$(read_env_value "$ENV_FILE" REALTIME_DB_USER)"
-REALTIME_DB_PASSWORD="$(read_env_value "$ENV_FILE" REALTIME_DB_PASSWORD)"
-REALTIME_API_JWT_SECRET="$(read_env_value "$ENV_FILE" REALTIME_API_JWT_SECRET)"
-REALTIME_SECRET_KEY_BASE="$(read_env_value "$ENV_FILE" REALTIME_SECRET_KEY_BASE)"
-
 cat > "$ENV_FILE" <<EOF
 PGRST_DB_URI=postgres://goodos_postgrest_authenticator:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}
 PGRST_DB_PASSWORD=${DB_PASSWORD}
@@ -140,11 +195,24 @@ PGRST_DB_POOL=20
 PGRST_DB_POOL_ACQUISITION_TIMEOUT=10
 PGRST_DB_MAX_ROWS=1000
 PGRST_LOG_LEVEL=info
-REALTIME_DB_NAME=${REALTIME_DB_NAME:-_goodos_realtime}
-REALTIME_DB_USER=${REALTIME_DB_USER:-goodos_realtime}
-REALTIME_DB_PASSWORD=${REALTIME_DB_PASSWORD:-not-provisioned}
-REALTIME_API_JWT_SECRET=${REALTIME_API_JWT_SECRET:-not-provisioned}
-REALTIME_SECRET_KEY_BASE=${REALTIME_SECRET_KEY_BASE:-not-provisioned}
+GOODBASE_DB_NAME=${DB_NAME}
+GOODBASE_TRANSACTION_POOL_PASSWORD=${TRANSACTION_POOL_PASSWORD}
+GOODBASE_SESSION_POOL_PASSWORD=${SESSION_POOL_PASSWORD}
+GOODBASE_TRANSACTION_MAX_CLIENTS=200
+GOODBASE_TRANSACTION_POOL_SIZE=20
+GOODBASE_TRANSACTION_RESERVE_SIZE=5
+GOODBASE_SESSION_MAX_CLIENTS=100
+GOODBASE_SESSION_POOL_SIZE=10
+GOODBASE_SESSION_RESERVE_SIZE=2
+REALTIME_DB_NAME=${REALTIME_DB_NAME:-${DB_NAME}}
+REALTIME_DB_USER=${REALTIME_DB_USER:-goodbase_realtime}
+REALTIME_DB_PASSWORD=${REALTIME_DB_PASSWORD}
+REALTIME_DB_ENC_KEY=${REALTIME_DB_ENC_KEY}
+REALTIME_API_JWT_SECRET=${REALTIME_API_JWT_SECRET}
+REALTIME_SECRET_KEY_BASE=${REALTIME_SECRET_KEY_BASE}
+REALTIME_MAX_CONNECTIONS=10000
+REALTIME_NUM_ACCEPTORS=100
+REALTIME_JWT_CLAIM_VALIDATORS={"iss":"${PUBLIC_URL}"}
 EOF
 chmod 0600 "$ENV_FILE"
 
@@ -156,6 +224,9 @@ upsert_env_value "$APP_ENV_FILE" GOODBASE_REST_TIMEOUT_MS "30000"
 upsert_env_value "$APP_ENV_FILE" GOODBASE_REST_MAX_QUERY_BYTES "8192"
 upsert_env_value "$APP_ENV_FILE" GOODBASE_REST_MAX_BODY_BYTES "1048576"
 upsert_env_value "$APP_ENV_FILE" GOODBASE_REST_MAX_RESPONSE_BYTES "10485760"
+upsert_env_value "$APP_ENV_FILE" GOODBASE_TRANSACTION_POOL_PORT "6543"
+upsert_env_value "$APP_ENV_FILE" GOODBASE_SESSION_POOL_PORT "5433"
+upsert_env_value "$APP_ENV_FILE" GOODBASE_REALTIME_PORT "8400"
 
 install \
   -o root \
@@ -168,7 +239,7 @@ systemctl daemon-reload
 
 cd "$COMPOSE_DIR"
 docker compose --env-file "$ENV_FILE" config --quiet
-docker compose --env-file "$ENV_FILE" pull postgrest
+docker compose --env-file "$ENV_FILE" pull postgrest pgbouncer-transaction pgbouncer-session realtime
 systemctl enable --now goodos-data-platform.service
 systemctl reload goodos-data-platform.service
 
@@ -207,6 +278,20 @@ for attempt in $(seq 1 30); do
   sleep 2
 done
 
+for port in 5433 6543 8400; do
+  for attempt in $(seq 1 45); do
+    if timeout 2 bash -c "</dev/tcp/127.0.0.1/${port}" >/dev/null 2>&1; then
+      break
+    fi
+    if [ "$attempt" -eq 45 ]; then
+      docker compose --env-file "$ENV_FILE" ps
+      docker compose --env-file "$ENV_FILE" logs --tail 120
+      fail "Goodbase service on port ${port} did not become ready."
+    fi
+    sleep 2
+  done
+done
+
 sudo -u postgres psql \
   -d "$DB_NAME" \
   -v ON_ERROR_STOP=1 \
@@ -233,3 +318,7 @@ echo "COMPONENT=postgrest"
 echo "LOCAL_ENDPOINT=http://127.0.0.1:8300"
 echo "PUBLIC_ENDPOINT=${PUBLIC_URL}/rest/v1"
 echo "HEALTH_ENDPOINT=${PUBLIC_URL}/api/data-platform/health"
+echo "TRANSACTION_POOL=postgresql://${PUBLIC_URL#https://}:6543/${DB_NAME}"
+echo "SESSION_POOL=postgresql://${PUBLIC_URL#https://}:5433/${DB_NAME}"
+echo "REALTIME_ENDPOINT=${PUBLIC_URL}/realtime/v1"
+echo "BACKUP_FILE=${BACKUP_FILE}"

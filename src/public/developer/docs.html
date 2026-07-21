@@ -91,7 +91,7 @@
     </section>
 
     <h2>Install the SDK</h2>
-    <pre><code>&lt;script src="https://backend.goodos.app/sdk/goodos.js"&gt;&lt;/script&gt;</code></pre>
+    <pre><code>&lt;script src="https://base.goodos.app/sdk/goodos.js"&gt;&lt;/script&gt;</code></pre>
 
     <h2>JavaScript Example</h2>
     <pre><code>const goodos = GoodOS.createClient({
@@ -232,7 +232,7 @@ await goodos.verifyMfa(setup.data.factorId, "123456");</code></pre>
         <tr><td><code>GET /api/v1/realtime/events</code></td><td><code>read:realtime</code></td><td>List realtime messages.</td></tr>
         <tr><td><code>POST /api/v1/realtime/events</code></td><td><code>publish:realtime</code></td><td>Publish a message.</td></tr>
         <tr><td><code>GET /api/v1/realtime/stream</code></td><td><code>subscribe:realtime</code></td><td>Subscribe over SSE.</td></tr>
-        <tr><td><code>wss://backend.goodos.app/api/v1/realtime/ws</code></td><td><code>subscribe:realtime</code></td><td>Subscribe over WebSocket.</td></tr>
+        <tr><td><code>wss://base.goodos.app/api/v1/realtime/ws</code></td><td><code>subscribe:realtime</code></td><td>Subscribe over WebSocket.</td></tr>
       </tbody>
     </table>
 
@@ -308,7 +308,7 @@ const created = await goodos.createDbRow("demo-items", {
 });</code></pre>
 
     <h2>cURL Example</h2>
-    <pre><code>curl https://backend.goodos.app/api/v1/health \
+    <pre><code>curl https://base.goodos.app/api/v1/health \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
   
     <h2>Secrets V2 / Provider Credentials</h2>

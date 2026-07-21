@@ -993,19 +993,19 @@ async function getOverviewForUser(
     },
 
     publicApiBaseUrl:
-      "https://backend.goodos.app/api/v1",
+      "https://base.goodos.app/api/v1",
 
     documentation: {
       developer:
-        "https://backend.goodos.app/docs",
+        "https://base.goodos.app/docs",
       api:
-        "https://backend.goodos.app/api-docs",
+        "https://base.goodos.app/api-docs",
       openApi:
-        "https://backend.goodos.app/openapi.json",
+        "https://base.goodos.app/openapi.json",
       sdk:
-        "https://backend.goodos.app/sdk/goodos.js",
+        "https://base.goodos.app/sdk/goodos.js",
       postman:
-        "https://backend.goodos.app/postman/goodos-postman-collection.json",
+        "https://base.goodos.app/postman/goodos-postman-collection.json",
     },
   };
 }

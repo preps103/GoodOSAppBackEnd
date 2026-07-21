@@ -9,7 +9,7 @@ router.get("/", (req, res) => {
   res.setHeader("Expires", "0");
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://backend.goodos.app; font-src 'self' https: data:;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://base.goodos.app; font-src 'self' https: data:;"
   );
 
   return res.sendFile(path.join(__dirname, "../public/console.html"));

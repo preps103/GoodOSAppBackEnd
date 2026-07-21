@@ -155,7 +155,7 @@ VALUES
     'development',
     'development',
     'active',
-    'https://backend.goodos.app',
+    'https://base.goodos.app',
     '{"seeded": true, "source": "phase_14a"}'::jsonb
   ),
   (
@@ -165,7 +165,7 @@ VALUES
     'staging',
     'staging',
     'active',
-    'https://backend.goodos.app',
+    'https://base.goodos.app',
     '{"seeded": true, "source": "phase_14a"}'::jsonb
   ),
   (
@@ -175,7 +175,7 @@ VALUES
     'production',
     'production',
     'active',
-    'https://backend.goodos.app',
+    'https://base.goodos.app',
     '{"seeded": true, "source": "phase_14a"}'::jsonb
   )
 ON CONFLICT (id) DO UPDATE

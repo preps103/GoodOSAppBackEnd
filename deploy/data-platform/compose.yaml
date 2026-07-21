@@ -55,10 +55,101 @@ services:
       retries: 6
       start_period: 15s
 
+  pgbouncer-transaction:
+    image: edoburu/pgbouncer:v1.25.2-p0
+    container_name: goodos-pgbouncer-transaction
+    restart: unless-stopped
+    init: true
+    ports:
+      - "6543:5432"
+    environment:
+      DB_HOST: /var/run/postgresql
+      DB_PORT: "5432"
+      DB_NAME: ${GOODBASE_DB_NAME:-goodos_backend}
+      DB_USER: goodbase_pool_transaction
+      DB_PASSWORD: ${GOODBASE_TRANSACTION_POOL_PASSWORD:?GOODBASE_TRANSACTION_POOL_PASSWORD is required}
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: ${GOODBASE_TRANSACTION_MAX_CLIENTS:-200}
+      DEFAULT_POOL_SIZE: ${GOODBASE_TRANSACTION_POOL_SIZE:-20}
+      RESERVE_POOL_SIZE: ${GOODBASE_TRANSACTION_RESERVE_SIZE:-5}
+      RESERVE_POOL_TIMEOUT: "5"
+      QUERY_TIMEOUT: "60"
+      IDLE_TRANSACTION_TIMEOUT: "60"
+      MAX_PREPARED_STATEMENTS: "200"
+      IGNORE_STARTUP_PARAMETERS: extra_float_digits,options
+      CLIENT_TLS_SSLMODE: require
+      CLIENT_TLS_CERT_FILE: /etc/letsencrypt/live/base.goodos.app/fullchain.pem
+      CLIENT_TLS_KEY_FILE: /etc/letsencrypt/live/base.goodos.app/privkey.pem
+      SERVER_TLS_SSLMODE: disable
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/run/postgresql:/var/run/postgresql
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /etc/pgbouncer:size=4m,mode=0755
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  pgbouncer-session:
+    image: edoburu/pgbouncer:v1.25.2-p0
+    container_name: goodos-pgbouncer-session
+    restart: unless-stopped
+    init: true
+    ports:
+      - "5433:5432"
+    environment:
+      DB_HOST: /var/run/postgresql
+      DB_PORT: "5432"
+      DB_NAME: ${GOODBASE_DB_NAME:-goodos_backend}
+      DB_USER: goodbase_pool_session
+      DB_PASSWORD: ${GOODBASE_SESSION_POOL_PASSWORD:?GOODBASE_SESSION_POOL_PASSWORD is required}
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: session
+      MAX_CLIENT_CONN: ${GOODBASE_SESSION_MAX_CLIENTS:-100}
+      DEFAULT_POOL_SIZE: ${GOODBASE_SESSION_POOL_SIZE:-10}
+      RESERVE_POOL_SIZE: ${GOODBASE_SESSION_RESERVE_SIZE:-2}
+      RESERVE_POOL_TIMEOUT: "5"
+      QUERY_TIMEOUT: "300"
+      IDLE_TRANSACTION_TIMEOUT: "300"
+      CLIENT_TLS_SSLMODE: require
+      CLIENT_TLS_CERT_FILE: /etc/letsencrypt/live/base.goodos.app/fullchain.pem
+      CLIENT_TLS_KEY_FILE: /etc/letsencrypt/live/base.goodos.app/privkey.pem
+      SERVER_TLS_SSLMODE: disable
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/run/postgresql:/var/run/postgresql
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /etc/pgbouncer:size=4m,mode=0755
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
   realtime:
-    image: supabase/realtime:v2.100.0
+    image: supabase/realtime:v2.112.9
     container_name: goodos-realtime-cdc
-    profiles: ["realtime"]
     restart: unless-stopped
     init: true
     network_mode: host
@@ -66,20 +157,26 @@ services:
       PORT: "8400"
       DB_HOST: 127.0.0.1
       DB_PORT: "5432"
-      DB_NAME: ${REALTIME_DB_NAME:-_goodos_realtime}
+      DB_NAME: ${REALTIME_DB_NAME:-goodos_backend}
       DB_USER: ${REALTIME_DB_USER:?REALTIME_DB_USER is required}
       DB_PASSWORD: ${REALTIME_DB_PASSWORD:?REALTIME_DB_PASSWORD is required}
       DB_SSL: "false"
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY:?REALTIME_DB_ENC_KEY is required}
+      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
       API_JWT_SECRET: ${REALTIME_API_JWT_SECRET:?REALTIME_API_JWT_SECRET is required}
+      METRICS_JWT_SECRET: ${REALTIME_API_JWT_SECRET:?REALTIME_API_JWT_SECRET is required}
       SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE:?REALTIME_SECRET_KEY_BASE is required}
       ERL_AFLAGS: -proto_dist inet_tcp
       DNS_NODES: "''"
       RLIMIT_NOFILE: "10000"
       APP_NAME: goodos_realtime
       SEED_SELF_HOST: "true"
-      SELF_HOST_TENANT_NAME: goodos
+      SELF_HOST_TENANT_NAME: base
       RUN_JANITOR: "true"
       DISABLE_HEALTHCHECK_LOGGING: "true"
+      MAX_CONNECTIONS: ${REALTIME_MAX_CONNECTIONS:-10000}
+      NUM_ACCEPTORS: ${REALTIME_NUM_ACCEPTORS:-100}
+      JWT_CLAIM_VALIDATORS: ${REALTIME_JWT_CLAIM_VALIDATORS:-'{"iss":"https://base.goodos.app"}'}
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777

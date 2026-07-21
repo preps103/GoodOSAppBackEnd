@@ -24,7 +24,7 @@ const tenantContext =
 const router = express.Router();
 
 const CALLBACK_URL =
-  "https://backend.goodos.app/api/oidc/callback";
+  "https://base.goodos.app/api/oidc/callback";
 
 const DEFAULT_RETURN_TO =
   "https://goodos.app/";
@@ -191,7 +191,7 @@ function safeReturnTo(value) {
 
     const allowed = new Set([
       "https://goodos.app",
-      "https://backend.goodos.app",
+      "https://base.goodos.app",
     ]);
 
     if (!allowed.has(target.origin)) {
@@ -511,7 +511,7 @@ router.get(
         callbackImplemented: true,
         callbackUrl: CALLBACK_URL,
         authorizationStartPattern:
-          "https://backend.goodos.app/api/oidc/start/{providerId}",
+          "https://base.goodos.app/api/oidc/start/{providerId}",
         ...result.rows[0],
         mandatorySso: false,
       });
@@ -769,7 +769,7 @@ router.get(
           message:
             "This callback must be reached through an OIDC provider authorization response.",
           startPattern:
-            "https://backend.goodos.app/api/oidc/start/{providerId}",
+            "https://base.goodos.app/api/oidc/start/{providerId}",
         });
     }
 
@@ -883,7 +883,7 @@ router.get(
       const callbackUrl =
         new URL(
           request.originalUrl,
-          "https://backend.goodos.app"
+          "https://base.goodos.app"
         );
 
       const tokens =

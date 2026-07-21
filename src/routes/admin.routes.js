@@ -1108,7 +1108,7 @@ router.post("/storage/files/:fileId/signed-url", async (req, res) => {
       signedUrl: {
         id,
         fileId: file.id,
-        url: `https://backend.goodos.app/storage/signed/${token}`,
+        url: `https://base.goodos.app/storage/signed/${token}`,
         expiresAt,
         maxDownloads,
         status: "active",
@@ -3134,7 +3134,7 @@ router.post("/projects/create-safe", async (req, res) => {
           api_base_url,
           metadata_json
         )
-        VALUES ($1, $2, 'Production', 'production', 'production', 'active', 'https://backend.goodos.app', $3::jsonb)
+        VALUES ($1, $2, 'Production', 'production', 'production', 'active', 'https://base.goodos.app', $3::jsonb)
         ON CONFLICT (id) DO NOTHING
       `,
       [
@@ -3193,7 +3193,7 @@ router.post("/projects/:id/environments/create-safe", async (req, res) => {
     const slug = normalizeProjectSlug(req.body?.slug || type);
     const id = normalizeProjectSlug(req.body?.id || `env_${projectId}_${slug}`);
     const status = normalizeProjectStatus(req.body?.status || "active");
-    const apiBaseUrl = String(req.body?.apiBaseUrl || "https://backend.goodos.app").trim();
+    const apiBaseUrl = String(req.body?.apiBaseUrl || "https://base.goodos.app").trim();
 
     if (!name) return fail(res, "Environment name is required", 400);
 
@@ -4468,7 +4468,7 @@ router.post("/users/invites/create-safe", async (req, res) => {
     return ok(res, {
       invite: result.rows[0],
       rawToken,
-      inviteUrl: `https://backend.goodos.app/invite/${rawToken}`,
+      inviteUrl: `https://base.goodos.app/invite/${rawToken}`,
       message: "Invite record created. Copy the token now; it is not stored in plain text.",
     });
   } catch (error) {
@@ -11027,7 +11027,7 @@ router.post("/storage/buckets/:bucketId/v2/update-safe", async (req, res) => {
           provider_endpoint = $5,
           cache_control = $6,
           public_url = CASE
-            WHEN $7::boolean = true THEN 'https://backend.goodos.app/storage/public/' || $8 || '/' || COALESCE(NULLIF(f.object_key, ''), f.filename)
+            WHEN $7::boolean = true THEN 'https://base.goodos.app/storage/public/' || $8 || '/' || COALESCE(NULLIF(f.object_key, ''), f.filename)
             ELSE f.public_url
           END,
           cdn_url = CASE
@@ -11093,7 +11093,7 @@ router.post("/storage/files/:fileId/metadata-refresh-safe", async (req, res) => 
     const checksumMd5 = storageV2Md5File(storagePath);
     const objectKey = storageV2CleanText(file.object_key || file.filename || path.basename(storagePath));
     const publicEnabled = file.public_read_enabled === true || file.visibility === "public";
-    const publicUrl = publicEnabled ? `https://backend.goodos.app/storage/public/${file.bucket_name}/${objectKey}` : file.public_url;
+    const publicUrl = publicEnabled ? `https://base.goodos.app/storage/public/${file.bucket_name}/${objectKey}` : file.public_url;
     const cdnUrl = file.cdn_enabled === true && file.cdn_base_url ? `${String(file.cdn_base_url).replace(/\/+$/, "")}/${objectKey}` : file.cdn_url;
 
     const updateResult = await dbQuery(
@@ -12660,7 +12660,7 @@ router.post("/auth-v2/password-resets/create-safe", async (req, res) => {
     return ok(res, {
       reset: result.rows[0],
       rawToken,
-      resetUrl: `https://backend.goodos.app/password-reset/${rawToken}`,
+      resetUrl: `https://base.goodos.app/password-reset/${rawToken}`,
       warning: "Copy this reset token now. It will not be shown again.",
       message: "Password reset token created.",
     });

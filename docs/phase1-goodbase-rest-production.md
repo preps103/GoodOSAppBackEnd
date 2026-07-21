@@ -58,7 +58,7 @@ Goodbase creates a dedicated `goodos_api` view using `security_invoker` and
 4. reload the backend with the Goodbase environment variables;
 5. activate `base.goodos.app` in Nginx and issue its certificate;
 6. verify local and public health;
-7. keep `backend.goodos.app` as a 308 compatibility alias during migration.
+7. keep `base.goodos.app` as a 308 compatibility alias during migration.
 
 ## Completion gate
 

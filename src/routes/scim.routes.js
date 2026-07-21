@@ -31,7 +31,7 @@ const router =
   express.Router();
 
 const SCIM_BASE =
-  "https://backend.goodos.app/scim/v2";
+  "https://base.goodos.app/scim/v2";
 
 const USER_SCHEMA =
   "urn:ietf:params:scim:schemas:core:2.0:User";

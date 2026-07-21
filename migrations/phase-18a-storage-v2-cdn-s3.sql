@@ -132,7 +132,7 @@ VALUES (
   'file:///var/www/GoodAppBackEnd/storage/buckets',
   'local',
   'storage/buckets',
-  'https://backend.goodos.app/storage/public',
+  'https://base.goodos.app/storage/public',
   '{"phase":"18A","supports":["local","cdn-url-mapping","future-s3-compatible"]}'::jsonb,
   'org_goodos',
   'proj_goodos_platform',
@@ -183,7 +183,7 @@ SET
   storage_class = COALESCE(f.storage_class, 'standard'),
   public_url = CASE
     WHEN b.public_read_enabled = true OR b.visibility = 'public'
-      THEN 'https://backend.goodos.app/storage/public/' || b.name || '/' || COALESCE(NULLIF(f.object_key, ''), f.filename)
+      THEN 'https://base.goodos.app/storage/public/' || b.name || '/' || COALESCE(NULLIF(f.object_key, ''), f.filename)
     ELSE f.public_url
   END,
   cdn_url = CASE
@@ -248,11 +248,11 @@ VALUES (
   'local',
   'file:///var/www/GoodAppBackEnd/storage/buckets',
   true,
-  'https://backend.goodos.app/storage/public/storage-v2-public',
+  'https://base.goodos.app/storage/public/storage-v2-public',
   'public, max-age=3600',
   false,
   '{"deleteAfterDays": null, "archiveAfterDays": null}'::jsonb,
-  '{"allowedOrigins":["https://backend.goodos.app","https://app.goodos.app"],"allowedMethods":["GET"]}'::jsonb,
+  '{"allowedOrigins":["https://base.goodos.app","https://app.goodos.app"],"allowedMethods":["GET"]}'::jsonb,
   'standard',
   'sha256',
   '{"phase":"18A","purpose":"public cdn route test"}'::jsonb,

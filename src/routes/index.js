@@ -106,6 +106,9 @@ const dataPlaneRoutes =
 const graphqlRoutes =
   require("./graphql.routes");
 
+const goodbasePlatformRoutes =
+  require("./goodbase-platform.routes");
+
 const router = express.Router();
 
 /* GOODOS_ENTERPRISE_FOUNDATION_V1_INITIALIZE */
@@ -359,6 +362,10 @@ router.use(
 router.use(
   "/graphql/v1",
   graphqlRoutes.router
+);
+router.use(
+  "/api/data-platform",
+  goodbasePlatformRoutes.router
 );
 router.use("/api/releases", releaseGovernanceRoutes);
 router.use("/api/privacy", privacyGovernanceRoutes);

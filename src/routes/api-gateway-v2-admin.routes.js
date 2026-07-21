@@ -387,7 +387,7 @@ router.get(
           {},
 
         publicBaseUrl:
-          "https://backend.goodos.app/api/v2",
+          "https://base.goodos.app/api/v2",
       });
     } catch (error) {
       return next(error);

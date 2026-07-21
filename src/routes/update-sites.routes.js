@@ -68,7 +68,7 @@ router.get("/health", (_request, response) => {
     success: true,
     service: "GoodOS Update Sites Deployment Center",
     status: "ready",
-    page: "https://backend.goodos.app/update-sites",
+    page: "https://base.goodos.app/update-sites",
     timestamp: new Date().toISOString(),
   });
 });

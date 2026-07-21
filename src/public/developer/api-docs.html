@@ -21,41 +21,41 @@
   <main>
     <p><a href="/docs">← Developer Docs</a></p>
     <h1>GoodOS API Reference</h1>
-    <p>Base URL: <code>https://backend.goodos.app/api/v1</code></p>
+    <p>Base URL: <code>https://base.goodos.app/api/v1</code></p>
     <p><a href="/openapi.json">Download OpenAPI JSON</a> · <a href="/postman/goodos-postman-collection.json">Download Postman Collection</a></p>
 
     <div class="card">
       <h2><span class="badge">GET</span> /health</h2>
       <p>Scope: <code>read:health</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/health \
+      <pre><code>curl https://base.goodos.app/api/v1/health \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">GET</span> /apps</h2>
       <p>Scope: <code>read:apps</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/apps \
+      <pre><code>curl https://base.goodos.app/api/v1/apps \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">GET</span> /storage/buckets</h2>
       <p>Scope: <code>read:storage</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/storage/buckets \
+      <pre><code>curl https://base.goodos.app/api/v1/storage/buckets \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">GET</span> /storage/files</h2>
       <p>Scope: <code>read:storage</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/storage/files \
+      <pre><code>curl https://base.goodos.app/api/v1/storage/files \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">POST</span> /functions/:slug</h2>
       <p>Scope: <code>execute:functions</code></p>
-      <pre><code>curl -X POST https://backend.goodos.app/api/v1/functions/health-check \
+      <pre><code>curl -X POST https://base.goodos.app/api/v1/functions/health-check \
   -H "Content-Type: application/json" \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
   --data '{"source":"api-docs","message":"Testing function call"}'</code></pre>
@@ -64,21 +64,21 @@
     <div class="card">
       <h2><span class="badge">GET</span> /db/tables</h2>
       <p>Scope: <code>read:db</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/db/tables \
+      <pre><code>curl https://base.goodos.app/api/v1/db/tables \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">GET</span> /db/:tableSlug/rows</h2>
       <p>Scope: <code>read:db</code></p>
-      <pre><code>curl "https://backend.goodos.app/api/v1/db/apps/rows?limit=10" \
+      <pre><code>curl "https://base.goodos.app/api/v1/db/apps/rows?limit=10" \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">POST</span> /db/:tableSlug/rows</h2>
       <p>Scope: <code>write:db</code></p>
-      <pre><code>curl -X POST https://backend.goodos.app/api/v1/db/demo-items/rows \
+      <pre><code>curl -X POST https://base.goodos.app/api/v1/db/demo-items/rows \
   -H "Content-Type: application/json" \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
   --data '{"title":"Created from API Docs","status":"active"}'</code></pre>
@@ -88,14 +88,14 @@
     <div class="card">
       <h2><span class="badge">GET</span> /storage/public/:bucketName/:objectKey</h2>
       <p>Public object route for Storage V2 buckets with public reads enabled.</p>
-      <pre><code>curl https://backend.goodos.app/storage/public/storage-v2-public/v2-public-health.txt</code></pre>
+      <pre><code>curl https://base.goodos.app/storage/public/storage-v2-public/v2-public-health.txt</code></pre>
     </div>
 
 
     <div class="card">
       <h2><span class="badge">POST</span> /functions/:slug — Edge Functions V2 runtime</h2>
       <p>Scope: <code>execute:functions</code>. Response includes <code>output._runtime</code> with version, deployment, timeout, memory, and sandbox metadata.</p>
-      <pre><code>curl -X POST https://backend.goodos.app/api/v1/functions/health-check \
+      <pre><code>curl -X POST https://base.goodos.app/api/v1/functions/health-check \
   -H "Content-Type: application/json" \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
   --data '{"source":"docs","message":"Edge Functions V2"}'</code></pre>
@@ -105,7 +105,7 @@
     <div class="card">
       <h2><span class="badge">POST</span> /realtime/events</h2>
       <p>Scope: <code>publish:realtime</code></p>
-      <pre><code>curl -X POST https://backend.goodos.app/api/v1/realtime/events \
+      <pre><code>curl -X POST https://base.goodos.app/api/v1/realtime/events \
   -H "Content-Type: application/json" \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
   --data '{"channel":"system","eventType":"demo.message","message":"Hello Realtime V2","payload":{"ok":true}}'</code></pre>
@@ -113,14 +113,14 @@
 
     <div class="card">
       <h2><span class="badge">WS</span> Realtime V2 WebSocket</h2>
-      <p>Connect to <code>wss://backend.goodos.app/api/v1/realtime/ws?api_key=YOUR_KEY&amp;channel=system</code>.</p>
+      <p>Connect to <code>wss://base.goodos.app/api/v1/realtime/ws?api_key=YOUR_KEY&amp;channel=system</code>.</p>
     </div>
 
 
     <div class="card">
       <h2><span class="badge">GET</span> /auth/session</h2>
       <p>Auth V2 session endpoint. Requires cookie or bearer token.</p>
-      <pre><code>curl https://backend.goodos.app/api/auth/session \
+      <pre><code>curl https://base.goodos.app/api/auth/session \
   -H "Cookie: goodos_session=YOUR_SESSION"</code></pre>
     </div>
 
@@ -133,13 +133,13 @@
     <div class="card">
       <h2><span class="badge">GET</span> /billing/plans</h2>
       <p>Public billing plan catalog.</p>
-      <pre><code>curl https://backend.goodos.app/api/v1/billing/plans</code></pre>
+      <pre><code>curl https://base.goodos.app/api/v1/billing/plans</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">GET</span> /usage — Usage V2 / Billing Meter</h2>
       <p>Scope: <code>read:usage</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/usage \
+      <pre><code>curl https://base.goodos.app/api/v1/usage \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
@@ -147,14 +147,14 @@
     <div class="card">
       <h2><span class="badge">GET</span> /notifications — Notifications V2</h2>
       <p>Scope: <code>read:notifications</code></p>
-      <pre><code>curl https://backend.goodos.app/api/v1/notifications \
+      <pre><code>curl https://base.goodos.app/api/v1/notifications \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY"</code></pre>
     </div>
 
     <div class="card">
       <h2><span class="badge">POST</span> /notifications</h2>
       <p>Scope: <code>write:notifications</code></p>
-      <pre><code>curl -X POST https://backend.goodos.app/api/v1/notifications \
+      <pre><code>curl -X POST https://base.goodos.app/api/v1/notifications \
   -H "Content-Type: application/json" \
   -H "X-GoodOS-API-Key: $GOODOS_API_KEY" \
   --data '{"title":"System notice","message":"Hello from Notifications V2"}'</code></pre>
@@ -164,7 +164,7 @@
     <div class="card">
       <h2><span class="badge">ADMIN</span> Background Jobs V2</h2>
       <p>Admin-only job scheduler and PM2 worker controls.</p>
-      <pre><code>curl https://backend.goodos.app/api/admin/jobs-page-data \
+      <pre><code>curl https://base.goodos.app/api/admin/jobs-page-data \
   -H "Cookie: goodos_session=YOUR_SESSION"</code></pre>
     </div>
 
