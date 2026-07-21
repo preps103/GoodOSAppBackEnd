@@ -3,9 +3,9 @@ BEGIN;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'goodbase_realtime') THEN
-    CREATE ROLE goodbase_realtime LOGIN REPLICATION NOINHERIT NOBYPASSRLS;
+    CREATE ROLE goodbase_realtime LOGIN REPLICATION INHERIT NOBYPASSRLS;
   ELSE
-    ALTER ROLE goodbase_realtime WITH LOGIN REPLICATION NOINHERIT NOBYPASSRLS;
+    ALTER ROLE goodbase_realtime WITH LOGIN REPLICATION INHERIT NOBYPASSRLS;
   END IF;
 END;
 $$;
@@ -28,7 +28,7 @@ BEGIN
 END;
 $$;
 
-GRANT supabase_realtime_admin TO goodbase_realtime;
+GRANT supabase_realtime_admin TO goodbase_realtime WITH ADMIN OPTION;
 
 CREATE TABLE IF NOT EXISTS backend_realtime_publications (
   id TEXT PRIMARY KEY,
