@@ -2,6 +2,13 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+UPDATE apps
+SET name='Goodbase',
+    domain='base.goodos.app',
+    description='Goodbase enterprise backend, authentication, data, storage, realtime, and developer platform.',
+    updated_at=NOW()
+WHERE id='goodbackend';
+
 -- Phase 11: complete authentication product control plane and passwordless runtime.
 CREATE TABLE IF NOT EXISTS goodbase_auth_channels (
   id TEXT PRIMARY KEY,
