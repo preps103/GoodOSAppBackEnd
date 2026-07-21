@@ -64,7 +64,11 @@ upsert_env_value() {
     printf '%s=%s\n' "$key" "$value" > "$temporary"
   fi
 
-  install -o root -g root -m 0600 "$temporary" "$file"
+  if [ "$file" = "$APP_ENV_FILE" ]; then
+    install -o root -g goodapp -m 0640 "$temporary" "$file"
+  else
+    install -o root -g root -m 0600 "$temporary" "$file"
+  fi
   rm -f "$temporary"
 }
 

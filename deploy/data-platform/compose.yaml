@@ -88,7 +88,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
-      - /etc/pgbouncer:size=4m,mode=0755
+      - /etc/pgbouncer:size=4m,mode=0777
     cap_drop:
       - ALL
     security_opt:
@@ -133,11 +133,10 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
-      - /etc/pgbouncer:size=4m,mode=0755
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
+      - /etc/pgbouncer:size=4m,mode=0777
+    cap_add:
+      - SETGID
+      - SETUID
     mem_limit: 256m
     cpus: 1.0
     pids_limit: 128
