@@ -1,7 +1,20 @@
+const { execFileSync } = require("child_process");
+
 const cwd = "/var/www/GoodAppBackEnd";
 const runtimeUser = "goodapp";
+function releaseCommit() {
+  try {
+    return execFileSync("git", ["-C", __dirname, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    }).trim();
+  } catch {
+    return "0000000";
+  }
+}
 const runtimeEnv = {
   NODE_ENV: "production",
+  GOODBASE_RELEASE_COMMIT: releaseCommit(),
   GOODOS_VOICE_DB_PATH: "/var/lib/goodapp-backend/goodos-voice-db.json"
 };
 
