@@ -20,6 +20,7 @@ MIGRATIONS=(
   "$APP_DIR/migrations/20260721_goodbase_rls_phase3.sql"
   "$APP_DIR/migrations/20260721_goodbase_pooling_phase4.sql"
   "$APP_DIR/migrations/20260721_goodbase_realtime_phase5.sql"
+  "$APP_DIR/migrations/20260721_goodbase_phases6_10.sql"
 )
 
 fail() {
@@ -189,7 +190,10 @@ if ! grep -q "GOODBASE_MANAGED_POOL_AUTH" "$HBA_FILE"; then
   systemctl reload postgresql
 fi
 
-install -d -o root -g root -m 0750 "$ENV_DIR"
+install -d -o root -g postgres -m 0710 "$ENV_DIR"
+install -d -o root -g root -m 0755 /var/lib/goodbase
+install -d -o goodapp -g goodapp -m 0755 /var/lib/goodbase/functions
+install -d -o goodapp -g goodapp -m 0750 /var/lib/goodbase/uploads
 install -d -o root -g root -m 0755 /etc/letsencrypt/renewal-hooks/deploy
 install -o root -g root -m 0755 "$TLS_REFRESH_SCRIPT" \
   /etc/letsencrypt/renewal-hooks/deploy/goodbase-data-platform
@@ -235,6 +239,7 @@ upsert_env_value "$APP_ENV_FILE" GOODBASE_REST_MAX_RESPONSE_BYTES "10485760"
 upsert_env_value "$APP_ENV_FILE" GOODBASE_TRANSACTION_POOL_PORT "6543"
 upsert_env_value "$APP_ENV_FILE" GOODBASE_SESSION_POOL_PORT "5433"
 upsert_env_value "$APP_ENV_FILE" GOODBASE_REALTIME_PORT "8400"
+upsert_env_value "$APP_ENV_FILE" GOODBASE_EDGE_RUNTIME_URL "http://127.0.0.1:8500"
 
 install \
   -o root \
@@ -247,7 +252,7 @@ systemctl daemon-reload
 
 cd "$COMPOSE_DIR"
 docker compose --env-file "$ENV_FILE" config --quiet
-docker compose --env-file "$ENV_FILE" pull postgrest pgbouncer-transaction pgbouncer-session realtime
+docker compose --env-file "$ENV_FILE" pull postgrest pgbouncer-transaction pgbouncer-session realtime edge-runtime
 systemctl enable --now goodos-data-platform.service
 systemctl reload goodos-data-platform.service
 
@@ -286,7 +291,7 @@ for attempt in $(seq 1 30); do
   sleep 2
 done
 
-for port in 5433 6543 8400; do
+for port in 5433 6543 8400 8500; do
   for attempt in $(seq 1 45); do
     if timeout 2 bash -c "</dev/tcp/127.0.0.1/${port}" >/dev/null 2>&1; then
       break

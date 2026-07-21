@@ -185,3 +185,49 @@ services:
       options:
         max-size: 10m
         max-file: "5"
+
+  edge-runtime:
+    image: denoland/deno:2.8.1
+    container_name: goodbase-edge-runtime
+    network_mode: host
+    user: deno
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: "2.0"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=256m,mode=1777
+    volumes:
+      - ../../src/edge-runtime/server.ts:/runtime/server.ts:ro
+      - /var/lib/goodbase/functions:/functions:ro
+    environment:
+      GOODBASE_EDGE_PORT: "8500"
+      DENO_NO_UPDATE_CHECK: "1"
+      NO_COLOR: "1"
+    command:
+      - run
+      - --quiet
+      - --no-prompt
+      - --no-config
+      - --no-lock
+      - --allow-net=0.0.0.0:8500,127.0.0.1:8500
+      - --allow-read=/functions
+      - --allow-run=deno
+      - --allow-env=GOODBASE_EDGE_PORT
+      - /runtime/server.ts
+    healthcheck:
+      test: ["CMD", "deno", "eval", "fetch('http://127.0.0.1:8500/health').then(r=>{if(!r.ok)Deno.exit(1)})"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+    restart: unless-stopped

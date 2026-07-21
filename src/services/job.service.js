@@ -258,6 +258,117 @@ async function runWebhookRetryScan() {
   };
 }
 
+function cronFieldMatches(field, value, minimum, maximum) {
+  return String(field).split(",").some((part) => {
+    const [rangePart, stepPart] = part.split("/");
+    const step = Math.max(Number(stepPart || 1), 1);
+    if (rangePart === "*") return (value - minimum) % step === 0;
+    const [startText, endText] = rangePart.split("-");
+    const start = Number(startText);
+    const end = endText == null ? start : Number(endText);
+    return Number.isInteger(start) && Number.isInteger(end) && start >= minimum && end <= maximum && value >= start && value <= end && (value - start) % step === 0;
+  });
+}
+
+function zonedParts(date, timezone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone || "UTC", minute: "2-digit", hour: "2-digit", hourCycle: "h23",
+    day: "2-digit", month: "2-digit", weekday: "short",
+  }).formatToParts(date).reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+  return {
+    minute: Number(parts.minute), hour: Number(parts.hour), day: Number(parts.day), month: Number(parts.month),
+    weekday: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(parts.weekday),
+  };
+}
+
+function nextCronOccurrence(expression, timezone = "UTC", from = new Date()) {
+  const fields = String(expression || "").trim().split(/\s+/);
+  if (fields.length !== 5) throw new Error("Cron expressions must contain five fields.");
+  let candidate = new Date(Math.floor(from.getTime() / 60000) * 60000 + 60000);
+  for (let index = 0; index < 527040; index += 1, candidate = new Date(candidate.getTime() + 60000)) {
+    const value = zonedParts(candidate, timezone);
+    if (cronFieldMatches(fields[0],value.minute,0,59) && cronFieldMatches(fields[1],value.hour,0,23) &&
+        cronFieldMatches(fields[2],value.day,1,31) && cronFieldMatches(fields[3],value.month,1,12) &&
+        cronFieldMatches(fields[4],value.weekday,0,6)) return candidate;
+  }
+  throw new Error("Cron expression has no occurrence within one year.");
+}
+
+async function runGoodbaseQueueMaintenance() {
+  const released = await dbQuery(`
+    UPDATE goodbase_queue_messages SET
+      status=CASE WHEN attempts>=max_attempts THEN 'dead_lettered' ELSE 'available' END,
+      available_at=CASE WHEN attempts>=max_attempts THEN available_at ELSE NOW()+make_interval(secs=>LEAST(3600,power(2,LEAST(attempts,11))::int)) END,
+      lease_owner=NULL,lease_token=NULL,lease_expires_at=NULL,updated_at=NOW()
+    WHERE status='leased' AND lease_expires_at<=NOW() RETURNING id,status
+  `);
+  const archived = await dbQuery(`
+    DELETE FROM goodbase_queue_messages message USING goodbase_queues queue
+    WHERE message.queue_id=queue.id AND message.status IN ('completed','archived')
+      AND COALESCE(message.archived_at,message.completed_at,message.updated_at) < NOW()-make_interval(secs=>queue.retention_seconds)
+    RETURNING message.id
+  `);
+  return { releasedLeases: released.rows.length, deadLettered: released.rows.filter((row)=>row.status==="dead_lettered").length, purgedArchived: archived.rows.length };
+}
+
+async function executeGoodbaseSchedule(schedule) {
+  const payload = schedule.payload_json || {};
+  if (schedule.target_type === "queue") {
+    const sent = await dbQuery(`SELECT goodbase_queue_send($1,$2::jsonb,$3,0,100) AS id`, [schedule.target_ref, JSON.stringify(payload), `schedule:${schedule.id}:${schedule.next_run_at.toISOString()}`]);
+    return { messageId: sent.rows[0].id };
+  }
+  if (schedule.target_type === "sql_function") {
+    if (!/^[a-z_][a-z0-9_]{0,62}\.[a-z_][a-z0-9_]{0,62}$/.test(schedule.target_ref)) throw new Error("Scheduled SQL function reference is invalid.");
+    const [schema, fn] = schedule.target_ref.split(".");
+    const result = await dbQuery(`SELECT "${schema}"."${fn}"($1::jsonb) AS result`, [JSON.stringify(payload)]);
+    return { result: result.rows[0]?.result ?? null };
+  }
+  if (schedule.target_type === "http") {
+    const url = new URL(schedule.target_ref);
+    if (url.protocol !== "https:" || /^(localhost|127\.|10\.|192\.168\.|169\.254\.|\[?::1)/i.test(url.hostname)) throw new Error("Scheduled HTTP target is not allowed.");
+    const result = await fetch(url, { method: "POST", headers: { "content-type": "application/json", ...(schedule.headers_json || {}) }, body: JSON.stringify(payload), signal: AbortSignal.timeout(schedule.timeout_seconds * 1000) });
+    return { status: result.status, ok: result.ok };
+  }
+  if (schedule.target_type === "edge_function") {
+    const fn = await dbQuery(`SELECT function.*,version.bundle_ref,version.version FROM goodbase_edge_functions function JOIN goodbase_edge_versions version ON version.function_id=function.id AND version.version=function.active_version WHERE function.id=$1 AND function.status='active'`, [schedule.target_ref]);
+    if (!fn.rowCount) throw new Error("Scheduled edge function has no active version.");
+    const item = fn.rows[0];
+    const result = await fetch(`${process.env.GOODBASE_EDGE_RUNTIME_URL || "http://127.0.0.1:8500"}/invoke`, { method:"POST", headers:{"content-type":"application/json"}, signal:AbortSignal.timeout(item.timeout_ms+2500), body:JSON.stringify({ functionId:item.id,version:item.version,bundleRef:item.bundle_ref,timeoutMs:item.timeout_ms,responseLimitBytes:item.response_limit_bytes,networkPolicy:item.network_policy,networkAllowlist:item.network_allowlist,input:payload }) });
+    if (!result.ok) throw new Error(`Edge runtime returned HTTP ${result.status}.`);
+    return result.json();
+  }
+  throw new Error("Unsupported schedule target.");
+}
+
+async function runGoodbaseSchedules() {
+  const ownerId = workerIdFromEnv();
+  const due = await dbQuery(`
+    SELECT schedule.* FROM goodbase_schedules schedule
+    WHERE schedule.status='active' AND schedule.next_run_at<=NOW()
+      AND (SELECT COUNT(*) FROM goodbase_schedule_runs run WHERE run.schedule_id=schedule.id AND run.status='running') < schedule.concurrency_limit
+    ORDER BY schedule.next_run_at FOR UPDATE SKIP LOCKED LIMIT 25
+  `);
+  const runs = [];
+  for (const schedule of due.rows) {
+    const runId = crypto.randomUUID();
+    const started = Date.now();
+    const nextRun = schedule.interval_seconds
+      ? new Date(Date.now() + schedule.interval_seconds * 1000)
+      : nextCronOccurrence(schedule.cron_expression, schedule.timezone);
+    await dbQuery(`INSERT INTO goodbase_schedule_runs(id,schedule_id,status,worker_id,scheduled_for,started_at) VALUES($1,$2,'running',$3,$4,NOW())`,[runId,schedule.id,ownerId,schedule.next_run_at]);
+    await dbQuery(`UPDATE goodbase_schedules SET last_run_at=NOW(),next_run_at=$2,updated_at=NOW() WHERE id=$1`,[schedule.id,nextRun]);
+    try {
+      const result = await executeGoodbaseSchedule(schedule);
+      await dbQuery(`UPDATE goodbase_schedule_runs SET status='succeeded',finished_at=NOW(),duration_ms=$2,result_json=$3::jsonb WHERE id=$1`,[runId,Date.now()-started,JSON.stringify(result)]);
+      runs.push({ scheduleId:schedule.id,runId,status:"succeeded" });
+    } catch (error) {
+      await dbQuery(`UPDATE goodbase_schedule_runs SET status='failed',finished_at=NOW(),duration_ms=$2,error_message=$3 WHERE id=$1`,[runId,Date.now()-started,String(error.message).slice(0,2000)]);
+      runs.push({ scheduleId:schedule.id,runId,status:"failed",error:error.message });
+    }
+  }
+  return { dueCount:due.rows.length,runs };
+}
+
 async function runQueueItemProcessor() {
   const ownerId = workerIdFromEnv();
 
@@ -327,6 +438,10 @@ async function runHandler(handlerKey) {
       return runWebhookRetryScan();
     case "queue.items.process":
       return runQueueItemProcessor();
+    case "goodbase.queues.maintain":
+      return runGoodbaseQueueMaintenance();
+    case "goodbase.schedules.dispatch":
+      return runGoodbaseSchedules();
     default:
       return {
         skipped: true,

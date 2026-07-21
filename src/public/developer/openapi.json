@@ -1223,6 +1223,72 @@
         "security": [{"bearerAuth": []}],
         "responses": {"200": {"description": "Preferences reset to defaults"}}
       }
+    },
+    "/api/goodbase/v1/platform/overview": {
+      "get": {
+        "summary": "Goodbase Phase 6-10 platform overview",
+        "tags": ["Goodbase Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Queue, schedule, recovery, storage, and edge-runtime metrics"}, "403": {"description": "Administrator access required"}}
+      }
+    },
+    "/api/goodbase/v1/platform/queues": {
+      "get": {
+        "summary": "List durable queues and delivery metrics",
+        "tags": ["Goodbase Queues"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Tenant queue inventory"}}
+      },
+      "post": {
+        "summary": "Create a durable tenant queue",
+        "tags": ["Goodbase Queues"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Queue created"}, "400": {"description": "Invalid queue policy"}}
+      }
+    },
+    "/api/goodbase/v1/platform/schedules": {
+      "get": {
+        "summary": "List schedules and recent run history",
+        "tags": ["Goodbase Scheduling"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Tenant schedules"}}
+      },
+      "post": {
+        "summary": "Create a queue, SQL, HTTPS, or edge-function schedule",
+        "tags": ["Goodbase Scheduling"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Schedule created"}, "400": {"description": "Invalid schedule"}}
+      }
+    },
+    "/api/goodbase/v1/platform/recovery": {
+      "get": {
+        "summary": "Backup, PITR, WAL, and disaster-recovery status",
+        "tags": ["Goodbase Recovery"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Recovery policies and available recovery window"}}
+      }
+    },
+    "/api/goodbase/v1/platform/storage/uploads": {
+      "post": {
+        "summary": "Create a TUS or S3 multipart upload session",
+        "tags": ["Goodbase Storage"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Resumable upload session created"}, "400": {"description": "Invalid upload policy"}}
+      }
+    },
+    "/api/goodbase/v1/platform/edge/functions": {
+      "get": {
+        "summary": "List isolated edge functions and immutable versions",
+        "tags": ["Goodbase Edge Functions"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Tenant edge functions"}}
+      },
+      "post": {
+        "summary": "Create an isolated edge function",
+        "tags": ["Goodbase Edge Functions"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Function created"}, "400": {"description": "Invalid runtime policy"}}
+      }
     }
   }
 }
