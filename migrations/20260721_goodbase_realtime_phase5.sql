@@ -81,6 +81,7 @@ ON CONFLICT (id) DO UPDATE SET
 
 GRANT CONNECT ON DATABASE goodos_backend TO goodbase_realtime;
 GRANT CREATE ON DATABASE goodos_backend TO goodbase_realtime;
+GRANT SET ON PARAMETER log_min_messages TO goodbase_realtime;
 CREATE SCHEMA IF NOT EXISTS _realtime AUTHORIZATION goodbase_realtime;
 GRANT ALL ON SCHEMA _realtime TO goodbase_realtime;
 CREATE SCHEMA IF NOT EXISTS realtime AUTHORIZATION goodbase_realtime;
