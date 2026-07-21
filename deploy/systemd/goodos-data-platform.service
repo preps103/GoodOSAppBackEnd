@@ -1,5 +1,5 @@
 [Unit]
-Description=GoodOS hardened data platform
+Description=Goodbase hardened REST data platform
 Requires=docker.service postgresql.service
 After=docker.service postgresql.service network-online.target
 

@@ -5,6 +5,7 @@ services:
     image: postgrest/postgrest:v14.12
     container_name: goodos-postgrest
     restart: unless-stopped
+    init: true
     network_mode: host
     environment:
       PGRST_DB_URI: ${PGRST_DB_URI:?PGRST_DB_URI is required}
@@ -12,18 +13,21 @@ services:
       PGRST_DB_EXTRA_SEARCH_PATH: goodos_auth,public
       PGRST_DB_ANON_ROLE: goodos_anon
       PGRST_DB_PRE_REQUEST: goodos_auth.check_session
+      PGRST_DB_CHANNEL_ENABLED: "true"
+      PGRST_DB_CHANNEL: pgrst
       PGRST_JWT_SECRET: ${GOODOS_JWT_SECRET:?GOODOS_JWT_SECRET is required}
+      PGRST_JWT_AUD: goodbase-rest
       PGRST_JWT_CACHE_MAX_ENTRIES: "1000"
-      PGRST_DB_POOL: "20"
-      PGRST_DB_POOL_ACQUISITION_TIMEOUT: "10"
-      PGRST_DB_MAX_ROWS: "1000"
+      PGRST_DB_POOL: ${PGRST_DB_POOL:-20}
+      PGRST_DB_POOL_ACQUISITION_TIMEOUT: ${PGRST_DB_POOL_ACQUISITION_TIMEOUT:-10}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
       PGRST_SERVER_HOST: 127.0.0.1
       PGRST_SERVER_PORT: "8300"
       PGRST_ADMIN_SERVER_PORT: "8301"
       PGRST_SERVER_TIMING_ENABLED: "true"
-      PGRST_LOG_LEVEL: info
+      PGRST_LOG_LEVEL: ${PGRST_LOG_LEVEL:-info}
       PGRST_OPENAPI_MODE: follow-privileges
-      PGRST_OPENAPI_SERVER_PROXY_URI: https://backend.goodos.app/rest/v1
+      PGRST_OPENAPI_SERVER_PROXY_URI: https://base.goodos.app/rest/v1
     read_only: true
     tmpfs:
       - /tmp:size=32m,mode=1777
@@ -33,6 +37,17 @@ services:
       - no-new-privileges:true
     mem_limit: 512m
     cpus: 2.0
+    pids_limit: 128
+    stop_grace_period: 30s
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
     healthcheck:
       test: ["CMD", "postgrest", "--ready"]
       interval: 10s
@@ -45,6 +60,7 @@ services:
     container_name: goodos-realtime-cdc
     profiles: ["realtime"]
     restart: unless-stopped
+    init: true
     network_mode: host
     environment:
       PORT: "8400"
@@ -73,3 +89,9 @@ services:
       - no-new-privileges:true
     mem_limit: 1g
     cpus: 2.0
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"

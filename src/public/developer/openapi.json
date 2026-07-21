@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://backend.goodos.app/api/v1",
+      "url": "https://base.goodos.app/api/v1",
       "description": "GoodOS Production Public API"
     }
   ],
@@ -569,7 +569,7 @@
         "description": "Public object delivery route for buckets marked public or public_read_enabled. This route is served from the root backend domain, not /api/v1.",
         "servers": [
           {
-            "url": "https://backend.goodos.app"
+            "url": "https://base.goodos.app"
           }
         ],
         "parameters": [
@@ -749,7 +749,7 @@
     "/realtime/ws": {
       "get": {
         "summary": "Realtime V2 WebSocket endpoint",
-        "description": "Connect to wss://backend.goodos.app/api/v1/realtime/ws?api_key=YOUR_KEY&channel=system with subscribe:realtime scope. Publish messages with publish:realtime scope.",
+        "description": "Connect to wss://base.goodos.app/api/v1/realtime/ws?api_key=YOUR_KEY&channel=system with subscribe:realtime scope. Publish messages with publish:realtime scope.",
         "x-goodos-scope": "subscribe:realtime",
         "responses": {
           "101": {

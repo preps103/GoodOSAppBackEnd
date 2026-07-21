@@ -19,7 +19,7 @@
     constructor(options = {}) {
       this.apiKey = options.apiKey || "";
       this.accessToken = options.accessToken || "";
-      this.baseUrl = String(options.baseUrl || "https://backend.goodos.app/api/v1").replace(/\/+$/, "");
+      this.baseUrl = String(options.baseUrl || "https://base.goodos.app/api/v1").replace(/\/+$/, "");
       this.rootUrl = String(options.rootUrl || this.baseUrl.replace(/\/api\/v1$/, "")).replace(/\/+$/, "");
       this.defaultHeaders = options.headers || {};
     }
@@ -177,7 +177,7 @@
       return this.request("/storage/buckets");
     }
 
-    storagePublicUrl(bucketName, objectKey, rootUrl = "https://backend.goodos.app") {
+    storagePublicUrl(bucketName, objectKey, rootUrl = "https://base.goodos.app") {
       const bucket = encodeURIComponent(bucketName);
       const key = String(objectKey || "").split("/").map(encodeURIComponent).join("/");
       return `${String(rootUrl).replace(/\/+$/, "")}/storage/public/${bucket}/${key}`;
@@ -270,12 +270,12 @@
       });
     }
 
-    realtimeStreamUrl(channel = "system", rootUrl = "https://backend.goodos.app") {
+    realtimeStreamUrl(channel = "system", rootUrl = "https://base.goodos.app") {
       return `${String(rootUrl).replace(/\/+$/, "")}/api/v1/realtime/stream?channel=${encodeURIComponent(channel)}`;
     }
 
     realtimeWebSocketUrl(channel = "system", options = {}) {
-      const rootUrl = options.rootUrl || "wss://backend.goodos.app";
+      const rootUrl = options.rootUrl || "wss://base.goodos.app";
       const apiKey = options.apiKey || this.apiKey || "";
       const search = new URLSearchParams();
       search.set("channel", channel);
