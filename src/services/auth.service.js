@@ -4,6 +4,9 @@ const crypto = require("crypto");
 
 const env = require("../config/env");
 const { query } = require("../config/database");
+const {
+  profileAvatarUrl
+} = require("../utils/managedAssetUrl");
 
 function publicUser(row) {
   if (!row) return null;
@@ -14,7 +17,7 @@ function publicUser(row) {
     firstName: row.first_name,
     lastName: row.last_name,
     displayName: row.display_name,
-    avatarUrl: row.avatar_url || null,
+    avatarUrl: profileAvatarUrl(row),
     avatarUpdatedAt:
       row.avatar_updated_at || null,
     platformRole: row.platform_role,

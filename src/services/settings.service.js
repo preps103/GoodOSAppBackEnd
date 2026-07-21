@@ -5,6 +5,10 @@ const bcrypt = require("bcryptjs");
 const fs = require("fs");
 const path = require("path");
 
+const {
+  profileAvatarUrl
+} = require("../utils/managedAssetUrl");
+
 const fileSystem = fs.promises;
 const PROFILE_AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 const PROFILE_AVATAR_ROOT = path.resolve(
@@ -219,7 +223,7 @@ function publicProfile(row) {
     phone:
       row.phone || "",
     avatarUrl:
-      row.avatar_url || null,
+      profileAvatarUrl(row),
     avatarUpdatedAt:
       row.avatar_updated_at || null,
     platformRole:
@@ -314,6 +318,7 @@ async function getProfile(
           display_name,
           phone,
           avatar_url,
+          avatar_file_name,
           avatar_updated_at,
           platform_role,
           status,
@@ -810,6 +815,7 @@ async function updateProfileForUser({
           display_name,
           phone,
           avatar_url,
+          avatar_file_name,
           avatar_updated_at,
           platform_role,
           status,
@@ -1084,7 +1090,13 @@ async function saveAvatarForUser({
   );
 
   const avatarUrl =
-    `${PUBLIC_BACKEND_URL}/api/settings/avatars/${userId}?v=${Date.now()}`;
+    profileAvatarUrl({
+      id: userId,
+      avatar_file_name:
+        fileName,
+      avatar_updated_at:
+        new Date()
+    });
 
   try {
     await dbQuery(
