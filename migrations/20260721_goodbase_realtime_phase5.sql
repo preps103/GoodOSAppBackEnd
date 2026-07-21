@@ -70,6 +70,8 @@ GRANT CONNECT ON DATABASE goodos_backend TO goodbase_realtime;
 GRANT CREATE ON DATABASE goodos_backend TO goodbase_realtime;
 CREATE SCHEMA IF NOT EXISTS _realtime AUTHORIZATION goodbase_realtime;
 GRANT ALL ON SCHEMA _realtime TO goodbase_realtime;
+CREATE SCHEMA IF NOT EXISTS realtime AUTHORIZATION goodbase_realtime;
+GRANT ALL ON SCHEMA realtime TO goodbase_realtime;
 GRANT USAGE ON SCHEMA public TO goodbase_realtime;
 GRANT SELECT ON public_goodos_demo_items TO goodbase_realtime;
 REVOKE ALL ON backend_realtime_publications, backend_realtime_replication_health
