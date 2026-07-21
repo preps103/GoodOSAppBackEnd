@@ -871,7 +871,7 @@ async function runDueJobs(options = {}) {
       FROM backend_jobs
       WHERE status = 'active'
         AND next_run_at <= NOW()
-      ORDER BY priority ASC, next_run_at ASC
+      ORDER BY next_run_at ASC, priority ASC
       LIMIT $1
     `,
     [limit]

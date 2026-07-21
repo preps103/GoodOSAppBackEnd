@@ -38,6 +38,12 @@ test("product APIs are mounted and privileged paths enforce MFA", () => {
   assert.match(routes, /status='misconfigured' until signed verification|signed verification succeeds/);
 });
 
+test("the scheduler runs the oldest due work before using priority as a tie breaker", () => {
+  const jobs = fs.readFileSync(path.join(root, "src/services/job.service.js"), "utf8");
+  assert.match(jobs, /ORDER BY next_run_at ASC, priority ASC/);
+  assert.doesNotMatch(jobs, /ORDER BY priority ASC, next_run_at ASC/);
+});
+
 test("SDKs expose product telemetry and configuration calls", () => {
   for (const file of ["src/public/sdk/goodos.js", "sdk/goodos.js", "sdks/dart/lib/goodbase.dart", "sdks/kotlin/src/main/kotlin/app/goodos/goodbase/GoodbaseClient.kt", "sdks/swift/Sources/Goodbase/GoodbaseClient.swift"]) {
     const source = fs.readFileSync(path.join(root, file), "utf8");
