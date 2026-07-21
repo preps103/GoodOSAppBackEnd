@@ -72,7 +72,7 @@ async function main() {
     readyStorageReplications: await count("SELECT COUNT(*) FROM goodbase_storage_replications WHERE status='ready' AND last_verified_at IS NOT NULL"),
     completedCdnOperations: await count("SELECT COUNT(DISTINCT operation_type) FROM goodbase_cdn_operations WHERE status='completed'"),
     readyDistributionProviders: await count("SELECT COUNT(DISTINCT provider_type) FROM goodbase_distribution_providers WHERE status='ready' AND last_health_at IS NOT NULL"),
-    passedDeviceProviders: await count("SELECT COUNT(DISTINCT provider_id) FROM goodbase_device_test_runs WHERE status='passed' AND cardinality(artifacts_json)>0"),
+    passedDeviceProviders: await count("SELECT COUNT(DISTINCT provider_id) FROM goodbase_device_test_runs WHERE status='passed' AND jsonb_typeof(artifacts_json)='array' AND jsonb_array_length(artifacts_json)>0"),
     productionTelemetryFamilies: await count("SELECT ((CASE WHEN EXISTS(SELECT 1 FROM goodbase_analytics_events WHERE received_at>NOW()-INTERVAL '24 hours') THEN 1 ELSE 0 END)+(CASE WHEN EXISTS(SELECT 1 FROM goodbase_crash_occurrences WHERE received_at>NOW()-INTERVAL '24 hours') THEN 1 ELSE 0 END)+(CASE WHEN EXISTS(SELECT 1 FROM goodbase_performance_traces WHERE received_at>NOW()-INTERVAL '24 hours') THEN 1 ELSE 0 END))::int AS count"),
     completedSymbolication: await count("SELECT COUNT(*) FROM goodbase_symbolication_jobs WHERE status='completed'"),
     readyHostingProjects: await count("SELECT COUNT(*) FROM goodbase_hosting_projects WHERE status='ready' AND controller_id IS NOT NULL"),
