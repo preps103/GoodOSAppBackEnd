@@ -2,7 +2,10 @@
   if (typeof module === "object" && module.exports) {
     module.exports = factory();
   } else {
-    root.GoodOS = factory();
+    const sdk = factory();
+    root.Goodbase = sdk;
+    // Compatibility alias. Deprecated 2026-07-21; removal is scheduled for 2027-01-21.
+    root.GoodOS = sdk;
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   class GoodOSError extends Error {
@@ -49,7 +52,7 @@
         ...extra,
       };
 
-      if (this.apiKey) headers["X-GoodOS-API-Key"] = this.apiKey;
+      if (this.apiKey) headers["X-Goodbase-API-Key"] = this.apiKey;
       return headers;
     }
 
@@ -523,6 +526,8 @@
   }
 
   return {
+    GoodbaseClient: GoodOSClient,
+    GoodbaseError: GoodOSError,
     GoodOSClient,
     GoodOSError,
     createClient(options) {

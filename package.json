@@ -1,7 +1,7 @@
 {
-  "name": "goodapp-backend",
+  "name": "goodbase",
   "version": "1.0.0",
-  "description": "GoodAppBackEnd - self-hosted backend for GoodOS",
+  "description": "Goodbase — the production backend platform for GoodOS applications",
   "private": true,
   "main": "src/server.js",
   "bin": {
@@ -27,16 +27,18 @@
     "assurance:run": "node scripts/goodbase-assurance.js",
     "security:gate": "node scripts/goodbase-security-gate.js",
     "load:approved": "node scripts/goodbase-load.js",
-    "chaos:approved": "node scripts/goodbase-chaos.js"
+    "chaos:approved": "node scripts/goodbase-chaos.js",
+    "certify:production": "node scripts/goodbase-certify.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/preps103/GoodOSAppBackEnd.git"
+    "url": "git+ssh://git@github.com/preps103/Goodbase.git"
   },
   "keywords": [
-    "goodos",
-    "backend",
-    "self-hosted"
+    "goodbase",
+    "backend-as-a-service",
+    "self-hosted",
+    "enterprise"
   ],
   "author": "GoodOS",
   "license": "UNLICENSED",

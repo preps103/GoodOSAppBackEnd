@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/var/www/GoodAppBackEnd"
+APP_DIR="/var/www/Goodbase"
 BACKUP_DIR="$APP_DIR/backups/database"
 BACKUP_GROUP="${BACKUP_GROUP:-goodapp}"
 DB_NAME="goodos_backend"
@@ -36,7 +36,7 @@ VALUES (
   'running',
   0,
   '$FILE_PATH',
-  'Real pg_dump backup started from GoodAppBackEnd console.',
+  'Real pg_dump backup started from Goodbase console.',
   'console',
   'custom',
   '$DB_NAME',

@@ -304,11 +304,29 @@ router.get("/openapi.json", (req, res) => {
   res.type("json").sendFile(developerPublicFile("developer/openapi.json"));
 });
 
+router.get("/sdk/goodbase.js", (req, res) => {
+  res.type("application/javascript").sendFile(path.join(__dirname, "..", "public", "sdk", "goodos.js"));
+});
+
+router.get("/sdk/goodbase.d.ts", (req, res) => {
+  res.type("text/plain").sendFile(path.join(__dirname, "..", "public", "sdk", "goodos.d.ts"));
+});
+
+router.get("/sdk/goodbase-offline.js", (req, res) => {
+  res.type("application/javascript").sendFile(path.join(__dirname, "..", "public", "sdk", "goodbase-offline.js"));
+});
+
 router.get("/sdk/goodos.js", (req, res) => {
+  res.setHeader("Deprecation", "true");
+  res.setHeader("Sunset", "Wed, 21 Jan 2027 00:00:00 GMT");
+  res.setHeader("Link", '<https://base.goodos.app/sdk/goodbase.js>; rel="successor-version"');
   res.type("application/javascript").sendFile(path.join(__dirname, "..", "public", "sdk", "goodos.js"));
 });
 
 router.get("/sdk/goodos.d.ts", (req, res) => {
+  res.setHeader("Deprecation", "true");
+  res.setHeader("Sunset", "Wed, 21 Jan 2027 00:00:00 GMT");
+  res.setHeader("Link", '<https://base.goodos.app/sdk/goodbase.d.ts>; rel="successor-version"');
   res.type("text/plain").sendFile(path.join(__dirname, "..", "public", "sdk", "goodos.d.ts"));
 });
 

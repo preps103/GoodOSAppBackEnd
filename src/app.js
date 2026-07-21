@@ -19,6 +19,7 @@ app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 app.use((req, res, next) => {
+  res.setHeader("X-Goodbase-Canonical-Origin", "https://base.goodos.app");
   if (["GET", "HEAD"].includes(req.method)) {
     const canonical = new URL(req.path, "https://base.goodos.app").toString();
     res.setHeader("Link", `<${canonical}>; rel="canonical"`);
@@ -385,6 +386,7 @@ app.use(
       "Authorization",
       "Content-Type",
       "X-Requested-With",
+      "X-Goodbase-API-Key",
       "X-GoodOS-API-Key",
       "X-Request-ID",
       "Traceparent"

@@ -610,7 +610,7 @@ async function main() {
   const backupTimers = {
     database:
       timerActive(
-        "goodos-db-backup.timer"
+        "goodbase-backup.timer"
       ),
     enterprise:
       timerActive(
@@ -618,7 +618,7 @@ async function main() {
       ),
     retention:
       timerActive(
-        "goodos-backup-retention.timer"
+        "goodbase-backup-retention.timer"
       ),
     verification:
       timerActive(

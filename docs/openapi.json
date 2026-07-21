@@ -3,7 +3,7 @@
   "info": {
     "title": "Goodbase Public API",
     "version": "1.2.0",
-    "description": "Goodbase public API for GoodOS apps. All public endpoints require an API key using X-GoodOS-API-Key or Authorization: Bearer."
+    "description": "Goodbase public API for GoodOS apps. All public endpoints require an API key using X-Goodbase-API-Key or Authorization: Bearer."
   },
   "servers": [
     {
@@ -24,7 +24,7 @@
       "GoodOSApiKey": {
         "type": "apiKey",
         "in": "header",
-        "name": "X-GoodOS-API-Key"
+        "name": "X-Goodbase-API-Key"
       },
       "GoodOSBearer": {
         "type": "http",
@@ -107,7 +107,7 @@
               "application/json": {
                 "example": {
                   "success": true,
-                  "service": "GoodAppBackEnd Public API",
+                  "service": "Goodbase Public API",
                   "status": "ok",
                   "apiKey": {
                     "id": "key_xxx",

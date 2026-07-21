@@ -2,11 +2,11 @@
 set -Eeuo pipefail
 umask 077
 
-APP_DIR="${GOODBASE_APP_DIR:-${GOODOS_APP_DIR:-/var/www/GoodAppBackEnd}}"
-ENV_DIR="${GOODBASE_DATA_PLATFORM_ENV_DIR:-${GOODOS_DATA_PLATFORM_ENV_DIR:-/etc/goodos}}"
+APP_DIR="${GOODBASE_APP_DIR:-${GOODOS_APP_DIR:-/var/www/Goodbase}}"
+ENV_DIR="${GOODBASE_DATA_PLATFORM_ENV_DIR:-${GOODOS_DATA_PLATFORM_ENV_DIR:-/etc/goodbase}}"
 ENV_FILE="$ENV_DIR/data-platform.env"
 APP_ENV_FILE="$APP_DIR/.env"
-SERVICE_FILE="$APP_DIR/deploy/systemd/goodos-data-platform.service"
+SERVICE_FILE="$APP_DIR/deploy/systemd/goodbase-data-platform.service"
 TLS_REFRESH_SCRIPT="$APP_DIR/scripts/refresh-goodbase-tls.sh"
 COMPOSE_DIR="$APP_DIR/deploy/data-platform"
 DB_NAME="${GOODBASE_DB_NAME:-goodos_backend}"
@@ -251,15 +251,15 @@ install \
   -g root \
   -m 0644 \
   "$SERVICE_FILE" \
-  /etc/systemd/system/goodos-data-platform.service
+  /etc/systemd/system/goodbase-data-platform.service
 
 systemctl daemon-reload
 
 cd "$COMPOSE_DIR"
 docker compose --env-file "$ENV_FILE" config --quiet
 docker compose --env-file "$ENV_FILE" pull postgrest pgbouncer-transaction pgbouncer-session realtime edge-runtime
-systemctl enable --now goodos-data-platform.service
-systemctl reload goodos-data-platform.service
+systemctl enable --now goodbase-data-platform.service
+systemctl reload goodbase-data-platform.service
 
 for attempt in $(seq 1 30); do
   if curl -fsS --max-time 3 http://127.0.0.1:8301/ready >/dev/null 2>&1 &&

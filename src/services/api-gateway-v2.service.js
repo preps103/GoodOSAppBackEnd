@@ -28,8 +28,8 @@ function extractApiKey(
 ) {
   const direct =
     request.get(
-      "X-GoodOS-API-Key"
-    );
+      "X-Goodbase-API-Key"
+    ) || request.get("X-GoodOS-API-Key");
 
   if (direct) {
     return direct.trim();

@@ -1,6 +1,6 @@
 const { execFileSync } = require("child_process");
 
-const cwd = "/var/www/GoodAppBackEnd";
+const cwd = "/var/www/Goodbase";
 const runtimeUser = "goodapp";
 function releaseCommit() {
   try {
@@ -35,7 +35,7 @@ module.exports = {
   apps: [
     {
       ...serviceDefaults,
-      name: "goodapp-backend",
+      name: "goodbase-api",
       script: "src/server.js",
       env: {
         ...runtimeEnv,
@@ -44,7 +44,7 @@ module.exports = {
     },
     {
       ...serviceDefaults,
-      name: "goodapp-backend-ha",
+      name: "goodbase-api-ha",
       script: "src/server.js",
       env: {
         ...runtimeEnv,
@@ -53,7 +53,7 @@ module.exports = {
     },
     {
       ...serviceDefaults,
-      name: "goodapp-worker-v3",
+      name: "goodbase-worker",
       script: "src/workers/goodapp-worker-v3.js",
       env: runtimeEnv
     }

@@ -68,6 +68,13 @@ test("canonical Goodbase assets no longer depend on the retired backend hostname
   };
   roots.forEach(walk);
   const retiredHost = ["backend", "goodos", "app"].join(".");
-  const offenders = files.filter((file) => read(file).includes(retiredHost));
+  const allowedRetirementAssets = new Set([
+    "deploy/nginx/backend.goodos.app-retirement.conf.example",
+    "docs/goodbase-deprecation-policy.md",
+    "scripts/goodbase-certify.js",
+    "test/goodbase-phases3-5.test.js",
+    "test/goodbase-phases39-45.test.js"
+  ]);
+  const offenders = files.filter((file) => read(file).includes(retiredHost) && !allowedRetirementAssets.has(file));
   assert.deepEqual(offenders, []);
 });

@@ -513,6 +513,7 @@ function attachRealtimeWebSocketServer(server, options = {}) {
       const rawKey =
         url.searchParams.get("api_key") ||
         url.searchParams.get("apiKey") ||
+        request.headers["x-goodbase-api-key"] ||
         request.headers["x-goodos-api-key"] ||
         "";
 

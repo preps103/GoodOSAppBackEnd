@@ -43,6 +43,8 @@ export class GoodOSError extends Error {
   response: Response | null;
 }
 
+export { GoodOSError as GoodbaseError };
+
 export class GoodOSClient {
   constructor(options?: GoodOSClientOptions);
   setApiKey(apiKey: string): this;
@@ -92,5 +94,7 @@ export class GoodOSClient {
     options?: { method?: "GET" | "POST" }
   ): Promise<GoodOSResponse<TOutput>>;
 }
+
+export { GoodOSClient as GoodbaseClient };
 
 export function createClient(options?: GoodOSClientOptions): GoodOSClient;

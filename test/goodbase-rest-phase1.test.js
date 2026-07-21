@@ -40,8 +40,8 @@ test("PostgREST uses the Goodbase public URL and validates token audience", () =
   const compose = read("deploy/data-platform/compose.yaml");
   const tokenService = read("src/services/data-plane-token.service.js");
 
-  assert.match(compose, /name: goodos-data-platform/);
-  assert.match(compose, /container_name: goodos-postgrest/);
+  assert.match(compose, /name: goodbase-data-platform/);
+  assert.match(compose, /container_name: goodbase-postgrest/);
   assert.match(compose, /PGRST_JWT_AUD: goodbase-rest/);
   assert.match(compose, /PGRST_DB_CHANNEL_ENABLED: "true"/);
   assert.match(compose, /PGRST_OPENAPI_SERVER_PROXY_URI: https:\/\/base\.goodos\.app\/rest\/v1/);

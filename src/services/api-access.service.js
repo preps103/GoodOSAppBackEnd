@@ -1003,7 +1003,7 @@ async function getOverviewForUser(
       openApi:
         "https://base.goodos.app/openapi.json",
       sdk:
-        "https://base.goodos.app/sdk/goodos.js",
+        "https://base.goodos.app/sdk/goodbase.js",
       postman:
         "https://base.goodos.app/postman/goodos-postman-collection.json",
     },

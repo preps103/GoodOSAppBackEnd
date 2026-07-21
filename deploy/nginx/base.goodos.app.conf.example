@@ -26,6 +26,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/base.goodos.app/privkey.pem;
 
     client_max_body_size 10m;
+    add_header X-Goodbase-Canonical-Origin "https://base.goodos.app" always;
 
     location ^~ /realtime/v1/ {
         rewrite ^/realtime/v1/(.*)$ /socket/$1 break;

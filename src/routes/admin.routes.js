@@ -248,7 +248,7 @@ async function getOverview() {
   const memory = process.memoryUsage();
 
   return {
-    service: "GoodAppBackEnd",
+    service: "Goodbase",
     environment: process.env.NODE_ENV || "production",
     version: process.env.VERSION || "1.0.0",
     status: "operational",
@@ -8151,7 +8151,7 @@ router.get("/settings-page-data", async (req, res) => {
       categories: categoriesResult.rows,
       runtime: {
         environment: process.env.NODE_ENV || "production",
-        service: "GoodAppBackEnd",
+        service: "Goodbase",
         node: process.version,
         pid: process.pid,
         uptimeSeconds: Math.floor(process.uptime()),

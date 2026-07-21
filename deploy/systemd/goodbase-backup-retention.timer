@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Goodbase backup retention cleanup daily
+
+[Timer]
+OnCalendar=*-*-* 02:45:00
+Persistent=true
+Unit=goodbase-backup-retention.service
+
+[Install]
+WantedBy=timers.target

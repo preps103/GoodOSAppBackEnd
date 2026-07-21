@@ -39,7 +39,7 @@ function isAllowedOrigin(origin) {
 const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT || 8001),
-  serviceName: process.env.SERVICE_NAME || "GoodAppBackEnd",
+  serviceName: process.env.SERVICE_NAME || "Goodbase",
   version: process.env.VERSION || "1.0.0",
   databaseUrl: process.env.DATABASE_URL,
 

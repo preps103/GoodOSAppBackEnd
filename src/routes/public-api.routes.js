@@ -20,7 +20,7 @@ function hashKey(key) {
 }
 
 function extractApiKey(req) {
-  const headerKey = req.get("X-GoodOS-API-Key");
+  const headerKey = req.get("X-Goodbase-API-Key") || req.get("X-GoodOS-API-Key");
   if (headerKey) return headerKey.trim();
 
   const auth = req.get("Authorization") || "";
@@ -63,7 +63,7 @@ async function apiKeyRequired(req, res, next) {
     if (!key) {
       return res.status(401).json({
         success: false,
-        message: "API key required. Use X-GoodOS-API-Key or Authorization: Bearer.",
+        message: "API key required. Use X-Goodbase-API-Key or Authorization: Bearer.",
       });
     }
 
@@ -478,7 +478,7 @@ async function executePublicControlledFunction(fn, input = {}, apiKey = {}) {
         routePath,
         type,
         triggerType,
-        service: "GoodAppBackEnd Public Callable Function",
+        service: "Goodbase Public Callable Function",
         runtime: process.version,
         databaseTime: dbTime.rows[0]?.now || null,
         uptimeSeconds: Math.floor(process.uptime()),
@@ -1317,7 +1317,7 @@ router.get("/usage", apiKeyRequired, requireScope("read:usage"), async (req, res
 router.get("/health", apiKeyRequired, requireScope("read:health"), async (req, res) => {
   return res.json({
     success: true,
-    service: "GoodAppBackEnd Public API",
+    service: "Goodbase Public API",
     status: "ok",
     apiKey: {
       id: req.goodosApiKey.id,

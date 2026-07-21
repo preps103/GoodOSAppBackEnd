@@ -44,7 +44,7 @@ function createShutdownController({
     if (shutdownPromise) return shutdownPromise;
 
     lifecycle.beginDrain(signal);
-    logger.info?.(`GoodAppBackEnd draining after ${signal}.`);
+    logger.info?.(`Goodbase draining after ${signal}.`);
 
     shutdownPromise = (async () => {
       const deadline = setTimeout(() => {
@@ -63,11 +63,11 @@ function createShutdownController({
 
         await pool?.end?.();
         clearTimeout(deadline);
-        logger.info?.("GoodAppBackEnd shutdown completed.");
+        logger.info?.("Goodbase shutdown completed.");
         exit(exitCode);
       } catch (error) {
         clearTimeout(deadline);
-        logger.error?.("GoodAppBackEnd shutdown failed.", error);
+        logger.error?.("Goodbase shutdown failed.", error);
         exit(1);
       }
     })();

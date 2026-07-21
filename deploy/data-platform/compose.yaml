@@ -1,9 +1,9 @@
-name: goodos-data-platform
+name: goodbase-data-platform
 
 services:
   postgrest:
     image: postgrest/postgrest:v14.12
-    container_name: goodos-postgrest
+    container_name: goodbase-postgrest
     restart: unless-stopped
     init: true
     network_mode: host
@@ -57,7 +57,7 @@ services:
 
   pgbouncer-transaction:
     image: edoburu/pgbouncer:v1.25.2-p0
-    container_name: goodos-pgbouncer-transaction
+    container_name: goodbase-pgbouncer-transaction
     restart: unless-stopped
     init: true
     ports:
@@ -83,7 +83,7 @@ services:
       CLIENT_TLS_KEY_FILE: /tls/privkey.pem
       SERVER_TLS_SSLMODE: disable
     volumes:
-      - /etc/goodos/pgbouncer-tls:/tls:ro
+      - /etc/goodbase/pgbouncer-tls:/tls:ro
       - /var/run/postgresql:/var/run/postgresql
     read_only: true
     tmpfs:
@@ -104,7 +104,7 @@ services:
 
   pgbouncer-session:
     image: edoburu/pgbouncer:v1.25.2-p0
-    container_name: goodos-pgbouncer-session
+    container_name: goodbase-pgbouncer-session
     restart: unless-stopped
     init: true
     ports:
@@ -128,7 +128,7 @@ services:
       CLIENT_TLS_KEY_FILE: /tls/privkey.pem
       SERVER_TLS_SSLMODE: disable
     volumes:
-      - /etc/goodos/pgbouncer-tls:/tls:ro
+      - /etc/goodbase/pgbouncer-tls:/tls:ro
       - /var/run/postgresql:/var/run/postgresql
     read_only: true
     tmpfs:
@@ -149,7 +149,7 @@ services:
 
   realtime:
     image: supabase/realtime:v2.112.9
-    container_name: goodos-realtime-cdc
+    container_name: goodbase-realtime-cdc
     restart: unless-stopped
     init: true
     network_mode: host
@@ -169,7 +169,7 @@ services:
       ERL_AFLAGS: -proto_dist inet_tcp
       DNS_NODES: "''"
       RLIMIT_NOFILE: "10000"
-      APP_NAME: goodos_realtime
+      APP_NAME: goodbase_realtime
       SEED_SELF_HOST: "true"
       SELF_HOST_TENANT_NAME: base
       RUN_JANITOR: "true"

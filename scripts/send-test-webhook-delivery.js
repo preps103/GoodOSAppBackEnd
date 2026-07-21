@@ -39,7 +39,7 @@ async function main() {
     source: "goodapp-backend",
     createdAt: new Date().toISOString(),
     data: {
-      message: "GoodAppBackEnd webhook delivery log test",
+      message: "Goodbase webhook delivery log test",
       webhookId: webhook.id,
       webhookName: webhook.name
     }
@@ -49,7 +49,7 @@ async function main() {
 
   const headers = {
     "Content-Type": "application/json",
-    "User-Agent": "GoodAppBackEnd-Webhooks/1.0",
+    "User-Agent": "Goodbase-Webhooks/1.0",
     "X-GoodOS-Event": payload.type,
     "X-GoodOS-Webhook-Id": webhook.id,
     "X-GoodOS-Delivery-Id": deliveryId,
