@@ -22,6 +22,8 @@
       this.baseUrl = String(options.baseUrl || "https://base.goodos.app/api/v1").replace(/\/+$/, "");
       this.rootUrl = String(options.rootUrl || this.baseUrl.replace(/\/api\/v1$/, "")).replace(/\/+$/, "");
       this.defaultHeaders = options.headers || {};
+      this.maxRetries = Number.isInteger(options.maxRetries) ? Math.max(0, Math.min(options.maxRetries, 5)) : 2;
+      this.timeoutMs = Number.isInteger(options.timeoutMs) ? Math.max(100, Math.min(options.timeoutMs, 300000)) : 30000;
     }
 
     setApiKey(apiKey) {
@@ -56,12 +58,31 @@
       };
       if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
 
-      const response = await fetch(url, {
-        method: options.method || "GET",
-        headers,
-        credentials: options.credentials || "include",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
+      const method = options.method || "GET";
+      const attempts = ["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase()) ? this.maxRetries + 1 : 1;
+      let response;
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(new Error("Goodbase request timed out.")), options.timeoutMs || this.timeoutMs);
+        const abort = () => controller.abort(options.signal.reason);
+        if (options.signal) options.signal.addEventListener("abort", abort, { once: true });
+        try {
+          response = await fetch(url, {
+            method,
+            headers,
+            credentials: options.credentials || "include",
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+            signal: controller.signal,
+          });
+        } catch (error) {
+          if (attempt + 1 >= attempts || options.signal?.aborted) throw error;
+        } finally {
+          clearTimeout(timeout);
+          if (options.signal) options.signal.removeEventListener("abort", abort);
+        }
+        if (response && response.status !== 429 && response.status < 500) break;
+        if (attempt + 1 < attempts) await new Promise((resolve) => setTimeout(resolve, Math.min(2000, 150 * (2 ** attempt))));
+      }
       const payload = await response.json().catch(() => null);
       if (!response.ok || (payload && payload.success === false)) {
         const message = payload && payload.message ? payload.message : `GoodOS request failed with status ${response.status}`;
@@ -243,6 +264,44 @@
         method: "POST",
         body: { token, password },
       });
+    }
+
+    startPasswordless(email, type = "email_otp") {
+      return this.platformRequest("/api/auth/v3/passwordless/start", { method: "POST", body: { email, type } });
+    }
+
+    verifyPasswordless(email, secret, type = "email_otp") {
+      return this.platformRequest("/api/auth/v3/passwordless/verify", {
+        method: "POST",
+        body: { email, type, ...(type === "magic_link" ? { token: secret } : { code: secret }) },
+      });
+    }
+
+    queues() {
+      return this.platformRequest("/api/goodbase/v1/platform/queues");
+    }
+
+    sendQueueMessage(queueId, payload, options = {}) {
+      return this.platformRequest(`/api/goodbase/v1/platform/queues/${encodeURIComponent(queueId)}/messages`, {
+        method: "POST",
+        body: { payload, idempotencyKey: options.idempotencyKey, delaySeconds: options.delaySeconds, priority: options.priority },
+      });
+    }
+
+    migrationPlans() {
+      return this.platformRequest("/api/goodbase/v1/developer/migrations");
+    }
+
+    validateMigration(input) {
+      return this.platformRequest("/api/goodbase/v1/developer/migrations/validate", { method: "POST", body: input });
+    }
+
+    previewEnvironments() {
+      return this.platformRequest("/api/goodbase/v1/developer/previews");
+    }
+
+    createPreview(input) {
+      return this.platformRequest("/api/goodbase/v1/developer/previews", { method: "POST", body: input });
     }
 
     realtimeChannels() {

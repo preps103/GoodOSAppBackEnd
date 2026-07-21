@@ -112,6 +112,40 @@ async function createSession({ userId, token, ipAddress, userAgent }) {
   return result.rows[0];
 }
 
+async function issueSessionForUser({ user, ipAddress, userAgent, authMethod = "password" }) {
+  if (!user || user.status !== "active" || !user.email_verified) {
+    const err = new Error("Account is not eligible for sign in.");
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const token = jwt.sign(
+    {
+      sub: user.id,
+      email: user.email,
+      platformRole: user.platform_role,
+      authMethod
+    },
+    env.jwtSecret,
+    { expiresIn: env.jwtExpiresIn }
+  );
+  const session = await createSession({ userId: user.id, token, ipAddress, userAgent });
+  await query(`UPDATE sessions SET auth_level=$2 WHERE id=$1`, [session.id, authMethod]);
+  await query(`UPDATE users SET last_login_at=NOW() WHERE id=$1`, [user.id]);
+
+  return {
+    token,
+    session: {
+      id: session.id,
+      expiresAt: session.expires_at,
+      authLevel: authMethod,
+      mfaVerified: session.mfa_verified
+    },
+    user: publicUser(user),
+    apps: await getUserApps(user.id)
+  };
+}
+
 async function validateSessionToken(token) {
   const tokenHash = hashToken(token);
 
@@ -234,49 +268,7 @@ async function login({ email, password, ipAddress, userAgent }) {
     throw err;
   }
 
-  const token = jwt.sign(
-    {
-      sub: user.id,
-      email: user.email,
-      platformRole: user.platform_role
-    },
-    env.jwtSecret,
-    {
-      expiresIn: env.jwtExpiresIn
-    }
-  );
-
-  const session = await createSession({
-    userId: user.id,
-    token,
-    ipAddress,
-    userAgent
-  });
-
-  await query(
-    `
-    UPDATE users
-    SET last_login_at = NOW()
-    WHERE id = $1
-    `,
-    [user.id]
-  );
-
-  const apps = await getUserApps(user.id);
-
-  return {
-    token,
-    session: {
-      id: session.id,
-      expiresAt: session.expires_at,
-      authLevel:
-        session.auth_level,
-      mfaVerified:
-        session.mfa_verified
-    },
-    user: publicUser(user),
-    apps
-  };
+  return issueSessionForUser({ user, ipAddress, userAgent, authMethod: "password" });
 }
 
 module.exports = {
@@ -287,5 +279,7 @@ module.exports = {
   revokeSessionById,
   revokeAllUserSessions,
   listUserSessions,
+  getUserByEmail,
+  issueSessionForUser,
   publicUser
 };

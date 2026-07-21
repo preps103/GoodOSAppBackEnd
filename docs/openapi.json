@@ -1289,6 +1289,76 @@
         "security": [{"GoodOSBearer": []}],
         "responses": {"201": {"description": "Function created"}, "400": {"description": "Invalid runtime policy"}}
       }
+    },
+    "/api/auth/v3/passwordless/start": {
+      "post": {
+        "summary": "Start a single-use email OTP or magic-link sign-in",
+        "tags": ["Goodbase Authentication"],
+        "security": [],
+        "responses": {"202": {"description": "Generic challenge delivery response"}, "429": {"description": "Authentication rate limit exceeded"}}
+      }
+    },
+    "/api/auth/v3/passwordless/verify": {
+      "post": {
+        "summary": "Consume a passwordless challenge and create a session",
+        "tags": ["Goodbase Authentication"],
+        "security": [],
+        "responses": {"200": {"description": "Authenticated session"}, "401": {"description": "Invalid, expired, reused, or locked challenge"}}
+      }
+    },
+    "/api/goodbase/v1/developer/overview": {
+      "get": {
+        "summary": "Goodbase Phase 11-15 developer-platform overview",
+        "tags": ["Goodbase Developer Platform"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Authentication, CLI, SDK, migration, and preview metrics"}, "403": {"description": "Administrator access required"}}
+      }
+    },
+    "/api/goodbase/v1/developer/auth/channels": {
+      "get": {
+        "summary": "List authentication channels, security policy, and hooks",
+        "tags": ["Goodbase Authentication"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Tenant authentication configuration"}}
+      }
+    },
+    "/api/goodbase/v1/developer/sdks": {
+      "get": {
+        "summary": "List supported SDK releases and compatibility",
+        "tags": ["Goodbase SDKs"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "SDK release registry"}}
+      }
+    },
+    "/api/goodbase/v1/developer/migrations": {
+      "get": {
+        "summary": "List checksum-locked migration plans and steps",
+        "tags": ["Goodbase Migrations"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Tenant migration plans"}}
+      }
+    },
+    "/api/goodbase/v1/developer/migrations/validate": {
+      "post": {
+        "summary": "Lint and register a migration plan without executing it",
+        "tags": ["Goodbase Migrations"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Migration plan validated"}, "400": {"description": "Invalid migration SQL"}}
+      }
+    },
+    "/api/goodbase/v1/developer/previews": {
+      "get": {
+        "summary": "List isolated preview environments and resources",
+        "tags": ["Goodbase Preview Environments"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Preview environment inventory"}}
+      },
+      "post": {
+        "summary": "Queue an isolated preview environment",
+        "tags": ["Goodbase Preview Environments"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"202": {"description": "Preview provisioning accepted"}, "409": {"description": "Preview slug already exists"}}
+      }
     }
   }
 }

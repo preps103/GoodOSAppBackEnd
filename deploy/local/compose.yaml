@@ -1,0 +1,35 @@
+name: goodbase-local
+
+services:
+  database:
+    image: postgres:17.5-bookworm
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    ports: ["55432:5432"]
+    volumes:
+      - goodbase_database:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/00-goodbase.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  postgrest:
+    image: postgrest/postgrest:v14.12
+    depends_on:
+      database: { condition: service_healthy }
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@database:5432/goodbase_local
+      PGRST_DB_SCHEMAS: goodos_api
+      PGRST_DB_ANON_ROLE: goodos_anon
+      PGRST_JWT_SECRET: ${GOODBASE_JWT_SECRET:?GOODBASE_JWT_SECRET is required}
+      PGRST_SERVER_PORT: "3000"
+    ports: ["55433:3000"]
+
+  mail:
+    image: axllent/mailpit:v1.27.8
+    ports: ["55434:8025", "55435:1025"]
+
+volumes:
+  goodbase_database:

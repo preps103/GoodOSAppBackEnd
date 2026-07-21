@@ -112,6 +112,12 @@ const goodbasePlatformRoutes =
 const goodbaseAdvancedPlatformRoutes =
   require("./goodbase-advanced-platform.routes");
 
+const goodbaseAuthProductRoutes =
+  require("./goodbase-auth-product.routes");
+
+const goodbaseDeveloperPlatformRoutes =
+  require("./goodbase-developer-platform.routes");
+
 const router = express.Router();
 
 /* GOODOS_ENTERPRISE_FOUNDATION_V1_INITIALIZE */
@@ -240,6 +246,7 @@ router.use("/api/health", healthRoutes);
 router.use("/api/apps", appsRoutes);
 router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);
+router.use("/api/auth/v3", goodbaseAuthProductRoutes);
 router.use("/api/admin", adminRoutes);
 router.use("/api/v1", publicApiRoutes);
 
@@ -275,11 +282,11 @@ router.get("/openapi.json", (req, res) => {
 });
 
 router.get("/sdk/goodos.js", (req, res) => {
-  res.type("application/javascript").sendFile(developerPublicFile("sdk/goodos.js"));
+  res.type("application/javascript").sendFile(path.join(__dirname, "..", "public", "sdk", "goodos.js"));
 });
 
 router.get("/sdk/goodos.d.ts", (req, res) => {
-  res.type("text/plain").sendFile(developerPublicFile("sdk/goodos.d.ts"));
+  res.type("text/plain").sendFile(path.join(__dirname, "..", "public", "sdk", "goodos.d.ts"));
 });
 
 router.get("/postman/goodos-postman-collection.json", (req, res) => {
@@ -373,6 +380,10 @@ router.use(
 router.use(
   "/api/goodbase/v1/platform",
   goodbaseAdvancedPlatformRoutes
+);
+router.use(
+  "/api/goodbase/v1/developer",
+  goodbaseDeveloperPlatformRoutes
 );
 router.use("/api/releases", releaseGovernanceRoutes);
 router.use("/api/privacy", privacyGovernanceRoutes);

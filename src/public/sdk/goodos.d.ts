@@ -4,6 +4,8 @@ export interface GoodOSClientOptions {
   baseUrl?: string;
   rootUrl?: string;
   headers?: Record<string, string>;
+  maxRetries?: number;
+  timeoutMs?: number;
 }
 
 export interface GoodOSApiKeyContext {
@@ -72,6 +74,14 @@ export class GoodOSClient {
   verifyMfa(factorId: string, token: string): Promise<GoodOSResponse>;
   requestPasswordReset(email: string): Promise<GoodOSResponse>;
   completePasswordReset(token: string, password: string): Promise<GoodOSResponse>;
+  startPasswordless(email: string, type?: "email_otp" | "magic_link"): Promise<GoodOSResponse>;
+  verifyPasswordless(email: string, secret: string, type?: "email_otp" | "magic_link"): Promise<GoodOSResponse>;
+  queues(): Promise<GoodOSResponse>;
+  sendQueueMessage(queueId: string, payload: unknown, options?: { idempotencyKey?: string; delaySeconds?: number; priority?: number }): Promise<GoodOSResponse>;
+  migrationPlans(): Promise<GoodOSResponse>;
+  validateMigration(input: { name: string; fileName: string; sql: string; rollbackGuidance?: string; sourceRevision?: string }): Promise<GoodOSResponse>;
+  previewEnvironments(): Promise<GoodOSResponse>;
+  createPreview(input: { name: string; slug?: string; sourceRevision: string; pullRequestRef?: string; ttlHours?: number }): Promise<GoodOSResponse>;
   realtimeChannels(): Promise<GoodOSResponse>;
   realtimeEvents(params?: { channel?: string; limit?: number; offset?: number }): Promise<GoodOSResponse>;
   publishRealtimeEvent(channel?: string, event?: { eventType?: string; event_type?: string; message?: string; payload?: Record<string, unknown> }): Promise<GoodOSResponse>;

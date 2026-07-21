@@ -4,6 +4,10 @@
   "description": "GoodAppBackEnd - self-hosted backend for GoodOS",
   "private": true,
   "main": "src/server.js",
+  "bin": {
+    "goodbase": "bin/goodbase.js",
+    "goodos": "bin/goodbase.js"
+  },
   "engines": {
     "node": ">=22.22.3 <23",
     "npm": ">=10.9.8 <11"
@@ -14,7 +18,7 @@
     "dev": "nodemon src/server.js",
     "worker": "node src/workers/goodapp-worker-v3.js",
     "check": "npm run check:syntax && npm run check:openapi && npm test",
-    "check:syntax": "find src scripts test -type f -name '*.js' -print0 | xargs -0 -n 1 node --check",
+    "check:syntax": "find src scripts test bin -type f -name '*.js' -print0 | xargs -0 -n 1 node --check",
     "check:openapi": "node scripts/validate-openapi.js",
     "test": "node --test test/*.test.js",
     "enterprise:readiness": "node scripts/enterprise-readiness.js",

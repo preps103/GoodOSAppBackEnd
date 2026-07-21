@@ -422,6 +422,86 @@ async function runQueueItemProcessor() {
   };
 }
 
+async function runGoodbaseAuthMaintenance() {
+  const expired = await dbQuery(
+    `UPDATE goodbase_auth_challenges
+     SET status='expired'
+     WHERE status='pending' AND expires_at<=NOW()
+     RETURNING id`
+  );
+  const purged = await dbQuery(
+    `DELETE FROM goodbase_auth_challenges
+     WHERE status IN ('expired','consumed','revoked','locked')
+       AND created_at<NOW()-INTERVAL '30 days'
+     RETURNING id`
+  );
+  return { expired: expired.rowCount, purged: purged.rowCount };
+}
+
+async function runGoodbaseMigrationMaintenance() {
+  const locks = await dbQuery(
+    `DELETE FROM goodbase_migration_locks WHERE expires_at<=NOW() RETURNING environment_id`
+  );
+  const stale = await dbQuery(
+    `UPDATE goodbase_migration_plans
+     SET status='failed',validation_json=validation_json||'{"failure":"migration_apply_timeout"}'::jsonb,updated_at=NOW()
+     WHERE status='applying' AND updated_at<NOW()-INTERVAL '30 minutes'
+     RETURNING id`
+  );
+  return { expiredLocks: locks.rowCount, stalePlansFailed: stale.rowCount };
+}
+
+async function runGoodbasePreviewReconcile() {
+  const paused = await dbQuery(
+    `UPDATE goodbase_preview_environments
+     SET status='paused',updated_at=NOW()
+     WHERE status='ready' AND auto_pause_minutes>0
+       AND COALESCE(last_activity_at,created_at)<NOW()+(auto_pause_minutes*-1)*INTERVAL '1 minute'
+     RETURNING id`
+  );
+  const deleting = await dbQuery(
+    `UPDATE goodbase_preview_environments
+     SET status='deleting',updated_at=NOW()
+     WHERE status NOT IN ('deleting','deleted','promoting') AND expires_at<=NOW()
+     RETURNING id`
+  );
+
+  const requested = await dbQuery(
+    `SELECT * FROM goodbase_preview_environments
+     WHERE status='requested' ORDER BY created_at LIMIT 10`
+  );
+  const endpoint = String(process.env.GOODBASE_PREVIEW_PROVISIONER_URL || "").replace(/\/+$/, "");
+  let dispatched = 0;
+  if (endpoint && process.env.GOODBASE_PREVIEW_PROVISIONER_TOKEN) {
+    for (const preview of requested.rows) {
+      const response = await fetch(`${endpoint}/v1/previews`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${process.env.GOODBASE_PREVIEW_PROVISIONER_TOKEN}` },
+        body: JSON.stringify({
+          id: preview.id,
+          databaseName: preview.database_name,
+          credentialSecretRef: preview.credential_secret_ref,
+          sourceEnvironmentId: preview.source_environment_id,
+          sourceRevision: preview.source_revision,
+          limits: { cpuMillicores: preview.cpu_limit_millicores, memoryMb: preview.memory_limit_mb, storageMb: preview.storage_limit_mb }
+        }),
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok) throw new Error(`Preview provisioner returned ${response.status}.`);
+      await dbQuery(`UPDATE goodbase_preview_environments SET status='provisioning',updated_at=NOW() WHERE id=$1 AND status='requested'`, [preview.id]);
+      await dbQuery(`INSERT INTO goodbase_preview_events(preview_id,event_type,status,detail_json) VALUES($1,'preview.provisioning.dispatched','accepted',$2::jsonb)`, [preview.id, JSON.stringify({ endpoint })]);
+      dispatched += 1;
+    }
+  }
+  return {
+    paused: paused.rowCount,
+    expiredQueuedForDeletion: deleting.rowCount,
+    requested: requested.rowCount,
+    dispatched,
+    provisionerConfigured: Boolean(endpoint && process.env.GOODBASE_PREVIEW_PROVISIONER_TOKEN)
+  };
+}
+
 async function runHandler(handlerKey) {
   switch (handlerKey) {
     case "notifications.email_queue.process":
@@ -442,6 +522,12 @@ async function runHandler(handlerKey) {
       return runGoodbaseQueueMaintenance();
     case "goodbase.schedules.dispatch":
       return runGoodbaseSchedules();
+    case "goodbase.auth.maintain":
+      return runGoodbaseAuthMaintenance();
+    case "goodbase.migrations.maintain":
+      return runGoodbaseMigrationMaintenance();
+    case "goodbase.previews.reconcile":
+      return runGoodbasePreviewReconcile();
     default:
       return {
         skipped: true,
