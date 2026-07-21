@@ -28,6 +28,8 @@ BEGIN
 END;
 $$;
 
+GRANT supabase_realtime_admin TO goodbase_realtime;
+
 CREATE TABLE IF NOT EXISTS backend_realtime_publications (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES backend_projects(id) ON DELETE CASCADE,
