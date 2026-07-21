@@ -10,6 +10,19 @@ BEGIN
 END;
 $$;
 
+DO $$
+DECLARE
+  compatibility_role text;
+BEGIN
+  FOREACH compatibility_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role']
+  LOOP
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = compatibility_role) THEN
+      EXECUTE format('CREATE ROLE %I NOLOGIN NOINHERIT NOBYPASSRLS', compatibility_role);
+    END IF;
+  END LOOP;
+END;
+$$;
+
 CREATE TABLE IF NOT EXISTS backend_realtime_publications (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES backend_projects(id) ON DELETE CASCADE,
