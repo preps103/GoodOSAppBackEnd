@@ -65,7 +65,7 @@ router.get("/overview", async (request, response, next) => {
         (SELECT status FROM goodbase_verification_runs WHERE organization_id=$1 AND project_id=$2 AND environment_id=$3 ORDER BY created_at DESC LIMIT 1) AS verification_status,
         (SELECT COUNT(*)::int FROM goodbase_backup_artifacts_v2 WHERE organization_id=$1 AND project_id=$2 AND environment_id=$3 AND status='verified') AS verified_backups,
         (SELECT COUNT(*)::int FROM goodbase_restore_exercises_v2 WHERE organization_id=$1 AND project_id=$2 AND environment_id=$3 AND status='passed') AS passed_restores,
-        (SELECT COUNT(*)::int FROM goodbase_sdk_releases WHERE status='published') AS published_sdks,
+        (SELECT COUNT(*)::int FROM goodbase_sdk_releases WHERE status='active') AS published_sdks,
         (SELECT COUNT(*)::int FROM goodbase_sync_collections WHERE organization_id=$1 AND project_id=$2 AND environment_id=$3 AND status='active') AS sync_collections,
         (SELECT COUNT(*)::int FROM goodbase_controller_registrations WHERE status='ready') AS ready_controllers`,
       [tenant.organizationId, tenant.projectId, tenant.environmentId]
@@ -198,7 +198,13 @@ router.post("/recovery/restores", mfaRequired, async (request, response, next) =
 
 router.get("/sdks", async (_request, response, next) => {
   try {
-    const result = await database.query(`SELECT * FROM goodbase_sdk_releases ORDER BY sdk,created_at DESC`);
+    const result = await database.query(
+      `SELECT id,language AS sdk,version,status,minimum_platform_version,
+              COALESCE(package_ref,artifact_url) AS package_ref,source_commit,
+              checksum_sha256,signed,test_report_json,capabilities_json,
+              COALESCE(published_at,released_at) AS published_at,created_at
+       FROM goodbase_sdk_releases ORDER BY language,COALESCE(published_at,released_at) DESC`
+    );
     return response.json({success:true,releases:result.rows});
   } catch (error) { return next(error); }
 });
@@ -207,12 +213,15 @@ router.post("/sdks/releases", mfaRequired, async (request, response, next) => {
   try {
     const sdk = clean(request.body?.sdk,30);
     if (!["javascript","node","react","nextjs","dart","swift","kotlin","python","csharp"].includes(sdk)) return response.status(400).json({success:false,message:"Unsupported official SDK."});
+    const version=clean(request.body?.version,40);const packageRef=clean(request.body?.packageRef,500);const sourceCommit=clean(request.body?.sourceCommit,64);
+    if(!version||!packageRef||!/^[0-9a-f]{7,64}$/.test(sourceCommit))return response.status(400).json({success:false,message:"Version, package reference, and a valid source commit are required."});
+    const capabilities=Array.isArray(request.body?.capabilities)?request.body.capabilities.map((item)=>clean(item,80)).filter(Boolean).slice(0,100):[];
+    const releaseId=`sdk_${sdk}_${version.replace(/[^a-zA-Z0-9]+/g,"_")}`;
     const result = await database.query(
-      `INSERT INTO goodbase_sdk_releases(sdk,version,package_ref,source_commit,minimum_platform_version,capabilities,checksum_sha256,signed,test_report_json)
-       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) RETURNING *`,
-      [sdk,clean(request.body?.version,40),clean(request.body?.packageRef,500),clean(request.body?.sourceCommit,64),clean(request.body?.minimumPlatformVersion,80)||null,
-        Array.isArray(request.body?.capabilities)?request.body.capabilities.map((item)=>clean(item,80)).slice(0,100):[],clean(request.body?.checksumSha256,64)||null,
-        request.body?.signed===true,JSON.stringify(request.body?.testReport||{})]
+      `INSERT INTO goodbase_sdk_releases(id,language,version,status,minimum_platform_version,artifact_url,package_ref,source_commit,capabilities_json,checksum_sha256,signed,test_report_json)
+       VALUES($1,$2,$3,'preview',$4,$5,$5,$6,$7::jsonb,$8,$9,$10::jsonb) RETURNING *`,
+      [releaseId,sdk,version,clean(request.body?.minimumPlatformVersion,80)||"1.0.0",packageRef,sourceCommit,
+        JSON.stringify(capabilities),clean(request.body?.checksumSha256,64)||null,request.body?.signed===true,JSON.stringify(request.body?.testReport||{})]
     );
     await audit(request,"goodbase.sdk.release.register","sdk_release",result.rows[0].id,{sdk});
     return response.status(201).json({success:true,release:result.rows[0]});

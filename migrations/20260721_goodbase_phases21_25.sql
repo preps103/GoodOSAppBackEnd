@@ -114,27 +114,25 @@ CREATE TABLE IF NOT EXISTS goodbase_replication_targets_v2 (
   UNIQUE(organization_id,project_id,environment_id,region_id)
 );
 
--- Phase 23: official SDK release and compatibility governance.
-CREATE TABLE IF NOT EXISTS goodbase_sdk_releases (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sdk TEXT NOT NULL CHECK (sdk IN ('javascript','node','react','nextjs','dart','swift','kotlin','python','csharp')),
-  version TEXT NOT NULL,
-  package_ref TEXT NOT NULL,
-  source_commit TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'candidate' CHECK (status IN ('candidate','published','deprecated','revoked')),
-  minimum_platform_version TEXT,
-  capabilities TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
-  checksum_sha256 TEXT CHECK (checksum_sha256 IS NULL OR checksum_sha256 ~ '^[0-9a-f]{64}$'),
-  signed BOOLEAN NOT NULL DEFAULT FALSE,
-  test_report_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  published_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(sdk,version)
-);
+-- Phase 23: extend the Phase 13 SDK registry without replacing its data model.
+ALTER TABLE goodbase_sdk_releases DROP CONSTRAINT IF EXISTS goodbase_sdk_releases_language_check;
+ALTER TABLE goodbase_sdk_releases ADD CONSTRAINT goodbase_sdk_releases_language_check
+  CHECK (language IN ('javascript','typescript','node','react','nextjs','dart','swift','kotlin','python','csharp'));
+ALTER TABLE goodbase_sdk_releases
+  ADD COLUMN IF NOT EXISTS package_ref TEXT,
+  ADD COLUMN IF NOT EXISTS source_commit TEXT,
+  ADD COLUMN IF NOT EXISTS signed BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS test_report_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+UPDATE goodbase_sdk_releases
+SET package_ref=COALESCE(package_ref,artifact_url),
+    published_at=COALESCE(published_at,released_at),
+    created_at=COALESCE(created_at,released_at);
 
 CREATE TABLE IF NOT EXISTS goodbase_sdk_compatibility_runs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  release_id UUID NOT NULL REFERENCES goodbase_sdk_releases(id) ON DELETE CASCADE,
+  release_id TEXT NOT NULL REFERENCES goodbase_sdk_releases(id) ON DELETE CASCADE,
   platform_version TEXT NOT NULL,
   local_stack_version TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('queued','running','passed','failed')),
@@ -269,9 +267,20 @@ BEGIN
       table_name
     );
     EXECUTE format('DROP POLICY IF EXISTS goodbase_backend_service ON %I', table_name);
-    EXECUTE format('CREATE POLICY goodbase_backend_service ON %I TO goodbase_backend_service USING (TRUE) WITH CHECK (TRUE)', table_name);
+    EXECUTE format('CREATE POLICY goodbase_backend_service ON %I TO goodapp_backend_user USING (TRUE) WITH CHECK (TRUE)', table_name);
   END LOOP;
 END $$;
+
+GRANT SELECT,INSERT,UPDATE,DELETE ON
+  goodbase_verification_runs,goodbase_verification_checks,
+  goodbase_recovery_policies_v2,goodbase_backup_artifacts_v2,
+  goodbase_restore_exercises_v2,goodbase_replication_targets_v2,
+  goodbase_sdk_releases,goodbase_sdk_compatibility_runs,
+  goodbase_sync_collections,goodbase_sync_records,goodbase_sync_mutations,
+  goodbase_sync_events,goodbase_sync_cursors,
+  goodbase_controller_registrations,goodbase_controller_operations
+TO goodapp_backend_user;
+GRANT USAGE,SELECT ON SEQUENCE goodbase_sync_events_sequence_id_seq TO goodapp_backend_user;
 
 INSERT INTO backend_jobs(id,handler_key,name,description,job_type,handler,status,priority,max_concurrency,timeout_seconds,max_attempts,concurrency_key,next_run_at,metadata_json,organization_id,project_id,environment_id,created_by)
 SELECT 'job_goodbase_production_verify','goodbase.production.verify','Verify Goodbase Production','Runs daily endpoint, authorization, controller, and recovery readiness checks.','scheduled','goodbase.production.verify','active',5,1,300,3,'goodbase.production.verify',NOW(),'{"phase":21}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1)
