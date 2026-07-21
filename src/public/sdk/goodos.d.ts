@@ -82,6 +82,16 @@ export class GoodOSClient {
   validateMigration(input: { name: string; fileName: string; sql: string; rollbackGuidance?: string; sourceRevision?: string }): Promise<GoodOSResponse>;
   previewEnvironments(): Promise<GoodOSResponse>;
   createPreview(input: { name: string; slug?: string; sourceRevision: string; pullRequestRef?: string; ttlHours?: number }): Promise<GoodOSResponse>;
+  enterpriseOverview(): Promise<GoodOSResponse>;
+  queryLogs(filters?: { query?: string; service?: string; severity?: string; hours?: number; limit?: number; requestId?: string; traceId?: string; regex?: boolean }): Promise<GoodOSResponse>;
+  customDomains(): Promise<GoodOSResponse>;
+  addCustomDomain(input: { hostname: string; type?: "api" | "auth" | "storage" | "functions" | "vanity"; targetHostname?: string }): Promise<GoodOSResponse>;
+  vectorCollections(): Promise<GoodOSResponse>;
+  createVectorCollection(input: { name: string; dimensions: number; distanceMetric?: "cosine" | "inner_product" | "euclidean"; indexType?: "hnsw" | "ivfflat" | "exact"; provider?: string; model?: string; providerSecretRef?: string }): Promise<GoodOSResponse>;
+  upsertVectorDocument(collectionId: string, input: { externalId?: string; content: string; metadata?: Record<string, unknown>; embedding?: number[] }): Promise<GoodOSResponse>;
+  searchVectors(collectionId: string, input: { mode?: "keyword" | "semantic" | "hybrid"; query?: string; embedding?: number[]; limit?: number; minimumScore?: number }): Promise<GoodOSResponse>;
+  infrastructureStatus(): Promise<GoodOSResponse>;
+  requestManagementOperation(type: string, parameters?: Record<string, unknown>, idempotencyKey?: string): Promise<GoodOSResponse>;
   realtimeChannels(): Promise<GoodOSResponse>;
   realtimeEvents(params?: { channel?: string; limit?: number; offset?: number }): Promise<GoodOSResponse>;
   publishRealtimeEvent(channel?: string, event?: { eventType?: string; event_type?: string; message?: string; payload?: Record<string, unknown> }): Promise<GoodOSResponse>;

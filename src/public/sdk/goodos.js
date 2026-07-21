@@ -304,6 +304,54 @@
       return this.platformRequest("/api/goodbase/v1/developer/previews", { method: "POST", body: input });
     }
 
+    enterpriseOverview() {
+      return this.platformRequest("/api/goodbase/v1/enterprise/overview");
+    }
+
+    queryLogs(filters = {}) {
+      const search = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") search.set(key, String(value));
+      });
+      return this.platformRequest(`/api/goodbase/v1/enterprise/logs${search.size ? `?${search}` : ""}`);
+    }
+
+    customDomains() {
+      return this.platformRequest("/api/goodbase/v1/enterprise/domains");
+    }
+
+    addCustomDomain(input) {
+      return this.platformRequest("/api/goodbase/v1/enterprise/domains", { method: "POST", body: input });
+    }
+
+    vectorCollections() {
+      return this.platformRequest("/api/goodbase/v1/enterprise/search/collections");
+    }
+
+    createVectorCollection(input) {
+      return this.platformRequest("/api/goodbase/v1/enterprise/search/collections", { method: "POST", body: input });
+    }
+
+    upsertVectorDocument(collectionId, input) {
+      return this.platformRequest(`/api/goodbase/v1/enterprise/search/collections/${encodeURIComponent(collectionId)}/documents`, { method: "POST", body: input });
+    }
+
+    searchVectors(collectionId, input) {
+      return this.platformRequest(`/api/goodbase/v1/enterprise/search/collections/${encodeURIComponent(collectionId)}/query`, { method: "POST", body: input });
+    }
+
+    infrastructureStatus() {
+      return this.platformRequest("/api/goodbase/v1/enterprise/infrastructure");
+    }
+
+    requestManagementOperation(type, parameters = {}, idempotencyKey) {
+      return this.platformRequest("/api/goodbase/v1/enterprise/management/operations", {
+        method: "POST",
+        headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {},
+        body: { type, parameters, idempotencyKey },
+      });
+    }
+
     realtimeChannels() {
       return this.request("/realtime/channels");
     }

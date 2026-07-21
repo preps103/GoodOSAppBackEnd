@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "GoodOS Public API",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "description": "GoodAppBackEnd public API for GoodOS apps. All public endpoints require an API key using X-GoodOS-API-Key or Authorization: Bearer."
   },
   "servers": [
@@ -1108,256 +1108,1259 @@
     "/api/data-platform/health": {
       "get": {
         "summary": "Automatic data-plane health",
-        "tags": ["Data Platform"],
+        "tags": [
+          "Data Platform"
+        ],
         "security": [],
         "responses": {
-          "200": {"description": "PostgREST data plane is operational"},
-          "503": {"description": "The data plane is degraded or unavailable"}
+          "200": {
+            "description": "PostgREST data plane is operational"
+          },
+          "503": {
+            "description": "The data plane is degraded or unavailable"
+          }
         }
       }
     },
     "/api/data-platform/token": {
       "post": {
         "summary": "Issue a short-lived session-bound data token",
-        "tags": ["Data Platform"],
-        "security": [{"GoodOSBearer": []}],
+        "tags": [
+          "Data Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
         "responses": {
-          "200": {"description": "Five-minute database access token"},
-          "401": {"description": "A current GoodOS session is required"}
+          "200": {
+            "description": "Five-minute database access token"
+          },
+          "401": {
+            "description": "A current GoodOS session is required"
+          }
         }
       }
     },
     "/rest/v1/{resource}": {
       "parameters": [
-        {"name": "resource", "in": "path", "required": true, "schema": {"type": "string"}, "description": "An explicitly published goodos_api table, view, or function"}
+        {
+          "name": "resource",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "An explicitly published goodos_api table, view, or function"
+        }
       ],
       "get": {
         "summary": "Query an automatically generated REST resource",
-        "tags": ["Data Platform"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "RLS-filtered records"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+        "tags": [
+          "Data Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RLS-filtered records"
+          },
+          "401": {
+            "description": "Authorization required"
+          },
+          "403": {
+            "description": "Database policy denied access"
+          }
+        }
       },
       "post": {
         "summary": "Insert into an automatically generated REST resource",
-        "tags": ["Data Platform"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"201": {"description": "Record inserted"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+        "tags": [
+          "Data Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Record inserted"
+          },
+          "401": {
+            "description": "Authorization required"
+          },
+          "403": {
+            "description": "Database policy denied access"
+          }
+        }
       },
       "patch": {
         "summary": "Update an automatically generated REST resource",
-        "tags": ["Data Platform"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Record updated"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+        "tags": [
+          "Data Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record updated"
+          },
+          "401": {
+            "description": "Authorization required"
+          },
+          "403": {
+            "description": "Database policy denied access"
+          }
+        }
       },
       "delete": {
         "summary": "Delete from an automatically generated REST resource",
-        "tags": ["Data Platform"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Record deleted"}, "401": {"description": "Authorization required"}, "403": {"description": "Database policy denied access"}}
+        "tags": [
+          "Data Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record deleted"
+          },
+          "401": {
+            "description": "Authorization required"
+          },
+          "403": {
+            "description": "Database policy denied access"
+          }
+        }
       }
     },
     "/api/settings/overview": {
       "get": {
         "summary": "Current user and business settings overview",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "Profile, preferences, organization, workspace, sessions, and audit activity"}, "401": {"description": "Authorization required"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile, preferences, organization, workspace, sessions, and audit activity"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
       }
     },
     "/api/settings/profile": {
       "patch": {
         "summary": "Update current user profile",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "User profile updated"}, "400": {"description": "Invalid profile data"}, "401": {"description": "Authorization required"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile updated"
+          },
+          "400": {
+            "description": "Invalid profile data"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
       }
     },
     "/api/settings/avatar": {
       "post": {
         "summary": "Upload current user profile photo",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"type": "object", "required": ["avatar"], "properties": {"avatar": {"type": "string", "format": "binary"}}}}}},
-        "responses": {"200": {"description": "Profile photo saved"}, "413": {"description": "Profile photo is too large"}, "415": {"description": "Unsupported image type"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "avatar"
+                ],
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile photo saved"
+          },
+          "413": {
+            "description": "Profile photo is too large"
+          },
+          "415": {
+            "description": "Unsupported image type"
+          }
+        }
       },
       "delete": {
         "summary": "Remove current user profile photo",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "Profile photo removed"}, "401": {"description": "Authorization required"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile photo removed"
+          },
+          "401": {
+            "description": "Authorization required"
+          }
+        }
       }
     },
     "/api/settings/business-profile": {
       "patch": {
         "summary": "Update the current organization business profile",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "Business profile updated"}, "400": {"description": "Invalid business profile data"}, "403": {"description": "Owner or administrator access required"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Business profile updated"
+          },
+          "400": {
+            "description": "Invalid business profile data"
+          },
+          "403": {
+            "description": "Owner or administrator access required"
+          }
+        }
       }
     },
     "/api/settings/business-logo": {
       "post": {
         "summary": "Upload the current organization business logo",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"type": "object", "required": ["logo"], "properties": {"logo": {"type": "string", "format": "binary"}}}}}},
-        "responses": {"200": {"description": "Business logo saved"}, "403": {"description": "Owner or administrator access required"}, "413": {"description": "Business logo is too large"}, "415": {"description": "Unsupported image type"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "logo"
+                ],
+                "properties": {
+                  "logo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Business logo saved"
+          },
+          "403": {
+            "description": "Owner or administrator access required"
+          },
+          "413": {
+            "description": "Business logo is too large"
+          },
+          "415": {
+            "description": "Unsupported image type"
+          }
+        }
       },
       "delete": {
         "summary": "Remove the current organization business logo",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "Business logo removed"}, "403": {"description": "Owner or administrator access required"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Business logo removed"
+          },
+          "403": {
+            "description": "Owner or administrator access required"
+          }
+        }
       }
     },
     "/api/settings/preferences": {
       "patch": {
         "summary": "Update current user preferences",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "Preferences updated"}, "400": {"description": "Invalid preference data"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferences updated"
+          },
+          "400": {
+            "description": "Invalid preference data"
+          }
+        }
       },
       "delete": {
         "summary": "Reset current user preferences",
-        "tags": ["Account Settings"],
-        "security": [{"bearerAuth": []}],
-        "responses": {"200": {"description": "Preferences reset to defaults"}}
+        "tags": [
+          "Account Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferences reset to defaults"
+          }
+        }
       }
     },
     "/api/goodbase/v1/platform/overview": {
       "get": {
         "summary": "Goodbase Phase 6-10 platform overview",
-        "tags": ["Goodbase Platform"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Queue, schedule, recovery, storage, and edge-runtime metrics"}, "403": {"description": "Administrator access required"}}
+        "tags": [
+          "Goodbase Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Queue, schedule, recovery, storage, and edge-runtime metrics"
+          },
+          "403": {
+            "description": "Administrator access required"
+          }
+        }
       }
     },
     "/api/goodbase/v1/platform/queues": {
       "get": {
         "summary": "List durable queues and delivery metrics",
-        "tags": ["Goodbase Queues"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Tenant queue inventory"}}
+        "tags": [
+          "Goodbase Queues"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant queue inventory"
+          }
+        }
       },
       "post": {
         "summary": "Create a durable tenant queue",
-        "tags": ["Goodbase Queues"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"201": {"description": "Queue created"}, "400": {"description": "Invalid queue policy"}}
+        "tags": [
+          "Goodbase Queues"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Queue created"
+          },
+          "400": {
+            "description": "Invalid queue policy"
+          }
+        }
       }
     },
     "/api/goodbase/v1/platform/schedules": {
       "get": {
         "summary": "List schedules and recent run history",
-        "tags": ["Goodbase Scheduling"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Tenant schedules"}}
+        "tags": [
+          "Goodbase Scheduling"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant schedules"
+          }
+        }
       },
       "post": {
         "summary": "Create a queue, SQL, HTTPS, or edge-function schedule",
-        "tags": ["Goodbase Scheduling"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"201": {"description": "Schedule created"}, "400": {"description": "Invalid schedule"}}
+        "tags": [
+          "Goodbase Scheduling"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Schedule created"
+          },
+          "400": {
+            "description": "Invalid schedule"
+          }
+        }
       }
     },
     "/api/goodbase/v1/platform/recovery": {
       "get": {
         "summary": "Backup, PITR, WAL, and disaster-recovery status",
-        "tags": ["Goodbase Recovery"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Recovery policies and available recovery window"}}
+        "tags": [
+          "Goodbase Recovery"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recovery policies and available recovery window"
+          }
+        }
       }
     },
     "/api/goodbase/v1/platform/storage/uploads": {
       "post": {
         "summary": "Create a TUS or S3 multipart upload session",
-        "tags": ["Goodbase Storage"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"201": {"description": "Resumable upload session created"}, "400": {"description": "Invalid upload policy"}}
+        "tags": [
+          "Goodbase Storage"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resumable upload session created"
+          },
+          "400": {
+            "description": "Invalid upload policy"
+          }
+        }
       }
     },
     "/api/goodbase/v1/platform/edge/functions": {
       "get": {
         "summary": "List isolated edge functions and immutable versions",
-        "tags": ["Goodbase Edge Functions"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Tenant edge functions"}}
+        "tags": [
+          "Goodbase Edge Functions"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant edge functions"
+          }
+        }
       },
       "post": {
         "summary": "Create an isolated edge function",
-        "tags": ["Goodbase Edge Functions"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"201": {"description": "Function created"}, "400": {"description": "Invalid runtime policy"}}
+        "tags": [
+          "Goodbase Edge Functions"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Function created"
+          },
+          "400": {
+            "description": "Invalid runtime policy"
+          }
+        }
       }
     },
     "/api/auth/v3/passwordless/start": {
       "post": {
         "summary": "Start a single-use email OTP or magic-link sign-in",
-        "tags": ["Goodbase Authentication"],
+        "tags": [
+          "Goodbase Authentication"
+        ],
         "security": [],
-        "responses": {"202": {"description": "Generic challenge delivery response"}, "429": {"description": "Authentication rate limit exceeded"}}
+        "responses": {
+          "202": {
+            "description": "Generic challenge delivery response"
+          },
+          "429": {
+            "description": "Authentication rate limit exceeded"
+          }
+        }
       }
     },
     "/api/auth/v3/passwordless/verify": {
       "post": {
         "summary": "Consume a passwordless challenge and create a session",
-        "tags": ["Goodbase Authentication"],
+        "tags": [
+          "Goodbase Authentication"
+        ],
         "security": [],
-        "responses": {"200": {"description": "Authenticated session"}, "401": {"description": "Invalid, expired, reused, or locked challenge"}}
+        "responses": {
+          "200": {
+            "description": "Authenticated session"
+          },
+          "401": {
+            "description": "Invalid, expired, reused, or locked challenge"
+          }
+        }
       }
     },
     "/api/goodbase/v1/developer/overview": {
       "get": {
         "summary": "Goodbase Phase 11-15 developer-platform overview",
-        "tags": ["Goodbase Developer Platform"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Authentication, CLI, SDK, migration, and preview metrics"}, "403": {"description": "Administrator access required"}}
+        "tags": [
+          "Goodbase Developer Platform"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentication, CLI, SDK, migration, and preview metrics"
+          },
+          "403": {
+            "description": "Administrator access required"
+          }
+        }
       }
     },
     "/api/goodbase/v1/developer/auth/channels": {
       "get": {
         "summary": "List authentication channels, security policy, and hooks",
-        "tags": ["Goodbase Authentication"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Tenant authentication configuration"}}
+        "tags": [
+          "Goodbase Authentication"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant authentication configuration"
+          }
+        }
       }
     },
     "/api/goodbase/v1/developer/sdks": {
       "get": {
         "summary": "List supported SDK releases and compatibility",
-        "tags": ["Goodbase SDKs"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "SDK release registry"}}
+        "tags": [
+          "Goodbase SDKs"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SDK release registry"
+          }
+        }
       }
     },
     "/api/goodbase/v1/developer/migrations": {
       "get": {
         "summary": "List checksum-locked migration plans and steps",
-        "tags": ["Goodbase Migrations"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Tenant migration plans"}}
+        "tags": [
+          "Goodbase Migrations"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant migration plans"
+          }
+        }
       }
     },
     "/api/goodbase/v1/developer/migrations/validate": {
       "post": {
         "summary": "Lint and register a migration plan without executing it",
-        "tags": ["Goodbase Migrations"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"201": {"description": "Migration plan validated"}, "400": {"description": "Invalid migration SQL"}}
+        "tags": [
+          "Goodbase Migrations"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Migration plan validated"
+          },
+          "400": {
+            "description": "Invalid migration SQL"
+          }
+        }
       }
     },
     "/api/goodbase/v1/developer/previews": {
       "get": {
         "summary": "List isolated preview environments and resources",
-        "tags": ["Goodbase Preview Environments"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"200": {"description": "Preview environment inventory"}}
+        "tags": [
+          "Goodbase Preview Environments"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preview environment inventory"
+          }
+        }
       },
       "post": {
         "summary": "Queue an isolated preview environment",
-        "tags": ["Goodbase Preview Environments"],
-        "security": [{"GoodOSBearer": []}],
-        "responses": {"202": {"description": "Preview provisioning accepted"}, "409": {"description": "Preview slug already exists"}}
+        "tags": [
+          "Goodbase Preview Environments"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Preview provisioning accepted"
+          },
+          "409": {
+            "description": "Preview slug already exists"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/overview": {
+      "get": {
+        "summary": "Get Phase 16-20 enterprise overview",
+        "tags": [
+          "Goodbase Enterprise"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enterprise platform metrics"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/logs": {
+      "get": {
+        "summary": "Search unified logs",
+        "tags": [
+          "Goodbase Observability"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded unified log results"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/observability": {
+      "get": {
+        "summary": "Get observability controls",
+        "tags": [
+          "Goodbase Observability"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved queries, drains, policy, and SLOs"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/observability/saved-queries": {
+      "post": {
+        "summary": "Save a log query",
+        "tags": [
+          "Goodbase Observability"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Saved log query"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/observability/drains": {
+      "post": {
+        "summary": "Create a protected log drain",
+        "tags": [
+          "Goodbase Observability"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created external log drain"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/management": {
+      "get": {
+        "summary": "List management controls",
+        "tags": [
+          "Goodbase Management"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operations, scoped tokens, and integrations"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/management/tokens": {
+      "post": {
+        "summary": "Create a scoped management token",
+        "tags": [
+          "Goodbase Management"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Token secret returned once"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/management/operations": {
+      "post": {
+        "summary": "Queue an idempotent management operation",
+        "tags": [
+          "Goodbase Management"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued management operation"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/domains": {
+      "get": {
+        "summary": "List custom domains",
+        "tags": [
+          "Goodbase Domains"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Custom domain lifecycle records"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a custom domain",
+        "tags": [
+          "Goodbase Domains"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "DNS verification instructions"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/domains/{id}/verify": {
+      "post": {
+        "summary": "Verify custom-domain DNS",
+        "tags": [
+          "Goodbase Domains"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DNS verification result"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/domains/{id}/activate": {
+      "post": {
+        "summary": "Activate a certificate-ready domain",
+        "tags": [
+          "Goodbase Domains"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued domain activation"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/search/collections": {
+      "get": {
+        "summary": "List vector collections",
+        "tags": [
+          "Goodbase Search"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vector collection inventory"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a vector collection",
+        "tags": [
+          "Goodbase Search"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created vector collection"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/search/collections/{id}/documents": {
+      "post": {
+        "summary": "Upsert and embed a search document",
+        "tags": [
+          "Goodbase Search"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Document and embedding queue state"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/search/collections/{id}/query": {
+      "post": {
+        "summary": "Run keyword, semantic, or hybrid search",
+        "tags": [
+          "Goodbase Search"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranked search results"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/infrastructure": {
+      "get": {
+        "summary": "Get regional infrastructure state",
+        "tags": [
+          "Goodbase Infrastructure"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regions, nodes, capacity, failover, incidents, and limits"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/infrastructure/failover-plans/{id}/events": {
+      "post": {
+        "summary": "Queue a privileged failover event",
+        "tags": [
+          "Goodbase Infrastructure"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued failover test, failover, or failback"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/domains/{id}/deactivate": {
+      "post": {
+        "summary": "Deactivate a custom domain",
+        "tags": [
+          "Goodbase Domains"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued domain deactivation"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/search/collections/{id}/rebuild": {
+      "post": {
+        "summary": "Rebuild a managed search index",
+        "tags": [
+          "Goodbase Search"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued index rebuild"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/infrastructure/capacity-policies": {
+      "put": {
+        "summary": "Create or update an autoscaling policy",
+        "tags": [
+          "Goodbase Infrastructure"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Capacity policy"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/infrastructure/failover-plans": {
+      "post": {
+        "summary": "Create a failover plan",
+        "tags": [
+          "Goodbase Infrastructure"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Failover plan"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
+      }
+    },
+    "/api/goodbase/v1/enterprise/infrastructure/incidents": {
+      "post": {
+        "summary": "Create a platform incident",
+        "tags": [
+          "Goodbase Infrastructure"
+        ],
+        "security": [
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Platform incident"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Required administrator role or management scope is missing"
+          }
+        }
       }
     }
   }

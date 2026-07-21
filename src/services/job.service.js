@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const os = require("os");
+const dns = require("dns").promises;
 const database = require("../config/database");
 const notificationService = require("./notification.service");
 
@@ -502,6 +503,177 @@ async function runGoodbasePreviewReconcile() {
   };
 }
 
+async function controllerRequest(baseEnvironmentKey, path, body) {
+  const endpoint = String(process.env[`${baseEnvironmentKey}_URL`] || "").replace(/\/+$/, "");
+  const token = process.env[`${baseEnvironmentKey}_TOKEN`];
+  if (!endpoint || !token) return { configured: false, response: null };
+  const response = await fetch(`${endpoint}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(20000)
+  });
+  if (!response.ok) throw new Error(`${baseEnvironmentKey} returned HTTP ${response.status}.`);
+  return { configured: true, response: await response.json().catch(() => ({})) };
+}
+
+async function runGoodbaseObservabilityMaintenance() {
+  const retention = await dbQuery(`SELECT MIN(log_retention_days)::int AS days FROM goodbase_observability_policies`);
+  const days = Math.max(1, Math.min(Number(retention.rows[0]?.days || 30), 3650));
+  const removed = await dbQuery(
+    `DELETE FROM backend_operational_events
+     WHERE created_at < NOW()-($1::text||' days')::interval RETURNING id`,
+    [days]
+  );
+  const unhealthyDrains = await dbQuery(
+    `UPDATE goodbase_log_drains SET status='failing',last_error='No successful delivery within the monitoring window.',updated_at=NOW()
+     WHERE status='active' AND last_delivery_at IS NOT NULL AND last_delivery_at<NOW()-INTERVAL '24 hours' RETURNING id`
+  );
+  return { retentionDays: days, operationalEventsRemoved: removed.rowCount, drainsMarkedFailing: unhealthyDrains.rowCount };
+}
+
+async function runGoodbaseManagementDispatch() {
+  const operations = await dbQuery(
+    `SELECT * FROM goodbase_management_operations WHERE status='queued' ORDER BY requested_at FOR UPDATE SKIP LOCKED LIMIT 10`
+  );
+  let dispatched = 0;
+  const configured = Boolean(process.env.GOODBASE_INFRA_CONTROLLER_URL && process.env.GOODBASE_INFRA_CONTROLLER_TOKEN);
+  if (configured) {
+    for (const operation of operations.rows) {
+      await dbQuery(`UPDATE goodbase_management_operations SET status='running',started_at=NOW() WHERE id=$1 AND status='queued'`, [operation.id]);
+      try {
+        const result = await controllerRequest("GOODBASE_INFRA_CONTROLLER", "/v1/operations", {
+          id: operation.id, type: operation.operation_type, organizationId: operation.organization_id,
+          projectId: operation.project_id, environmentId: operation.environment_id, parameters: operation.request_json
+        });
+        await dbQuery(`UPDATE goodbase_management_operations SET status='completed',result_json=$2::jsonb,controller_request_id=$3,completed_at=NOW() WHERE id=$1`, [operation.id, JSON.stringify(result.response || {}), result.response?.requestId || null]);
+        dispatched += 1;
+      } catch (error) {
+        await dbQuery(`UPDATE goodbase_management_operations SET status='failed',error_message=$2,completed_at=NOW() WHERE id=$1`, [operation.id, String(error.message).slice(0, 1000)]);
+      }
+    }
+  }
+  return { queued: operations.rowCount, dispatched, controllerConfigured: configured };
+}
+
+async function runGoodbaseDomainReconcile() {
+  const domains = await dbQuery(`SELECT * FROM goodbase_custom_domains WHERE activation_status<>'active' OR certificate_expires_at<NOW()+INTERVAL '30 days' ORDER BY updated_at LIMIT 25`);
+  let verified = 0; let dispatched = 0;
+  for (const domain of domains.rows) {
+    let dnsVerified = domain.dns_status === "verified";
+    let certificateReady = domain.certificate_status === "ready";
+    try {
+      const records = (await dns.resolveTxt(domain.expected_txt_name)).flat();
+      if (records.includes(domain.expected_txt_value)) {
+        await dbQuery(`UPDATE goodbase_custom_domains SET dns_status='verified',certificate_status=CASE WHEN certificate_status IN('pending','failed') THEN 'issuing' ELSE certificate_status END,last_checked_at=NOW(),last_error=NULL,updated_at=NOW() WHERE id=$1`, [domain.id]);
+        verified += 1;
+        dnsVerified = true;
+      }
+    } catch (error) {
+      await dbQuery(`UPDATE goodbase_custom_domains SET last_checked_at=NOW(),last_error=$2,updated_at=NOW() WHERE id=$1`, [domain.id, String(error.code || error.message).slice(0, 300)]);
+    }
+    if (dnsVerified && ["pending", "issuing", "renewing", "failed"].includes(domain.certificate_status)) {
+      const result = await controllerRequest("GOODBASE_DOMAIN_CONTROLLER", "/v1/certificates", { id: domain.id, hostname: domain.hostname, targetHostname: domain.target_hostname });
+      if (result.configured) {
+        const ready = result.response?.status === "ready";
+        await dbQuery(`UPDATE goodbase_custom_domains SET certificate_status=$2,certificate_secret_ref=COALESCE($3,certificate_secret_ref),certificate_expires_at=COALESCE($4::timestamptz,certificate_expires_at),last_error=NULL,updated_at=NOW() WHERE id=$1`, [domain.id, ready ? "ready" : "issuing", result.response?.certificateSecretRef || null, result.response?.expiresAt || null]);
+        certificateReady = ready;
+        dispatched += 1;
+      }
+    }
+    if (dnsVerified && certificateReady && domain.activation_status === "activating") {
+      const result = await controllerRequest("GOODBASE_DOMAIN_CONTROLLER", "/v1/domains/activate", { id: domain.id, hostname: domain.hostname, targetHostname: domain.target_hostname });
+      if (result.configured) {
+        await dbQuery(`UPDATE goodbase_custom_domains SET activation_status='active',oauth_callbacks_updated=COALESCE($2,FALSE),saml_entity_updated=COALESCE($3,FALSE),last_error=NULL,updated_at=NOW() WHERE id=$1`, [domain.id, result.response?.oauthCallbacksUpdated === true, result.response?.samlEntityUpdated === true]);
+        dispatched += 1;
+      }
+    }
+    if (domain.activation_status === "deactivating") {
+      const result = await controllerRequest("GOODBASE_DOMAIN_CONTROLLER", "/v1/domains/deactivate", { id: domain.id, hostname: domain.hostname });
+      if (result.configured) {
+        await dbQuery(`UPDATE goodbase_custom_domains SET activation_status='inactive',updated_at=NOW() WHERE id=$1`, [domain.id]);
+        dispatched += 1;
+      }
+    }
+  }
+  return { checked: domains.rowCount, verified, dispatched, controllerConfigured: Boolean(process.env.GOODBASE_DOMAIN_CONTROLLER_URL && process.env.GOODBASE_DOMAIN_CONTROLLER_TOKEN) };
+}
+
+async function runGoodbaseEmbeddingProcess() {
+  const jobs = await dbQuery(
+    `SELECT job.*,document.content,collection.provider,collection.model,collection.dimensions
+     FROM goodbase_embedding_jobs job
+     JOIN goodbase_vector_documents document ON document.id=job.document_id
+     JOIN goodbase_vector_collections collection ON collection.id=document.collection_id
+     WHERE job.status IN('queued','failed') AND job.available_at<=NOW() AND job.attempts<job.max_attempts
+       AND (job.locked_until IS NULL OR job.locked_until<NOW()) ORDER BY job.available_at FOR UPDATE SKIP LOCKED LIMIT 10`
+  );
+  let completed = 0;
+  const configured = Boolean(process.env.GOODBASE_EMBEDDING_GATEWAY_URL && process.env.GOODBASE_EMBEDDING_GATEWAY_TOKEN);
+  if (!configured) return { queued: jobs.rowCount, completed, indexRebuilds: 0, gatewayConfigured: false };
+  for (const job of jobs.rows) {
+    await dbQuery(`UPDATE goodbase_embedding_jobs SET status='processing',attempts=attempts+1,locked_until=NOW()+INTERVAL '5 minutes',updated_at=NOW() WHERE id=$1`, [job.id]);
+    try {
+      const result = await controllerRequest("GOODBASE_EMBEDDING_GATEWAY", "/v1/embeddings", { provider: job.provider, model: job.model, dimensions: job.dimensions, input: job.content });
+      const embedding = result.response?.embedding;
+      if (!Array.isArray(embedding) || embedding.length !== job.dimensions || embedding.some((value) => !Number.isFinite(Number(value)))) throw new Error("Embedding provider returned an invalid vector.");
+      await dbQuery(`UPDATE goodbase_vector_documents SET embedding=$2,embedding_model=$3,embedding_status='ready',updated_at=NOW() WHERE id=$1`, [job.document_id, embedding.map(Number), job.model]);
+      await dbQuery(`UPDATE goodbase_embedding_jobs SET status='completed',provider_request_id=$2,locked_until=NULL,error_message=NULL,updated_at=NOW() WHERE id=$1`, [job.id, result.response?.requestId || null]);
+      completed += 1;
+    } catch (error) {
+      await dbQuery(`UPDATE goodbase_embedding_jobs SET status=CASE WHEN attempts>=max_attempts THEN 'dead_letter' ELSE 'failed' END,available_at=NOW()+(LEAST(3600,POWER(2,attempts)*10)::text||' seconds')::interval,locked_until=NULL,error_message=$2,updated_at=NOW() WHERE id=$1`, [job.id, String(error.message).slice(0, 1000)]);
+      await dbQuery(`UPDATE goodbase_vector_documents SET embedding_status='failed',updated_at=NOW() WHERE id=$1`, [job.document_id]);
+    }
+  }
+  const rebuilds = await dbQuery(
+    `SELECT event.*,collection.name,collection.dimensions,collection.distance_metric,collection.index_type
+     FROM goodbase_search_index_events event JOIN goodbase_vector_collections collection ON collection.id=event.collection_id
+     WHERE event.event_type='index.rebuild' AND event.status='queued' ORDER BY event.created_at LIMIT 5`
+  );
+  let rebuilt = 0;
+  for (const rebuild of rebuilds.rows) {
+    try {
+      const result = await controllerRequest("GOODBASE_EMBEDDING_GATEWAY", "/v1/indexes/rebuild", rebuild);
+      await dbQuery(`UPDATE goodbase_search_index_events SET status='completed',detail_json=detail_json||$2::jsonb WHERE id=$1`, [rebuild.id, JSON.stringify(result.response || {})]);
+      await dbQuery(`UPDATE goodbase_vector_collections SET status='active',updated_at=NOW() WHERE id=$1`, [rebuild.collection_id]);
+      rebuilt += 1;
+    } catch (error) {
+      await dbQuery(`UPDATE goodbase_search_index_events SET status='failed',detail_json=detail_json||$2::jsonb WHERE id=$1`, [rebuild.id, JSON.stringify({ error: String(error.message).slice(0, 1000) })]);
+      await dbQuery(`UPDATE goodbase_vector_collections SET status='degraded',updated_at=NOW() WHERE id=$1`, [rebuild.collection_id]);
+    }
+  }
+  return { queued: jobs.rowCount, completed, indexRebuilds: rebuilt, gatewayConfigured: configured };
+}
+
+async function runGoodbaseInfrastructureReconcile() {
+  const staleNodes = await dbQuery(
+    `UPDATE goodbase_service_nodes SET status='offline',updated_at=NOW()
+     WHERE status IN('ready','degraded') AND COALESCE(last_heartbeat_at,created_at)<NOW()-INTERVAL '2 minutes' RETURNING id`
+  );
+  const events = await dbQuery(
+    `SELECT event.*,plan.organization_id,plan.project_id,plan.environment_id,plan.service_type,
+            plan.primary_region_id,plan.recovery_region_id,plan.rto_minutes,plan.rpo_minutes
+     FROM goodbase_failover_events event JOIN goodbase_failover_plans plan ON plan.id=event.plan_id
+     WHERE event.status='queued' ORDER BY event.created_at LIMIT 5`
+  );
+  let dispatched = 0;
+  const configured = Boolean(process.env.GOODBASE_INFRA_CONTROLLER_URL && process.env.GOODBASE_INFRA_CONTROLLER_TOKEN);
+  if (configured) {
+    for (const event of events.rows) {
+      await dbQuery(`UPDATE goodbase_failover_events SET status='running' WHERE id=$1 AND status='queued'`, [event.id]);
+      try {
+        const result = await controllerRequest("GOODBASE_INFRA_CONTROLLER", "/v1/failover", event);
+        await dbQuery(`UPDATE goodbase_failover_events SET status='completed',result_json=$2::jsonb,completed_at=NOW() WHERE id=$1`, [event.id, JSON.stringify(result.response || {})]);
+        await dbQuery(`UPDATE goodbase_failover_plans SET status=CASE WHEN $2='failover' THEN 'failed_over' ELSE 'active' END,last_tested_at=CASE WHEN $2='test' THEN NOW() ELSE last_tested_at END,last_result_json=$3::jsonb,updated_at=NOW() WHERE id=$1`, [event.plan_id, event.event_type, JSON.stringify(result.response || {})]);
+        dispatched += 1;
+      } catch (error) {
+        await dbQuery(`UPDATE goodbase_failover_events SET status='failed',error_message=$2,completed_at=NOW() WHERE id=$1`, [event.id, String(error.message).slice(0, 1000)]);
+      }
+    }
+  }
+  return { staleNodes: staleNodes.rowCount, queuedFailoverEvents: events.rowCount, dispatched, controllerConfigured: configured };
+}
+
 async function runHandler(handlerKey) {
   switch (handlerKey) {
     case "notifications.email_queue.process":
@@ -528,6 +700,16 @@ async function runHandler(handlerKey) {
       return runGoodbaseMigrationMaintenance();
     case "goodbase.previews.reconcile":
       return runGoodbasePreviewReconcile();
+    case "goodbase.observability.maintain":
+      return runGoodbaseObservabilityMaintenance();
+    case "goodbase.management.dispatch":
+      return runGoodbaseManagementDispatch();
+    case "goodbase.domains.reconcile":
+      return runGoodbaseDomainReconcile();
+    case "goodbase.embeddings.process":
+      return runGoodbaseEmbeddingProcess();
+    case "goodbase.infrastructure.reconcile":
+      return runGoodbaseInfrastructureReconcile();
     default:
       return {
         skipped: true,
