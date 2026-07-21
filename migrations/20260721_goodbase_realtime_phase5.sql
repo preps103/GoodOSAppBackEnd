@@ -17,6 +17,7 @@ BEGIN
   FOREACH compatibility_role IN ARRAY ARRAY[
     'anon',
     'authenticated',
+    'dashboard_user',
     'service_role',
     'supabase_realtime_admin'
   ]
