@@ -82,7 +82,7 @@
       '</button>' +
       '<section id="backend-ada-panel" class="backend-ada-panel" role="dialog" aria-modal="false" aria-labelledby="backend-ada-title" aria-describedby="backend-ada-description" hidden>' +
         '<header class="backend-ada-panel-header"><div class="backend-ada-panel-heading"><span class="backend-ada-heading-icon">' + ICONS.accessibility + '</span><span>' +
-          '<span id="backend-ada-title" class="backend-ada-title">Accessibility</span><span id="backend-ada-description" class="backend-ada-subtitle">Adjust GoodOS Cloud to your needs</span>' +
+          '<span id="backend-ada-title" class="backend-ada-title">Accessibility</span><span id="backend-ada-description" class="backend-ada-subtitle">Adjust Goodbase to your needs</span>' +
         '</span></div><button type="button" class="backend-ada-close" aria-label="Close accessibility options">' + ICONS.close + '</button></header>' +
         '<div class="backend-ada-panel-content"><section class="backend-ada-section"><div class="backend-ada-section-heading"><span>Text size</span><strong data-ada-scale-label>100%</strong></div>' +
           '<div class="backend-ada-text-sizes" role="group" aria-label="Text size"><button type="button" data-ada-scale="100">Default</button><button type="button" data-ada-scale="112">Large</button><button type="button" data-ada-scale="125">Larger</button></div></section>' +

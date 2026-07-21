@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Goodbase encrypted backup daily
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+RandomizedDelaySec=900
+Persistent=true
+Unit=goodbase-backup.service
+
+[Install]
+WantedBy=timers.target

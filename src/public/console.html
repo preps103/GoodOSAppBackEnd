@@ -256,7 +256,7 @@
 
 
   <meta charset="utf-8" />
-  <title>GoodOS Cloud Console</title>
+  <title>Goodbase Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -5143,7 +5143,7 @@
   <div id="login" class="login hidden">
     <form class="login-card" id="loginForm">
       <div class="logo">G</div>
-      <h1>GoodOS Cloud</h1>
+      <h1>Goodbase</h1>
       <p>Sign in with your GoodOS owner account to access the production backend console.</p>
       <div id="loginError" class="error"></div>
       <label>Email</label>
@@ -5159,8 +5159,8 @@
       <div class="brand">
         <div class="logo">G</div>
         <div>
-          <h1>GoodOS Cloud</h1>
-          <p>Backend hosting console</p>
+          <h1>Goodbase</h1>
+          <p>Enterprise backend platform</p>
         </div>
       </div>
 
@@ -5266,7 +5266,7 @@ async function request(path, options = {}) {
     } catch (retryError) {
       const offlineMessage = navigator.onLine === false
         ? "Your browser is offline. Reconnect and try again."
-        : "Unable to reach GoodOS Cloud. Refresh the page and try again.";
+        : "Unable to reach Goodbase. Refresh the page and try again.";
       throw new Error(offlineMessage);
     }
   }
@@ -6244,7 +6244,7 @@ window.createPolicyRule = async function createPolicyRule() {
         priority,
         conditionJson,
         status: "active",
-        message: "Policy created from GoodOS Cloud Console."
+        message: "Policy created from Goodbase Console."
       })
     });
 
@@ -6466,7 +6466,7 @@ function dashboard() {
   const generatedAt = activityCharts.generatedAt;
 
   return `
-    ${hero("Backend Console", "GoodOS Cloud command center for live production modules, activity, readiness, logs, audit trail, and global search.", state.overview?.status || "operational")}
+    ${hero("Goodbase Console", "Goodbase command center for live production modules, activity, readiness, logs, audit trail, and global search.", state.overview?.status || "operational")}
     <div class="section-head">
       <h3>Activity Center</h3>
       <div>
@@ -8483,7 +8483,7 @@ window.createDbApiRule = async function createDbApiRule() {
         tableName,
         apiSlug,
         displayName,
-        description: "Published from GoodOS Cloud Console.",
+        description: "Published from Goodbase Console.",
         readEnabled: true,
         writeEnabled: false,
         insertEnabled: false,
@@ -9518,7 +9518,7 @@ window.createSafeBackup = async function createSafeBackup() {
   const name = prompt("Backup name:", "Manual Console Backup");
   if (!name) return;
 
-  const notes = prompt("Notes:", "Manual backup record created from GoodOS Cloud console.") || "";
+  const notes = prompt("Notes:", "Manual backup record created from Goodbase Console.") || "";
 
   try {
     const response = await fetch("/api/admin/backups/create-safe", {
@@ -9655,7 +9655,7 @@ window.restoreVerifyBackup = async function restoreVerifyBackup(id) {
 window.deleteBackupSafe = async function deleteBackupSafe(id) {
   if (!id) return alert("Missing backup id.");
 
-  const reason = prompt("Delete reason:", "Manual delete from GoodOS Cloud console.");
+  const reason = prompt("Delete reason:", "Manual delete from Goodbase Console.");
   if (reason === null) return;
 
   const confirmed = confirm("This will delete the backup file from disk and mark the record. Continue?");
@@ -10865,7 +10865,7 @@ function settingsView() {
 
     <div class="grid cards native-metric-grid" data-card-count="4" data-metric-section="settings-runtime">
       ${liveMetricCard("Environment", runtime.environment || "production", "Runtime mode", { type: "progress", title: "Environment availability", current: runtime.environment ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "blue")}
-      ${liveMetricCard("Service", runtime.service || "GoodOS Cloud", "Backend service", { type: "progress", title: "Service availability", current: runtime.service ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "teal")}
+      ${liveMetricCard("Service", runtime.service || "Goodbase", "Backend service", { type: "progress", title: "Service availability", current: runtime.service ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "teal")}
       ${liveMetricCard("Node", runtime.node || "-", "Node runtime", { type: "progress", title: "Runtime availability", current: runtime.node ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "pink")}
       ${liveMetricCard("PID", runtime.pid || "-", "Process ID", { type: "progress", title: "Process availability", current: runtime.pid ? 1 : 0, total: 1, generatedAt: settingsUpdatedAt }, "blue")}
     </div>
@@ -11427,7 +11427,7 @@ window.refreshStorageV2CenterNow = async function refreshStorageV2CenterNow() {
 window.createStorageProvider = async function createStorageProvider() {
   const provider = prompt("Provider type: local, s3, r2, minio, spaces, wasabi", "local") || "local";
   const name = prompt("Provider name:", provider.toUpperCase() + " Provider") || provider.toUpperCase() + " Provider";
-  const endpointUrl = prompt("Endpoint URL:", provider === "local" ? "file:///var/www/GoodOS Cloud/storage/buckets" : "") || "";
+  const endpointUrl = prompt("Endpoint URL:", provider === "local" ? "file:///var/www/GoodAppBackEnd/storage/buckets" : "") || "";
   const bucketName = prompt("Provider bucket name:", "") || "";
   const cdnBaseUrl = prompt("CDN base URL:", "") || "";
 
@@ -11446,7 +11446,7 @@ window.createStorageProvider = async function createStorageProvider() {
         endpointUrl,
         bucketName,
         cdnBaseUrl,
-        metadata: { createdFrom: "GoodOS Cloud Console" }
+        metadata: { createdFrom: "Goodbase Console" }
       })
     });
 
@@ -11473,7 +11473,7 @@ window.editStorageV2Bucket = async function editStorageV2Bucket(bucketId) {
     providerConfigId: bucket.provider_config_id || bucket.providerConfigId || "storage_provider_local_goodos",
     providerBucketName: bucket.provider_bucket_name || bucket.providerBucketName || bucket.name,
     providerRegion: bucket.provider_region || bucket.providerRegion || "local",
-    providerEndpoint: bucket.provider_endpoint || bucket.providerEndpoint || "file:///var/www/GoodOS Cloud/storage/buckets",
+    providerEndpoint: bucket.provider_endpoint || bucket.providerEndpoint || "file:///var/www/GoodAppBackEnd/storage/buckets",
     providerPrefix: bucket.provider_prefix || bucket.providerPrefix || "",
     cdnEnabled: Boolean(bucket.cdn_enabled || bucket.cdnEnabled),
     cdnBaseUrl: bucket.cdn_base_url || bucket.cdnBaseUrl || "",
@@ -12516,7 +12516,7 @@ window.sendRealtimeTestEvent = async function sendRealtimeTestEvent() {
   const channel = prompt("Realtime channel:", state.realtimeSelectedChannel || "system");
   if (channel === null) return;
 
-  const message = prompt("Realtime message:", "Realtime test event from GoodOS Cloud console");
+  const message = prompt("Realtime message:", "Realtime test event from Goodbase Console");
   if (message === null) return;
 
   try {
@@ -13140,7 +13140,7 @@ window.createEdgeFunction = async function createEdgeFunction() {
         runtime: "node",
         triggerType,
         routePath,
-        description: "Created from GoodOS Cloud console."
+        description: "Created from Goodbase Console."
       })
     });
 

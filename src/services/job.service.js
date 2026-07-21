@@ -3,6 +3,10 @@ const os = require("os");
 const dns = require("dns").promises;
 const database = require("../config/database");
 const notificationService = require("./notification.service");
+const {
+  dispatchControllerOperations,
+  runProductionVerification
+} = require("./goodbase-production.service");
 
 function dbQuery(sql, params = []) {
   if (typeof database.query === "function") return database.query(sql, params);
@@ -710,6 +714,10 @@ async function runHandler(handlerKey) {
       return runGoodbaseEmbeddingProcess();
     case "goodbase.infrastructure.reconcile":
       return runGoodbaseInfrastructureReconcile();
+    case "goodbase.production.verify":
+      return runProductionVerification({ triggerType: "daily" });
+    case "goodbase.controllers.dispatch":
+      return dispatchControllerOperations();
     default:
       return {
         skipped: true,

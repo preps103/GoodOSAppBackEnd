@@ -146,7 +146,7 @@ function generateTypes() {
 
 async function main() {
   if (["help", "--help", "-h"].includes(command)) {
-    process.stdout.write(`Goodbase CLI ${VERSION}\n\nCommands:\n  login/logout/init/link/start/stop/status/reset\n  db diff|dump|push|pull|reset\n  migration new\n  seed\n  types generate\n  functions new|serve|deploy\n  secrets set|list\n  logs/deploy/projects list/branches create/backups list\n  domains list|add|verify\n  vectors collections|create|search\n  management operations|run\n  infrastructure status\n`);
+    process.stdout.write(`Goodbase CLI ${VERSION}\n\nCommands:\n  login/logout/init/link/start/stop/status/reset\n  db diff|dump|push|pull|reset\n  migration new\n  seed\n  types generate\n  functions new|serve|deploy\n  secrets set|list\n  logs/deploy/projects list/branches create/backups list\n  domains list|add|verify\n  vectors collections|create|search\n  management operations|run\n  infrastructure status\n  production status|verify\n  recovery status|backup|restore\n  sdk list\n  sync collections|create\n  controllers list|probe\n`);
     return;
   }
   if (["--version", "version"].includes(command)) return process.stdout.write(`${VERSION}\n`);
@@ -200,6 +200,16 @@ async function main() {
   if (command === "management" && subcommand === "operations") return api("/api/goodbase/v1/enterprise/management");
   if (command === "management" && subcommand === "run") return api("/api/goodbase/v1/enterprise/management/operations",{method:"POST",body:{type:args[2],idempotencyKey:option("idempotency-key",crypto.randomUUID()),parameters:readJson(option("parameters",""),{})}});
   if (command === "infrastructure" && subcommand === "status") return api("/api/goodbase/v1/enterprise/infrastructure");
+  if (command === "production" && subcommand === "status") return api("/api/goodbase/v1/production/overview");
+  if (command === "production" && subcommand === "verify") return api("/api/goodbase/v1/production/verification/runs",{method:"POST",body:{}});
+  if (command === "recovery" && subcommand === "status") return api("/api/goodbase/v1/production/recovery");
+  if (command === "recovery" && subcommand === "backup") return api("/api/goodbase/v1/production/recovery/backups",{method:"POST",body:{type:option("type","full")}});
+  if (command === "recovery" && subcommand === "restore") return api("/api/goodbase/v1/production/recovery/restores",{method:"POST",body:{backupId:args[2],targetType:option("target","isolated_verification"),targetRef:option("target-ref"),pointInTime:option("point-in-time")}});
+  if (command === "sdk" && subcommand === "list") return api("/api/goodbase/v1/production/sdks");
+  if (command === "sync" && subcommand === "collections") return api("/api/goodbase/v1/production/sync/collections");
+  if (command === "sync" && subcommand === "create") return api("/api/goodbase/v1/production/sync/collections",{method:"POST",body:{name:args[2],conflictPolicy:option("conflict-policy","reject"),retentionDays:Number(option("retention-days",30))}});
+  if (command === "controllers" && subcommand === "list") return api("/api/goodbase/v1/production/controllers");
+  if (command === "controllers" && subcommand === "probe") return api(`/api/goodbase/v1/production/controllers/${encodeURIComponent(args[2]||"")}/probe`,{method:"POST",body:{}});
   fail(`Unknown command: ${args.join(" ")}`);
 }
 

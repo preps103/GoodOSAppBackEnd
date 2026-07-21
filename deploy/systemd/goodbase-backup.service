@@ -1,0 +1,20 @@
+[Unit]
+Description=Goodbase encrypted off-site PostgreSQL backup
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=goodapp
+Group=goodapp
+WorkingDirectory=/var/www/GoodAppBackEnd
+EnvironmentFile=/etc/goodos/backup.env
+ExecStart=/var/www/GoodAppBackEnd/scripts/goodbase-backup.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

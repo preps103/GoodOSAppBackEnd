@@ -91,6 +91,16 @@ export class GoodOSClient {
   upsertVectorDocument(collectionId: string, input: { externalId?: string; content: string; metadata?: Record<string, unknown>; embedding?: number[] }): Promise<GoodOSResponse>;
   searchVectors(collectionId: string, input: { mode?: "keyword" | "semantic" | "hybrid"; query?: string; embedding?: number[]; limit?: number; minimumScore?: number }): Promise<GoodOSResponse>;
   infrastructureStatus(): Promise<GoodOSResponse>;
+  productionOverview(): Promise<GoodOSResponse>;
+  productionVerificationRuns(limit?: number): Promise<GoodOSResponse>;
+  runProductionVerification(): Promise<GoodOSResponse>;
+  recoveryStatus(): Promise<GoodOSResponse>;
+  officialSdkReleases(): Promise<GoodOSResponse>;
+  syncCollections(): Promise<GoodOSResponse>;
+  createSyncCollection(input: { name: string; conflictPolicy?: "reject" | "last_write_wins" | "merge"; retentionDays?: number }): Promise<GoodOSResponse>;
+  syncChanges(collectionId: string, options?: { cursor?: number; limit?: number }): Promise<GoodOSResponse>;
+  syncMutations(collectionId: string, input: { deviceId: string; mutations: Array<{ idempotencyKey: string; recordKey: string; operation: "upsert" | "delete"; expectedVersion?: number; value?: unknown; baseValue?: unknown }> }): Promise<GoodOSResponse>;
+  productionControllers(): Promise<GoodOSResponse>;
   requestManagementOperation(type: string, parameters?: Record<string, unknown>, idempotencyKey?: string): Promise<GoodOSResponse>;
   realtimeChannels(): Promise<GoodOSResponse>;
   realtimeEvents(params?: { channel?: string; limit?: number; offset?: number }): Promise<GoodOSResponse>;

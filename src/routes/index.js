@@ -121,6 +121,9 @@ const goodbaseDeveloperPlatformRoutes =
 const goodbaseEnterprisePlatformRoutes =
   require("./goodbase-enterprise-platform.routes");
 
+const goodbaseProductionRoutes =
+  require("./goodbase-production.routes");
+
 const router = express.Router();
 
 /* GOODOS_ENTERPRISE_FOUNDATION_V1_INITIALIZE */
@@ -391,6 +394,10 @@ router.use(
 router.use(
   "/api/goodbase/v1/enterprise",
   goodbaseEnterprisePlatformRoutes
+);
+router.use(
+  "/api/goodbase/v1/production",
+  goodbaseProductionRoutes
 );
 router.use("/api/releases", releaseGovernanceRoutes);
 router.use("/api/privacy", privacyGovernanceRoutes);

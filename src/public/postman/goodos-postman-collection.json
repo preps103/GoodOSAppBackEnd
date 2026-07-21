@@ -2,7 +2,7 @@
   "info": {
     "name": "GoodOS Public API",
     "_postman_id": "goodos-public-api",
-    "description": "GoodAppBackEnd public API collection. Set GOODOS_API_KEY in collection variables.",
+    "description": "Goodbase public API collection. Set GOODOS_API_KEY in collection variables.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

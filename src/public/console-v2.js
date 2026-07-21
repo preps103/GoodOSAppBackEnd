@@ -7,7 +7,7 @@
   };
 
   const titles = {
-    overview: ["Build and run your backend from one control center", "GoodOS Cloud provides the database, auth, storage, functions, realtime, jobs, billing, notifications, and encrypted secrets your applications need to scale with confidence."],
+    overview: ["Build and run your backend from one control center", "Goodbase provides the database, auth, storage, functions, realtime, jobs, billing, notifications, and encrypted secrets your applications need to scale with confidence."],
     projects: ["Projects", "Create and manage customer projects, environments, applications, and backend hosting workspaces."],
     database: ["Database", "Build hosted database APIs, table permissions, row access rules, and managed data workflows."],
     auth: ["Authentication", "Manage users, sessions, roles, permissions, MFA, password reset, and team access."],
@@ -59,7 +59,7 @@
       <section class="hero">
         <span class="pill"><span class="dot"></span> Production environment ${escapeHtml(state.health)}</span>
         <h1>Build and run your backend from one control center</h1>
-        <p>GoodOS Cloud provides the database, auth, storage, functions, realtime, jobs, billing, notifications, and encrypted secrets your applications need to scale with confidence.</p>
+        <p>Goodbase provides the database, auth, storage, functions, realtime, jobs, billing, notifications, and encrypted secrets your applications need to scale with confidence.</p>
         <div class="hero-art"><div class="orbit"></div><div class="cube one"></div><div class="cube two"></div><div class="cube three"></div></div>
       </section>
 
@@ -174,7 +174,7 @@
       <section class="panel" style="margin-top:16px;">
         <div class="panel-head">
           <div><h2>${escapeHtml(name)} Readiness</h2><p>This area is ready for the next build-out phase.</p></div>
-          <span class="badge">GoodOS Cloud</span>
+          <span class="badge">Goodbase</span>
         </div>
         <div class="list">
           <div class="row"><span><span class="dot"></span> Customer-ready navigation</span><strong>Complete</strong></div>

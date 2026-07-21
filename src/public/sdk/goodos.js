@@ -344,6 +344,49 @@
       return this.platformRequest("/api/goodbase/v1/enterprise/infrastructure");
     }
 
+    productionOverview() {
+      return this.platformRequest("/api/goodbase/v1/production/overview");
+    }
+
+    productionVerificationRuns(limit = 20) {
+      return this.platformRequest(`/api/goodbase/v1/production/verification/runs?limit=${encodeURIComponent(limit)}`);
+    }
+
+    runProductionVerification() {
+      return this.platformRequest("/api/goodbase/v1/production/verification/runs", { method: "POST", body: {} });
+    }
+
+    recoveryStatus() {
+      return this.platformRequest("/api/goodbase/v1/production/recovery");
+    }
+
+    officialSdkReleases() {
+      return this.platformRequest("/api/goodbase/v1/production/sdks");
+    }
+
+    syncCollections() {
+      return this.platformRequest("/api/goodbase/v1/production/sync/collections");
+    }
+
+    createSyncCollection(input) {
+      return this.platformRequest("/api/goodbase/v1/production/sync/collections", { method: "POST", body: input });
+    }
+
+    syncChanges(collectionId, options = {}) {
+      const search = new URLSearchParams();
+      search.set("cursor", String(options.cursor || 0));
+      search.set("limit", String(options.limit || 500));
+      return this.platformRequest(`/api/goodbase/v1/production/sync/collections/${encodeURIComponent(collectionId)}/changes?${search}`);
+    }
+
+    syncMutations(collectionId, input) {
+      return this.platformRequest(`/api/goodbase/v1/production/sync/collections/${encodeURIComponent(collectionId)}/mutations`, { method: "POST", body: input });
+    }
+
+    productionControllers() {
+      return this.platformRequest("/api/goodbase/v1/production/controllers");
+    }
+
     requestManagementOperation(type, parameters = {}, idempotencyKey) {
       return this.platformRequest("/api/goodbase/v1/enterprise/management/operations", {
         method: "POST",

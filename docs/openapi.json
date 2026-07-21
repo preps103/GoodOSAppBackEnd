@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "GoodOS Public API",
+    "title": "Goodbase Public API",
     "version": "1.2.0",
-    "description": "GoodAppBackEnd public API for GoodOS apps. All public endpoints require an API key using X-GoodOS-API-Key or Authorization: Bearer."
+    "description": "Goodbase public API for GoodOS apps. All public endpoints require an API key using X-GoodOS-API-Key or Authorization: Bearer."
   },
   "servers": [
     {
@@ -1813,6 +1813,68 @@
             "description": "Preview slug already exists"
           }
         }
+      }
+    },
+    "/api/goodbase/v1/production/overview": {
+      "get": {
+        "summary": "Get Goodbase Phases 21-25 production readiness",
+        "tags": ["Goodbase Production"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Production verification, recovery, SDK, sync, and controller status"}, "401": {"description": "Authentication required"}, "403": {"description": "Administrator role required"}}
+      }
+    },
+    "/api/goodbase/v1/production/verification/runs": {
+      "get": {
+        "summary": "List commit-bound production verification evidence",
+        "tags": ["Goodbase Production"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Verification run history"}}
+      },
+      "post": {
+        "summary": "Run privileged production verification",
+        "tags": ["Goodbase Production"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "All critical checks passed"}, "424": {"description": "One or more critical checks failed"}, "428": {"description": "Verified MFA required"}}
+      }
+    },
+    "/api/goodbase/v1/production/recovery": {
+      "get": {
+        "summary": "Get backup, restore, PITR, and replica readiness",
+        "tags": ["Goodbase Recovery"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Recovery inventory and evidence"}}
+      }
+    },
+    "/api/goodbase/v1/production/sync/collections/{collectionId}/changes": {
+      "get": {
+        "summary": "Resume an offline synchronization change feed",
+        "tags": ["Goodbase Offline Sync"],
+        "security": [{"GoodOSBearer": []}],
+        "parameters": [{"name":"collectionId","in":"path","required":true,"schema":{"type":"string","format":"uuid"}},{"name":"cursor","in":"query","schema":{"type":"integer","minimum":0}},{"name":"limit","in":"query","schema":{"type":"integer","minimum":1,"maximum":1000}}],
+        "responses": {"200": {"description": "Ordered deduplicated changes and next cursor"}}
+      }
+    },
+    "/api/goodbase/v1/production/sync/collections/{collectionId}/mutations": {
+      "post": {
+        "summary": "Apply durable idempotent offline mutations",
+        "tags": ["Goodbase Offline Sync"],
+        "security": [{"GoodOSBearer": []}],
+        "parameters": [{"name":"collectionId","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],
+        "responses": {"200": {"description": "Applied mutations and conflicts"}, "400": {"description": "Invalid mutation batch"}}
+      }
+    },
+    "/api/goodbase/v1/production/controllers": {
+      "get": {
+        "summary": "List verified production controllers",
+        "tags": ["Goodbase Controllers"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"200": {"description": "Controller health and capabilities"}}
+      },
+      "post": {
+        "summary": "Register an HTTPS production controller",
+        "tags": ["Goodbase Controllers"],
+        "security": [{"GoodOSBearer": []}],
+        "responses": {"201": {"description": "Unverified controller registered"}, "428": {"description": "Verified MFA required"}}
       }
     },
     "/api/goodbase/v1/enterprise/overview": {

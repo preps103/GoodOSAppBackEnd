@@ -357,6 +357,24 @@ function isAllowedOrigin(origin) {
 
 app.set("trust proxy", 1);
 
+app.use((req, res, next) => {
+  if (["GET", "HEAD"].includes(req.method)) {
+    const canonical = new URL(
+      req.path,
+      "https://base.goodos.app"
+    ).toString();
+    res.setHeader(
+      "Link",
+      `<${canonical}>; rel="canonical"`
+    );
+    res.setHeader(
+      "Content-Location",
+      canonical
+    );
+  }
+  next();
+});
+
 app.use(helmet());
 
 

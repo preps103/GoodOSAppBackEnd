@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "releasePolicy": "semantic-versioning",
+  "compatibility": "Goodbase API v1",
+  "requiredCapabilities": [
+    "auth", "session-refresh", "rest", "graphql", "realtime", "presence", "broadcast",
+    "storage", "resumable-upload", "functions", "queues", "pagination", "cancellation",
+    "safe-retries", "request-ids", "local-stack"
+  ],
+  "official": {
+    "javascript": "src/public/sdk/goodos.js",
+    "node": "src/public/sdk/goodos.js",
+    "react": "sdks/javascript/react.js",
+    "nextjs": "sdks/javascript/nextjs.js",
+    "python": "sdks/python/goodbase/client.py",
+    "dart": "sdks/dart/lib/goodbase.dart",
+    "swift": "sdks/swift/Sources/Goodbase/GoodbaseClient.swift",
+    "kotlin": "sdks/kotlin/src/main/kotlin/app/goodos/goodbase/GoodbaseClient.kt",
+    "csharp": "sdks/csharp/Goodbase/GoodbaseClient.cs"
+  }
+}
