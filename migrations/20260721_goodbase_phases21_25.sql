@@ -282,19 +282,17 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON
 TO goodapp_backend_user;
 GRANT USAGE,SELECT ON SEQUENCE goodbase_sync_events_sequence_id_seq TO goodapp_backend_user;
 
-INSERT INTO backend_jobs(id,handler_key,name,description,job_type,handler,status,priority,max_concurrency,timeout_seconds,max_attempts,concurrency_key,next_run_at,metadata_json,organization_id,project_id,environment_id,created_by)
-SELECT 'job_goodbase_production_verify','goodbase.production.verify','Verify Goodbase Production','Runs daily endpoint, authorization, controller, and recovery readiness checks.','scheduled','goodbase.production.verify','active',5,1,300,3,'goodbase.production.verify',NOW(),'{"phase":21}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1)
-WHERE EXISTS(SELECT 1 FROM users)
-ON CONFLICT(id) DO UPDATE SET handler_key=EXCLUDED.handler_key,name=EXCLUDED.name,description=EXCLUDED.description,status='active';
+INSERT INTO backend_jobs(id,name,display_name,description,job_type,handler_key,status,priority,schedule_seconds,timeout_seconds,max_attempts,concurrency_key,next_run_at,metadata_json,organization_id,project_id,environment_id,created_by)
+VALUES('job_goodbase_production_verify','goodbase.production.verify','Verify Goodbase Production','Runs daily endpoint, authorization, controller, and recovery readiness checks.','scheduled','goodbase.production.verify','active',5,86400,300,3,'goodbase.production.verify',NOW(),'{"phase":21}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1))
+ON CONFLICT(id) DO UPDATE SET handler_key=EXCLUDED.handler_key,name=EXCLUDED.name,display_name=EXCLUDED.display_name,description=EXCLUDED.description,status='active',schedule_seconds=86400;
 
 INSERT INTO backend_job_schedules(id,job_id,schedule_type,interval_seconds,timezone,enabled,next_run_at)
 VALUES('schedule_goodbase_production_verify','job_goodbase_production_verify','interval',86400,'UTC',TRUE,NOW())
 ON CONFLICT(id) DO UPDATE SET interval_seconds=86400,enabled=TRUE;
 
-INSERT INTO backend_jobs(id,handler_key,name,description,job_type,handler,status,priority,max_concurrency,timeout_seconds,max_attempts,concurrency_key,next_run_at,metadata_json,organization_id,project_id,environment_id,created_by)
-SELECT 'job_goodbase_controllers_dispatch','goodbase.controllers.dispatch','Dispatch Goodbase Controllers','Dispatches signed idempotent operations to verified external controllers.','scheduled','goodbase.controllers.dispatch','active',5,4,300,5,'goodbase.controllers.dispatch',NOW(),'{"phase":25}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1)
-WHERE EXISTS(SELECT 1 FROM users)
-ON CONFLICT(id) DO UPDATE SET handler_key=EXCLUDED.handler_key,name=EXCLUDED.name,description=EXCLUDED.description,status='active';
+INSERT INTO backend_jobs(id,name,display_name,description,job_type,handler_key,status,priority,schedule_seconds,timeout_seconds,max_attempts,concurrency_key,next_run_at,metadata_json,organization_id,project_id,environment_id,created_by)
+VALUES('job_goodbase_controllers_dispatch','goodbase.controllers.dispatch','Dispatch Goodbase Controllers','Dispatches signed idempotent operations to verified external controllers.','scheduled','goodbase.controllers.dispatch','active',5,30,300,5,'goodbase.controllers.dispatch',NOW(),'{"phase":25}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1))
+ON CONFLICT(id) DO UPDATE SET handler_key=EXCLUDED.handler_key,name=EXCLUDED.name,display_name=EXCLUDED.display_name,description=EXCLUDED.description,status='active',schedule_seconds=30;
 
 INSERT INTO backend_job_schedules(id,job_id,schedule_type,interval_seconds,timezone,enabled,next_run_at)
 VALUES('schedule_goodbase_controllers_dispatch','job_goodbase_controllers_dispatch','interval',30,'UTC',TRUE,NOW())
