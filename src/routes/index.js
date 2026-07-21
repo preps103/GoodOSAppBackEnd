@@ -124,6 +124,9 @@ const goodbaseEnterprisePlatformRoutes =
 const goodbaseProductionRoutes =
   require("./goodbase-production.routes");
 
+const goodbaseGrowthRoutes =
+  require("./goodbase-growth.routes");
+
 const router = express.Router();
 
 /* GOODOS_ENTERPRISE_FOUNDATION_V1_INITIALIZE */
@@ -178,6 +181,17 @@ router.get("/account-settings.js", (req, res) => {
 router.get("/account-settings.css", (req, res) => {
   res.type("text/css");
   res.sendFile(path.join(__dirname, "../public/account-settings.css"));
+});
+
+router.get("/auth/ui", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.sendFile(path.join(__dirname, "../public/goodbase-auth.html"));
+});
+
+router.get("/goodbase-auth.js", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.type("application/javascript");
+  res.sendFile(path.join(__dirname, "../public/goodbase-auth.js"));
 });
 
 router.get("/backend-ada.js", (req, res) => {
@@ -398,6 +412,14 @@ router.use(
 router.use(
   "/api/goodbase/v1/production",
   goodbaseProductionRoutes
+);
+router.use(
+  "/api/goodbase/v1/growth",
+  goodbaseGrowthRoutes.publicRouter
+);
+router.use(
+  "/api/goodbase/v1/growth",
+  goodbaseGrowthRoutes.authenticatedRouter
 );
 router.use("/api/releases", releaseGovernanceRoutes);
 router.use("/api/privacy", privacyGovernanceRoutes);

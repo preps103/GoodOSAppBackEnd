@@ -2424,6 +2424,755 @@
           }
         }
       }
-    }
+    },
+      "/api/goodbase/v1/growth/auth/providers": {
+        "get": {
+          "summary": "List public consumer authentication providers",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/anonymous": {
+        "post": {
+          "summary": "Create an anonymous upgradeable account",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/phone/start": {
+        "post": {
+          "summary": "Start phone OTP authentication",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "responses": {
+            "202": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/phone/verify": {
+        "post": {
+          "summary": "Verify phone OTP authentication",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/anonymous/upgrade/start": {
+        "post": {
+          "summary": "Start anonymous account upgrade",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "202": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/anonymous/upgrade/verify": {
+        "post": {
+          "summary": "Verify anonymous account upgrade",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/identities": {
+        "get": {
+          "summary": "List linked sign-in identities",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/identities/{id}": {
+        "delete": {
+          "summary": "Unlink a sign-in identity",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/attestation/challenge": {
+        "post": {
+          "summary": "Create an app attestation challenge",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/attestation/exchange": {
+        "post": {
+          "summary": "Exchange a provider assertion for a short-lived attestation token",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/attestation/policies": {
+        "get": {
+          "summary": "List app attestation policies",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        },
+        "post": {
+          "summary": "Create or update an app attestation policy",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/devices": {
+        "post": {
+          "summary": "Register or rotate a messaging device",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/devices/{id}": {
+        "delete": {
+          "summary": "Revoke a messaging device",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/providers": {
+        "get": {
+          "summary": "List messaging providers",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        },
+        "post": {
+          "summary": "Configure a messaging provider",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/providers/{id}/verify": {
+        "post": {
+          "summary": "Verify a messaging provider",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/topics": {
+        "post": {
+          "summary": "Create a messaging topic",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/segments": {
+        "post": {
+          "summary": "Create a messaging segment",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/templates": {
+        "post": {
+          "summary": "Create or update a localized messaging template",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/campaigns": {
+        "post": {
+          "summary": "Schedule a messaging campaign",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/messaging/campaigns/{id}/queue": {
+        "post": {
+          "summary": "Queue an audience-aware messaging campaign",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "202": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/assurance/overview": {
+        "get": {
+          "summary": "Get release assurance status",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/assurance/runs": {
+        "post": {
+          "summary": "Run a commit-bound assurance suite",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/developer/assets": {
+        "get": {
+          "summary": "List published developer assets",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/imports/analyze": {
+        "post": {
+          "summary": "Analyze an import manifest without changing data",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/imports/{id}/apply": {
+        "post": {
+          "summary": "Queue a rollback-protected import",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "202": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/provider-configs": {
+        "get": {
+          "summary": "List administrative authentication provider configuration",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      },
+      "/api/goodbase/v1/growth/auth/providers/{id}": {
+        "patch": {
+          "summary": "Configure and verify an authentication provider",
+          "tags": [
+            "Goodbase Growth"
+          ],
+          "security": [
+            {
+              "GoodOSBearer": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "401": {
+              "description": "Authentication required"
+            },
+            "403": {
+              "description": "Insufficient permission"
+            }
+          }
+        }
+      }
   }
 }

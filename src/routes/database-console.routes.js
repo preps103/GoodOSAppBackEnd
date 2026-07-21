@@ -121,9 +121,12 @@ async function runDb(sql, params = []) {
     };
   }
 
+  const databaseCa = String(process.env.DATABASE_SSL_CA || "").replace(/\\n/g, "\n") || undefined;
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+    ssl: process.env.DATABASE_SSL === "false"
+      ? false
+      : { rejectUnauthorized: true, ...(databaseCa ? { ca: databaseCa } : {}) },
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 3000,
     max: 1

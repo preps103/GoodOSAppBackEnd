@@ -1,0 +1,57 @@
+name: Goodbase Assurance
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 7 * * *"
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.3
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run security:gate
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm sbom --sbom-format cyclonedx > goodbase-sbom.cdx.json
+      - id: package
+        shell: bash
+        run: |
+          npm pack
+          artifact="$(find . -maxdepth 1 -name '*.tgz' -print -quit)"
+          test -n "$artifact"
+          echo "path=$artifact" >> "$GITHUB_OUTPUT"
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.package.outputs.path }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goodbase-release-evidence
+          path: |
+            goodbase-sbom.cdx.json
+            ${{ steps.package.outputs.path }}
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+  container-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          severity: HIGH,CRITICAL
+          exit-code: "1"

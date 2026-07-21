@@ -146,7 +146,7 @@ function generateTypes() {
 
 async function main() {
   if (["help", "--help", "-h"].includes(command)) {
-    process.stdout.write(`Goodbase CLI ${VERSION}\n\nCommands:\n  login/logout/init/link/start/stop/status/reset\n  db diff|dump|push|pull|reset\n  migration new\n  seed\n  types generate\n  functions new|serve|deploy\n  secrets set|list\n  logs/deploy/projects list/branches create/backups list\n  domains list|add|verify\n  vectors collections|create|search\n  management operations|run\n  infrastructure status\n  production status|verify\n  recovery status|backup|restore\n  sdk list\n  sync collections|create\n  controllers list|probe\n`);
+    process.stdout.write(`Goodbase CLI ${VERSION}\n\nCommands:\n  login/logout/init/link/start/stop/status/reset\n  db diff|dump|push|pull|reset\n  migration new\n  seed\n  types generate\n  functions new|serve|deploy\n  secrets set|list\n  logs/deploy/projects list/branches create/backups list\n  domains list|add|verify\n  vectors collections|create|search\n  management operations|run\n  infrastructure status\n  production status|verify\n  recovery status|backup|restore\n  sdk list\n  sync collections|create\n  controllers list|probe\n  assurance status|run\n  imports analyze|apply\n  auth-providers list\n  attestation policies\n  messaging providers\n`);
     return;
   }
   if (["--version", "version"].includes(command)) return process.stdout.write(`${VERSION}\n`);
@@ -210,6 +210,13 @@ async function main() {
   if (command === "sync" && subcommand === "create") return api("/api/goodbase/v1/production/sync/collections",{method:"POST",body:{name:args[2],conflictPolicy:option("conflict-policy","reject"),retentionDays:Number(option("retention-days",30))}});
   if (command === "controllers" && subcommand === "list") return api("/api/goodbase/v1/production/controllers");
   if (command === "controllers" && subcommand === "probe") return api(`/api/goodbase/v1/production/controllers/${encodeURIComponent(args[2]||"")}/probe`,{method:"POST",body:{}});
+  if (command === "assurance" && subcommand === "status") return api("/api/goodbase/v1/growth/assurance/overview");
+  if (command === "assurance" && subcommand === "run") return api("/api/goodbase/v1/growth/assurance/runs",{method:"POST",body:{suiteId:option("suite","assurance_daily_security")}});
+  if (command === "imports" && subcommand === "analyze") return api("/api/goodbase/v1/growth/imports/analyze",{method:"POST",body:{sourceType:option("source"),manifest:readJson(option("file",""),{})}});
+  if (command === "imports" && subcommand === "apply") return api(`/api/goodbase/v1/growth/imports/${encodeURIComponent(args[2]||"")}/apply`,{method:"POST",body:{rollbackRef:option("rollback-ref")}});
+  if (command === "auth-providers" && subcommand === "list") return api("/api/goodbase/v1/growth/auth/provider-configs");
+  if (command === "attestation" && subcommand === "policies") return api("/api/goodbase/v1/growth/attestation/policies");
+  if (command === "messaging" && subcommand === "providers") return api("/api/goodbase/v1/growth/messaging/providers");
   fail(`Unknown command: ${args.join(" ")}`);
 }
 

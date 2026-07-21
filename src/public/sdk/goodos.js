@@ -19,6 +19,7 @@
     constructor(options = {}) {
       this.apiKey = options.apiKey || "";
       this.accessToken = options.accessToken || "";
+      this.attestationToken = options.attestationToken || "";
       this.baseUrl = String(options.baseUrl || "https://base.goodos.app/api/v1").replace(/\/+$/, "");
       this.rootUrl = String(options.rootUrl || this.baseUrl.replace(/\/api\/v1$/, "")).replace(/\/+$/, "");
       this.defaultHeaders = options.headers || {};
@@ -33,6 +34,11 @@
 
     setAccessToken(accessToken) {
       this.accessToken = accessToken || "";
+      return this;
+    }
+
+    setAttestationToken(attestationToken) {
+      this.attestationToken = attestationToken || "";
       return this;
     }
 
@@ -57,6 +63,7 @@
         ...(options.headers || {}),
       };
       if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
+      if (this.attestationToken) headers["X-Goodbase-Attestation"] = this.attestationToken;
 
       const method = options.method || "GET";
       const attempts = ["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase()) ? this.maxRetries + 1 : 1;
@@ -275,6 +282,41 @@
         method: "POST",
         body: { email, type, ...(type === "magic_link" ? { token: secret } : { code: secret }) },
       });
+    }
+
+    consumerAuthProviders() {
+      return this.platformRequest("/api/goodbase/v1/growth/auth/providers");
+    }
+
+    createAnonymousAccount(appId) {
+      return this.platformRequest("/api/goodbase/v1/growth/auth/anonymous", { method: "POST", body: { appId } });
+    }
+
+    startPhoneOtp(phone) {
+      return this.platformRequest("/api/goodbase/v1/growth/auth/phone/start", { method: "POST", body: { phone } });
+    }
+
+    verifyPhoneOtp(phone, code) {
+      return this.platformRequest("/api/goodbase/v1/growth/auth/phone/verify", { method: "POST", body: { phone, code } });
+    }
+
+    async exchangeAttestation(appId, platform, assertion) {
+      const challenge = await this.platformRequest("/api/goodbase/v1/growth/attestation/challenge", { method: "POST", body: { appId, platform } });
+      const result = await this.platformRequest("/api/goodbase/v1/growth/attestation/exchange", { method: "POST", body: { challengeId: challenge.challengeId, nonce: challenge.nonce, assertion } });
+      if (result.attestationToken) this.setAttestationToken(result.attestationToken);
+      return result;
+    }
+
+    registerMessagingDevice(input) {
+      return this.platformRequest("/api/goodbase/v1/growth/messaging/devices", { method: "POST", body: input });
+    }
+
+    revokeMessagingDevice(deviceId) {
+      return this.platformRequest(`/api/goodbase/v1/growth/messaging/devices/${encodeURIComponent(deviceId)}`, { method: "DELETE" });
+    }
+
+    assuranceOverview() {
+      return this.platformRequest("/api/goodbase/v1/growth/assurance/overview");
     }
 
     queues() {

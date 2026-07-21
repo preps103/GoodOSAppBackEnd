@@ -23,7 +23,11 @@
     "test": "node --test test/*.test.js",
     "enterprise:readiness": "node scripts/enterprise-readiness.js",
     "jobs:run-once": "node scripts/run-job-once.js",
-    "jobs:health": "node -e \"require('./src/services/job.service').getJobsSnapshot().then(x=>console.log(JSON.stringify(x.counts,null,2))).catch(e=>{console.error(e);process.exit(1)})\""
+    "jobs:health": "node -e \"require('./src/services/job.service').getJobsSnapshot().then(x=>console.log(JSON.stringify(x.counts,null,2))).catch(e=>{console.error(e);process.exit(1)})\"",
+    "assurance:run": "node scripts/goodbase-assurance.js",
+    "security:gate": "node scripts/goodbase-security-gate.js",
+    "load:approved": "node scripts/goodbase-load.js",
+    "chaos:approved": "node scripts/goodbase-chaos.js"
   },
   "repository": {
     "type": "git",

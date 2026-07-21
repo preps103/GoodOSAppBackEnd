@@ -2,11 +2,12 @@ import Foundation
 
 public actor GoodbaseClient {
     public var accessToken: String?
+    public var attestationToken: String?
     private let baseURL: URL
     private let session: URLSession
 
-    public init(baseURL: URL = URL(string: "https://base.goodos.app")!, accessToken: String? = nil, session: URLSession = .shared) {
-        self.baseURL = baseURL; self.accessToken = accessToken; self.session = session
+    public init(baseURL: URL = URL(string: "https://base.goodos.app")!, accessToken: String? = nil, attestationToken: String? = nil, session: URLSession = .shared) {
+        self.baseURL = baseURL; self.accessToken = accessToken; self.attestationToken = attestationToken; self.session = session
     }
 
     public func request<T: Decodable, Body: Encodable>(_ path: String, method: String = "GET", body: Body? = nil) async throws -> T {
@@ -14,9 +15,22 @@ public actor GoodbaseClient {
         request.httpMethod = method; request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(UUID().uuidString, forHTTPHeaderField: "X-Request-ID")
         if let token = accessToken { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        if let token = attestationToken { request.setValue(token, forHTTPHeaderField: "X-Goodbase-Attestation") }
         if let body { request.httpBody = try JSONEncoder().encode(body); request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(T.self, from: data)
+    }
+
+    public struct AttestationChallenge: Codable { public let challengeId: String; public let nonce: String }
+    public struct AttestationExchange: Codable { public let attestationToken: String; public let expiresIn: Int }
+    private struct ChallengeRequest: Codable { let appId: String; let platform: String }
+    private struct ExchangeRequest: Codable { let challengeId: String; let nonce: String; let assertion: [String:String] }
+
+    public func exchangeAttestation(appId: String, assertion: [String:String]) async throws -> AttestationExchange {
+        let challenge: AttestationChallenge = try await request("/api/goodbase/v1/growth/attestation/challenge", method: "POST", body: ChallengeRequest(appId: appId, platform: "ios"))
+        let exchange: AttestationExchange = try await request("/api/goodbase/v1/growth/attestation/exchange", method: "POST", body: ExchangeRequest(challengeId: challenge.challengeId, nonce: challenge.nonce, assertion: assertion))
+        attestationToken = exchange.attestationToken
+        return exchange
     }
 }

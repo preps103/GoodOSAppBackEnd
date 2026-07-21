@@ -7,6 +7,11 @@ const {
   dispatchControllerOperations,
   runProductionVerification
 } = require("./goodbase-production.service");
+const {
+  runAssuranceSuite,
+  dispatchMessaging,
+  dispatchSms
+} = require("./goodbase-growth.service");
 
 function dbQuery(sql, params = []) {
   if (typeof database.query === "function") return database.query(sql, params);
@@ -718,6 +723,12 @@ async function runHandler(handlerKey) {
       return runProductionVerification({ triggerType: "daily" });
     case "goodbase.controllers.dispatch":
       return dispatchControllerOperations();
+    case "goodbase.assurance.daily":
+      return runAssuranceSuite({ suiteId: "assurance_daily_security" });
+    case "goodbase.auth.sms.dispatch":
+      return dispatchSms();
+    case "goodbase.messaging.dispatch":
+      return dispatchMessaging();
     default:
       return {
         skipped: true,

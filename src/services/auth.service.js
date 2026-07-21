@@ -11,9 +11,14 @@ const {
 function publicUser(row) {
   if (!row) return null;
 
+  const authMetadata = typeof row.auth_metadata_json === "string"
+    ? JSON.parse(row.auth_metadata_json || "{}")
+    : (row.auth_metadata_json || {});
+  const anonymous = authMetadata.anonymous === true;
+
   return {
     id: row.id,
-    email: row.email,
+    email: anonymous ? null : row.email,
     firstName: row.first_name,
     lastName: row.last_name,
     displayName: row.display_name,
@@ -22,7 +27,7 @@ function publicUser(row) {
       row.avatar_updated_at || null,
     platformRole: row.platform_role,
     status: row.status,
-    emailVerified: row.email_verified,
+    emailVerified: anonymous ? false : row.email_verified,
     mfaEnabled: Boolean(row.mfa_enabled),
     mfaRequired: Boolean(row.mfa_required),
     createdAt: row.created_at,
@@ -122,10 +127,13 @@ async function issueSessionForUser({ user, ipAddress, userAgent, authMethod = "p
     throw err;
   }
 
+  const authMetadata = typeof user.auth_metadata_json === "string"
+    ? JSON.parse(user.auth_metadata_json || "{}")
+    : (user.auth_metadata_json || {});
   const token = jwt.sign(
     {
       sub: user.id,
-      email: user.email,
+      email: authMetadata.anonymous === true ? null : user.email,
       platformRole: user.platform_role,
       authMethod
     },

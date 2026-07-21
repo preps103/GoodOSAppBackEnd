@@ -1,6 +1,7 @@
 export interface GoodOSClientOptions {
   apiKey?: string;
   accessToken?: string;
+  attestationToken?: string;
   baseUrl?: string;
   rootUrl?: string;
   headers?: Record<string, string>;
@@ -49,6 +50,7 @@ export class GoodOSClient {
   constructor(options?: GoodOSClientOptions);
   setApiKey(apiKey: string): this;
   setAccessToken(accessToken: string): this;
+  setAttestationToken(attestationToken: string): this;
   platformRequest<T = unknown>(path: string, options?: RequestInit & { body?: unknown }): Promise<T>;
   issueDataToken(): Promise<{ success: true; token: string; tokenType: "Bearer"; expiresIn: string; endpoint: string }>;
   dataRows<T = Record<string, unknown>>(resource: string, params?: Record<string, string | number | boolean>): Promise<T[]>;
@@ -76,6 +78,14 @@ export class GoodOSClient {
   completePasswordReset(token: string, password: string): Promise<GoodOSResponse>;
   startPasswordless(email: string, type?: "email_otp" | "magic_link"): Promise<GoodOSResponse>;
   verifyPasswordless(email: string, secret: string, type?: "email_otp" | "magic_link"): Promise<GoodOSResponse>;
+  consumerAuthProviders(): Promise<GoodOSResponse>;
+  createAnonymousAccount(appId?: string): Promise<GoodOSResponse>;
+  startPhoneOtp(phone: string): Promise<GoodOSResponse>;
+  verifyPhoneOtp(phone: string, code: string): Promise<GoodOSResponse>;
+  exchangeAttestation(appId: string, platform: "ios" | "android" | "web" | "flutter" | "custom", assertion: Record<string, unknown>): Promise<GoodOSResponse>;
+  registerMessagingDevice(input: { appId: string; platform: "ios" | "android" | "web" | "flutter"; deviceToken: string; locale?: string; timezone?: string }): Promise<GoodOSResponse>;
+  revokeMessagingDevice(deviceId: string): Promise<GoodOSResponse>;
+  assuranceOverview(): Promise<GoodOSResponse>;
   queues(): Promise<GoodOSResponse>;
   sendQueueMessage(queueId: string, payload: unknown, options?: { idempotencyKey?: string; delaySeconds?: number; priority?: number }): Promise<GoodOSResponse>;
   migrationPlans(): Promise<GoodOSResponse>;
