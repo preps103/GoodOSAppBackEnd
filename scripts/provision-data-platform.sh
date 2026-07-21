@@ -7,6 +7,7 @@ ENV_DIR="${GOODBASE_DATA_PLATFORM_ENV_DIR:-${GOODOS_DATA_PLATFORM_ENV_DIR:-/etc/
 ENV_FILE="$ENV_DIR/data-platform.env"
 APP_ENV_FILE="$APP_DIR/.env"
 SERVICE_FILE="$APP_DIR/deploy/systemd/goodos-data-platform.service"
+TLS_REFRESH_SCRIPT="$APP_DIR/scripts/refresh-goodbase-tls.sh"
 COMPOSE_DIR="$APP_DIR/deploy/data-platform"
 DB_NAME="${GOODBASE_DB_NAME:-goodos_backend}"
 PM2_PROCESS="${GOODBASE_PM2_PROCESS:-goodapp-backend}"
@@ -82,6 +83,7 @@ for migration in "${MIGRATIONS[@]}"; do
   [ -f "$migration" ] || fail "Missing migration: $migration"
 done
 [ -f "$SERVICE_FILE" ] || fail "Missing service file: $SERVICE_FILE"
+[ -f "$TLS_REFRESH_SCRIPT" ] || fail "Missing TLS refresh script: $TLS_REFRESH_SCRIPT"
 [ -f "$COMPOSE_DIR/compose.yaml" ] || fail "Missing Compose file."
 
 systemctl is-active --quiet postgresql || fail "PostgreSQL is not active."
@@ -188,6 +190,10 @@ if ! grep -q "GOODBASE_MANAGED_POOL_AUTH" "$HBA_FILE"; then
 fi
 
 install -d -o root -g root -m 0750 "$ENV_DIR"
+install -d -o root -g root -m 0755 /etc/letsencrypt/renewal-hooks/deploy
+install -o root -g root -m 0755 "$TLS_REFRESH_SCRIPT" \
+  /etc/letsencrypt/renewal-hooks/deploy/goodbase-data-platform
+GOODBASE_APP_DIR="$APP_DIR" "$TLS_REFRESH_SCRIPT"
 
 REALTIME_DB_NAME="$(read_env_value "$ENV_FILE" REALTIME_DB_NAME)"
 REALTIME_DB_USER="$(read_env_value "$ENV_FILE" REALTIME_DB_USER)"

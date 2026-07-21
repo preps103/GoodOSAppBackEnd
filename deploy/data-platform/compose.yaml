@@ -79,11 +79,11 @@ services:
       MAX_PREPARED_STATEMENTS: "200"
       IGNORE_STARTUP_PARAMETERS: extra_float_digits,options
       CLIENT_TLS_SSLMODE: require
-      CLIENT_TLS_CERT_FILE: /etc/letsencrypt/live/base.goodos.app/fullchain.pem
-      CLIENT_TLS_KEY_FILE: /etc/letsencrypt/live/base.goodos.app/privkey.pem
+      CLIENT_TLS_CERT_FILE: /tls/fullchain.pem
+      CLIENT_TLS_KEY_FILE: /tls/privkey.pem
       SERVER_TLS_SSLMODE: disable
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /etc/goodos/pgbouncer-tls:/tls:ro
       - /var/run/postgresql:/var/run/postgresql
     read_only: true
     tmpfs:
@@ -124,19 +124,20 @@ services:
       QUERY_TIMEOUT: "300"
       IDLE_TRANSACTION_TIMEOUT: "300"
       CLIENT_TLS_SSLMODE: require
-      CLIENT_TLS_CERT_FILE: /etc/letsencrypt/live/base.goodos.app/fullchain.pem
-      CLIENT_TLS_KEY_FILE: /etc/letsencrypt/live/base.goodos.app/privkey.pem
+      CLIENT_TLS_CERT_FILE: /tls/fullchain.pem
+      CLIENT_TLS_KEY_FILE: /tls/privkey.pem
       SERVER_TLS_SSLMODE: disable
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /etc/goodos/pgbouncer-tls:/tls:ro
       - /var/run/postgresql:/var/run/postgresql
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
       - /etc/pgbouncer:size=4m,mode=0777
-    cap_add:
-      - SETGID
-      - SETUID
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     mem_limit: 256m
     cpus: 1.0
     pids_limit: 128
@@ -176,13 +177,6 @@ services:
       MAX_CONNECTIONS: ${REALTIME_MAX_CONNECTIONS:-10000}
       NUM_ACCEPTORS: ${REALTIME_NUM_ACCEPTORS:-100}
       JWT_CLAIM_VALIDATORS: ${REALTIME_JWT_CLAIM_VALIDATORS:-'{"iss":"https://base.goodos.app"}'}
-    read_only: true
-    tmpfs:
-      - /tmp:size=64m,mode=1777
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
     mem_limit: 1g
     cpus: 2.0
     pids_limit: 256
