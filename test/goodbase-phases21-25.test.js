@@ -14,6 +14,7 @@ const jobs = read("src/services/job.service.js");
 const sdk = read("src/public/sdk/goodos.js");
 const offline = read("src/public/sdk/goodbase-offline.js");
 const cli = read("bin/goodbase.js");
+const appSource = read("src/app.js");
 
 test("Phase 21 records commit-bound production checks and daily release evidence", () => {
   assert.match(migration, /goodbase_verification_runs/);
@@ -25,7 +26,8 @@ test("Phase 21 records commit-bound production checks and daily release evidence
   assert.match(jobs, /goodbase\.production\.verify/);
   assert.match(read("src/public/console.html"), /<title>Goodbase Console<\/title>/);
   assert.doesNotMatch(read("src/public/console.html"), /GoodOS Cloud/);
-  assert.match(read("src/app.js"), /rel=\"canonical\"/);
+  assert.match(appSource, /rel=\"canonical\"/);
+  assert.ok(appSource.indexOf('rel="canonical"') < appSource.indexOf('app.get("/console"'), "canonical middleware must run before public console routes");
 });
 
 test("Phase 22 executes encrypted off-site backups and isolated restore verification", () => {
