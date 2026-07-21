@@ -1005,6 +1005,8 @@ restRouter.use(async (request, response) => {
 module.exports = {
   controlRouter,
   restRouter,
+  dataPlaneAuth,
+  dataPlaneAdminRequired,
   __test: {
     postgrestRequest,
     dataPlaneAuth,

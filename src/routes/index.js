@@ -103,6 +103,9 @@ const environmentGovernanceRoutes = require("./environment-governance.routes");
 const dataPlaneRoutes =
   require("./data-plane.routes");
 
+const graphqlRoutes =
+  require("./graphql.routes");
+
 const router = express.Router();
 
 /* GOODOS_ENTERPRISE_FOUNDATION_V1_INITIALIZE */
@@ -348,6 +351,14 @@ router.use(
 router.use(
   "/rest/v1",
   dataPlaneRoutes.restRouter
+);
+router.use(
+  "/api/data-platform/graphql",
+  graphqlRoutes.healthRouter
+);
+router.use(
+  "/graphql/v1",
+  graphqlRoutes.router
 );
 router.use("/api/releases", releaseGovernanceRoutes);
 router.use("/api/privacy", privacyGovernanceRoutes);
