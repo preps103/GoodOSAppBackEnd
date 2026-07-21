@@ -22,6 +22,18 @@
     });
   }
 
+  function safeLocalStorage() {
+    try {
+      var storage = global.localStorage;
+      var probe = "__goodbase_storage_probe__";
+      storage.setItem(probe, "1");
+      storage.removeItem(probe);
+      return storage;
+    } catch (_error) {
+      return null;
+    }
+  }
+
   function GoodbaseOfflineStore(options) {
     options = options || {};
     if (!options.client) throw new Error("Goodbase client is required.");
@@ -29,7 +41,10 @@
     this.client = options.client;
     this.userId = String(options.userId);
     this.databaseName = "goodbase-offline-" + this.userId.replace(/[^a-zA-Z0-9_-]/g, "_");
+    this.metadataKey = "goodbase.offline.v1." + this.userId.replace(/[^a-zA-Z0-9_-]/g, "_");
     this.database = null;
+    this.localStorage = safeLocalStorage();
+    this.storagePersisted = false;
     this.listeners = new Set();
     this.maxRecords = Math.max(100, Number(options.maxRecords || 10000));
     this.channel = typeof global.BroadcastChannel === "function"
@@ -42,6 +57,18 @@
 
   GoodbaseOfflineStore.prototype.open = async function () {
     if (this.database) return this;
+    if (!global.indexedDB) throw new Error("This browser does not support durable Goodbase offline storage.");
+    if (global.navigator && global.navigator.storage) {
+      try {
+        if (typeof global.navigator.storage.persist === "function") {
+          this.storagePersisted = await global.navigator.storage.persist();
+        } else if (typeof global.navigator.storage.persisted === "function") {
+          this.storagePersisted = await global.navigator.storage.persisted();
+        }
+      } catch (_error) {
+        this.storagePersisted = false;
+      }
+    }
     var openRequest = global.indexedDB.open(this.databaseName, 1);
     openRequest.onupgradeneeded = function () {
       var database = openRequest.result;
@@ -50,7 +77,35 @@
       if (!database.objectStoreNames.contains("metadata")) database.createObjectStore("metadata", { keyPath: "key" });
     };
     this.database = await requestDone(openRequest);
+    this.writeLocalMetadata({ openedAt:new Date().toISOString() });
     return this;
+  };
+
+  GoodbaseOfflineStore.prototype.writeLocalMetadata = function (patch) {
+    if (!this.localStorage) return;
+    var current = {};
+    try { current = JSON.parse(this.localStorage.getItem(this.metadataKey) || "{}"); } catch (_error) { current = {}; }
+    this.localStorage.setItem(this.metadataKey, JSON.stringify(Object.assign({}, current, patch || {}, {
+      databaseName:this.databaseName,
+      userId:this.userId,
+      storagePersisted:this.storagePersisted,
+      updatedAt:new Date().toISOString()
+    })));
+  };
+
+  GoodbaseOfflineStore.prototype.storageStatus = async function () {
+    await this.open();
+    var estimate = null;
+    if (global.navigator && global.navigator.storage && typeof global.navigator.storage.estimate === "function") {
+      try { estimate = await global.navigator.storage.estimate(); } catch (_error) { estimate = null; }
+    }
+    return {
+      databaseName:this.databaseName,
+      durable:this.storagePersisted,
+      usageBytes:estimate && Number.isFinite(estimate.usage) ? estimate.usage : null,
+      quotaBytes:estimate && Number.isFinite(estimate.quota) ? estimate.quota : null,
+      pendingMutations:await this.pendingCount()
+    };
   };
 
   GoodbaseOfflineStore.prototype.pendingCount = async function () {
@@ -96,6 +151,7 @@
     transaction.objectStore("mutations").put(mutation);
     records.put({ key:key,collectionId:collectionId,recordKey:recordKey,value:value||{},version:current?current.version:0,deleted:operation==="delete",pending:true });
     await transactionDone(transaction);
+    this.writeLocalMetadata({ lastMutationAt:new Date().toISOString() });
     this.emit({ type:"mutation-queued",mutation:mutation });
     return mutation;
   };
@@ -127,6 +183,7 @@
     await transactionDone(write);
     await this.evict();
     var result = { online:true,uploaded:pending.length,downloaded:(changes.changes||[]).length,cursor:changes.cursor||0 };
+    this.writeLocalMetadata({ lastSyncAt:new Date().toISOString(),lastCollectionId:collectionId,lastCursor:result.cursor });
     this.emit({ type:"sync-completed",...result });
     if (this.channel) this.channel.postMessage({ type:"sync-completed",collectionId:collectionId,cursor:result.cursor });
     return result;
@@ -148,6 +205,7 @@
     if (this.channel) { this.channel.close(); this.channel = null; }
     if (this.database) { this.database.close(); this.database = null; }
     await requestDone(global.indexedDB.deleteDatabase(this.databaseName));
+    if (this.localStorage) this.localStorage.removeItem(this.metadataKey);
   };
 
   global.GoodbaseOfflineStore = GoodbaseOfflineStore;
