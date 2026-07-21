@@ -7,6 +7,7 @@ on:
   schedule:
     - cron: "17 7 * * *"
 permissions:
+  attestations: write
   contents: read
   security-events: write
   id-token: write
@@ -41,6 +42,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: goodbase-release-evidence
+          retention-days: 90
           path: |
             artifacts/release-evidence/
             ${{ steps.package.outputs.path }}
@@ -55,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           severity: HIGH,CRITICAL

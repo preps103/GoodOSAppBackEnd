@@ -28,6 +28,7 @@
     "security:gate": "node scripts/goodbase-security-gate.js",
     "load:approved": "node scripts/goodbase-load.js",
     "chaos:approved": "node scripts/goodbase-chaos.js",
+    "ci:evidence": "node scripts/goodbase-record-ci.js",
     "certify:production": "node scripts/goodbase-certify.js"
   },
   "repository": {
