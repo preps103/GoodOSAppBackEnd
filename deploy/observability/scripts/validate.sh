@@ -16,5 +16,6 @@ docker run --rm --entrypoint /bin/promtool \
 docker run --rm --entrypoint /bin/amtool \
   -v "$ROOT_DIR/config/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.32.1 \
   check-config /etc/alertmanager/alertmanager.yml
-docker run --rm -v "$ROOT_DIR/config/otel:/etc/otelcol-contrib:ro" otel/opentelemetry-collector-contrib:0.153.0 \
+docker run --rm -v "$ROOT_DIR/config/otel:/etc/otelcol-contrib:ro" -v /:/hostfs:ro \
+  otel/opentelemetry-collector-contrib:0.153.0 \
   validate --config=/etc/otelcol-contrib/collector.yaml
