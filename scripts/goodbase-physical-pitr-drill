@@ -94,7 +94,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-for command_name in runuser psql tar sha256sum openssl curl docker; do require "$command_name"; done
+for command_name in runuser psql tar sha256sum openssl curl docker install; do require "$command_name"; done
 [[ -x "$AGE" && -r "$IDENTITY" ]] || fail "The age binary or recovery identity is unavailable"
 [[ -d "$PROJECT_ROOT" && -d "$BACKUP_ROOT/base" && -d "$BACKUP_ROOT/wal" ]] || fail "Project or backup roots are unavailable"
 [[ "$MAX_BASE_AGE_HOURS" =~ ^[0-9]+$ ]] || fail "Base-backup age limit must be an integer"
@@ -138,7 +138,8 @@ for _attempt in $(seq 1 90); do
 done
 [[ "${ARCHIVED_NOW:-0}" -gt "$ARCHIVED_BEFORE" ]] || fail "WAL archiving did not advance after the boundary markers"
 
-mkdir -p "$WORK_ROOT" "$EVIDENCE_ROOT"; chmod 700 "$WORK_ROOT" "$EVIDENCE_ROOT"
+install -d -m 0710 -o root -g postgres "$WORK_ROOT"
+install -d -m 0700 -o root -g root "$EVIDENCE_ROOT"
 WORK_DIR="$(mktemp -d "$WORK_ROOT/pitr.XXXXXX")"
 PLAIN_BASE="$WORK_DIR/base.tar.gz"
 PG_DATA="$WORK_DIR/postgres"
