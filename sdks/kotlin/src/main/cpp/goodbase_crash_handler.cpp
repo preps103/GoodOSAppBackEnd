@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
+#include <initializer_list>
 
 static char marker_path[1024];
 static void goodbase_signal_handler(int signal_number) {

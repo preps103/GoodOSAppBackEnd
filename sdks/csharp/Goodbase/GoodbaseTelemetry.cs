@@ -59,7 +59,7 @@ public sealed class GoodbaseTelemetry : IDisposable
         List<JsonElement> remaining=[];
         string[] lines;lock(_sync)lines=File.ReadAllLines(_spool);
         foreach(var line in lines){try{using var document=JsonDocument.Parse(line);await UploadAsync(document.RootElement,cancellationToken);}catch{try{using var document=JsonDocument.Parse(line);remaining.Add(document.RootElement.Clone());}catch{}}}
-        Replace(remaining.Select(JsonSerializer.Serialize).TakeLast(100));
+        Replace(remaining.Select(value => JsonSerializer.Serialize(value)).TakeLast(100));
     }
 
     private object SessionPayload(string action,string? endedReason=null)=>new{appId=_options.AppId,sessionId=_sessionId,action,consentState=Consent.ToString().ToLowerInvariant(),occurredAt=DateTimeOffset.UtcNow,release=_options.Release,buildNumber=_options.BuildNumber,distributionTrack=_options.DistributionTrack,endedReason};
