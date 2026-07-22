@@ -103,6 +103,15 @@ PG_MAJOR="$(sql -Atqc "SELECT current_setting('server_version_num')::int/10000")
 PG_BIN="${GOODBASE_PITR_PG_BIN:-/usr/lib/postgresql/$PG_MAJOR/bin}"
 for binary in pg_ctl pg_isready pg_verifybackup psql; do [[ -x "$PG_BIN/$binary" ]] || fail "Missing PostgreSQL binary: $PG_BIN/$binary"; done
 PG_CTL="$PG_BIN/pg_ctl"
+SOURCE_MAX_CONNECTIONS="$(sql -Atqc "SELECT current_setting('max_connections')")"
+SOURCE_MAX_WORKERS="$(sql -Atqc "SELECT current_setting('max_worker_processes')")"
+SOURCE_MAX_WAL_SENDERS="$(sql -Atqc "SELECT current_setting('max_wal_senders')")"
+SOURCE_MAX_PREPARED="$(sql -Atqc "SELECT current_setting('max_prepared_transactions')")"
+SOURCE_WAL_LEVEL="$(sql -Atqc "SELECT current_setting('wal_level')")"
+for numeric_setting in "$SOURCE_MAX_CONNECTIONS" "$SOURCE_MAX_WORKERS" "$SOURCE_MAX_WAL_SENDERS" "$SOURCE_MAX_PREPARED"; do
+  [[ "$numeric_setting" =~ ^[0-9]+$ ]] || fail "A source PostgreSQL safety setting is invalid"
+done
+[[ "$SOURCE_WAL_LEVEL" =~ ^(replica|logical)$ ]] || fail "The source WAL level is not recovery compatible"
 
 BASE_FILE="$(find "$BACKUP_ROOT/base" -maxdepth 1 -type f -name 'postgres-cluster-*.tar.gz.age' -printf '%T@ %p\n' | sort -nr | awk 'NR==1{sub(/^[^ ]+ /,"");print}')"
 [[ -n "$BASE_FILE" && -s "$BASE_FILE" && -s "${BASE_FILE}.sha256" ]] || fail "No complete encrypted physical base backup is available"
@@ -175,12 +184,28 @@ local all all trust
 host all all 127.0.0.1/32 trust
 host all all ::1/128 trust
 EOF
+cat >"$PG_DATA/postgresql.conf" <<EOF
+data_directory = '$PG_DATA'
+hba_file = '$WORK_DIR/pg_hba.conf'
+ident_file = '$WORK_DIR/pg_ident.conf'
+external_pid_file = ''
+listen_addresses = '127.0.0.1'
+unix_socket_directories = '$PG_SOCKET'
+ssl = off
+max_connections = $SOURCE_MAX_CONNECTIONS
+max_worker_processes = $SOURCE_MAX_WORKERS
+max_wal_senders = $SOURCE_MAX_WAL_SENDERS
+max_prepared_transactions = $SOURCE_MAX_PREPARED
+wal_level = '$SOURCE_WAL_LEVEL'
+shared_buffers = '128MB'
+logging_collector = off
+EOF
+touch "$WORK_DIR/pg_ident.conf"
 cat >>"$PG_DATA/postgresql.auto.conf" <<EOF
 archive_mode = 'off'
 archive_command = ''
 listen_addresses = '127.0.0.1'
 ssl = 'off'
-max_connections = 40
 shared_buffers = '128MB'
 restore_command = '$RESTORE_HELPER %f %p'
 recovery_target_time = '$TARGET_TIME'
