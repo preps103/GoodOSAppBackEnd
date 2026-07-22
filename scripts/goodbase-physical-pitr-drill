@@ -192,7 +192,10 @@ chown -R postgres:postgres "$WORK_DIR"
 
 PG_PORT="$((24000 + RANDOM % 10000))"
 log "Replaying encrypted WAL to $TARGET_TIME"
-runuser -u postgres -- "$PG_CTL" -D "$PG_DATA" -l "$WORK_DIR/postgres.log" -o "-p $PG_PORT -k $PG_SOCKET -c hba_file=$WORK_DIR/pg_hba.conf" -w start >/dev/null
+if ! runuser -u postgres -- "$PG_CTL" -D "$PG_DATA" -l "$WORK_DIR/postgres.log" -o "-p $PG_PORT -k $PG_SOCKET -c hba_file=$WORK_DIR/pg_hba.conf" -w start >/dev/null; then
+  tail -n 120 "$WORK_DIR/postgres.log" >&2 || true
+  fail "Recovered PostgreSQL cluster failed to start"
+fi
 PG_STARTED=1
 for _attempt in $(seq 1 180); do
   RECOVERY_STATE="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc 'SELECT pg_is_in_recovery()' 2>/dev/null || true)"
