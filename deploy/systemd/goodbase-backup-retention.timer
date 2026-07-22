@@ -1,8 +1,9 @@
 [Unit]
-Description=Run Goodbase backup retention cleanup daily
+Description=Schedule Goodbase encrypted backup retention
 
 [Timer]
-OnCalendar=*-*-* 02:45:00
+OnCalendar=*-*-* 04:15:00
+RandomizedDelaySec=600
 Persistent=true
 Unit=goodbase-backup-retention.service
 

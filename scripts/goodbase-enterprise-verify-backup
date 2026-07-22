@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+DATABASE="goodos_backend"
+
+AGE="/usr/bin/age"
+IDENTITY="/etc/goodos/backup-age.key"
+
+BACKUP_ROW="$(
+  sudo -u postgres psql \
+    -d "$DATABASE" \
+    -At \
+    -F '|' \
+    -v ON_ERROR_STOP=1 \
+    -c "
+      SELECT
+        id,
+        file_path,
+        checksum_sha256,
+        EXTRACT(
+          EPOCH FROM (
+            NOW() -
+            completed_at
+          )
+        ) / 60
+
+      FROM backend_backup_inventory
+
+      WHERE status = 'completed'
+        AND backup_type = 'postgres_custom'
+        AND storage_type = 'local_age_encrypted'
+
+      ORDER BY completed_at DESC
+
+      LIMIT 1;
+    "
+)"
+
+if [ -z "$BACKUP_ROW" ]; then
+  echo "ERROR: No encrypted logical backup is available."
+  exit 1
+fi
+
+IFS='|' read -r \
+  BACKUP_ID \
+  FILE_PATH \
+  EXPECTED_CHECKSUM \
+  RPO_MINUTES \
+  <<<"$BACKUP_ROW"
+
+test -f "$FILE_PATH"
+test -r "$IDENTITY"
+
+ACTUAL_CHECKSUM="$(
+  sha256sum "$FILE_PATH" |
+  awk '{print $1}'
+)"
+
+if [ "$ACTUAL_CHECKSUM" != "$EXPECTED_CHECKSUM" ]; then
+  echo "ERROR: Encrypted backup checksum mismatch."
+  exit 1
+fi
+
+TEMP_PLAINTEXT="$(mktemp /tmp/goodos-logical-verify-XXXXXX.dump)"
+LIST_FILE="$(mktemp)"
+
+cleanup() {
+  rm -f \
+    "$TEMP_PLAINTEXT" \
+    "$LIST_FILE"
+}
+
+trap cleanup EXIT
+
+STARTED_AT="$(date -u -Is)"
+START_EPOCH="$(date +%s)"
+
+"$AGE" \
+  --decrypt \
+  --identity "$IDENTITY" \
+  --output "$TEMP_PLAINTEXT" \
+  "$FILE_PATH"
+
+test -s "$TEMP_PLAINTEXT"
+
+pg_restore \
+  --list \
+  "$TEMP_PLAINTEXT" \
+  >"$LIST_FILE"
+
+ENTRY_COUNT="$(
+  grep -cvE \
+    '^(;|$)' \
+    "$LIST_FILE"
+)"
+
+if [ "$ENTRY_COUNT" -lt 5 ]; then
+  echo "ERROR: Backup contains too few restore entries."
+  exit 1
+fi
+
+COMPLETED_AT="$(date -u -Is)"
+END_EPOCH="$(date +%s)"
+
+RTO_MINUTES="$(
+  awk \
+    -v start="$START_EPOCH" \
+    -v finish="$END_EPOCH" \
+    'BEGIN {
+      printf "%.4f", (finish - start) / 60
+    }'
+)"
+
+VERIFY_ID="verify_age_$(date -u +%Y%m%dT%H%M%SZ)_$RANDOM"
+
+sudo -u postgres psql \
+  -d "$DATABASE" \
+  -v ON_ERROR_STOP=1 \
+  -v verification_id="$VERIFY_ID" \
+  -v backup_id="$BACKUP_ID" \
+  -v rpo="$RPO_MINUTES" \
+  -v rto="$RTO_MINUTES" \
+  -v started="$STARTED_AT" \
+  -v completed="$COMPLETED_AT" \
+  -v entries="$ENTRY_COUNT" <<'SQL'
+INSERT INTO backend_restore_verifications (
+    id,
+    backup_inventory_id,
+    verification_type,
+    target_environment,
+    status,
+    rpo_minutes,
+    rto_minutes,
+    started_at,
+    completed_at,
+    notes,
+    evidence_json,
+    created_at
+)
+VALUES (
+    :'verification_id',
+    :'backup_id',
+    'encrypted_logical_integrity',
+    'verification-only',
+    'passed',
+    :'rpo'::numeric,
+    :'rto'::numeric,
+    :'started'::timestamptz,
+    :'completed'::timestamptz,
+    'Checksum, age decryption and PostgreSQL archive parsing passed.',
+    jsonb_build_object(
+      'archiveEntryCount',
+      :'entries'::int,
+      'checksumVerified',
+      true,
+      'encrypted',
+      true,
+      'sigpipeAvoided',
+      true
+    ),
+    NOW()
+);
+SQL
+
+echo "Encrypted backup verification passed."
+echo "Verification ID: $VERIFY_ID"
+echo "Restore entries: $ENTRY_COUNT"

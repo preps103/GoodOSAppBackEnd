@@ -1,0 +1,22 @@
+# Cluster roles referenced by database policies, grants, or ownership metadata.
+# Recovery creates every entry as NOLOGIN; credentials are never restored.
+anon|noinherit
+authenticated|noinherit
+dashboard_user|noinherit
+goodapp_backend_user|inherit
+goodbase_migrator|noinherit
+goodbase_pool_session|noinherit
+goodbase_pool_transaction|noinherit
+goodbase_realtime|inherit
+goodid_app|noinherit
+goodid_bridge|noinherit
+goodmail|inherit
+goodmail_dovecot|inherit
+goodmail_portal|inherit
+goodmail_postfix|inherit
+goodos_anon|noinherit
+goodos_authenticated|noinherit
+goodos_postgrest_authenticator|noinherit
+roundcube|inherit
+service_role|noinherit
+supabase_realtime_admin|noinherit

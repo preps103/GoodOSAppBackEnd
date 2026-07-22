@@ -1,10 +1,16 @@
 [Unit]
-Description=Goodbase backup retention cleanup
-After=postgresql.service
+Description=Goodbase encrypted backup retention
+After=postgresql.service goodos-enterprise-backup.service
 
 [Service]
 Type=oneshot
 User=root
 Group=root
-WorkingDirectory=/var/www/Goodbase
-ExecStart=/var/www/Goodbase/scripts/cleanup-db-backups.sh
+ExecStart=/usr/local/sbin/goodbase-enterprise-retention
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/goodos-enterprise-v1

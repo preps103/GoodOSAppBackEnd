@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+DATABASE="goodos_backend"
+
+AGE="/usr/bin/age"
+IDENTITY="/etc/goodos/backup-age.key"
+RECIPIENT_FILE="/etc/goodos/backup-age-recipient.txt"
+
+BACKUP_ROOT="/var/backups/goodos-enterprise-v1/database"
+
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP_ID="backup_age_${STAMP}_$RANDOM"
+
+FILE_NAME="${DATABASE}-${STAMP}.dump.age"
+FILE_PATH="$BACKUP_ROOT/$FILE_NAME"
+
+TEMP_ENCRYPTED="$BACKUP_ROOT/.${FILE_NAME}.$$.$RANDOM.tmp"
+CHECKSUM_PATH="${FILE_PATH}.sha256"
+TEMP_CHECKSUM="${CHECKSUM_PATH}.$$.$RANDOM.tmp"
+TEMP_PLAINTEXT="$(mktemp /tmp/goodos-backup-verify-XXXXXX.dump)"
+
+STARTED_AT="$(date -u -Is)"
+RETENTION_UNTIL="$(date -u -d '+30 days' -Is)"
+
+cleanup() {
+  rm -f \
+    "$TEMP_ENCRYPTED" \
+    "$TEMP_CHECKSUM" \
+    "$TEMP_PLAINTEXT"
+}
+
+trap cleanup EXIT
+
+test -x "$AGE"
+test -r "$IDENTITY"
+test -r "$RECIPIENT_FILE"
+
+RECIPIENT="$(
+  tr -d '\r\n' \
+    <"$RECIPIENT_FILE"
+)"
+
+if [[ "$RECIPIENT" != age1* ]]; then
+  echo "ERROR: Invalid age recipient."
+  exit 1
+fi
+
+mkdir -p "$BACKUP_ROOT"
+chmod 700 "$BACKUP_ROOT"
+
+sudo -u postgres \
+  pg_dump \
+  --format=custom \
+  --compress=6 \
+  --no-owner \
+  --no-privileges \
+  "$DATABASE" |
+"$AGE" \
+  --encrypt \
+  --recipient "$RECIPIENT" \
+  --output "$TEMP_ENCRYPTED"
+
+test -s "$TEMP_ENCRYPTED"
+
+"$AGE" \
+  --decrypt \
+  --identity "$IDENTITY" \
+  --output "$TEMP_PLAINTEXT" \
+  "$TEMP_ENCRYPTED"
+
+test -s "$TEMP_PLAINTEXT"
+
+pg_restore \
+  --list \
+  "$TEMP_PLAINTEXT" \
+  >/dev/null
+
+rm -f "$TEMP_PLAINTEXT"
+
+chmod 600 "$TEMP_ENCRYPTED"
+
+mv \
+  "$TEMP_ENCRYPTED" \
+  "$FILE_PATH"
+
+CHECKSUM="$(
+  sha256sum "$FILE_PATH" |
+  awk '{print $1}'
+)"
+
+printf '%s  %s\n' \
+  "$CHECKSUM" \
+  "$FILE_NAME" \
+  >"$TEMP_CHECKSUM"
+
+chmod 600 "$TEMP_CHECKSUM"
+mv "$TEMP_CHECKSUM" "$CHECKSUM_PATH"
+
+SIZE_BYTES="$(
+  stat -c '%s' "$FILE_PATH"
+)"
+
+COMPLETED_AT="$(date -u -Is)"
+
+KEY_FINGERPRINT="$(
+  sha256sum "$RECIPIENT_FILE" |
+  awk '{print $1}'
+)"
+
+sudo -u postgres psql \
+  -d "$DATABASE" \
+  -v ON_ERROR_STOP=1 \
+  -v backup_id="$BACKUP_ID" \
+  -v file_path="$FILE_PATH" \
+  -v file_name="$FILE_NAME" \
+  -v size_bytes="$SIZE_BYTES" \
+  -v checksum="$CHECKSUM" \
+  -v started_at="$STARTED_AT" \
+  -v completed_at="$COMPLETED_AT" \
+  -v retention_until="$RETENTION_UNTIL" \
+  -v key_fingerprint="$KEY_FINGERPRINT" <<'SQL'
+INSERT INTO backend_backup_inventory (
+    id,
+    backup_type,
+    storage_type,
+    file_path,
+    file_name,
+    size_bytes,
+    checksum_sha256,
+    database_name,
+    started_at,
+    completed_at,
+    status,
+    retention_until,
+    metadata_json,
+    created_at,
+    updated_at
+)
+VALUES (
+    :'backup_id',
+    'postgres_custom',
+    'local_age_encrypted',
+    :'file_path',
+    :'file_name',
+    :'size_bytes'::bigint,
+    :'checksum',
+    'goodos_backend',
+    :'started_at'::timestamptz,
+    :'completed_at'::timestamptz,
+    'completed',
+    :'retention_until'::timestamptz,
+    jsonb_build_object(
+      'encryption',
+      'age-x25519',
+      'keyFingerprint',
+      :'key_fingerprint',
+      'compression',
+      'postgres-custom-6',
+      'plaintextStored',
+      false,
+      'verificationMethod',
+      'isolated-temporary-file'
+    ),
+    NOW(),
+    NOW()
+);
+SQL
+
+find "$BACKUP_ROOT" \
+  -maxdepth 1 \
+  -type f \
+  -name '*.dump.age' \
+  -mtime +30 \
+  -delete
+
+find "$BACKUP_ROOT" \
+  -maxdepth 1 \
+  -type f \
+  -name '*.dump.age.sha256' \
+  -mtime +30 \
+  -delete
+
+trap - EXIT
+
+echo "Encrypted logical backup completed:"
+echo "  ID: $BACKUP_ID"
+echo "  File: $FILE_PATH"
+echo "  Size: $SIZE_BYTES"
+echo "  SHA-256: $CHECKSUM"
