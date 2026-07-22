@@ -33,6 +33,7 @@ scrape_configs:
     static_configs:
       - targets: ["blackbox:9115"]
   - job_name: grafana
+    metrics_path: /observability/metrics
     static_configs:
       - targets: ["grafana:3000"]
   - job_name: goodbase_https

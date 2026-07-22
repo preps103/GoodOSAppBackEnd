@@ -49,6 +49,16 @@ test("telemetry retention, correlation, probes, and SLO alerts are configured", 
   assert.match(datasources, /matcherRegex:.*traceId/);
 });
 
+test("Grafana is published only through the canonical Goodbase subpath", () => {
+  const nginx = read("deploy/nginx/goodbase-observability.location.conf");
+  const compose = read("deploy/observability/compose.yaml");
+
+  assert.match(nginx, /location \^~ \/observability\//);
+  assert.match(nginx, /proxy_pass http:\/\/127\.0\.0\.1:3300/);
+  assert.match(compose, /GF_SECURITY_COOKIE_SECURE: "true"/);
+  assert.match(compose, /GF_AUTH_ANONYMOUS_ENABLED: "false"/);
+});
+
 test("Goodbase API and worker export telemetry without exposing secrets", () => {
   const bootstrap = read("src/telemetry/bootstrap.js");
   const middleware = read("src/middleware/enterprise-observability.js");
