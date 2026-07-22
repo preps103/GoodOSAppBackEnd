@@ -1,0 +1,17 @@
+[Unit]
+Description=Goodbase plan-based telemetry retention
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=goodbase
+Group=goodbase
+WorkingDirectory=/var/www/Goodbase
+EnvironmentFile=/var/www/Goodbase/.env
+ExecStart=/usr/bin/npm run telemetry:retention
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/goodapp-backend/telemetry-privacy
+

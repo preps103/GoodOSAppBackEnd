@@ -29,6 +29,8 @@
     "load:approved": "node scripts/goodbase-load.js",
     "chaos:approved": "node scripts/goodbase-chaos.js",
     "ci:evidence": "node scripts/goodbase-record-ci.js",
+    "symbols:upload": "node scripts/goodbase-upload-symbols.js",
+    "telemetry:retention": "node scripts/goodbase-telemetry-retention.js",
     "certify:production": "node scripts/goodbase-certify.js"
   },
   "repository": {

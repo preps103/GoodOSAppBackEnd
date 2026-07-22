@@ -3183,11 +3183,30 @@
       "/api/goodbase/v1/product/analytics/events": {
         "post": {"summary":"Ingest consent-aware analytics events","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Events accepted"},"400":{"description":"Invalid or missing consent"},"401":{"description":"Authentication required"}}}
       },
+      "/api/goodbase/v1/product/telemetry/sessions": {
+        "post": {"summary":"Record a consent-aware client session lifecycle event","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Session lifecycle recorded"},"400":{"description":"Invalid lifecycle or consent"},"401":{"description":"Authentication required"}}}
+      },
       "/api/goodbase/v1/product/telemetry/crashes": {
         "post": {"summary":"Capture a client crash occurrence","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Crash accepted"},"400":{"description":"Invalid crash payload"}}}
       },
+      "/api/goodbase/v1/product/telemetry/stability": {
+        "get": {"summary":"Read crash-free user, session, release adoption, and issue-impact metrics","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Release stability metrics"},"403":{"description":"Administrator role required"}}}
+      },
+      "/api/goodbase/v1/product/telemetry/privacy/requests": {
+        "get": {"summary":"List auditable telemetry privacy requests","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Telemetry privacy request history"},"403":{"description":"Administrator role required"}}},
+        "post": {"summary":"Create an export or deletion request across telemetry stores","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"201":{"description":"Privacy request queued"},"400":{"description":"Invalid identity or target store"},"428":{"description":"Privileged MFA required"}}}
+      },
+      "/api/goodbase/v1/product/telemetry/privacy/requests/{id}/process": {
+        "post": {"summary":"Process a legal-hold-aware telemetry privacy request","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"parameters":[{"in":"path","name":"id","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Request completed or explicitly blocked"},"404":{"description":"Request not found"},"428":{"description":"Privileged MFA required"}}}
+      },
+      "/api/goodbase/v1/experience/telemetry/releases": {
+        "post": {"summary":"Register an application release for native symbol processing","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"201":{"description":"Release registered"},"400":{"description":"Invalid release identity"},"403":{"description":"Administrator role required"},"428":{"description":"Privileged MFA required"}}}
+      },
       "/api/goodbase/v1/experience/telemetry/symbol-files": {
-        "post": {"summary":"Upload a Source Map v3 file for JavaScript crash symbolication","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"requestBody":{"required":true,"content":{"multipart/form-data":{"schema":{"type":"object","required":["releaseId","sourceMap"],"properties":{"releaseId":{"type":"string","format":"uuid"},"sourceMap":{"type":"string","format":"binary"}}}}}},"responses":{"201":{"description":"Source map validated, checksummed, and activated"},"400":{"description":"Invalid source map"},"403":{"description":"Administrator role required"},"428":{"description":"Privileged MFA required"}}}
+        "post": {"summary":"Upload dSYM, ProGuard/R8, NDK, Flutter, Unity, or Source Map symbols","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"requestBody":{"required":true,"content":{"multipart/form-data":{"schema":{"type":"object","required":["releaseId","symbolType","symbolFile"],"properties":{"releaseId":{"type":"string","format":"uuid"},"symbolType":{"type":"string","enum":["sourcemap","dsym","proguard","ndk","flutter","unity"]},"symbolFile":{"type":"string","format":"binary"},"metadata":{"type":"string"}}}}}},"responses":{"201":{"description":"Symbol artifact validated, checksummed, and activated"},"400":{"description":"Invalid symbol artifact"},"403":{"description":"Administrator role required"},"428":{"description":"Privileged MFA required"}}}
+      },
+      "/api/goodbase/v1/experience/telemetry/releases/{releaseId}/symbol-files": {
+        "get": {"summary":"List verified symbol artifacts for a release","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"parameters":[{"in":"path","name":"releaseId","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Release symbol inventory"},"403":{"description":"Administrator role required"}}}
       },
       "/api/internal/observability/alerts": {
         "post": {"summary":"Accept a timestamped, nonce-protected HMAC-signed Alertmanager webhook","tags":["Goodbase Observability"],"security":[],"parameters":[{"in":"header","name":"X-Goodbase-Timestamp","required":true,"schema":{"type":"string"}},{"in":"header","name":"X-Goodbase-Nonce","required":true,"schema":{"type":"string"}},{"in":"header","name":"X-Goodbase-Signature","required":true,"schema":{"type":"string"}}],"responses":{"202":{"description":"Signed alerts accepted for durable delivery"},"401":{"description":"Signature invalid or expired"},"409":{"description":"Replay nonce detected"},"413":{"description":"Alert batch exceeds the bounded limit"}}}

@@ -81,6 +81,7 @@ export class GoodOSClient {
   realtimeWebSocketUrl(channel?: string, options?: { rootUrl?: string; apiKey?: string }): string;
   connectRealtimeWebSocket(channel?: string, options?: { rootUrl?: string; apiKey?: string }): WebSocket;
   track(appId: string, events: Record<string, unknown> | Array<Record<string, unknown>>, context?: Record<string, unknown>): Promise<GoodOSResponse>;
+  recordSession(appId: string, lifecycle: Record<string, unknown>): Promise<GoodOSResponse>;
   captureCrash(appId: string, crash: Record<string, unknown>): Promise<GoodOSResponse>;
   recordTrace(appId: string, trace: Record<string, unknown>): Promise<GoodOSResponse>;
   remoteConfig(appId: string, context?: Record<string, string>): Promise<GoodOSResponse>;

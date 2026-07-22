@@ -28,7 +28,19 @@ public actor GoodbaseClient {
     private struct ExchangeRequest: Codable { let challengeId: String; let nonce: String; let assertion: [String:String] }
     public struct ProductResponse: Codable { public let success: Bool }
     private struct AnalyticsRequest: Codable { let appId: String; let events: [[String:String]]; let consentState: String }
-    public struct CrashRequest: Codable { public let appId: String; public let platform: String; public let occurredAt: String; public let title: String; public let stackTrace: String? }
+    public struct SessionRequest: Codable {
+        public let appId: String; public let sessionId: String; public let action: String
+        public let consentState: String; public let occurredAt: String; public let anonymousId: String?
+        public let installationId: String?; public let release: String?; public let buildNumber: String?
+        public let distributionTrack: String?; public let endedReason: String?; public let properties: [String:String]?
+    }
+    public struct CrashRequest: Codable {
+        public let appId: String; public let platform: String; public let occurredAt: String
+        public let title: String; public let stackTrace: String?; public let sessionId: String?
+        public let release: String?; public let buildNumber: String?; public let fatal: Bool?
+        public let exceptionType: String?; public let breadcrumbs: [[String:String]]?
+        public let customKeys: [String:String]?; public let device: [String:String]?
+    }
     public struct TraceRequest: Codable { public let appId: String; public let type: String; public let name: String; public let durationMs: Double; public let occurredAt: String }
 
     public func exchangeAttestation(appId: String, assertion: [String:String]) async throws -> AttestationExchange {
@@ -44,6 +56,10 @@ public actor GoodbaseClient {
 
     public func captureCrash(_ crash: CrashRequest) async throws -> ProductResponse {
         try await request("/api/goodbase/v1/product/telemetry/crashes", method: "POST", body: crash)
+    }
+
+    public func recordSession(_ lifecycle: SessionRequest) async throws -> ProductResponse {
+        try await request("/api/goodbase/v1/product/telemetry/sessions", method: "POST", body: lifecycle)
     }
 
     public func recordTrace(_ trace: TraceRequest) async throws -> ProductResponse {

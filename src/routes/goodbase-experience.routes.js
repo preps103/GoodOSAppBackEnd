@@ -14,12 +14,17 @@ const symbolication = require("../services/goodbase-symbolication.service");
 const publicRouter = express.Router();
 const authenticatedRouter = express.Router();
 const publicLimiter = rateLimit({ windowMs:60000,limit:120,standardHeaders:true,legacyHeaders:false });
-const symbolUpload = multer({storage:multer.memoryStorage(),limits:{fileSize:20*1024*1024,files:1,fields:10}});
+const symbolUpload = multer({storage:multer.memoryStorage(),limits:{fileSize:symbolication.maximumBytes,files:1,fields:20}});
 function scope(request){return request.tenantContext||product.DEFAULT_SCOPE;}
 function values(tenant){return[tenant.organizationId,tenant.projectId,tenant.environmentId];}
 function where(alias=""){const p=alias?`${alias}.`:"";return`${p}organization_id=$1 AND ${p}project_id=$2 AND ${p}environment_id=$3`;}
 function clean(value,max=200){return product.clean(value,max);}
 function bounded(value,max=65536){return product.boundedJson(value,max);}
+function uploadMetadata(value){
+  if(!value)return{};
+  if(typeof value==="object")return bounded(value,16384);
+  try{return bounded(JSON.parse(String(value)),16384);}catch{throw Object.assign(new Error("Symbol metadata must be valid JSON."),{statusCode:400});}
+}
 function mfaRequired(request,response,next){if(!request.auth?.mfaVerified)return response.status(428).json({success:false,code:"GOODBASE_PRIVILEGED_MFA_REQUIRED",message:"Verify MFA before changing production controls."});return next();}
 
 publicRouter.get("/in-app/:appId",publicLimiter,async(request,response,next)=>{try{
@@ -47,9 +52,21 @@ authenticatedRouter.post("/in-app/:campaignId/events",publicLimiter,async(reques
 }catch(error){return next(error);}});
 
 authenticatedRouter.use(dataPlaneAdminRequired);
-authenticatedRouter.post("/telemetry/symbol-files",mfaRequired,symbolUpload.single("sourceMap"),async(request,response,next)=>{try{
-  if(!request.file)return response.status(400).json({success:false,message:"A Source Map v3 file is required."});
-  const symbolFile=await symbolication.saveSourceMap({scope:scope(request),releaseId:request.body?.releaseId,contents:request.file.buffer});
+authenticatedRouter.post("/telemetry/releases",mfaRequired,async(request,response,next)=>{try{
+  const tenant=scope(request),platform=clean(request.body?.platform,30),version=clean(request.body?.version,100),build=clean(request.body?.buildNumber,100),appId=clean(request.body?.appId,100);
+  if(!appId||!platform||!version||!build)return response.status(400).json({success:false,message:"App, platform, version, and build number are required."});
+  const result=await database.query(`INSERT INTO goodbase_client_releases(organization_id,project_id,environment_id,app_id,platform,version,build_number,commit_sha,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'active') ON CONFLICT(app_id,platform,version,build_number) DO UPDATE SET commit_sha=COALESCE(EXCLUDED.commit_sha,goodbase_client_releases.commit_sha),status='active' RETURNING *`,[...values(tenant),appId,platform,version,build,clean(request.body?.commitSha,64)||null]);
+  return response.status(201).json({success:true,release:result.rows[0]});
+}catch(error){return next(error);}});
+authenticatedRouter.get("/telemetry/releases/:releaseId/symbol-files",async(request,response,next)=>{try{
+  const tenant=scope(request),result=await database.query(`SELECT symbol.id,symbol.symbol_type,symbol.checksum_sha256,symbol.status,symbol.original_filename,symbol.content_type,symbol.size_bytes,symbol.processing_tool,symbol.metadata_json,symbol.verified_at,symbol.created_at FROM goodbase_symbol_files symbol JOIN goodbase_client_releases release ON release.id=symbol.release_id WHERE symbol.release_id=$4 AND ${where("release")} ORDER BY symbol.created_at DESC`,[...values(tenant),request.params.releaseId]);
+  return response.json({success:true,symbolFiles:result.rows});
+}catch(error){return next(error);}});
+authenticatedRouter.post("/telemetry/symbol-files",mfaRequired,symbolUpload.fields([{name:"symbolFile",maxCount:1},{name:"sourceMap",maxCount:1}]),async(request,response,next)=>{try{
+  const file=request.files?.symbolFile?.[0]||request.files?.sourceMap?.[0];
+  const symbolType=clean(request.body?.symbolType||(request.files?.sourceMap?.length?"sourcemap":""),20);
+  if(!file)return response.status(400).json({success:false,message:"A native symbol, mapping, or Source Map v3 file is required."});
+  const symbolFile=await symbolication.saveSymbolFile({scope:scope(request),releaseId:request.body?.releaseId,symbolType,contents:file.buffer,filename:file.originalname,contentType:file.mimetype,metadata:uploadMetadata(request.body?.metadata)});
   return response.status(201).json({success:true,symbolFile});
 }catch(error){return next(error);}});
 authenticatedRouter.get("/studio/overview",async(request,response,next)=>{try{

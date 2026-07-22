@@ -30,6 +30,7 @@ class GoodbaseClient(private val baseUrl: String = "https://base.goodos.app", va
         request("/api/goodbase/v1/growth/attestation/exchange", "POST", jsonBody)
 
     fun track(jsonBody: String): String = request("/api/goodbase/v1/product/analytics/events", "POST", jsonBody)
+    fun recordSession(jsonBody: String): String = request("/api/goodbase/v1/product/telemetry/sessions", "POST", jsonBody)
     fun captureCrash(jsonBody: String): String = request("/api/goodbase/v1/product/telemetry/crashes", "POST", jsonBody)
     fun recordTrace(jsonBody: String): String = request("/api/goodbase/v1/product/telemetry/traces", "POST", jsonBody)
     fun remoteConfig(appId: String): String = request("/api/goodbase/v1/product/config/$appId")

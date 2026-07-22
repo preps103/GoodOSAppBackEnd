@@ -491,6 +491,10 @@
       });
     }
 
+    recordSession(appId, lifecycle) {
+      return this.platformRequest("/api/goodbase/v1/product/telemetry/sessions", { method: "POST", body: { appId, ...lifecycle } });
+    }
+
     captureCrash(appId, crash) {
       return this.platformRequest("/api/goodbase/v1/product/telemetry/crashes", { method: "POST", body: { appId, ...crash } });
     }

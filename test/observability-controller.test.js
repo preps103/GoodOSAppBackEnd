@@ -111,7 +111,7 @@ test("browser telemetry and JavaScript source maps feed production observability
   assert.match(product, /symbolicateStack/);
   assert.match(symbols, /SourceMapConsumer\.with/);
   assert.match(symbols, /goodbase_symbol_files/);
-  assert.match(symbols, /20 \* 1024 \* 1024/);
+  assert.match(symbols, /50 \* 1024 \* 1024/);
   assert.match(routes, /telemetry\/symbol-files/);
   assert.match(routes, /mfaRequired,symbolUpload/);
 });
