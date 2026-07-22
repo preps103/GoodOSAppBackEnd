@@ -136,6 +136,8 @@ const goodbaseControllerCallbackRoutes =
   require("./goodbase-controller-callback.routes");
 const goodbaseEcosystemRoutes =
   require("./goodbase-ecosystem.routes");
+const goodbaseAlertDeliveryRoutes =
+  require("./goodbase-alert-delivery.routes");
 
 const router = express.Router();
 
@@ -273,6 +275,7 @@ router.get("/api", (req, res) => {
 
 router.use("/health", healthRoutes);
 router.use("/api/health", healthRoutes);
+router.use("/api/internal/observability", goodbaseAlertDeliveryRoutes.receiverRouter);
 router.use("/api/apps", appsRoutes);
 router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);
@@ -440,6 +443,10 @@ router.use(
 router.use(
   "/api/goodbase/v1/production",
   goodbaseProductionRoutes
+);
+router.use(
+  "/api/goodbase/v1/production/observability",
+  goodbaseAlertDeliveryRoutes.adminRouter
 );
 router.use(
   "/api/goodbase/v1/ecosystem",

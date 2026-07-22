@@ -3,6 +3,7 @@ const os = require("os");
 const dns = require("dns").promises;
 const database = require("../config/database");
 const notificationService = require("./notification.service");
+const alertDeliveryService = require("./goodbase-alert-delivery.service");
 const {
   dispatchControllerOperations,
   runProductionVerification
@@ -719,6 +720,8 @@ async function runHandler(handlerKey) {
       return runGoodbasePreviewReconcile();
     case "goodbase.observability.maintain":
       return runGoodbaseObservabilityMaintenance();
+    case "goodbase.alerts.deliver":
+      return alertDeliveryService.processDueDeliveries(25);
     case "goodbase.management.dispatch":
       return runGoodbaseManagementDispatch();
     case "goodbase.domains.reconcile":

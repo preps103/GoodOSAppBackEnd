@@ -29,6 +29,9 @@ scrape_configs:
   - job_name: alertmanager
     static_configs:
       - targets: ["alertmanager:9093"]
+  - job_name: goodbase-alert-relay
+    static_configs:
+      - targets: ["alert-relay:8080"]
   - job_name: blackbox
     static_configs:
       - targets: ["blackbox:9115"]

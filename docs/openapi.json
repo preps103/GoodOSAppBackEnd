@@ -3189,6 +3189,15 @@
       "/api/goodbase/v1/experience/telemetry/symbol-files": {
         "post": {"summary":"Upload a Source Map v3 file for JavaScript crash symbolication","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"requestBody":{"required":true,"content":{"multipart/form-data":{"schema":{"type":"object","required":["releaseId","sourceMap"],"properties":{"releaseId":{"type":"string","format":"uuid"},"sourceMap":{"type":"string","format":"binary"}}}}}},"responses":{"201":{"description":"Source map validated, checksummed, and activated"},"400":{"description":"Invalid source map"},"403":{"description":"Administrator role required"},"428":{"description":"Privileged MFA required"}}}
       },
+      "/api/internal/observability/alerts": {
+        "post": {"summary":"Accept a timestamped, nonce-protected HMAC-signed Alertmanager webhook","tags":["Goodbase Observability"],"security":[],"parameters":[{"in":"header","name":"X-Goodbase-Timestamp","required":true,"schema":{"type":"string"}},{"in":"header","name":"X-Goodbase-Nonce","required":true,"schema":{"type":"string"}},{"in":"header","name":"X-Goodbase-Signature","required":true,"schema":{"type":"string"}}],"responses":{"202":{"description":"Signed alerts accepted for durable delivery"},"401":{"description":"Signature invalid or expired"},"409":{"description":"Replay nonce detected"},"413":{"description":"Alert batch exceeds the bounded limit"}}}
+      },
+      "/api/goodbase/v1/production/observability/alerts": {
+        "get": {"summary":"Read alert receipts, active instances, on-call policies, and delivery status","tags":["Goodbase Observability"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Auditable outbound alert delivery snapshot"},"403":{"description":"Administrator role required"}}}
+      },
+      "/api/goodbase/v1/production/observability/alerts/test": {
+        "post": {"summary":"Run an end-to-end Goodbase outbound alert test","tags":["Goodbase Observability"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Test alert accepted and queued"},"428":{"description":"Privileged MFA required"}}}
+      },
       "/api/goodbase/v1/product/experiments/{appId}/assignments": {
         "get": {"summary":"Resolve sticky experiment assignments","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Stable assignments and variant payloads"}}}
       },

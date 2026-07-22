@@ -10,6 +10,10 @@ route:
 
 receivers:
   - name: goodbase-console
+    webhook_configs:
+      - url: http://alert-relay:8080/v1/alerts
+        send_resolved: true
+        max_alerts: 100
 
 inhibit_rules:
   - source_matchers: ['severity="critical"']

@@ -108,6 +108,24 @@ services:
       timeout: 5s
       retries: 10
 
+  alert-relay:
+    <<: *service-defaults
+    image: node:22.17.0-alpine
+    command: ["node", "/app/server.js"]
+    environment:
+      GOODBASE_ALERT_RECEIVER_URL: ${GOODBASE_ALERT_RECEIVER_URL:-https://base.goodos.app/api/internal/observability/alerts}
+      GOODBASE_ALERT_WEBHOOK_SECRET_FILE: /run/secrets/alert_webhook_secret
+    volumes:
+      - ./alert-relay/server.js:/app/server.js:ro
+      - /etc/goodbase/alert-webhook.secret:/run/secrets/alert_webhook_secret:ro
+    mem_limit: 128m
+    cpus: 0.15
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
   blackbox:
     <<: *service-defaults
     image: prom/blackbox-exporter:v0.28.0

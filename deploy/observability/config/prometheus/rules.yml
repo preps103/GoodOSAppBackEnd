@@ -65,3 +65,19 @@ groups:
           severity: warning
         annotations:
           summary: "Goodbase production memory is over 90% utilized"
+      - alert: GoodbaseAlertRelayDown
+        expr: up{job="goodbase-alert-relay"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Goodbase outbound alert relay is unavailable"
+          description: "Alertmanager cannot reach the signed Goodbase notification receiver."
+      - alert: GoodbaseAlertDeliveryFailures
+        expr: increase(goodbase_alert_relay_failed_total[15m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Goodbase outbound alert delivery is failing"
+          description: "At least one signed alert delivery exhausted its retry budget in the last 15 minutes."
