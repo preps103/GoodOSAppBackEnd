@@ -10,9 +10,11 @@ if [[ ! -r "$ENV_FILE" ]]; then
 fi
 
 docker compose --env-file "$ENV_FILE" -f "$ROOT_DIR/compose.yaml" config --quiet
-docker run --rm -v "$ROOT_DIR/config/prometheus:/etc/prometheus:ro" prom/prometheus:v3.11.3 \
-  promtool check config /etc/prometheus/prometheus.yml
-docker run --rm -v "$ROOT_DIR/config/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.32.1 \
-  amtool check-config /etc/alertmanager/alertmanager.yml
+docker run --rm --entrypoint /bin/promtool \
+  -v "$ROOT_DIR/config/prometheus:/etc/prometheus:ro" prom/prometheus:v3.11.3 \
+  check config /etc/prometheus/prometheus.yml
+docker run --rm --entrypoint /bin/amtool \
+  -v "$ROOT_DIR/config/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.32.1 \
+  check-config /etc/alertmanager/alertmanager.yml
 docker run --rm -v "$ROOT_DIR/config/otel:/etc/otelcol-contrib:ro" otel/opentelemetry-collector-contrib:0.153.0 \
   validate --config=/etc/otelcol-contrib/collector.yaml
