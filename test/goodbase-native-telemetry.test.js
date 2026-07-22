@@ -75,4 +75,5 @@ test("official clients expose session lifecycle and CI symbol upload without emb
   assert.match(uploader,/GOODBASE_ACCESS_TOKEN/);
   assert.match(uploader,/FormData/);
   assert.doesNotMatch(uploader,/Bearer\s+[A-Za-z0-9_-]{16,}/);
+  assert.match(read("src/services/goodbase-symbolication.service.js"),/\/usr\/lib\/llvm-18\/bin\/llvm-symbolizer/);
 });

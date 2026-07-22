@@ -106,10 +106,18 @@ function textSymbolicate(stack, symbols) {
   return {stack:output,symbolicated:replacements>0,replacements,tool:"goodbase-symbol-table"};
 }
 
+function llvmSymbolizerExecutable() {
+  if (process.env.GOODBASE_LLVM_SYMBOLIZER) return process.env.GOODBASE_LLVM_SYMBOLIZER;
+  for (const candidate of ["/usr/lib/llvm-19/bin/llvm-symbolizer","/usr/lib/llvm-18/bin/llvm-symbolizer","/usr/lib/llvm-17/bin/llvm-symbolizer"]) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return "llvm-symbolizer";
+}
+
 function llvmSymbolicate(stack, objectPath) {
   const addresses=[...new Set(String(stack).match(/0x[0-9a-f]{6,}/gi)||[])];
   if(!addresses.length)return Promise.resolve({stack,symbolicated:false,replacements:0,tool:"llvm-symbolizer"});
-  const executable=process.env.GOODBASE_LLVM_SYMBOLIZER||"llvm-symbolizer";
+  const executable=llvmSymbolizerExecutable();
   return new Promise(resolve=>{
     let timer;
     const child=spawn(executable,[`--obj=${objectPath}`,"--functions=linkage","--inlines"],{stdio:["pipe","pipe","ignore"]});let output="",finished=false;
