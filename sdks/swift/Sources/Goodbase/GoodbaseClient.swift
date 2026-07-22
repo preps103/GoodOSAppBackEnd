@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public actor GoodbaseClient {
     public var accessToken: String?
@@ -33,6 +36,9 @@ public actor GoodbaseClient {
         public let consentState: String; public let occurredAt: String; public let anonymousId: String?
         public let installationId: String?; public let release: String?; public let buildNumber: String?
         public let distributionTrack: String?; public let endedReason: String?; public let properties: [String:String]?
+        public init(appId: String, sessionId: String, action: String, consentState: String, occurredAt: String, anonymousId: String? = nil, installationId: String? = nil, release: String? = nil, buildNumber: String? = nil, distributionTrack: String? = nil, endedReason: String? = nil, properties: [String:String]? = nil) {
+            self.appId=appId; self.sessionId=sessionId; self.action=action; self.consentState=consentState; self.occurredAt=occurredAt; self.anonymousId=anonymousId; self.installationId=installationId; self.release=release; self.buildNumber=buildNumber; self.distributionTrack=distributionTrack; self.endedReason=endedReason; self.properties=properties
+        }
     }
     public struct CrashRequest: Codable {
         public let appId: String; public let platform: String; public let occurredAt: String
@@ -40,8 +46,14 @@ public actor GoodbaseClient {
         public let release: String?; public let buildNumber: String?; public let fatal: Bool?
         public let exceptionType: String?; public let breadcrumbs: [[String:String]]?
         public let customKeys: [String:String]?; public let device: [String:String]?
+        public init(appId: String, platform: String, occurredAt: String, title: String, stackTrace: String? = nil, sessionId: String? = nil, release: String? = nil, buildNumber: String? = nil, fatal: Bool? = nil, exceptionType: String? = nil, breadcrumbs: [[String:String]]? = nil, customKeys: [String:String]? = nil, device: [String:String]? = nil) {
+            self.appId=appId; self.platform=platform; self.occurredAt=occurredAt; self.title=title; self.stackTrace=stackTrace; self.sessionId=sessionId; self.release=release; self.buildNumber=buildNumber; self.fatal=fatal; self.exceptionType=exceptionType; self.breadcrumbs=breadcrumbs; self.customKeys=customKeys; self.device=device
+        }
     }
-    public struct TraceRequest: Codable { public let appId: String; public let type: String; public let name: String; public let durationMs: Double; public let occurredAt: String }
+    public struct TraceRequest: Codable {
+        public let appId: String; public let type: String; public let name: String; public let durationMs: Double; public let occurredAt: String
+        public init(appId: String, type: String, name: String, durationMs: Double, occurredAt: String) { self.appId=appId; self.type=type; self.name=name; self.durationMs=durationMs; self.occurredAt=occurredAt }
+    }
 
     public func exchangeAttestation(appId: String, assertion: [String:String]) async throws -> AttestationExchange {
         let challenge: AttestationChallenge = try await request("/api/goodbase/v1/growth/attestation/challenge", method: "POST", body: ChallengeRequest(appId: appId, platform: "ios"))

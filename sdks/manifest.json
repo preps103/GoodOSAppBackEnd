@@ -5,11 +5,13 @@
   "requiredCapabilities": [
     "auth", "session-refresh", "rest", "graphql", "realtime", "presence", "broadcast",
     "storage", "resumable-upload", "functions", "queues", "pagination", "cancellation",
-    "safe-retries", "request-ids", "local-stack"
+    "safe-retries", "request-ids", "local-stack", "fatal-crashes", "nonfatal-exceptions",
+    "lifecycle-sessions", "breadcrumbs", "custom-keys", "offline-telemetry-buffer",
+    "performance-traces", "remote-config", "experiments", "push-registration", "attestation"
   ],
   "official": {
-    "javascript": "src/public/sdk/goodos.js",
-    "node": "src/public/sdk/goodos.js",
+    "javascript": "sdks/javascript/index.js",
+    "node": "sdks/javascript/index.js",
     "react": "sdks/javascript/react.js",
     "nextjs": "sdks/javascript/nextjs.js",
     "python": "sdks/python/goodbase/client.py",
@@ -23,5 +25,14 @@
     "swift": "sdks/swift/Sources/Goodbase/GoodbaseOfflineStore.swift",
     "kotlin": "sdks/kotlin/src/main/kotlin/app/goodos/goodbase/GoodbaseOfflineStore.kt",
     "dart": "sdks/dart/lib/goodbase_offline.dart"
-  }
+  },
+  "packages": {
+    "javascript": {"registry":"npm","name":"@goodos/goodbase","version":"0.1.0","status":"source-ready"},
+    "swift": {"registry":"swift-package-manager","name":"Goodbase","version":"0.1.0","status":"source-ready"},
+    "kotlin": {"registry":"maven","name":"app.goodos:goodbase-android","version":"0.1.0","status":"source-ready"},
+    "dart": {"registry":"pub.dev","name":"goodbase","version":"0.1.0","status":"source-ready"},
+    "csharp": {"registry":"nuget","name":"Goodbase","version":"0.1.0","status":"source-ready"},
+    "python": {"registry":"pypi","name":"goodbase","version":"0.1.0","status":"source-ready"}
+  },
+  "certification": {"status":"pending-real-devices","required":["physical-iphone","physical-android","flutter-app","android-ndk-app","unity-app"]}
 }

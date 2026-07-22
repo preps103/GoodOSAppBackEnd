@@ -37,4 +37,6 @@ class GoodbaseClient {
   Future<Map<String, dynamic>> recordTrace(Map<String, dynamic> payload) => request('/api/goodbase/v1/product/telemetry/traces', method: 'POST', body: payload);
   Future<Map<String, dynamic>> remoteConfig(String appId) => request('/api/goodbase/v1/product/config/$appId');
   Future<Map<String, dynamic>> experimentAssignments(String appId) => request('/api/goodbase/v1/product/experiments/$appId/assignments');
+  Future<Map<String, dynamic>> syncChanges(String collectionId, {int cursor = 0, int limit = 500}) => request('/api/goodbase/v1/production/sync/collections/$collectionId/changes?cursor=$cursor&limit=$limit');
+  Future<Map<String, dynamic>> syncMutations(String collectionId, String deviceId, List<Map<String, dynamic>> mutations) => request('/api/goodbase/v1/production/sync/collections/$collectionId/mutations', method: 'POST', body: {'deviceId': deviceId, 'mutations': mutations});
 }

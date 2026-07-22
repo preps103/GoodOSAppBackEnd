@@ -17,10 +17,11 @@ class GoodbaseError(Exception):
 
 
 class GoodbaseClient:
-    def __init__(self, url="https://base.goodos.app", access_token=None, timeout=30):
+    def __init__(self, url="https://base.goodos.app", access_token=None, timeout=30, attestation_token=None):
         self.url = url.rstrip("/")
         self.access_token = access_token
         self.timeout = timeout
+        self.attestation_token = attestation_token
 
     def request(self, path, method="GET", body=None, retries=2, headers=None):
         payload = None if body is None else json.dumps(body).encode("utf-8")
@@ -30,6 +31,8 @@ class GoodbaseClient:
             request_headers["Content-Type"] = "application/json"
         if self.access_token:
             request_headers["Authorization"] = "Bearer " + self.access_token
+        if self.attestation_token:
+            request_headers["X-Goodbase-Attestation"] = self.attestation_token
         for attempt in range(retries + 1):
             try:
                 request = urllib.request.Request(self.url + path, data=payload, method=method, headers=request_headers)
@@ -58,3 +61,12 @@ class GoodbaseClient:
 
     def sync_mutations(self, collection_id, device_id, mutations):
         return self.request(f"/api/goodbase/v1/production/sync/collections/{collection_id}/mutations", "POST", {"deviceId": device_id, "mutations": mutations})
+
+    def remote_config(self, app_id, query=""):
+        return self.request(f"/api/goodbase/v1/product/config/{urllib.parse.quote(app_id)}" + ("?" + query if query else ""))
+
+    def experiment_assignments(self, app_id):
+        return self.request(f"/api/goodbase/v1/product/experiments/{urllib.parse.quote(app_id)}/assignments")
+
+    def register_push_token(self, payload):
+        return self.request("/api/goodbase/v1/growth/messaging/devices", "POST", payload)

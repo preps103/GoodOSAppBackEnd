@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Goodbase</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>GoodOS</Authors>
+    <Description>Official Goodbase .NET and Unity-compatible SDK.</Description>
+    <RepositoryUrl>https://github.com/preps103/GoodOSAppBackEnd</RepositoryUrl>
+  </PropertyGroup>
+</Project>

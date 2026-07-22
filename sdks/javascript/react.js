@@ -1,5 +1,7 @@
 "use strict";
 
+const { GoodbaseTelemetry } = require("./telemetry");
+
 function createGoodbaseReactBindings(React, client) {
   const Context = React.createContext(client);
   function GoodbaseProvider(props) {
@@ -24,7 +26,15 @@ function createGoodbaseReactBindings(React, client) {
     }, [api]);
     return state;
   }
-  return { Context,GoodbaseProvider,useGoodbase,useGoodbaseSession };
+  function useGoodbaseTelemetry(options) {
+    const api=useGoodbase(),reference=React.useRef(null);
+    React.useEffect(function(){
+      const telemetry=new GoodbaseTelemetry({...options,client:api});reference.current=telemetry;telemetry.start();
+      return function(){telemetry.stop();reference.current=null;};
+    },[api,options.appId,options.release,options.buildNumber]);
+    return reference;
+  }
+  return { Context,GoodbaseProvider,useGoodbase,useGoodbaseSession,useGoodbaseTelemetry };
 }
 
 module.exports = { createGoodbaseReactBindings };

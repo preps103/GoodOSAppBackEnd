@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goodbase"
+version = "0.1.0"
+description = "Official Goodbase Python SDK"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Proprietary"}
+authors = [{name = "GoodOS"}]
+classifiers = ["Programming Language :: Python :: 3", "Typing :: Typed"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["goodbase*"]
