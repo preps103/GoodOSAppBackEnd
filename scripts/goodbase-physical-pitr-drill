@@ -134,7 +134,7 @@ INSERT INTO public.goodbase_pitr_drill_markers(marker_id,phase) VALUES('$PRE_MAR
 SELECT pg_switch_wal();
 SQL
 ARCHIVED_BEFORE="$(sql -Atqc 'SELECT archived_count FROM pg_stat_archiver')"
-TARGET_TIME="$(sql -Atqc "SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')")"
+TARGET_TIME="$(sql -Atqc "SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD HH24:MI:SS.US') || '+00'")"
 sleep 2
 sql <<SQL >/dev/null
 INSERT INTO public.goodbase_pitr_drill_markers(marker_id,phase) VALUES('$POST_MARKER','post_target');
