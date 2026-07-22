@@ -1,7 +1,15 @@
 "use strict";
 
+process.env.GOODBASE_RUNTIME_ROLE =
+  process.env.GOODBASE_RUNTIME_ROLE || "worker";
+process.env.OTEL_SERVICE_NAME =
+  process.env.OTEL_SERVICE_NAME || "goodbase-worker";
+require("../telemetry/bootstrap");
+
 const crypto = require("crypto");
 const os = require("os");
+const { observeWorkerTick } = require("../telemetry/metrics");
+const { shutdownTelemetry } = require("../telemetry/bootstrap");
 
 require("../config/env");
 
@@ -416,6 +424,7 @@ async function heartbeat(
 }
 
 async function tick() {
+  const tickStarted = process.hrtime.bigint();
   if (running || stopping) {
     return;
   }
@@ -451,6 +460,12 @@ async function tick() {
         new Date().toISOString()
     });
 
+    observeWorkerTick({
+      status: "success",
+      durationMs: Number(process.hrtime.bigint() - tickStarted) / 1e6,
+      eventCount: outboxResults.length,
+    });
+
     if (
       outboxResults.length > 0 ||
       legacyBatchProcessed
@@ -464,6 +479,10 @@ async function tick() {
       );
     }
   } catch (error) {
+    observeWorkerTick({
+      status: "failed",
+      durationMs: Number(process.hrtime.bigint() - tickStarted) / 1e6,
+    });
     console.error(
       "[goodapp-worker-v3] tick failed:",
       error
@@ -507,6 +526,8 @@ async function shutdown(signal) {
       error.message
     );
   }
+
+  await shutdownTelemetry();
 
   process.exit(0);
 }

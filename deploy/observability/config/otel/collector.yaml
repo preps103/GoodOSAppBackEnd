@@ -1,0 +1,115 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins: []
+
+  hostmetrics:
+    root_path: /hostfs
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      disk:
+      filesystem:
+        exclude_mount_points:
+          mount_points: ["^/dev/.*", "^/proc/.*", "^/sys/.*", "^/run/docker/.*", "^/var/lib/docker/.*"]
+          match_type: regexp
+      load:
+      memory:
+      network:
+      paging:
+      process:
+        mute_process_name_error: true
+        mute_process_exe_error: true
+      processes:
+
+  filelog:
+    include:
+      - /var/log/goodbase/pm2/*.log
+      - /var/log/goodbase/nginx/*.log
+      - /var/log/goodbase/postgresql/*.log
+    exclude:
+      - /var/log/goodbase/nginx/*access*.log.*
+      - /var/log/goodbase/nginx/*error*.log.*
+    include_file_name: true
+    include_file_path: true
+    start_at: end
+    storage: file_storage
+
+processors:
+  memory_limiter:
+    check_interval: 2s
+    limit_mib: 400
+    spike_limit_mib: 100
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+  resourcedetection:
+    detectors: [system, env]
+    timeout: 2s
+    override: false
+  resource/common:
+    attributes:
+      - key: deployment.environment.name
+        value: production
+        action: upsert
+      - key: service.namespace
+        value: goodbase
+        action: upsert
+  transform/logs:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - set(resource.attributes["service.name"], "goodbase-api") where IsMatch(attributes["log.file.path"], ".*/pm2/goodbase-api.*")
+          - set(resource.attributes["service.name"], "goodbase-worker") where IsMatch(attributes["log.file.path"], ".*/pm2/goodbase-worker.*")
+          - set(resource.attributes["service.name"], "nginx") where IsMatch(attributes["log.file.path"], ".*/nginx/.*")
+          - set(resource.attributes["service.name"], "postgresql") where IsMatch(attributes["log.file.path"], ".*/postgresql/.*")
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: goodbase
+    resource_to_telemetry_conversion:
+      enabled: true
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+  debug:
+    verbosity: basic
+    sampling_initial: 2
+    sampling_thereafter: 1000
+
+service:
+  extensions: [health_check, file_storage]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, resource/common, batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp, hostmetrics]
+      processors: [memory_limiter, resourcedetection, resource/common, batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, resourcedetection, resource/common, transform/logs, batch]
+      exporters: [otlphttp/loki]
+  telemetry:
+    logs:
+      level: info
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  file_storage:
+    directory: /var/lib/otelcol

@@ -13,6 +13,15 @@ const enterprise =
 const requestStorage =
   new AsyncLocalStorage();
 
+const {
+  context: otelContext,
+  trace: otelTrace,
+} = require("@opentelemetry/api");
+
+const {
+  observeHttpRequest,
+} = require("../telemetry/metrics");
+
 const sensitiveKeys =
   /password|passphrase|token|secret|authorization|cookie|api[_-]?key|private[_-]?key|credential/i;
 
@@ -238,11 +247,21 @@ function requestContextMiddleware(
       )
     );
 
+  const activeSpan =
+    otelTrace.getSpan(
+      otelContext.active()
+    );
+
+  const activeSpanContext =
+    activeSpan?.spanContext();
+
   const traceId =
+    activeSpanContext?.traceId ||
     incomingTrace?.traceId ||
     randomHex(16);
 
   const spanId =
+    activeSpanContext?.spanId ||
     randomHex(8);
 
   const context = {
@@ -353,6 +372,24 @@ function structuredAccessLogMiddleware(
           res.statusCode,
         durationMs,
       });
+
+      observeHttpRequest({
+        ...fields,
+        organizationId:
+          fields.organizationId,
+      });
+
+      const activeSpan =
+        otelTrace.getSpan(
+          otelContext.active()
+        );
+
+      if (activeSpan && fields.organizationId) {
+        activeSpan.setAttribute(
+          "goodbase.tenant.id",
+          String(fields.organizationId)
+        );
+      }
 
       if (
         res.statusCode >= 500 ||

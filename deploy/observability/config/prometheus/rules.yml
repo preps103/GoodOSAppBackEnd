@@ -1,0 +1,67 @@
+groups:
+  - name: goodbase.recording
+    interval: 30s
+    rules:
+      - record: goodbase:http_requests:rate5m
+        expr: sum(rate(goodbase_goodbase_http_server_requests_total[5m]))
+      - record: goodbase:http_errors:rate5m
+        expr: sum(rate(goodbase_goodbase_http_server_requests_total{http_response_status_code=~"5.."}[5m]))
+      - record: goodbase:http_error_ratio:rate5m
+        expr: goodbase:http_errors:rate5m / clamp_min(goodbase:http_requests:rate5m, 0.001)
+      - record: goodbase:http_error_ratio:rate1h
+        expr: sum(rate(goodbase_goodbase_http_server_requests_total{http_response_status_code=~"5.."}[1h])) / clamp_min(sum(rate(goodbase_goodbase_http_server_requests_total[1h])), 0.001)
+
+  - name: goodbase.alerts
+    rules:
+      - alert: GoodbaseEndpointDown
+        expr: probe_success{job="goodbase_https"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Goodbase endpoint is unavailable"
+          description: "{{ $labels.instance }} has failed HTTPS checks for two minutes."
+      - alert: GoodbaseCertificateExpiresSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) < 14 * 24 * 3600
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Goodbase TLS certificate expires within 14 days"
+          description: "{{ $labels.instance }} certificate expiry requires attention."
+      - alert: GoodbaseDnsResolutionFailure
+        expr: probe_success{job="goodos_dns"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "goodos.app DNS resolution is failing"
+      - alert: GoodbaseFastBurn
+        expr: goodbase:http_error_ratio:rate5m > (14.4 * 0.001) and goodbase:http_error_ratio:rate1h > (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: critical
+          slo: availability-99.9
+        annotations:
+          summary: "Goodbase is rapidly consuming its 99.9% availability error budget"
+      - alert: GoodbaseTelemetryExporterFailure
+        expr: increase(otelcol_exporter_send_failed_spans_total[10m]) > 0 or increase(otelcol_exporter_send_failed_log_records_total[10m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Goodbase telemetry export is dropping data"
+      - alert: GoodbaseHostDiskLow
+        expr: (system_filesystem_utilization{mountpoint="/"} > 0.85)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Goodbase production disk is over 85% full"
+      - alert: GoodbaseHostMemoryPressure
+        expr: system_memory_utilization{state="used"} > 0.90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Goodbase production memory is over 90% utilized"

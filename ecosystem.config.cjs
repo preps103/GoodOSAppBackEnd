@@ -15,7 +15,9 @@ function releaseCommit() {
 const runtimeEnv = {
   NODE_ENV: "production",
   GOODBASE_RELEASE_COMMIT: releaseCommit(),
-  GOODOS_VOICE_DB_PATH: "/var/lib/goodapp-backend/goodos-voice-db.json"
+  GOODOS_VOICE_DB_PATH: "/var/lib/goodapp-backend/goodos-voice-db.json",
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://127.0.0.1:4318",
+  OTEL_METRIC_EXPORT_INTERVAL: "15000"
 };
 
 const serviceDefaults = {
@@ -39,6 +41,8 @@ module.exports = {
       script: "src/server.js",
       env: {
         ...runtimeEnv,
+        OTEL_SERVICE_NAME: "goodbase-api",
+        GOODBASE_RUNTIME_ROLE: "api",
         PORT: 8001
       }
     },
@@ -48,6 +52,8 @@ module.exports = {
       script: "src/server.js",
       env: {
         ...runtimeEnv,
+        OTEL_SERVICE_NAME: "goodbase-api-ha",
+        GOODBASE_RUNTIME_ROLE: "api",
         PORT: 8002
       }
     },
@@ -55,7 +61,11 @@ module.exports = {
       ...serviceDefaults,
       name: "goodbase-worker",
       script: "src/workers/goodapp-worker-v3.js",
-      env: runtimeEnv
+      env: {
+        ...runtimeEnv,
+        OTEL_SERVICE_NAME: "goodbase-worker",
+        GOODBASE_RUNTIME_ROLE: "worker"
+      }
     }
   ]
 };

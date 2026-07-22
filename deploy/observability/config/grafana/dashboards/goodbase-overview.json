@@ -1,0 +1,25 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {"type":"stat","title":"HTTPS Availability","datasource":{"type":"prometheus","uid":"goodbase-prometheus"},"targets":[{"expr":"avg(probe_success{job=\"goodbase_https\"}) * 100","legendFormat":"availability"}],"fieldConfig":{"defaults":{"unit":"percent","min":0,"max":100}},"gridPos":{"h":6,"w":6,"x":0,"y":0}},
+    {"type":"stat","title":"API Request Rate","datasource":{"type":"prometheus","uid":"goodbase-prometheus"},"targets":[{"expr":"goodbase:http_requests:rate5m","legendFormat":"requests/sec"}],"fieldConfig":{"defaults":{"unit":"reqps"}},"gridPos":{"h":6,"w":6,"x":6,"y":0}},
+    {"type":"stat","title":"5xx Error Ratio","datasource":{"type":"prometheus","uid":"goodbase-prometheus"},"targets":[{"expr":"goodbase:http_error_ratio:rate5m * 100","legendFormat":"5xx"}],"fieldConfig":{"defaults":{"unit":"percent"}},"gridPos":{"h":6,"w":6,"x":12,"y":0}},
+    {"type":"stat","title":"TLS Days Remaining","datasource":{"type":"prometheus","uid":"goodbase-prometheus"},"targets":[{"expr":"min(probe_ssl_earliest_cert_expiry - time()) / 86400","legendFormat":"days"}],"fieldConfig":{"defaults":{"unit":"d"}},"gridPos":{"h":6,"w":6,"x":18,"y":0}},
+    {"type":"timeseries","title":"Goodbase Request Volume","datasource":{"type":"prometheus","uid":"goodbase-prometheus"},"targets":[{"expr":"sum by (service_name) (rate(goodbase_goodbase_http_server_requests_total[5m]))","legendFormat":"{{service_name}}"}],"gridPos":{"h":8,"w":12,"x":0,"y":6}},
+    {"type":"timeseries","title":"Request Latency","datasource":{"type":"prometheus","uid":"goodbase-prometheus"},"targets":[{"expr":"histogram_quantile(0.95, sum by (le, service_name) (rate(goodbase_goodbase_http_server_duration_milliseconds_bucket[5m])))","legendFormat":"p95 {{service_name}}"}],"fieldConfig":{"defaults":{"unit":"ms"}},"gridPos":{"h":8,"w":12,"x":12,"y":6}},
+    {"type":"logs","title":"Correlated Production Logs","datasource":{"type":"loki","uid":"goodbase-loki"},"targets":[{"expr":"{service_namespace=\"goodbase\"}","refId":"A"}],"options":{"showTime":true,"showLabels":false,"wrapLogMessage":true,"enableLogDetails":true},"gridPos":{"h":12,"w":24,"x":0,"y":14}}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": ["goodbase", "production", "slo"],
+  "templating": {"list": []},
+  "time": {"from":"now-6h","to":"now"},
+  "timezone": "browser",
+  "title": "Goodbase Production Overview",
+  "uid": "goodbase-production-overview",
+  "version": 1
+}

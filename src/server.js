@@ -1,9 +1,12 @@
+require("./telemetry/bootstrap");
+
 const app = require("./app");
 const env = require("./config/env");
 const database = require("./config/database");
 const { attachRealtimeWebSocketServer } = require("./realtime/hub");
 const { flushMetrics } = require("./enterprise/enterprise-foundation.service");
 const { createShutdownController } = require("./runtime/graceful-shutdown");
+const { shutdownTelemetry } = require("./telemetry/bootstrap");
 
 const server = app.listen(env.port, "127.0.0.1", () => {
   console.log(`${env.serviceName} running on http://127.0.0.1:${env.port}`);
@@ -25,6 +28,7 @@ const shutdownController = createShutdownController({
 
 for (const signal of ["SIGTERM", "SIGINT"]) {
   process.once(signal, () => {
+    void shutdownTelemetry();
     void shutdownController.shutdown(signal, 0);
   });
 }
