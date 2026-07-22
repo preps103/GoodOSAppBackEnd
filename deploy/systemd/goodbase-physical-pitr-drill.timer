@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule Goodbase physical PITR replay after the weekly base backup
+
+[Timer]
+OnCalendar=Sun *-*-* 02:00:00 UTC
+RandomizedDelaySec=600
+Persistent=true
+Unit=goodbase-physical-pitr-drill.service
+
+[Install]
+WantedBy=timers.target

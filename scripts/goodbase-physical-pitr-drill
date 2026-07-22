@@ -1,0 +1,249 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+# Restores the newest encrypted physical base backup, replays the encrypted WAL
+# archive to a transaction boundary, starts an isolated Goodbase runtime, stores
+# recovery evidence, and destroys every disposable process and file afterward.
+
+DATABASE="${GOODBASE_PITR_DATABASE:-goodos_backend}"
+PROJECT_ROOT="${GOODBASE_PITR_PROJECT_ROOT:-/var/www/Goodbase}"
+BACKUP_ROOT="${GOODBASE_PITR_BACKUP_ROOT:-/var/backups/goodos-enterprise-v1}"
+EVIDENCE_ROOT="${GOODBASE_PITR_EVIDENCE_ROOT:-/var/lib/goodbase/pitr-evidence}"
+IDENTITY="${GOODBASE_PITR_IDENTITY:-/etc/goodos/backup-age.key}"
+AGE="${GOODBASE_PITR_AGE:-/usr/bin/age}"
+POSTGREST_IMAGE="${GOODBASE_PITR_POSTGREST_IMAGE:-postgrest/postgrest:v14.12}"
+MAX_BASE_AGE_HOURS="${GOODBASE_PITR_MAX_BASE_AGE_HOURS:-192}"
+DRILL_ID="pitr_$(date -u +%Y%m%dT%H%M%SZ)_$(openssl rand -hex 4)"
+PRE_MARKER="${DRILL_ID}_pre"
+POST_MARKER="${DRILL_ID}_post"
+WORK_ROOT="${GOODBASE_PITR_WORK_ROOT:-/var/lib/goodbase/pitr-work}"
+WORK_DIR=""
+PG_DATA=""
+PG_SOCKET=""
+PG_STARTED=0
+APP_PID=""
+POSTGREST_CONTAINER=""
+START_EPOCH="$(date +%s)"
+TARGET_TIME=""
+BASE_FILE=""
+BACKUP_ID=""
+MARKERS_REMOVED=0
+DISPOSABLE_DESTROYED=0
+
+timestamp(){ date -u '+%Y-%m-%dT%H:%M:%SZ'; }
+log(){ printf '%s %s\n' "$(timestamp)" "$*"; }
+fail(){ log "ERROR: $*" >&2; return 1; }
+require(){ command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"; }
+sql(){ runuser -u postgres -- psql -X -v ON_ERROR_STOP=1 -d "$DATABASE" "$@"; }
+
+write_failure(){
+  mkdir -p "$EVIDENCE_ROOT"
+  local message="${1:-Physical PITR drill failed}" file="$EVIDENCE_ROOT/${DRILL_ID}-failed.json" temporary destroyed=false
+  [[ "$DISPOSABLE_DESTROYED" -eq 1 ]] && destroyed=true
+  temporary="${file}.tmp"
+  printf '{"schemaVersion":1,"drillId":"%s","status":"failed","completedAt":"%s","message":"%s","temporaryClusterDestroyed":%s}\n' \
+    "$DRILL_ID" "$(timestamp)" "$(printf '%s' "$message" | sed 's/["\\]/_/g;s/[[:cntrl:]]/ /g' | cut -c1-500)" "$destroyed" >"$temporary"
+  chmod 400 "$temporary"; mv "$temporary" "$file"
+  sha256sum "$file" >"${file}.sha256"; chmod 400 "${file}.sha256"
+}
+
+destroy_disposable(){
+  local failed=0
+  set +e
+  if [[ -n "$APP_PID" ]]; then
+    kill -TERM "$APP_PID" 2>/dev/null
+    for _attempt in $(seq 1 30); do kill -0 "$APP_PID" 2>/dev/null || break; sleep 1; done
+    kill -KILL "$APP_PID" 2>/dev/null; wait "$APP_PID" 2>/dev/null
+    kill -0 "$APP_PID" 2>/dev/null && failed=1
+    APP_PID=""
+  fi
+  if [[ -n "$POSTGREST_CONTAINER" ]]; then
+    docker rm -f "$POSTGREST_CONTAINER" >/dev/null 2>&1 || failed=1
+    docker inspect "$POSTGREST_CONTAINER" >/dev/null 2>&1 && failed=1
+    POSTGREST_CONTAINER=""
+  fi
+  if [[ "$PG_STARTED" -eq 1 && -n "$PG_DATA" ]]; then
+    runuser -u postgres -- "$PG_CTL" -D "$PG_DATA" -m fast -w stop >/dev/null 2>&1 || \
+      runuser -u postgres -- "$PG_CTL" -D "$PG_DATA" -m immediate -w stop >/dev/null 2>&1 || failed=1
+    runuser -u postgres -- "$PG_CTL" -D "$PG_DATA" status >/dev/null 2>&1 && failed=1
+    PG_STARTED=0
+  fi
+  if [[ -n "$WORK_DIR" && "$WORK_DIR" == "$WORK_ROOT"/pitr.* && -d "$WORK_DIR" ]]; then
+    find "$WORK_DIR" -depth -mindepth 1 -delete && rmdir "$WORK_DIR" || failed=1
+  fi
+  [[ -z "$WORK_DIR" || ! -e "$WORK_DIR" ]] || failed=1
+  WORK_DIR=""
+  if [[ "$failed" -eq 0 ]]; then DISPOSABLE_DESTROYED=1; else DISPOSABLE_DESTROYED=0; fi
+  set -e
+  return "$failed"
+}
+
+cleanup(){
+  local status=$?
+  set +e
+  destroy_disposable || status=1
+  if [[ "$MARKERS_REMOVED" -eq 0 && -n "$PRE_MARKER" ]]; then
+    sql -c "DELETE FROM public.goodbase_pitr_drill_markers WHERE marker_id IN ('$PRE_MARKER','$POST_MARKER')" >/dev/null 2>&1 && MARKERS_REMOVED=1
+  fi
+  if [[ "$status" -ne 0 ]]; then write_failure "Physical PITR drill exited with status $status"; fi
+  trap - EXIT INT TERM
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+for command_name in runuser psql tar sha256sum openssl curl docker; do require "$command_name"; done
+[[ -x "$AGE" && -r "$IDENTITY" ]] || fail "The age binary or recovery identity is unavailable"
+[[ -d "$PROJECT_ROOT" && -d "$BACKUP_ROOT/base" && -d "$BACKUP_ROOT/wal" ]] || fail "Project or backup roots are unavailable"
+[[ "$MAX_BASE_AGE_HOURS" =~ ^[0-9]+$ ]] || fail "Base-backup age limit must be an integer"
+
+PG_MAJOR="$(sql -Atqc "SELECT current_setting('server_version_num')::int/10000")"
+PG_BIN="${GOODBASE_PITR_PG_BIN:-/usr/lib/postgresql/$PG_MAJOR/bin}"
+for binary in pg_ctl pg_isready pg_verifybackup psql; do [[ -x "$PG_BIN/$binary" ]] || fail "Missing PostgreSQL binary: $PG_BIN/$binary"; done
+PG_CTL="$PG_BIN/pg_ctl"
+
+BASE_FILE="$(find "$BACKUP_ROOT/base" -maxdepth 1 -type f -name 'postgres-cluster-*.tar.gz.age' -printf '%T@ %p\n' | sort -nr | awk 'NR==1{sub(/^[^ ]+ /,"");print}')"
+[[ -n "$BASE_FILE" && -s "$BASE_FILE" && -s "${BASE_FILE}.sha256" ]] || fail "No complete encrypted physical base backup is available"
+BASE_AGE_HOURS="$(( ($(date +%s)-$(stat -c '%Y' "$BASE_FILE"))/3600 ))"
+[[ "$BASE_AGE_HOURS" -le "$MAX_BASE_AGE_HOURS" ]] || fail "Newest physical base backup is stale (${BASE_AGE_HOURS}h)"
+EXPECTED_BASE_CHECKSUM="$(awk 'NR==1{print $1}' "${BASE_FILE}.sha256")"
+ACTUAL_BASE_CHECKSUM="$(sha256sum "$BASE_FILE" | awk '{print $1}')"
+[[ "$EXPECTED_BASE_CHECKSUM" == "$ACTUAL_BASE_CHECKSUM" ]] || fail "Encrypted physical base-backup checksum mismatch"
+BACKUP_ID="$(sql -Atqc "SELECT id FROM backend_backup_inventory WHERE backup_type='postgres_base_pitr' AND status='completed' ORDER BY completed_at DESC LIMIT 1")"
+[[ -n "$BACKUP_ID" ]] || fail "Physical backup inventory evidence is missing"
+
+log "Creating transaction-boundary markers"
+sql <<SQL >/dev/null
+CREATE TABLE IF NOT EXISTS public.goodbase_pitr_drill_markers(
+  marker_id text PRIMARY KEY,
+  phase text NOT NULL CHECK(phase IN ('pre_target','post_target')),
+  committed_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+INSERT INTO public.goodbase_pitr_drill_markers(marker_id,phase) VALUES('$PRE_MARKER','pre_target');
+SELECT pg_switch_wal();
+SQL
+ARCHIVED_BEFORE="$(sql -Atqc 'SELECT archived_count FROM pg_stat_archiver')"
+TARGET_TIME="$(sql -Atqc "SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')")"
+sleep 2
+sql <<SQL >/dev/null
+INSERT INTO public.goodbase_pitr_drill_markers(marker_id,phase) VALUES('$POST_MARKER','post_target');
+SELECT pg_switch_wal();
+SQL
+for _attempt in $(seq 1 90); do
+  ARCHIVED_NOW="$(sql -Atqc 'SELECT archived_count FROM pg_stat_archiver')"
+  [[ "$ARCHIVED_NOW" -gt "$ARCHIVED_BEFORE" ]] && break
+  sleep 2
+done
+[[ "${ARCHIVED_NOW:-0}" -gt "$ARCHIVED_BEFORE" ]] || fail "WAL archiving did not advance after the boundary markers"
+
+mkdir -p "$WORK_ROOT" "$EVIDENCE_ROOT"; chmod 700 "$WORK_ROOT" "$EVIDENCE_ROOT"
+WORK_DIR="$(mktemp -d "$WORK_ROOT/pitr.XXXXXX")"
+PLAIN_BASE="$WORK_DIR/base.tar.gz"
+PG_DATA="$WORK_DIR/postgres"
+PG_SOCKET="$WORK_DIR/socket"
+mkdir -p "$PG_DATA" "$PG_SOCKET"
+
+log "Decrypting and verifying $(basename "$BASE_FILE")"
+"$AGE" --decrypt --identity "$IDENTITY" --output "$PLAIN_BASE" "$BASE_FILE"
+tar -xzf "$PLAIN_BASE" -C "$PG_DATA"
+rm -f "$PLAIN_BASE"
+"$PG_BIN/pg_verifybackup" "$PG_DATA"
+
+RESTORE_HELPER="$WORK_DIR/restore-wal"
+cat >"$RESTORE_HELPER" <<EOF
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+name="\${1:?}"; destination="\${2:?}"
+[[ "\$name" =~ ^[A-F0-9]{24}([.][A-Za-z0-9_-]+)?$ ]] || exit 2
+encrypted="$BACKUP_ROOT/wal/\${name}.age"; checksum="$BACKUP_ROOT/wal/\${name}.sha256"
+[[ -s "\$encrypted" && -s "\$checksum" ]] || exit 1
+temporary="\${destination}.tmp"
+trap 'rm -f "\$temporary"' EXIT
+$AGE --decrypt --identity $IDENTITY --output "\$temporary" "\$encrypted"
+expected="\$(awk 'NR==1{print \$1}' "\$checksum")"; actual="\$(sha256sum "\$temporary"|awk '{print \$1}')"
+[[ "\$expected" == "\$actual" ]] || exit 3
+mv "\$temporary" "\$destination"; trap - EXIT
+EOF
+chmod 700 "$RESTORE_HELPER"
+
+cat >"$WORK_DIR/pg_hba.conf" <<'EOF'
+local all all trust
+host all all 127.0.0.1/32 trust
+host all all ::1/128 trust
+EOF
+cat >>"$PG_DATA/postgresql.auto.conf" <<EOF
+archive_mode = 'off'
+archive_command = ''
+listen_addresses = '127.0.0.1'
+ssl = 'off'
+max_connections = 40
+shared_buffers = '128MB'
+restore_command = '$RESTORE_HELPER %f %p'
+recovery_target_time = '$TARGET_TIME'
+recovery_target_inclusive = true
+recovery_target_action = 'promote'
+EOF
+touch "$PG_DATA/recovery.signal"
+chown -R postgres:postgres "$WORK_DIR"
+
+PG_PORT="$((24000 + RANDOM % 10000))"
+log "Replaying encrypted WAL to $TARGET_TIME"
+runuser -u postgres -- "$PG_CTL" -D "$PG_DATA" -l "$WORK_DIR/postgres.log" -o "-p $PG_PORT -k $PG_SOCKET -c hba_file=$WORK_DIR/pg_hba.conf" -w start >/dev/null
+PG_STARTED=1
+for _attempt in $(seq 1 180); do
+  RECOVERY_STATE="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc 'SELECT pg_is_in_recovery()' 2>/dev/null || true)"
+  [[ "$RECOVERY_STATE" == "f" ]] && break
+  sleep 2
+done
+[[ "${RECOVERY_STATE:-}" == "f" ]] || { tail -n 80 "$WORK_DIR/postgres.log" >&2; fail "Recovered cluster did not promote at the selected target"; }
+
+PRE_COUNT="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc "SELECT count(*) FROM public.goodbase_pitr_drill_markers WHERE marker_id='$PRE_MARKER'")"
+POST_COUNT="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc "SELECT count(*) FROM public.goodbase_pitr_drill_markers WHERE marker_id='$POST_MARKER'")"
+[[ "$PRE_COUNT" == "1" && "$POST_COUNT" == "0" ]] || fail "PITR transaction-boundary verification failed (pre=$PRE_COUNT post=$POST_COUNT)"
+REPLAY_LSN="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc 'SELECT pg_last_wal_replay_lsn()')"
+RPO_SECONDS="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc "SELECT round(abs(extract(epoch FROM ('$TARGET_TIME'::timestamptz-pg_last_xact_replay_timestamp())))::numeric,3)")"
+
+POSTGREST_PORT="$((34000 + RANDOM % 5000))"; APP_PORT="$((39000 + RANDOM % 5000))"
+POSTGREST_CONTAINER="goodbase-pitr-postgrest-${DRILL_ID//_/-}"
+docker run -d --rm --name "$POSTGREST_CONTAINER" --network host \
+  -e "PGRST_DB_URI=postgres://postgres@127.0.0.1:$PG_PORT/$DATABASE" \
+  -e PGRST_DB_SCHEMAS=goodos_api -e PGRST_DB_EXTRA_SEARCH_PATH=goodos_auth,public \
+  -e PGRST_DB_ANON_ROLE=goodos_anon -e PGRST_JWT_SECRET=goodbase-pitr-drill-only-signing-secret \
+  -e "PGRST_SERVER_HOST=127.0.0.1" -e "PGRST_SERVER_PORT=$POSTGREST_PORT" \
+  "$POSTGREST_IMAGE" >/dev/null
+for _attempt in $(seq 1 60); do curl -fsS "http://127.0.0.1:$POSTGREST_PORT/" -o /dev/null 2>/dev/null && break; sleep 1; done
+curl -fsS "http://127.0.0.1:$POSTGREST_PORT/" -o "$WORK_DIR/rest-openapi.json"
+
+cd "$PROJECT_ROOT"
+runuser -u goodapp -- env DATABASE_URL="postgresql://postgres@127.0.0.1:$PG_PORT/$DATABASE" PORT="$APP_PORT" NODE_ENV=pitr-verification SERVICE_NAME="Goodbase PITR Verification" GOODOS_POSTGREST_HOST=127.0.0.1 GOODOS_POSTGREST_PORT="$POSTGREST_PORT" GOODOS_POSTGREST_REQUIRED=true GOODOS_WORKER_REQUIRED=false node src/server.js >"$WORK_DIR/goodbase.log" 2>&1 &
+APP_PID=$!
+for _attempt in $(seq 1 60); do curl -fsS "http://127.0.0.1:$APP_PORT/api/health/ready" -o "$WORK_DIR/ready.json" 2>/dev/null && break; sleep 1; done
+curl -fsS "http://127.0.0.1:$APP_PORT/api/health/ready" -o "$WORK_DIR/ready.json"
+curl -fsS "http://127.0.0.1:$APP_PORT/api/data-platform/graphql/health" -o "$WORK_DIR/graphql.json"
+AUTH_STATUS="$(curl -sS -o "$WORK_DIR/auth.json" -w '%{http_code}' -H 'Content-Type: application/json' --data '{"email":"pitr-probe@invalid.goodos.app","password":"controlled-invalid-password"}' "http://127.0.0.1:$APP_PORT/api/auth/login")"
+[[ "$AUTH_STATUS" == "401" || "$AUTH_STATUS" == "400" ]] || fail "Isolated Auth route returned unexpected HTTP $AUTH_STATUS"
+STORAGE_COUNT="$(runuser -u goodapp -- env DATABASE_URL="postgresql://postgres@127.0.0.1:$PG_PORT/$DATABASE" node -e 'const s=require("./src/services/storage-v2.service");s.listBuckets({organizationId:"org_goodos"}).then(x=>{console.log(x.length);process.exit(0)}).catch(()=>process.exit(1))')"
+REALTIME_TABLES="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc "SELECT count(*) FROM (VALUES(to_regclass('public.backend_realtime_channels')),(to_regclass('public.backend_realtime_messages')),(to_regclass('public.backend_realtime_events'))) AS t(name) WHERE name IS NOT NULL")"
+WORKER_TABLES="$(runuser -u postgres -- "$PG_BIN/psql" -h 127.0.0.1 -p "$PG_PORT" -d "$DATABASE" -Atqc "SELECT count(*) FROM (VALUES(to_regclass('public.backend_jobs')),(to_regclass('public.backend_job_runs')),(to_regclass('public.backend_worker_heartbeats'))) AS t(name) WHERE name IS NOT NULL")"
+[[ "$REALTIME_TABLES" -ge 3 && "$WORKER_TABLES" -ge 3 ]] || fail "Realtime or worker metadata smoke checks failed"
+
+RTO_SECONDS="$(( $(date +%s)-START_EPOCH ))"; RTO_MINUTES="$(awk -v seconds="$RTO_SECONDS" 'BEGIN{printf "%.3f",seconds/60}')"; RPO_MINUTES="$(awk -v seconds="$RPO_SECONDS" 'BEGIN{printf "%.4f",seconds/60}')"
+sql -c "DELETE FROM public.goodbase_pitr_drill_markers WHERE marker_id IN ('$PRE_MARKER','$POST_MARKER')" >/dev/null
+MARKERS_REMOVED=1
+destroy_disposable || fail "The isolated recovery environment could not be fully destroyed"
+EVIDENCE_FILE="$EVIDENCE_ROOT/${DRILL_ID}-passed.json"; TEMP_EVIDENCE="${EVIDENCE_FILE}.tmp"
+cat >"$TEMP_EVIDENCE" <<EOF
+{"schemaVersion":1,"drillId":"$DRILL_ID","status":"passed","sourceBackup":"$(basename "$BASE_FILE")","sourceChecksumSha256":"$ACTUAL_BASE_CHECKSUM","targetTime":"$TARGET_TIME","replayLsn":"$REPLAY_LSN","preTargetTransactionPresent":true,"postTargetTransactionAbsent":true,"authSmoke":true,"restSmoke":true,"graphqlSmoke":true,"realtimeMetadataTables":$REALTIME_TABLES,"storageBucketCount":$STORAGE_COUNT,"workerMetadataTables":$WORKER_TABLES,"rpoMinutes":$RPO_MINUTES,"rtoMinutes":$RTO_MINUTES,"temporaryClusterDestroyed":true,"completedAt":"$(timestamp)"}
+EOF
+chmod 400 "$TEMP_EVIDENCE"; mv "$TEMP_EVIDENCE" "$EVIDENCE_FILE"; sha256sum "$EVIDENCE_FILE" >"${EVIDENCE_FILE}.sha256"; chmod 400 "${EVIDENCE_FILE}.sha256"
+
+VERIFY_ID="verify_${DRILL_ID}"
+sql -v verify_id="$VERIFY_ID" -v backup_id="$BACKUP_ID" -v rpo="$RPO_MINUTES" -v rto="$RTO_MINUTES" -v target="$TARGET_TIME" -v lsn="$REPLAY_LSN" -v evidence="$EVIDENCE_FILE" <<'SQL' >/dev/null
+INSERT INTO backend_restore_verifications(id,backup_inventory_id,verification_type,target_environment,status,rpo_minutes,rto_minutes,started_at,completed_at,notes,evidence_json,created_at)
+VALUES(:'verify_id',:'backup_id','physical_pitr_replay','isolated-physical-cluster','passed',:'rpo'::numeric,:'rto'::numeric,NOW()-make_interval(secs=(:'rto'::numeric*60)::double precision),NOW(),'Encrypted physical base plus archived WAL replay passed transaction-boundary and Goodbase smoke checks.',jsonb_build_object('targetTime',:'target','replayLsn',:'lsn','preTargetPresent',true,'postTargetAbsent',true,'auth',true,'rest',true,'graphql',true,'realtime',true,'storage',true,'worker',true,'evidenceFile',:'evidence','temporaryClusterDestroyed',true),NOW());
+SQL
+
+log "Physical PITR drill passed: RPO ${RPO_MINUTES}m, RTO ${RTO_MINUTES}m, evidence $EVIDENCE_FILE"

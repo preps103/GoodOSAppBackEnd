@@ -1,0 +1,6 @@
+"use strict";
+const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+const root=path.resolve(__dirname,".."),read=file=>fs.readFileSync(path.join(root,file),"utf8");
+test("physical PITR drill replays encrypted WAL to a proven transaction boundary",()=>{const source=read("scripts/goodbase-physical-pitr-drill");for(const term of ["recovery_target_time","restore_command","pg_verifybackup","preTargetTransactionPresent","postTargetTransactionAbsent","pg_last_wal_replay_lsn","temporaryClusterDestroyed"])assert.match(source,new RegExp(term));assert.match(source,/api\/health\/ready/);assert.match(source,/graphql\/health/);assert.match(source,/api\/auth\/login/);assert.match(source,/PGRST_DB_URI/);assert.ok(source.indexOf("destroy_disposable || fail")<source.indexOf('EVIDENCE_FILE="$EVIDENCE_ROOT'));});
+test("physical PITR drill is scheduled after the weekly base backup",()=>{const timer=read("deploy/systemd/goodbase-physical-pitr-drill.timer"),service=read("deploy/systemd/goodbase-physical-pitr-drill.service");assert.match(timer,/Sun \*-\*-\* 02:00:00 UTC/);assert.match(service,/TimeoutStartSec=7200/);assert.match(service,/ProtectSystem=strict/);});
+test("macOS recovery nodes set a stable locale before starting PostgreSQL",()=>assert.match(read("scripts/goodbase-recovery-node.sh"),/export LC_ALL=C/));

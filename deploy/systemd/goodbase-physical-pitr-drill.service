@@ -1,0 +1,23 @@
+[Unit]
+Description=Goodbase isolated physical PITR replay drill
+After=postgresql.service docker.service network-online.target
+Wants=postgresql.service docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/var/www/Goodbase
+ExecStart=/usr/local/sbin/goodbase-physical-pitr-drill
+TimeoutStartSec=7200
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+PrivateTmp=false
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/goodbase /var/backups/goodos-enterprise-v1 /tmp
+
+[Install]
+WantedBy=multi-user.target

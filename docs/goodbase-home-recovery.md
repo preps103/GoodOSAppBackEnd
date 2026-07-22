@@ -29,7 +29,21 @@ and laptop recovery nodes.
 
 ## Restore verification
 
-`scripts/goodbase-recovery-node.sh` performs these checks:
+`scripts/goodbase-recovery-node.sh` performs nightly logical restore and archive-integrity checks. It explicitly sets a stable locale so macOS PostgreSQL cannot fail startup with a multithreaded locale initialization error.
+
+`scripts/goodbase-physical-pitr-drill` is the separate physical recovery proof. It runs after the weekly base backup and:
+
+1. Creates pre-target and post-target transactions in a dedicated production drill table.
+2. Forces and verifies WAL archival.
+3. Decrypts and verifies the newest physical base archive.
+4. Replays individually checksum-verified encrypted WAL segments to the exact target timestamp.
+5. Proves the pre-target transaction exists and the post-target transaction is absent.
+6. Starts isolated PostgREST and Goodbase processes against the recovered cluster.
+7. Tests readiness, Auth, REST, GraphQL, Storage, Realtime metadata, and worker metadata.
+8. Records RPO, RTO, replay LSN, source checksum, and smoke results in both the database evidence ledger and a root-readable checksum sidecar.
+9. Stops every disposable process and destroys the recovered cluster.
+
+The home recovery controller performs these additional checks:
 
 1. Verifies logical, base-backup, WAL, and off-site-copy freshness.
 2. Verifies encrypted logical and base-backup SHA-256 sidecars.
