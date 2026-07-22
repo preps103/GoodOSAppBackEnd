@@ -9,3 +9,4 @@ test("Debian physical backups receive an isolated PostgreSQL configuration",()=>
 test("recovery target uses PostgreSQL's accepted timestamp format",()=>assert.match(read("scripts/goodbase-physical-pitr-drill"),/YYYY-MM-DD HH24:MI:SS[.]US.*[+]00/));
 test("restore evidence uses valid PostgreSQL named-argument syntax",()=>assert.match(read("scripts/goodbase-physical-pitr-drill"),/make_interval[(]secs =>/));
 test("macOS recovery nodes set a stable locale before starting PostgreSQL",()=>assert.match(read("scripts/goodbase-recovery-node.sh"),/export LC_ALL=C/));
+test("logical recovery records unavailable extension binaries without ignoring data errors",()=>{const source=read("scripts/goodbase-recovery-node.sh");assert.match(source,/pg_available_extensions/);assert.match(source,/--use-list=\"\$RESTORE_LIST\"/);assert.match(source,/unavailableExtensionBinaries/);assert.match(source,/--exit-on-error/);});

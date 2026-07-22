@@ -294,6 +294,33 @@ fi
 
 "$PG_BIN/createdb" -h "$PG_SOCKET" -p "$PORT" goodbase_restore_verify
 
+# A logical recovery node may not have every production extension binary (for
+# example pg_graphql on macOS). Extension-owned objects are not included in a
+# pg_dump archive, so omit only the unavailable CREATE/COMMENT entries while
+# continuing to fail on every application schema or data restore error. The
+# production physical PITR drill separately proves the full extension runtime.
+RESTORE_LIST="$WORK_DIR/restore.list"
+cp "$WORK_DIR/archive.list" "$RESTORE_LIST"
+MISSING_EXTENSIONS=()
+while IFS= read -r recovery_extension; do
+  [ -n "$recovery_extension" ] || continue
+  case "$recovery_extension" in *[!A-Za-z0-9_-]*) fail "Invalid extension name in recovery archive" ;; esac
+  extension_available="$(
+    "$PG_BIN/psql" -h "$PG_SOCKET" -p "$PORT" -d goodbase_restore_verify -Atqc \
+      "SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_available_extensions WHERE name='$recovery_extension') THEN 1 ELSE 0 END"
+  )"
+  if [ "$extension_available" != "1" ]; then
+    MISSING_EXTENSIONS+=("$recovery_extension")
+    filtered_list="$RESTORE_LIST.filtered"
+    awk -v extension="$recovery_extension" '
+      index($0, " EXTENSION - " extension) == 0 &&
+      index($0, " COMMENT - EXTENSION " extension) == 0 { print }
+    ' "$RESTORE_LIST" >"$filtered_list"
+    mv "$filtered_list" "$RESTORE_LIST"
+    log "Logical restore will omit unavailable extension binary: $recovery_extension"
+  fi
+done < <(awk '$4 == "EXTENSION" && $5 == "-" { print $6 }' "$WORK_DIR/archive.list" | sort -u)
+
 while IFS='|' read -r recovery_role recovery_inherit; do
   case "$recovery_role" in
     ''|'#'*) continue ;;
@@ -317,6 +344,7 @@ done <"$ROLES_FILE"
   --exit-on-error \
   --no-owner \
   --no-acl \
+  --use-list="$RESTORE_LIST" \
   --host="$PG_SOCKET" \
   --port="$PORT" \
   --dbname=goodbase_restore_verify \
@@ -354,6 +382,13 @@ PROJECT_COUNT="$(
     "SELECT COUNT(*) FROM backend_projects;"
 )"
 
+MISSING_EXTENSIONS_JSON="["
+for recovery_extension in "${MISSING_EXTENSIONS[@]}"; do
+  [ "$MISSING_EXTENSIONS_JSON" = "[" ] || MISSING_EXTENSIONS_JSON+=","
+  MISSING_EXTENSIONS_JSON+="\"$(json_escape "$recovery_extension")\""
+done
+MISSING_EXTENSIONS_JSON+="]"
+
 "$PG_BIN/pg_ctl" -D "$PG_DATA" -m fast -w stop >/dev/null
 PG_STARTED=0
 
@@ -378,6 +413,7 @@ cat >"$TEMP_EVIDENCE" <<EOF
   "decryptionVerified": true,
   "archiveEntries": $ARCHIVE_ENTRIES,
   "isolatedRestoreVerified": true,
+  "unavailableExtensionBinaries": $MISSING_EXTENSIONS_JSON,
   "walChecksumVerified": true,
   "baseArchiveVerified": true,
   "restoredPublicTables": $TABLE_COUNT,
