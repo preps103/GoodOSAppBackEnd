@@ -142,7 +142,7 @@ async function processDueDeliveries(limit=25) {
      FROM goodbase_alert_delivery_attempts delivery JOIN goodbase_alert_instances alert ON alert.id=delivery.alert_instance_id
      LEFT JOIN goodbase_on_call_policies policy ON policy.id=delivery.policy_id
      WHERE delivery.status IN('pending','retrying') AND delivery.next_attempt_at<=NOW()
-     ORDER BY delivery.next_attempt_at FOR UPDATE SKIP LOCKED LIMIT $1`,[Math.min(Math.max(Number(limit)||25,1),100)]);
+     ORDER BY delivery.next_attempt_at FOR UPDATE OF delivery SKIP LOCKED LIMIT $1`,[Math.min(Math.max(Number(limit)||25,1),100)]);
   const processed=[];
   for (const item of due.rows) {
     try {

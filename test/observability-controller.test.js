@@ -68,6 +68,7 @@ test("outbound alerts use signed relay delivery, durable routing, and no mail cr
   assert.match(service, /deduplication_key/);
   assert.match(service, /isQuietHours/);
   assert.match(service, /escalation_step/);
+  assert.match(service, /FOR UPDATE OF delivery SKIP LOCKED/);
   assert.match(routes, /GOODBASE_ALERT_REPLAY_DETECTED/);
   assert.match(routes, /alerts\/test/);
   assert.match(migration, /goodbase_alert_delivery_attempts/);
