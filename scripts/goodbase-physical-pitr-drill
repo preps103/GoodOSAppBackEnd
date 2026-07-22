@@ -272,7 +272,7 @@ chmod 400 "$TEMP_EVIDENCE"; mv "$TEMP_EVIDENCE" "$EVIDENCE_FILE"; sha256sum "$EV
 VERIFY_ID="verify_${DRILL_ID}"
 sql -v verify_id="$VERIFY_ID" -v backup_id="$BACKUP_ID" -v rpo="$RPO_MINUTES" -v rto="$RTO_MINUTES" -v target="$TARGET_TIME" -v lsn="$REPLAY_LSN" -v evidence="$EVIDENCE_FILE" <<'SQL' >/dev/null
 INSERT INTO backend_restore_verifications(id,backup_inventory_id,verification_type,target_environment,status,rpo_minutes,rto_minutes,started_at,completed_at,notes,evidence_json,created_at)
-VALUES(:'verify_id',:'backup_id','physical_pitr_replay','isolated-physical-cluster','passed',:'rpo'::numeric,:'rto'::numeric,NOW()-make_interval(secs=(:'rto'::numeric*60)::double precision),NOW(),'Encrypted physical base plus archived WAL replay passed transaction-boundary and Goodbase smoke checks.',jsonb_build_object('targetTime',:'target','replayLsn',:'lsn','preTargetPresent',true,'postTargetAbsent',true,'auth',true,'rest',true,'graphql',true,'realtime',true,'storage',true,'worker',true,'evidenceFile',:'evidence','temporaryClusterDestroyed',true),NOW());
+VALUES(:'verify_id',:'backup_id','physical_pitr_replay','isolated-physical-cluster','passed',:'rpo'::numeric,:'rto'::numeric,NOW()-make_interval(secs => (:'rto'::numeric*60)::double precision),NOW(),'Encrypted physical base plus archived WAL replay passed transaction-boundary and Goodbase smoke checks.',jsonb_build_object('targetTime',:'target','replayLsn',:'lsn','preTargetPresent',true,'postTargetAbsent',true,'auth',true,'rest',true,'graphql',true,'realtime',true,'storage',true,'worker',true,'evidenceFile',:'evidence','temporaryClusterDestroyed',true),NOW());
 SQL
 
 log "Physical PITR drill passed: RPO ${RPO_MINUTES}m, RTO ${RTO_MINUTES}m, evidence $EVIDENCE_FILE"

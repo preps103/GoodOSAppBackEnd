@@ -7,4 +7,5 @@ test("the PostgreSQL restore user can traverse the isolated work root",()=>asser
 test("recovered PostgreSQL startup failures are retained in the service journal",()=>assert.match(read("scripts/goodbase-physical-pitr-drill"),/tail -n 120 \"\$WORK_DIR\/postgres[.]log\"/));
 test("Debian physical backups receive an isolated PostgreSQL configuration",()=>{const source=read("scripts/goodbase-physical-pitr-drill");assert.match(source,/\$PG_DATA\/postgresql[.]conf/);for(const setting of ["max_connections","max_worker_processes","max_wal_senders","max_prepared_transactions","wal_level"])assert.match(source,new RegExp(setting));assert.doesNotMatch(source,/config_file=\/etc\/postgresql/);});
 test("recovery target uses PostgreSQL's accepted timestamp format",()=>assert.match(read("scripts/goodbase-physical-pitr-drill"),/YYYY-MM-DD HH24:MI:SS[.]US.*[+]00/));
+test("restore evidence uses valid PostgreSQL named-argument syntax",()=>assert.match(read("scripts/goodbase-physical-pitr-drill"),/make_interval[(]secs =>/));
 test("macOS recovery nodes set a stable locale before starting PostgreSQL",()=>assert.match(read("scripts/goodbase-recovery-node.sh"),/export LC_ALL=C/));
