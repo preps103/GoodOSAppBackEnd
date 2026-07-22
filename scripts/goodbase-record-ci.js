@@ -8,6 +8,7 @@ const repository = process.env.GOODBASE_GITHUB_REPOSITORY || "preps103/GoodOSApp
 const commit = String(process.env.GOODBASE_RELEASE_COMMIT || "").toLowerCase();
 const requiredRunId = process.env.GOODBASE_REQUIRED_CI_RUN_ID;
 const assuranceRunId = process.env.GOODBASE_ASSURANCE_RUN_ID;
+const sdkConformanceRunId = process.env.GOODBASE_SDK_CONFORMANCE_RUN_ID;
 const token = process.env.GITHUB_TOKEN || "";
 
 function requireValue(name, value) {
@@ -51,9 +52,11 @@ async function main() {
   if (!validCommit(commit) || commit.length !== 40) throw new Error("GOODBASE_RELEASE_COMMIT must be the exact 40-character Git commit.");
   requireValue("GOODBASE_REQUIRED_CI_RUN_ID", requiredRunId);
   requireValue("GOODBASE_ASSURANCE_RUN_ID", assuranceRunId);
+  requireValue("GOODBASE_SDK_CONFORMANCE_RUN_ID", sdkConformanceRunId);
   const runs = await Promise.all([
     verifyRun(requiredRunId, "Goodbase Required CI", "goodbase-required-ci-"),
-    verifyRun(assuranceRunId, "Goodbase Assurance", "goodbase-release-evidence")
+    verifyRun(assuranceRunId, "Goodbase Assurance", "goodbase-release-evidence"),
+    verifyRun(sdkConformanceRunId, "Goodbase SDK Conformance", "goodbase-sdk-conformance-")
   ]);
   const report = { schemaVersion: 1, verifiedAt: new Date().toISOString(), repository, releaseCommit: commit, status: "passed", runs };
   report.evidence = await preserveEvidence({ type: "ci", commit, status: "passed", report, database });
