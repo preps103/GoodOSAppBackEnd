@@ -611,6 +611,9 @@ async function main() {
     database:
       timerActive(
         "goodbase-backup.timer"
+      ) ||
+      timerActive(
+        "goodos-db-backup.timer"
       ),
     enterprise:
       timerActive(
