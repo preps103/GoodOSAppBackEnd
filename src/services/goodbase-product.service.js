@@ -4,6 +4,8 @@ const crypto = require("crypto");
 const database = require("../config/database");
 const env = require("../config/env");
 const { getSecretValue } = require("./secret.service");
+const { observeBrowserPerformance } = require("../telemetry/metrics");
+const symbolication = require("./goodbase-symbolication.service");
 
 const DEFAULT_SCOPE = Object.freeze({ organizationId: "org_goodos", projectId: "proj_goodos_platform", environmentId: "env_goodos_production" });
 const SENSITIVE_KEYS = /password|passcode|secret|token|authorization|cookie|session.?key|api.?key|credit.?card|cvv/i;
@@ -50,11 +52,14 @@ async function ingestAnalytics({ scope = DEFAULT_SCOPE, userId = null, body, req
 async function ingestCrash({ scope = DEFAULT_SCOPE, userId = null, body }) {
   const appId=clean(body?.appId,100), platform=clean(body?.platform,30), title=clean(body?.title||body?.exceptionType||"Unhandled error",300);
   if(!appId||!platform||!body?.occurredAt)throw Object.assign(new Error("App, platform, and occurrence time are required."),{statusCode:400});
-  const stack=clean(body?.stackTrace,32000), fingerprint=sha256(`${platform}:${clean(body?.exceptionType,200)}:${stack.split("\n").slice(0,8).join("\n")}`);
+  const rawStack=clean(body?.stackTrace,32000);
+  const releaseId=await symbolication.findRelease({scope,appId,releaseId:body?.releaseId,releaseName:body?.release});
+  const mapped=await symbolication.symbolicateStack({releaseId,stack:rawStack});
+  const stack=mapped.stack, fingerprint=sha256(`${platform}:${clean(body?.exceptionType,200)}:${stack.split("\n").slice(0,8).join("\n")}`);
   const client=await database.pool.connect();try{await client.query("BEGIN");
     const issue=await client.query(`INSERT INTO goodbase_crash_issues(organization_id,project_id,environment_id,app_id,fingerprint,platform,exception_type,title,first_release,last_release,occurrence_count,impacted_users) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,1,$10) ON CONFLICT(app_id,fingerprint) DO UPDATE SET occurrence_count=goodbase_crash_issues.occurrence_count+1,last_release=EXCLUDED.last_release,last_seen_at=NOW(),status=CASE WHEN goodbase_crash_issues.status='resolved' THEN 'regressed' ELSE goodbase_crash_issues.status END,impacted_users=goodbase_crash_issues.impacted_users+CASE WHEN $10=1 THEN 1 ELSE 0 END RETURNING *`,[...scopeParams(scope),appId,fingerprint,platform,clean(body?.exceptionType,200)||null,title,clean(body?.release,100)||null,userId||body?.anonymousId?1:0]);
-    await client.query(`INSERT INTO goodbase_crash_occurrences(issue_id,user_id,anonymous_id,fatal,error_message,stack_trace,breadcrumbs_json,custom_keys_json,device_json,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9::jsonb,$10)`,[issue.rows[0].id,userId,clean(body?.anonymousId,200)||null,body?.fatal!==false,clean(body?.message,4000)||null,stack||null,JSON.stringify(boundedJson(body?.breadcrumbs,32768)),JSON.stringify(boundedJson(body?.customKeys,16384)),JSON.stringify(boundedJson(body?.device,16384)),new Date(body.occurredAt).toISOString()]);
-    await client.query("COMMIT");return {issueId:issue.rows[0].id,fingerprint,status:issue.rows[0].status};
+    await client.query(`INSERT INTO goodbase_crash_occurrences(issue_id,release_id,user_id,anonymous_id,fatal,error_message,stack_trace,breadcrumbs_json,custom_keys_json,device_json,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11)`,[issue.rows[0].id,releaseId,userId,clean(body?.anonymousId,200)||null,body?.fatal!==false,clean(body?.message,4000)||null,stack||null,JSON.stringify(boundedJson(body?.breadcrumbs,32768)),JSON.stringify(boundedJson(body?.customKeys,16384)),JSON.stringify(boundedJson(body?.device,16384)),new Date(body.occurredAt).toISOString()]);
+    await client.query("COMMIT");return {issueId:issue.rows[0].id,fingerprint,status:issue.rows[0].status,symbolicated:mapped.symbolicated};
   }catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
 }
 
@@ -62,7 +67,9 @@ async function ingestTrace({ scope=DEFAULT_SCOPE,userId=null,body }) {
   const appId=clean(body?.appId,100),type=clean(body?.type,30),name=clean(body?.name,200),duration=Number(body?.durationMs);
   if(!appId||!["startup","screen","network","custom","anr"].includes(type)||!name||!Number.isFinite(duration)||duration<0||duration>86400000)throw Object.assign(new Error("Trace payload is invalid."),{statusCode:400});
   const rate=Math.min(1,Math.max(0,Number(body?.sampleRate??0.1)));const sampleKey=sha256(`${appId}:${userId||body?.anonymousId||"unknown"}:${name}`);if(parseInt(sampleKey.slice(0,8),16)/0xffffffff>rate)return{sampled:false};
-  const result=await database.query(`INSERT INTO goodbase_performance_traces(organization_id,project_id,environment_id,app_id,user_id,trace_type,name,duration_ms,success,platform,device_class,os_version,network_type,attributes_json,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15) RETURNING id`,[...scopeParams(scope),appId,userId,type,name,duration,body?.success!==false,clean(body?.platform,30)||null,clean(body?.deviceClass,50)||null,clean(body?.osVersion,50)||null,clean(body?.networkType,30)||null,JSON.stringify(boundedJson(body?.attributes,16384)),new Date(body?.occurredAt||Date.now()).toISOString()]);return{sampled:true,traceId:result.rows[0].id};
+  const result=await database.query(`INSERT INTO goodbase_performance_traces(organization_id,project_id,environment_id,app_id,user_id,trace_type,name,duration_ms,success,platform,device_class,os_version,network_type,attributes_json,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15) RETURNING id`,[...scopeParams(scope),appId,userId,type,name,duration,body?.success!==false,clean(body?.platform,30)||null,clean(body?.deviceClass,50)||null,clean(body?.osVersion,50)||null,clean(body?.networkType,30)||null,JSON.stringify(boundedJson(body?.attributes,16384)),new Date(body?.occurredAt||Date.now()).toISOString()]);
+  observeBrowserPerformance({organizationId:scope.organizationId,appId,type,durationMs:duration,success:body?.success!==false});
+  return{sampled:true,traceId:result.rows[0].id};
 }
 
 function matchesCondition(condition, context, subject) {

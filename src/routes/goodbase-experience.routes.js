@@ -3,15 +3,18 @@
 const crypto = require("crypto");
 const express = require("express");
 const rateLimit = require("express-rate-limit");
+const multer = require("multer");
 const database = require("../config/database");
 const authRequired = require("../middleware/authRequired");
 const tenantContext = require("../middleware/tenantContext");
 const { dataPlaneAdminRequired } = require("./data-plane.routes");
 const product = require("../services/goodbase-product.service");
+const symbolication = require("../services/goodbase-symbolication.service");
 
 const publicRouter = express.Router();
 const authenticatedRouter = express.Router();
 const publicLimiter = rateLimit({ windowMs:60000,limit:120,standardHeaders:true,legacyHeaders:false });
+const symbolUpload = multer({storage:multer.memoryStorage(),limits:{fileSize:20*1024*1024,files:1,fields:10}});
 function scope(request){return request.tenantContext||product.DEFAULT_SCOPE;}
 function values(tenant){return[tenant.organizationId,tenant.projectId,tenant.environmentId];}
 function where(alias=""){const p=alias?`${alias}.`:"";return`${p}organization_id=$1 AND ${p}project_id=$2 AND ${p}environment_id=$3`;}
@@ -44,6 +47,11 @@ authenticatedRouter.post("/in-app/:campaignId/events",publicLimiter,async(reques
 }catch(error){return next(error);}});
 
 authenticatedRouter.use(dataPlaneAdminRequired);
+authenticatedRouter.post("/telemetry/symbol-files",mfaRequired,symbolUpload.single("sourceMap"),async(request,response,next)=>{try{
+  if(!request.file)return response.status(400).json({success:false,message:"A Source Map v3 file is required."});
+  const symbolFile=await symbolication.saveSourceMap({scope:scope(request),releaseId:request.body?.releaseId,contents:request.file.buffer});
+  return response.status(201).json({success:true,symbolFile});
+}catch(error){return next(error);}});
 authenticatedRouter.get("/studio/overview",async(request,response,next)=>{try{
   const tenant=scope(request),params=values(tenant),result=await database.query(`SELECT
     (SELECT COUNT(*)::int FROM goodbase_distribution_providers WHERE ${where()} AND status='ready') ready_distribution_providers,

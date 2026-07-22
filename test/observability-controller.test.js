@@ -47,6 +47,7 @@ test("telemetry retention, correlation, probes, and SLO alerts are configured", 
   assert.match(rules, /GoodbaseDnsResolutionFailure/);
   assert.match(datasources, /tracesToLogsV2/);
   assert.match(datasources, /matcherRegex:.*traceId/);
+  assert.match(read("deploy/observability/config/grafana/dashboards/goodbase-overview.json"), /goodbase_tenant_id/);
 });
 
 test("Grafana is published only through the canonical Goodbase subpath", () => {
@@ -67,6 +68,21 @@ test("Goodbase API and worker export telemetry without exposing secrets", () => 
   assert.match(bootstrap, /OTEL_EXPORTER_OTLP_ENDPOINT/);
   assert.match(bootstrap, /enhancedDatabaseReporting: false/);
   assert.match(middleware, /goodbase\.tenant\.id/);
+  assert.match(read("src/services/goodbase-product.service.js"), /observeBrowserPerformance/);
   assert.match(ecosystem, /http:\/\/127\.0\.0\.1:4318/);
   assert.doesNotMatch(bootstrap, /DATABASE_URL|JWT_SECRET|SMTP_PASS/);
+});
+
+test("browser telemetry and JavaScript source maps feed production observability", () => {
+  const product = read("src/services/goodbase-product.service.js");
+  const symbols = read("src/services/goodbase-symbolication.service.js");
+  const routes = read("src/routes/goodbase-experience.routes.js");
+
+  assert.match(product, /observeBrowserPerformance/);
+  assert.match(product, /symbolicateStack/);
+  assert.match(symbols, /SourceMapConsumer\.with/);
+  assert.match(symbols, /goodbase_symbol_files/);
+  assert.match(symbols, /20 \* 1024 \* 1024/);
+  assert.match(routes, /telemetry\/symbol-files/);
+  assert.match(routes, /mfaRequired,symbolUpload/);
 });

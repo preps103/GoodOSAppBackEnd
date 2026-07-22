@@ -52,14 +52,14 @@ groups:
         annotations:
           summary: "Goodbase telemetry export is dropping data"
       - alert: GoodbaseHostDiskLow
-        expr: (system_filesystem_utilization{mountpoint="/"} > 0.85)
+        expr: sum(goodbase_system_filesystem_usage_bytes{mountpoint="/",state="used"}) / clamp_min(sum(goodbase_system_filesystem_usage_bytes{mountpoint="/"}), 1) > 0.85
         for: 15m
         labels:
           severity: warning
         annotations:
           summary: "Goodbase production disk is over 85% full"
       - alert: GoodbaseHostMemoryPressure
-        expr: system_memory_utilization{state="used"} > 0.90
+        expr: sum(goodbase_system_memory_usage_bytes{state="used"}) / clamp_min(sum(goodbase_system_memory_usage_bytes), 1) > 0.90
         for: 10m
         labels:
           severity: warning

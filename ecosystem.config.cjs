@@ -16,6 +16,7 @@ const runtimeEnv = {
   NODE_ENV: "production",
   GOODBASE_RELEASE_COMMIT: releaseCommit(),
   GOODOS_VOICE_DB_PATH: "/var/lib/goodapp-backend/goodos-voice-db.json",
+  GOODBASE_SYMBOL_STORAGE_ROOT: "/var/lib/goodapp-backend/symbols",
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://127.0.0.1:4318",
   OTEL_METRIC_EXPORT_INTERVAL: "15000"
 };

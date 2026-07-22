@@ -20,6 +20,10 @@ const workerTickDuration = meter.createHistogram("goodbase.worker.tick.duration"
 const workerEvents = meter.createCounter("goodbase.worker.events", {
   description: "Goodbase worker events processed",
 });
+const browserPerformance = meter.createHistogram("goodbase.browser.performance.duration", {
+  description: "Sampled Goodbase browser and client performance duration",
+  unit: "ms",
+});
 
 function bounded(value, fallback = "unknown") {
   const text = String(value || "").trim();
@@ -45,7 +49,17 @@ function observeWorkerTick({ status, durationMs, eventCount = 0 }) {
   if (eventCount > 0) workerEvents.add(Number(eventCount), attributes);
 }
 
+function observeBrowserPerformance({ organizationId, appId, type, durationMs, success }) {
+  browserPerformance.record(Number(durationMs), {
+    "goodbase.tenant.id": bounded(organizationId, "unassigned"),
+    "goodbase.app.id": bounded(appId),
+    "goodbase.telemetry.type": bounded(type),
+    "goodbase.telemetry.success": success !== false,
+  });
+}
+
 module.exports = {
   observeHttpRequest,
   observeWorkerTick,
+  observeBrowserPerformance,
 };

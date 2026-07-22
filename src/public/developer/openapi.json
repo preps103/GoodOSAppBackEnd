@@ -3186,6 +3186,9 @@
       "/api/goodbase/v1/product/telemetry/crashes": {
         "post": {"summary":"Capture a client crash occurrence","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"202":{"description":"Crash accepted"},"400":{"description":"Invalid crash payload"}}}
       },
+      "/api/goodbase/v1/experience/telemetry/symbol-files": {
+        "post": {"summary":"Upload a Source Map v3 file for JavaScript crash symbolication","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"requestBody":{"required":true,"content":{"multipart/form-data":{"schema":{"type":"object","required":["releaseId","sourceMap"],"properties":{"releaseId":{"type":"string","format":"uuid"},"sourceMap":{"type":"string","format":"binary"}}}}}},"responses":{"201":{"description":"Source map validated, checksummed, and activated"},"400":{"description":"Invalid source map"},"403":{"description":"Administrator role required"},"428":{"description":"Privileged MFA required"}}}
+      },
       "/api/goodbase/v1/product/experiments/{appId}/assignments": {
         "get": {"summary":"Resolve sticky experiment assignments","tags":["Goodbase Product Platform"],"security":[{"GoodOSBearer":[]}],"responses":{"200":{"description":"Stable assignments and variant payloads"}}}
       },
