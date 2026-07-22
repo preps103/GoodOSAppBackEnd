@@ -61,6 +61,7 @@ test("outbound alerts use signed relay delivery, durable routing, and no mail cr
   const compose = read("deploy/observability/compose.yaml");
 
   assert.match(relay, /createHmac\("sha256"/);
+  assert.match(relay, /JSON\.stringify\(JSON\.parse\(body\)\)/);
   assert.match(relay, /stats\.retries/);
   assert.match(relay, /\/metrics/);
   assert.match(service, /GOODBASE_ALERT_WEBHOOK_SECRET_FILE/);
