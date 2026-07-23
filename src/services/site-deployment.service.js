@@ -11,6 +11,10 @@ const { pool, query } = database;
 const BACKUP_ROOT = "/var/backups/goodos-site-updates";
 const ALLOWED_ROOTS = ["/home", "/var/www", "/opt"];
 const MAX_OUTPUT = 12000;
+const PM2_HOME = path.resolve(
+  process.env.GOODOS_PM2_HOME ||
+  "/home/mgoodlo3/.pm2"
+);
 
 function identifier(prefix) {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -231,8 +235,17 @@ function runCommand(command, args, options = {}) {
     )
   );
 
+  const commandArgs =
+    command === "git" && cwd
+      ? [
+          "-c",
+          `safe.directory=${path.resolve(cwd)}`,
+          ...(args || []),
+        ]
+      : (args || []);
+
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args || [], {
+    const child = spawn(command, commandArgs, {
       cwd,
       env: { ...process.env, ...(env || {}) },
       stdio: ["ignore", "pipe", "pipe"],
@@ -756,14 +769,24 @@ async function executeDeployment(runId) {
 }
 
 async function discoverServerApps() {
-  const result = await runCommand(
-    "pm2",
-    ["jlist"],
-    {
-      timeoutMs: 60000,
-      maxOutput: 5 * 1024 * 1024,
-    }
-  );
+  let result;
+  try {
+    result = await runCommand(
+      "pm2",
+      ["jlist"],
+      {
+        timeoutMs: 60000,
+        maxOutput: 5 * 1024 * 1024,
+        env: { PM2_HOME },
+      }
+    );
+  } catch {
+    throw statusError(
+      503,
+      "PM2 application discovery is unavailable. Verify GOODOS_PM2_HOME and deployment-worker permissions.",
+      "PM2_DISCOVERY_UNAVAILABLE"
+    );
+  }
 
   const rawOutput = String(
     result.stdout || ""
