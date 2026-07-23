@@ -388,6 +388,7 @@ app.use(
       "X-Requested-With",
       "X-Goodbase-API-Key",
       "X-GoodOS-API-Key",
+      "X-GoodBase-Client",
       "X-Request-ID",
       "Traceparent"
     ]

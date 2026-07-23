@@ -29,6 +29,11 @@
       "GoodOSBearer": {
         "type": "http",
         "scheme": "bearer"
+      },
+      "GoodBaseSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "goodos_session"
       }
     },
     "schemas": {
@@ -87,6 +92,77 @@
     }
   },
   "paths": {
+    "/api/goodspeech/v1/speech": {
+      "post": {
+        "summary": "Generate speech through GoodBase",
+        "description": "Authenticated, MFA-aware GoodSpeech generation. Provider credentials remain server-side and cloned samples are processed transiently.",
+        "servers": [
+          {
+            "url": "https://base.goodos.app"
+          }
+        ],
+        "security": [
+          {
+            "GoodBaseSession": []
+          },
+          {
+            "GoodOSBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text", "voice"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "voice": {
+                    "type": "object"
+                  },
+                  "style": {
+                    "type": "string"
+                  },
+                  "tone": {
+                    "type": "string"
+                  },
+                  "intensity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "contextualExpressiveness": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Base64-encoded audio generated successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "429": {
+            "description": "Per-user generation limit exceeded"
+          },
+          "502": {
+            "description": "Speech provider unavailable"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Public API health check",

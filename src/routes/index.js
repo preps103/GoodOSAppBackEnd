@@ -16,6 +16,7 @@ const tableEditorRoutes = require("./table-editor.routes");
 const sqlEditorRoutes = require("./sql-editor.routes");
 const databaseManagementRoutes = require("./database-management.routes");
 const voiceRoutes = require("./voice.routes");
+const goodSpeechRoutes = require("./goodspeech.routes");
 const teamsRoutes = require("./teams.routes");
 
 
@@ -288,6 +289,7 @@ router.use(
   apiGatewayV2PublicRoutes
 );
 router.use("/api/voice", voiceRoutes);
+router.use("/api/goodspeech/v1", goodSpeechRoutes);
 router.use("/api/teams", teamsRoutes);
 router.use(
   "/storage/v2",
