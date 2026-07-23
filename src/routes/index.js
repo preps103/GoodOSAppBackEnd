@@ -18,6 +18,7 @@ const databaseManagementRoutes = require("./database-management.routes");
 const voiceRoutes = require("./voice.routes");
 const goodSpeechRoutes = require("./goodspeech.routes");
 const teamsRoutes = require("./teams.routes");
+const goodboostRoutes = require("./goodboost.routes");
 
 
 const billingRoutes = require("./billing.routes");
@@ -280,6 +281,7 @@ router.use("/api/internal/observability", goodbaseAlertDeliveryRoutes.receiverRo
 router.use("/api/apps", appsRoutes);
 router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);
+router.use("/api/goodboost", goodboostRoutes);
 router.use("/api/auth/v3", goodbaseAuthProductRoutes);
 router.use("/api/admin", adminRoutes);
 router.use("/api/v1", publicApiRoutes);
