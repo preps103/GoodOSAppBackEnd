@@ -24,6 +24,7 @@ const tenantContext =
 const router = express.Router();
 
 const CALLBACK_URL =
+  process.env.OIDC_CALLBACK_URL ||
   "https://base.goodos.app/api/oidc/callback";
 
 const DEFAULT_RETURN_TO =
@@ -191,7 +192,12 @@ function safeReturnTo(value) {
 
     const allowed = new Set([
       "https://goodos.app",
+      "https://app.goodos.app",
       "https://base.goodos.app",
+      "https://editor.goodos.app",
+      "https://qr.goodos.app",
+      "https://trust.goodos.app",
+      "https://trusts.goodos.app",
     ]);
 
     if (!allowed.has(target.origin)) {
@@ -324,6 +330,8 @@ function federatedMfaVerified(
 async function activeProvider(
   providerId
 ) {
+  await ensureSocialProvider(providerId);
+
   const result = await query(
     `
       SELECT
@@ -354,6 +362,111 @@ async function activeProvider(
   );
 
   return result.rows[0] || null;
+}
+
+const socialProviderDefinitions = {
+  google: {
+    displayName: "Google",
+    issuerUrl: "https://accounts.google.com",
+    clientIdEnvironmentKey: "GOOGLE_CLIENT_ID",
+    secretEnvironmentKey: "GOOGLE_CLIENT_SECRET",
+  },
+  apple: {
+    displayName: "Apple",
+    issuerUrl: "https://appleid.apple.com",
+    clientIdEnvironmentKey: "APPLE_CLIENT_ID",
+    secretEnvironmentKey: "APPLE_CLIENT_SECRET",
+  },
+};
+
+async function ensureSocialProvider(providerId) {
+  const definition =
+    socialProviderDefinitions[providerId];
+
+  if (!definition) {
+    return;
+  }
+
+  const clientId = String(
+    process.env[
+      definition.clientIdEnvironmentKey
+    ] || ""
+  ).trim();
+
+  const clientSecret = String(
+    process.env[
+      definition.secretEnvironmentKey
+    ] || ""
+  ).trim();
+
+  if (!clientId || !clientSecret) {
+    throw oidcError(
+      `${definition.displayName} sign-in is not configured in GoodBase.`,
+      503,
+      "SOCIAL_PROVIDER_NOT_CONFIGURED"
+    );
+  }
+
+  await query(
+    `
+      INSERT INTO backend_identity_providers (
+        id,
+        organization_id,
+        provider_type,
+        name,
+        display_name,
+        issuer_url,
+        client_id,
+        secret_reference,
+        status,
+        domains,
+        metadata_json
+      )
+      VALUES (
+        $1,
+        'org_goodos',
+        'oidc',
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        'active',
+        ARRAY[]::text[],
+        jsonb_build_object(
+          'socialProvider',
+          true,
+          'jitEnabled',
+          true,
+          'autoLinkVerifiedUsers',
+          true,
+          'defaultRole',
+          'user'
+        )
+      )
+      ON CONFLICT (id)
+      DO UPDATE SET
+        display_name = EXCLUDED.display_name,
+        issuer_url = EXCLUDED.issuer_url,
+        client_id = EXCLUDED.client_id,
+        secret_reference = EXCLUDED.secret_reference,
+        status = 'active',
+        metadata_json =
+          COALESCE(
+            backend_identity_providers.metadata_json,
+            '{}'::jsonb
+          ) ||
+          EXCLUDED.metadata_json,
+        updated_at = NOW()
+    `,
+    [
+      providerId,
+      definition.displayName,
+      definition.issuerUrl,
+      clientId,
+      definition.secretEnvironmentKey,
+    ]
+  );
 }
 
 async function identityAdminRequired(
@@ -552,7 +665,9 @@ router.get(
           provider
             .verified_domain_count ||
           0
-        ) < 1
+        ) < 1 &&
+        providerMetadata(provider)
+          .socialProvider !== true
       ) {
         return response
           .status(409)
@@ -1123,8 +1238,12 @@ router.get(
         const domain =
           emailDomain(email);
 
-        const verifiedDomainResult =
-          await databaseClient.query(
+        if (
+          metadata.socialProvider !==
+          true
+        ) {
+          const verifiedDomainResult =
+            await databaseClient.query(
             `
               SELECT id
               FROM backend_identity_domains
@@ -1142,15 +1261,16 @@ router.get(
             ]
           );
 
-        if (
-          verifiedDomainResult
-            .rows.length !== 1
-        ) {
-          throw oidcError(
-            "The email domain is not verified for this identity provider.",
-            403,
-            "OIDC_EMAIL_DOMAIN_NOT_VERIFIED"
-          );
+          if (
+            verifiedDomainResult
+              .rows.length !== 1
+          ) {
+            throw oidcError(
+              "The email domain is not verified for this identity provider.",
+              403,
+              "OIDC_EMAIL_DOMAIN_NOT_VERIFIED"
+            );
+          }
         }
 
         const accountResult =
