@@ -192,6 +192,8 @@ function safeReturnTo(value) {
     const allowed = new Set([
       "https://app.goodos.app",
       "https://backend.goodos.app",
+      "https://trust.goodos.app",
+      "https://trusts.goodos.app",
     ]);
 
     if (!allowed.has(target.origin)) {
