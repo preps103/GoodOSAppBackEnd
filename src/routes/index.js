@@ -19,6 +19,7 @@ const voiceRoutes = require("./voice.routes");
 const goodSpeechRoutes = require("./goodspeech.routes");
 const teamsRoutes = require("./teams.routes");
 const goodboostRoutes = require("./goodboost.routes");
+const goodswapzRoutes = require("./goodswapz.routes");
 
 
 const billingRoutes = require("./billing.routes");
@@ -282,6 +283,7 @@ router.use("/api/apps", appsRoutes);
 router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);
 router.use("/api/goodboost", goodboostRoutes);
+router.use("/api/swapz/v1", goodswapzRoutes);
 router.use("/api/auth/v3", goodbaseAuthProductRoutes);
 router.use("/api/admin", adminRoutes);
 router.use("/api/v1", publicApiRoutes);
