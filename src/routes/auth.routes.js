@@ -1671,6 +1671,32 @@ router.post("/mfa/disable", authRequired, async (req, res) => {
 router.post("/password-reset/request", passwordResetLimiter, async (req, res) => {
   try {
     const email = String(req.body?.email || "").trim().toLowerCase();
+    const requestedReturnTo = String(req.body?.returnTo || "").trim();
+    let resetReturnTo = "https://base.goodos.app/password-reset";
+
+    if (requestedReturnTo) {
+      try {
+        const parsed = new URL(requestedReturnTo);
+        const allowedHost =
+          parsed.hostname === "goodos.app" ||
+          parsed.hostname.endsWith(".goodos.app");
+
+        if (
+          parsed.protocol === "https:" &&
+          allowedHost &&
+          !parsed.username &&
+          !parsed.password &&
+          !parsed.port
+        ) {
+          parsed.search = "";
+          parsed.hash = "";
+          resetReturnTo =
+            parsed.toString().replace(/\/+$/, "");
+        }
+      } catch {
+        // Invalid return targets fall back to the canonical GoodBase page.
+      }
+    }
 
     if (!email || !email.includes("@")) {
       return error(res, "Valid email is required", 400);
@@ -1728,7 +1754,7 @@ router.post("/password-reset/request", passwordResetLimiter, async (req, res) =>
         queueEmail: true,
         variables: {
           email: user.email,
-          resetUrl: `https://base.goodos.app/password-reset/${rawToken}`
+          resetUrl: `${resetReturnTo}?reset_token=${encodeURIComponent(rawToken)}`
         },
         payload: {
           resetTokenId: tokenId
