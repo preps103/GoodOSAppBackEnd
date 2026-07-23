@@ -202,4 +202,41 @@ router.patch("/listings/:id/status", async (req, res, next) => {
   } catch (error) { return next(error); }
 });
 
+router.post("/ai/estimate-valuation", async (req, res) => {
+  const platform = clean(req.body?.platform, 40);
+  const subscribers = number(req.body?.subscribers, 1, 2_000_000_000);
+  const revenue = number(req.body?.revenue || 0, 0, 100_000_000);
+  if (!PLATFORMS.has(platform) || !subscribers || revenue === null) {
+    return res.status(400).json({ success: false, message: "Valid platform, followers, and revenue are required." });
+  }
+  const platformRate = { YouTube: 0.035, Instagram: 0.018, TikTok: 0.012, "Twitter/X": 0.01, Telegram: 0.014 }[platform];
+  const audienceValue = subscribers * platformRate;
+  const revenueValue = revenue * 30;
+  const midpoint = Math.max(50, audienceValue + revenueValue);
+  return res.json({
+    success: true,
+    low: Math.round(midpoint * 0.8),
+    high: Math.round(midpoint * 1.2),
+    reasoning: "GoodBase estimated this range from audience size, platform, and a 30-month revenue multiple. Ownership, engagement evidence, account health, and transfer risk can change the final value.",
+  });
+});
+
+router.post("/ai/generate-description", async (req, res) => {
+  const platform = clean(req.body?.platform, 40);
+  const category = clean(req.body?.category, 80);
+  const title = clean(req.body?.title, 120);
+  const notes = clean(req.body?.notes, 800);
+  const subscribers = number(req.body?.subscribers, 1, 2_000_000_000);
+  const revenue = number(req.body?.revenue || 0, 0, 100_000_000);
+  if (!PLATFORMS.has(platform) || category.length < 2 || !subscribers || revenue === null) {
+    return res.status(400).json({ success: false, message: "Platform, category, and followers are required." });
+  }
+  const revenueText = revenue > 0 ? ` It currently reports approximately $${Math.round(revenue).toLocaleString("en-US")} in monthly revenue.` : "";
+  const noteText = notes ? ` Additional seller notes: ${notes}` : "";
+  return res.json({
+    success: true,
+    description: `${title || `${category} ${platform} account`} is an established ${category} account on ${platform} with approximately ${Math.round(subscribers).toLocaleString("en-US")} followers.${revenueText}${noteText} The account will be transferred only after GoodEscrow confirms funding and ownership review is complete.`,
+  });
+});
+
 module.exports = router;

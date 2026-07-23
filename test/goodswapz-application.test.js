@@ -24,5 +24,8 @@ test("GoodSwapz seller APIs are authenticated, origin-bound, and ownership-scope
   assert.match(route, /listing\.user_id=\$1/);
   assert.match(route, /WHERE id=\$1 AND user_id=\$2/);
   assert.match(route, /input\.acceptsSellerTerms !== true/);
+  assert.match(route, /router\.post\("\/ai\/estimate-valuation"/);
+  assert.match(route, /router\.post\("\/ai\/generate-description"/);
+  assert.match(route, /GoodBase estimated this range/);
   assert.doesNotMatch(route, /req\.body\?\.userId/);
 });
