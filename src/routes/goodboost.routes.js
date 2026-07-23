@@ -148,6 +148,8 @@ router.patch("/profile", async (req, res, next) => {
     const safeSettings = {
       emailNotifications: settings.emailNotifications !== false,
       dailyReports: settings.dailyReports !== false,
+      onboardingCompleted: settings.onboardingCompleted === true,
+      onboardingVersion: settings.onboardingCompleted === true ? 1 : 0,
       webhookUrl: webhook || undefined,
     };
     const result = await database.query(

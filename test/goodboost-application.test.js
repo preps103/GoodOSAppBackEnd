@@ -28,3 +28,9 @@ test("GoodBoost API is authenticated, origin-bound, and server-validates campaig
   assert.match(routes, /WHERE user_id=\$1/);
   assert.doesNotMatch(routes, /req\.body\?\.userId/);
 });
+
+test("GoodBoost persists the current onboarding completion state", () => {
+  const routes = read("src/routes/goodboost.routes.js");
+  assert.match(routes, /onboardingCompleted: settings\.onboardingCompleted === true/);
+  assert.match(routes, /onboardingVersion: settings\.onboardingCompleted === true \? 1 : 0/);
+});
