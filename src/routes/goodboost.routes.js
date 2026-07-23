@@ -40,57 +40,6 @@ function publicProfile(row) {
   };
 }
 
-function publicListing(row) {
-  return {
-    id: row.id,
-    platform: row.platform,
-    assetType: row.asset_type,
-    handle: row.handle,
-    profileUrl: row.profile_url,
-    niche: row.niche,
-    followers: row.followers,
-    averageViews: row.average_views,
-    engagementRate: Number(row.engagement_rate),
-    monthlyRevenue: Number(row.monthly_revenue),
-    askingPrice: Number(row.asking_price),
-    valuationLow: Number(row.valuation_low),
-    valuationHigh: Number(row.valuation_high),
-    transferEligibility: row.transfer_eligibility,
-    transferReason: row.transfer_reason,
-    status: row.status,
-    metricsVerified: row.metrics_verified,
-    ownershipVerified: row.ownership_verified,
-    notes: row.notes,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
-function transferPolicy(platform, assetType) {
-  const normalized = assetType.toLowerCase();
-  if (platform === "YouTube" && normalized === "brand account") {
-    return { eligibility: "Manual review", reason: "Only a YouTube Brand Account with a documented primary-owner transfer can proceed." };
-  }
-  if (platform === "Facebook" && ["page", "business asset"].includes(normalized)) {
-    return { eligibility: "Manual review", reason: "Only Page or business-asset access may proceed after Meta ownership and role-transfer review." };
-  }
-  if (platform === "Website" && ["website", "digital business"].includes(normalized)) {
-    return { eligibility: "Eligible", reason: "Domain, content, analytics, and business assets can proceed through documented asset transfer." };
-  }
-  return { eligibility: "Unsupported", reason: `${platform} personal accounts cannot be listed because account transfers may violate platform rules.` };
-}
-
-function valuation({ followers, averageViews, engagementRate, monthlyRevenue }) {
-  const revenueValue = monthlyRevenue * 24;
-  const audienceValue = followers * Math.min(0.12, 0.025 + engagementRate * 0.006);
-  const viewValue = averageViews * 0.035;
-  const midpoint = Math.max(100, revenueValue + audienceValue + viewValue);
-  return {
-    low: Math.round(midpoint * 0.75 * 100) / 100,
-    high: Math.round(midpoint * 1.3 * 100) / 100,
-  };
-}
-
 function validCampaignUrl(platform, value) {
   let url;
   try { url = new URL(value); } catch { return false; }
@@ -137,56 +86,6 @@ router.get("/bootstrap", async (req, res, next) => {
       activityLogs: activity.rows.map(row => ({ date: row.day, count: row.count })),
       connectedAccounts: [],
     });
-  } catch (error) { return next(error); }
-});
-
-router.get("/listings", async (req, res, next) => {
-  try {
-    const result = await database.query(
-      "SELECT * FROM goodboost_asset_listings WHERE user_id=$1 ORDER BY updated_at DESC LIMIT 200",
-      [req.user.id]
-    );
-    return res.json({ success: true, listings: result.rows.map(publicListing) });
-  } catch (error) { return next(error); }
-});
-
-router.post("/listings", async (req, res, next) => {
-  try {
-    const platform = clean(req.body?.platform, 40);
-    const assetType = clean(req.body?.assetType, 60);
-    const handle = clean(req.body?.handle, 100);
-    const profileUrl = clean(req.body?.profileUrl, 2048);
-    const niche = clean(req.body?.niche, 100);
-    const notes = clean(req.body?.notes, 2000);
-    const followers = Number(req.body?.followers);
-    const averageViews = Number(req.body?.averageViews);
-    const engagementRate = Number(req.body?.engagementRate);
-    const monthlyRevenue = Number(req.body?.monthlyRevenue);
-    const askingPrice = Number(req.body?.askingPrice);
-    if (!PLATFORMS.has(platform) || !assetType || !handle || !niche ||
-        !Number.isInteger(followers) || followers < 0 || followers > 2000000000 ||
-        !Number.isInteger(averageViews) || averageViews < 0 || averageViews > 2000000000 ||
-        !Number.isFinite(engagementRate) || engagementRate < 0 || engagementRate > 100 ||
-        !Number.isFinite(monthlyRevenue) || monthlyRevenue < 0 || monthlyRevenue > 1000000000 ||
-        !Number.isFinite(askingPrice) || askingPrice < 0 || askingPrice > 1000000000 ||
-        !validCampaignUrl(platform, profileUrl)) {
-      return res.status(400).json({ success: false, code: "INVALID_LISTING", message: "Listing details are invalid." });
-    }
-    const policy = transferPolicy(platform, assetType);
-    const estimated = valuation({ followers, averageViews, engagementRate, monthlyRevenue });
-    const status = policy.eligibility === "Unsupported" ? "Draft" : "Ready for review";
-    const result = await database.query(
-      `INSERT INTO goodboost_asset_listings(
-        user_id,platform,asset_type,handle,profile_url,niche,followers,average_views,
-        engagement_rate,monthly_revenue,asking_price,valuation_low,valuation_high,
-        transfer_eligibility,transfer_reason,status,notes
-      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
-      [req.user.id, platform, assetType, handle, profileUrl, niche, followers, averageViews,
-       engagementRate, monthlyRevenue, askingPrice, estimated.low, estimated.high,
-       policy.eligibility, policy.reason, status, notes]
-    );
-    await logAudit({ userId: req.user.id, appId: "goodboost", action: "goodboost.listing.create", entityType: "asset_listing", entityId: result.rows[0].id, ipAddress: req.ip, metadata: { platform, assetType, eligibility: policy.eligibility } }).catch(() => {});
-    return res.status(201).json({ success: true, listing: publicListing(result.rows[0]) });
   } catch (error) { return next(error); }
 });
 
