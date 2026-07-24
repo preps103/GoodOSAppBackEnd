@@ -844,15 +844,49 @@ async function getOverviewForUser(
   };
 }
 
+async function getApplicationOverviewForUser(
+  userId,
+  appId,
+  query = {}
+) {
+  const scopedAppId =
+    await requireAppAccess(
+      userId,
+      appId
+    );
+
+  if (scopedAppId === "all") {
+    throw serviceError(
+      "Application notification scope is required.",
+      400
+    );
+  }
+
+  return getOverviewForUser(
+    userId,
+    {
+      ...query,
+      appId: scopedAppId,
+    }
+  );
+}
+
 async function updateReadStateForUser(
   userId,
   notificationId,
   read,
-  requestMeta = {}
+  requestMeta = {},
+  requestedAppId = "all"
 ) {
   const context =
     await requireContext(
       userId
+    );
+
+  const appId =
+    await requireAppAccess(
+      userId,
+      requestedAppId
     );
 
   const result =
@@ -892,6 +926,13 @@ async function updateReadStateForUser(
             "notification"
           )}
 
+          AND (
+            $6 = 'all'
+            OR ${notificationAppIdSql(
+              "notification"
+            )} = $6
+          )
+
         RETURNING
           notification.id,
           notification.status,
@@ -908,6 +949,7 @@ async function updateReadStateForUser(
         context.email,
         notificationId,
         Boolean(read),
+        appId,
       ]
     );
 
@@ -923,7 +965,10 @@ async function updateReadStateForUser(
 
   await recordAudit({
     userId,
-    appId: "goodos",
+    appId:
+      appId === "all"
+        ? "goodos"
+        : appId,
     action:
       read
         ? "notification.read"
@@ -938,6 +983,7 @@ async function updateReadStateForUser(
     metadata: {
       organizationId:
         context.organizationId,
+      appId,
     },
   });
 
@@ -1034,11 +1080,18 @@ async function markAllReadForUser(
 async function archiveNotificationForUser(
   userId,
   notificationId,
-  requestMeta = {}
+  requestMeta = {},
+  requestedAppId = "all"
 ) {
   const context =
     await requireContext(
       userId
+    );
+
+  const appId =
+    await requireAppAccess(
+      userId,
+      requestedAppId
     );
 
   const result =
@@ -1061,6 +1114,13 @@ async function archiveNotificationForUser(
             "notification"
           )}
 
+          AND (
+            $5 = 'all'
+            OR ${notificationAppIdSql(
+              "notification"
+            )} = $5
+          )
+
         RETURNING
           notification.id,
 
@@ -1072,6 +1132,7 @@ async function archiveNotificationForUser(
         context.organizationId,
         context.email,
         notificationId,
+        appId,
       ]
     );
 
@@ -1087,7 +1148,10 @@ async function archiveNotificationForUser(
 
   await recordAudit({
     userId,
-    appId: "goodos",
+    appId:
+      appId === "all"
+        ? "goodos"
+        : appId,
     action:
       "notification.archived",
     entityType:
@@ -1100,6 +1164,7 @@ async function archiveNotificationForUser(
     metadata: {
       organizationId:
         context.organizationId,
+      appId,
     },
   });
 
@@ -1192,6 +1257,7 @@ async function archiveReadForUser(
 
 module.exports = {
   getOverviewForUser,
+  getApplicationOverviewForUser,
   updateReadStateForUser,
   markAllReadForUser,
   archiveNotificationForUser,

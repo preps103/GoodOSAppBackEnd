@@ -123,6 +123,21 @@ data-goodos-notification-app-id="<stable-product-app-id>"
 
 Its notification client must remain application-scoped and must use that `appId` for all reads and mutations. A product application must never request notifications from another product.
 
+Product applications use the strict application endpoint family. The server
+forces the `:appId` scope on every operation and rejects applications the
+signed-in user is not assigned to:
+
+```text
+GET    /api/notifications/apps/:appId/overview
+PATCH  /api/notifications/apps/:appId/:notificationId/read
+POST   /api/notifications/apps/:appId/read-all
+DELETE /api/notifications/apps/:appId/:notificationId
+POST   /api/notifications/apps/:appId/archive-read
+```
+
+Product code must not call the unscoped `/api/notifications/overview` family.
+Those routes belong exclusively to the GoodOS master Notification Center.
+
 GoodOS is the only application allowed to declare master mode:
 
 ```html

@@ -159,6 +159,198 @@ router.use(
   authRequired
 );
 
+/*
+ * Product applications must use the /apps/:appId routes below.
+ * The unscoped routes that follow are reserved for the GoodOS master
+ * Notification Center, which may aggregate the user's assigned apps.
+ */
+router.get(
+  "/apps/:appId/overview",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const data =
+        await notificationCenter
+          .getApplicationOverviewForUser(
+            req.user.id,
+            String(
+              req.params.appId
+            ),
+            req.query || {}
+          );
+
+      return success(
+        res,
+        data
+      );
+    } catch (error) {
+      return failure(
+        res,
+        error,
+        "Failed to load application notifications."
+      );
+    }
+  }
+);
+
+router.patch(
+  "/apps/:appId/:notificationId/read",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const notification =
+        await notificationCenter
+          .updateReadStateForUser(
+            req.user.id,
+            String(
+              req.params
+                .notificationId
+            ),
+            req.body?.read !==
+              false,
+            {
+              ipAddress:
+                req.ip,
+            },
+            String(
+              req.params.appId
+            )
+          );
+
+      return success(res, {
+        notification,
+        message:
+          req.body?.read === false
+            ? "Notification marked unread."
+            : "Notification marked read.",
+      });
+    } catch (error) {
+      return failure(
+        res,
+        error,
+        "Failed to update application notification."
+      );
+    }
+  }
+);
+
+router.post(
+  "/apps/:appId/read-all",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await notificationCenter
+          .markAllReadForUser(
+            req.user.id,
+            {
+              ipAddress:
+                req.ip,
+            },
+            String(
+              req.params.appId
+            )
+          );
+
+      return success(res, {
+        ...result,
+        message:
+          result.updated === 1
+            ? "1 notification marked read."
+            : `${result.updated} notifications marked read.`,
+      });
+    } catch (error) {
+      return failure(
+        res,
+        error,
+        "Failed to mark application notifications read."
+      );
+    }
+  }
+);
+
+router.delete(
+  "/apps/:appId/:notificationId",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const notification =
+        await notificationCenter
+          .archiveNotificationForUser(
+            req.user.id,
+            String(
+              req.params
+                .notificationId
+            ),
+            {
+              ipAddress:
+                req.ip,
+            },
+            String(
+              req.params.appId
+            )
+          );
+
+      return success(res, {
+        notification,
+        message:
+          "Notification archived.",
+      });
+    } catch (error) {
+      return failure(
+        res,
+        error,
+        "Failed to archive application notification."
+      );
+    }
+  }
+);
+
+router.post(
+  "/apps/:appId/archive-read",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await notificationCenter
+          .archiveReadForUser(
+            req.user.id,
+            {
+              ipAddress:
+                req.ip,
+            },
+            String(
+              req.params.appId
+            )
+          );
+
+      return success(res, {
+        ...result,
+        message:
+          result.archived === 1
+            ? "1 read notification archived."
+            : `${result.archived} read notifications archived.`,
+      });
+    } catch (error) {
+      return failure(
+        res,
+        error,
+        "Failed to archive read application notifications."
+      );
+    }
+  }
+);
+
 router.get(
   "/overview",
   async (
