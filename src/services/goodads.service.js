@@ -187,18 +187,65 @@ async function recordEvent({ resourceId, context, userId, eventType, previousSta
 }
 
 async function dashboard(context) {
-  const result = await query(
-    `SELECT resource_type, status, COUNT(*)::integer AS count
+  const [resourceCounts, connectionCounts, publishingCounts, recentResources] = await Promise.all([
+    query(
+      `SELECT resource_type, status, COUNT(*)::integer AS count
      FROM goodads_resources
      WHERE organization_id = $1 AND archived_at IS NULL
      GROUP BY resource_type, status ORDER BY resource_type, status`,
-    [context.organizationId]
-  );
+      [context.organizationId]
+    ),
+    query(
+      `SELECT status, COUNT(*)::integer AS count
+       FROM goodads_social_connections
+       WHERE organization_id = $1
+       GROUP BY status ORDER BY status`,
+      [context.organizationId]
+    ),
+    query(
+      `SELECT status, COUNT(*)::integer AS count
+       FROM goodads_publish_jobs
+       WHERE organization_id = $1
+       GROUP BY status ORDER BY status`,
+      [context.organizationId]
+    ),
+    query(
+      `SELECT *
+       FROM goodads_resources
+       WHERE organization_id = $1 AND archived_at IS NULL
+       ORDER BY updated_at DESC
+       LIMIT 8`,
+      [context.organizationId]
+    ),
+  ]);
+
+  const totalFor = (rows, predicate = () => true) => rows
+    .filter(predicate)
+    .reduce((total, row) => total + Number(row.count || 0), 0);
+  const resourceRows = resourceCounts.rows;
+  const connectionRows = connectionCounts.rows;
+  const publishingRows = publishingCounts.rows;
+
   return {
     organization: context.organization,
     project: context.project,
     environment: context.environment,
-    counts: result.rows,
+    metrics: {
+      campaigns: totalFor(resourceRows, (row) => row.resource_type === "campaigns"),
+      activeCampaigns: totalFor(resourceRows, (row) => row.resource_type === "campaigns" && row.status === "active"),
+      content: totalFor(resourceRows, (row) => row.resource_type === "content"),
+      scheduled: totalFor(resourceRows, (row) => row.status === "scheduled"),
+      pendingApprovals: totalFor(resourceRows, (row) => row.resource_type === "approvals" && row.status === "pending"),
+      connectedAccounts: totalFor(connectionRows, (row) => row.status === "connected"),
+      publishingJobs: totalFor(publishingRows),
+      publishingFailures: totalFor(publishingRows, (row) => row.status === "failed"),
+    },
+    counts: {
+      resources: resourceRows,
+      connections: connectionRows,
+      publishing: publishingRows,
+    },
+    recent: recentResources.rows.map(rowToResource),
     generatedAt: new Date().toISOString(),
   };
 }
