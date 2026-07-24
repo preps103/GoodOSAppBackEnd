@@ -189,33 +189,187 @@ function visibilitySql(
 ) {
   return `
     (
-      ${alias}.recipient_user_id =
-        $1::uuid
+      (
+        ${alias}.recipient_user_id =
+          $1::uuid
 
-      OR (
-        ${alias}.recipient_user_id
-          IS NULL
+        OR (
+          ${alias}.recipient_user_id
+            IS NULL
 
-        AND ${alias}.recipient_email
-          IS NOT NULL
+          AND ${alias}.recipient_email
+            IS NOT NULL
 
-        AND LOWER(
-          ${alias}.recipient_email
-        ) = LOWER($3)
+          AND LOWER(
+            ${alias}.recipient_email
+          ) = LOWER($3)
+        )
+
+        OR (
+          ${alias}.recipient_user_id
+            IS NULL
+
+          AND ${alias}.recipient_email
+            IS NULL
+
+          AND ${alias}.organization_id =
+            $2
+        )
       )
 
-      OR (
-        ${alias}.recipient_user_id
-          IS NULL
+      AND (
+        ${notificationAppIdSql(alias)}
+          = 'goodos'
 
-        AND ${alias}.recipient_email
-          IS NULL
+        OR EXISTS (
+          SELECT 1
 
-        AND ${alias}.organization_id =
-          $2
+          FROM app_memberships
+               app_membership
+
+          JOIN apps
+               accessible_app
+            ON accessible_app.id =
+               app_membership.app_id
+
+          WHERE app_membership.user_id =
+                $1::uuid
+
+            AND app_membership.status =
+                'active'
+
+            AND accessible_app.status =
+                'active'
+
+            AND accessible_app.id =
+                ${notificationAppIdSql(alias)}
+        )
       )
     )
   `;
+}
+
+function notificationAppIdSql(
+  alias = "notification"
+) {
+  return `
+    COALESCE(
+      NULLIF(
+        ${alias}.metadata_json
+          ->> 'appId',
+        ''
+      ),
+      NULLIF(
+        ${alias}.metadata_json
+          ->> 'app_id',
+        ''
+      ),
+      NULLIF(
+        ${alias}.payload_json
+          ->> 'appId',
+        ''
+      ),
+      NULLIF(
+        ${alias}.payload_json
+          ->> 'app_id',
+        ''
+      ),
+      'goodos'
+    )
+  `;
+}
+
+async function getAccessibleApps(
+  userId
+) {
+  const result =
+    await dbQuery(
+      `
+        SELECT
+          app.id,
+          app.name,
+          app.domain
+
+        FROM app_memberships
+             membership
+
+        JOIN apps app
+          ON app.id =
+             membership.app_id
+
+        WHERE membership.user_id =
+              $1::uuid
+
+          AND membership.status =
+              'active'
+
+          AND app.status =
+              'active'
+
+        ORDER BY
+          CASE
+            WHEN app.id = 'goodos'
+            THEN 0
+            ELSE 1
+          END,
+          app.name ASC
+      `,
+      [
+        userId,
+      ]
+    );
+
+  const apps =
+    result.rows;
+
+  if (
+    !apps.some(
+      app =>
+        app.id === "goodos"
+    )
+  ) {
+    apps.unshift({
+      id: "goodos",
+      name: "GoodOS",
+      domain: "goodos.app",
+    });
+  }
+
+  return apps;
+}
+
+async function requireAppAccess(
+  userId,
+  value
+) {
+  const appId =
+    cleanText(
+      value,
+      120
+    ) || "all";
+
+  if (appId === "all") {
+    return appId;
+  }
+
+  const accessibleApps =
+    await getAccessibleApps(
+      userId
+    );
+
+  if (
+    !accessibleApps.some(
+      app =>
+        app.id === appId
+    )
+  ) {
+    throw serviceError(
+      "This application is unavailable or is not assigned to this user.",
+      403
+    );
+  }
+
+  return appId;
 }
 
 async function getOverviewForUser(
@@ -279,6 +433,30 @@ async function getOverviewForUser(
       200
     );
 
+  const appId =
+    cleanText(
+      query.appId,
+      120
+    ) || "all";
+
+  const accessibleApps =
+    await getAccessibleApps(
+      userId
+    );
+
+  if (
+    appId !== "all" &&
+    !accessibleApps.some(
+      app =>
+        app.id === appId
+    )
+  ) {
+    throw serviceError(
+      "This application is unavailable or is not assigned to this user.",
+      403
+    );
+  }
+
   const includeArchived =
     String(
       query.includeArchived ||
@@ -294,6 +472,7 @@ async function getOverviewForUser(
     category,
     severity,
     search,
+    appId,
     includeArchived,
     limit,
     offset,
@@ -360,7 +539,14 @@ async function getOverviewForUser(
     )
 
     AND (
-      $8::boolean = TRUE
+      $8 = 'all'
+      OR ${notificationAppIdSql(
+        "notification"
+      )} = $8
+    )
+
+    AND (
+      $9::boolean = TRUE
       OR notification.archived_at
          IS NULL
     )
@@ -391,6 +577,20 @@ async function getOverviewForUser(
 
           notification.source_id
             AS "sourceId",
+
+          ${notificationAppIdSql(
+            "notification"
+          )} AS "appId",
+
+          COALESCE(
+            notification_app.name,
+            'GoodOS'
+          ) AS "appName",
+
+          COALESCE(
+            notification_app.domain,
+            'goodos.app'
+          ) AS "appDomain",
 
           notification.action_url
             AS "actionUrl",
@@ -424,6 +624,13 @@ async function getOverviewForUser(
         FROM backend_notifications
              notification
 
+        LEFT JOIN apps
+             notification_app
+          ON notification_app.id =
+             ${notificationAppIdSql(
+               "notification"
+             )}
+
         WHERE ${filteredWhere}
 
         ORDER BY
@@ -439,8 +646,8 @@ async function getOverviewForUser(
           notification.created_at
             DESC
 
-        LIMIT $9
-        OFFSET $10
+        LIMIT $10
+        OFFSET $11
       `,
       params
     ),
@@ -458,7 +665,7 @@ async function getOverviewForUser(
       `,
       params.slice(
         0,
-        8
+        9
       )
     ),
 
@@ -505,11 +712,19 @@ async function getOverviewForUser(
         WHERE ${visibilitySql(
           "notification"
         )}
+
+          AND (
+            $4 = 'all'
+            OR ${notificationAppIdSql(
+              "notification"
+            )} = $4
+          )
       `,
       [
         userId,
         context.organizationId,
         context.email,
+        appId,
       ]
     ),
 
@@ -528,6 +743,13 @@ async function getOverviewForUser(
           AND notification.archived_at
               IS NULL
 
+          AND (
+            $4 = 'all'
+            OR ${notificationAppIdSql(
+              "notification"
+            )} = $4
+          )
+
         ORDER BY
           notification.category
       `,
@@ -535,6 +757,7 @@ async function getOverviewForUser(
         userId,
         context.organizationId,
         context.email,
+        appId,
       ]
     ),
   ]);
@@ -585,6 +808,9 @@ async function getOverviewForUser(
     },
 
     filters: {
+      apps:
+        accessibleApps,
+
       categories:
         categoriesResult.rows
           .map(
@@ -720,11 +946,18 @@ async function updateReadStateForUser(
 
 async function markAllReadForUser(
   userId,
-  requestMeta = {}
+  requestMeta = {},
+  requestedAppId = "all"
 ) {
   const context =
     await requireContext(
       userId
+    );
+
+  const appId =
+    await requireAppAccess(
+      userId,
+      requestedAppId
     );
 
   const result =
@@ -755,12 +988,20 @@ async function markAllReadForUser(
             "notification"
           )}
 
+          AND (
+            $4 = 'all'
+            OR ${notificationAppIdSql(
+              "notification"
+            )} = $4
+          )
+
         RETURNING notification.id
       `,
       [
         userId,
         context.organizationId,
         context.email,
+        appId,
       ]
     );
 
@@ -778,6 +1019,7 @@ async function markAllReadForUser(
     metadata: {
       organizationId:
         context.organizationId,
+      appId,
       updated:
         result.rowCount,
     },
@@ -866,11 +1108,18 @@ async function archiveNotificationForUser(
 
 async function archiveReadForUser(
   userId,
-  requestMeta = {}
+  requestMeta = {},
+  requestedAppId = "all"
 ) {
   const context =
     await requireContext(
       userId
+    );
+
+  const appId =
+    await requireAppAccess(
+      userId,
+      requestedAppId
     );
 
   const result =
@@ -898,12 +1147,20 @@ async function archiveReadForUser(
             "notification"
           )}
 
+          AND (
+            $4 = 'all'
+            OR ${notificationAppIdSql(
+              "notification"
+            )} = $4
+          )
+
         RETURNING notification.id
       `,
       [
         userId,
         context.organizationId,
         context.email,
+        appId,
       ]
     );
 
@@ -921,6 +1178,7 @@ async function archiveReadForUser(
     metadata: {
       organizationId:
         context.organizationId,
+      appId,
       archived:
         result.rowCount,
     },

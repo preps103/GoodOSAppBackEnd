@@ -241,7 +241,9 @@ router.post(
             {
               ipAddress:
                 req.ip,
-            }
+            },
+            req.body?.appId ||
+              "all"
           );
 
       return success(res, {
@@ -311,7 +313,9 @@ router.post(
             {
               ipAddress:
                 req.ip,
-            }
+            },
+            req.body?.appId ||
+              "all"
           );
 
       return success(res, {
