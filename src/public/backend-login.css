@@ -1,0 +1,43 @@
+:root {
+  --goodbase-login-accent: #2563eb;
+  --goodbase-login-brand-bg: #071a33;
+  --goodbase-login-auth-bg: #f6f8fc;
+  --goodbase-login-ink: #0f172a;
+  --goodbase-login-muted: #64748b;
+  --goodbase-login-border: #d7deea;
+}
+
+[data-goodbase-login] {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(520px, .92fr);
+  background: var(--goodbase-login-auth-bg);
+}
+[data-goodbase-login-brand] { min-width: 0; background: var(--goodbase-login-brand-bg); color: #fff; }
+[data-goodbase-login-auth] { display: grid; place-items: center; padding: 48px 40px; color: var(--goodbase-login-ink); }
+[data-goodbase-login-panel] { width: min(100%, 560px); }
+[data-goodbase-login-providers] { display: grid; gap: 12px; margin: 28px 0; }
+[data-goodbase-login-provider],
+[data-goodbase-login-submit] {
+  width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 12px;
+  border: 1px solid var(--goodbase-login-border); border-radius: 12px; background: #fff;
+  color: var(--goodbase-login-ink); font: 700 14px/20px inherit; cursor: pointer;
+}
+[data-goodbase-login-provider]:focus-visible,
+[data-goodbase-login-submit]:focus-visible,
+[data-goodbase-login] input:focus-visible,
+[data-goodbase-login] a:focus-visible { outline: 3px solid color-mix(in srgb, var(--goodbase-login-accent) 35%, transparent); outline-offset: 2px; }
+[data-goodbase-login-submit] { border-color: var(--goodbase-login-accent); background: var(--goodbase-login-accent); color: #fff; }
+[data-goodbase-login-fields] { display: grid; gap: 18px; }
+[data-goodbase-login-field] { display: grid; gap: 8px; font: 700 13px/18px inherit; }
+[data-goodbase-login-field] input { box-sizing: border-box; width: 100%; min-height: 52px; border: 1px solid var(--goodbase-login-border); border-radius: 12px; background: #fff; padding: 0 16px; color: var(--goodbase-login-ink); font: 500 15px/20px inherit; }
+[data-goodbase-login-divider] { display: flex; align-items: center; gap: 14px; color: #94a3b8; font: 800 10px/16px inherit; letter-spacing: .16em; text-transform: uppercase; }
+[data-goodbase-login-divider]::before,[data-goodbase-login-divider]::after { content: ""; height: 1px; flex: 1; background: var(--goodbase-login-border); }
+[data-goodbase-login-recovery] { color: var(--goodbase-login-accent); font-weight: 700; }
+[data-goodbase-login-error] { border: 1px solid #fecaca; border-radius: 12px; background: #fff1f2; padding: 12px 14px; color: #b91c1c; }
+@media (max-width: 900px) {
+  [data-goodbase-login] { grid-template-columns: 1fr; }
+  [data-goodbase-login-brand] { display: none; }
+  [data-goodbase-login-auth] { padding: 32px 20px; }
+}
+@media (prefers-reduced-motion: reduce) { [data-goodbase-login] * { scroll-behavior: auto !important; transition: none !important; } }
