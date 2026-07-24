@@ -4039,9 +4039,21 @@ router.post("/apps/create-safe", async (req, res) => {
           name,
           domain,
           status,
-          description
+          description,
+          organization_id,
+          project_id,
+          environment_id
         )
-        VALUES ($1, $2, NULLIF($3, ''), $4, NULLIF($5, ''))
+        VALUES (
+          $1,
+          $2,
+          NULLIF($3, ''),
+          $4,
+          NULLIF($5, ''),
+          'org_goodos',
+          'proj_goodos_platform',
+          'env_goodos_production'
+        )
         RETURNING
           id,
           name,
@@ -5958,6 +5970,9 @@ async function runEdgeFunctionById(functionId, input = {}, actor = "console-user
         status,
         timeout_seconds,
         last_run_at,
+        organization_id,
+        project_id,
+        environment_id,
         created_at,
         updated_at
       FROM backend_edge_functions
@@ -5994,9 +6009,12 @@ async function runEdgeFunctionById(functionId, input = {}, actor = "console-user
         trigger_type,
         status,
         input_json,
-        created_by
+        created_by,
+        organization_id,
+        project_id,
+        environment_id
       )
-      VALUES ($1, $2, $3, $4, 'started', $5::jsonb, $6)
+      VALUES ($1, $2, $3, $4, 'started', $5::jsonb, $6, $7, $8, $9)
     `,
     [
       runId,
@@ -6005,6 +6023,9 @@ async function runEdgeFunctionById(functionId, input = {}, actor = "console-user
       triggerType,
       JSON.stringify(input || {}),
       actor,
+      fn.organization_id,
+      fn.project_id,
+      fn.environment_id,
     ]
   );
 

@@ -736,9 +736,12 @@ async function runPublicEdgeFunction(fn, input = {}, apiKey = {}) {
         trigger_type,
         status,
         input_json,
-        created_by
+        created_by,
+        organization_id,
+        project_id,
+        environment_id
       )
-      VALUES ($1, $2, $3, 'public_api', 'started', $4::jsonb, $5)
+      VALUES ($1, $2, $3, 'public_api', 'started', $4::jsonb, $5, $6, $7, $8)
     `,
     [
       runId,
@@ -746,6 +749,9 @@ async function runPublicEdgeFunction(fn, input = {}, apiKey = {}) {
       fn.name,
       JSON.stringify(input || {}),
       apiKey.id || "public-api-key",
+      fn.organization_id,
+      fn.project_id,
+      fn.environment_id,
     ]
   );
 
@@ -935,6 +941,9 @@ async function publicCallableFunctionHandler(req, res) {
           description,
           status,
           timeout_seconds,
+          organization_id,
+          project_id,
+          environment_id,
           current_version_id AS "currentVersionId",
           deployment_id AS "deploymentId",
           runtime_version AS "runtimeVersion",

@@ -33,7 +33,19 @@ CREATE INDEX IF NOT EXISTS goodswapz_listings_status_created_idx
 CREATE INDEX IF NOT EXISTS goodswapz_listings_user_created_idx
   ON goodswapz_listings(user_id, created_at DESC);
 
-INSERT INTO apps (id, name, domain, status, description)
-VALUES ('goodswapz', 'GoodSwapz', 'swapz.goodos.app', 'active', 'Secure marketplace for transferring social media accounts')
+INSERT INTO apps (
+  id, name, domain, status, description,
+  organization_id, project_id, environment_id
+)
+VALUES (
+  'goodswapz', 'GoodSwapz', 'swapz.goodos.app', 'active', 'Secure marketplace for transferring social media accounts',
+  'org_goodos', 'proj_goodos_platform', 'env_goodos_production'
+)
 ON CONFLICT (id) DO UPDATE SET
-  name=EXCLUDED.name, domain=EXCLUDED.domain, status=EXCLUDED.status, description=EXCLUDED.description;
+  name=EXCLUDED.name,
+  domain=EXCLUDED.domain,
+  status=EXCLUDED.status,
+  description=EXCLUDED.description,
+  organization_id=EXCLUDED.organization_id,
+  project_id=EXCLUDED.project_id,
+  environment_id=EXCLUDED.environment_id;
