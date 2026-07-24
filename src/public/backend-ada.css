@@ -10,6 +10,12 @@
   z-index: 50;
 }
 
+button[aria-label="Accessibility Options"]:not(.backend-ada-trigger),
+button[aria-label="Open accessibility menu"]:not(.backend-ada-trigger),
+button[aria-label="Open accessibility options"]:not(.backend-ada-trigger) {
+  display: none !important;
+}
+
 .backend-ada-trigger {
   position: fixed;
   right: 24px;
