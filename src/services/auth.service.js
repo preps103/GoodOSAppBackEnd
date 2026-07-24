@@ -8,6 +8,21 @@ const { query } = require("../config/database");
 function publicUser(row) {
   if (!row) return null;
 
+  const metadata =
+    row.auth_metadata_json &&
+    typeof row.auth_metadata_json === "object"
+      ? row.auth_metadata_json
+      : {};
+  const avatarUrl =
+    row.avatar_url ||
+    row.profile_image_url ||
+    metadata.avatarUrl ||
+    metadata.avatar_url ||
+    metadata.profileImageUrl ||
+    metadata.picture ||
+    metadata.photoURL ||
+    null;
+
   return {
     id: row.id,
     email: row.email,
@@ -15,6 +30,7 @@ function publicUser(row) {
     lastName: row.last_name,
     displayName: row.display_name,
     platformRole: row.platform_role,
+    avatarUrl,
     status: row.status,
     emailVerified: row.email_verified,
     mfaEnabled: Boolean(row.mfa_enabled),
