@@ -5,8 +5,28 @@ const authRequired = require("../middleware/authRequired");
 const tenantContext = require("../middleware/tenantContext");
 const { success, error } = require("../utils/response");
 const service = require("../services/goodads.service");
+const social = require("../services/goodads-social.service");
 
 const router = express.Router();
+
+router.get("/oauth/:platform/callback", (req, res) => {
+  if (req.query.error) {
+    return res.status(400).type("html").send("<!doctype html><title>Connection cancelled</title><p>The social account connection was cancelled.</p><script>window.close()</script>");
+  }
+  return social.completeAuthorization({
+    provider: req.params.platform,
+    code: req.query.code,
+    state: req.query.state,
+  }).then(({ connection, returnOrigin }) => {
+    const targetOrigin = returnOrigin === "https://ads.goodos.app" ? returnOrigin : "https://ads.goodos.app";
+    const payload = JSON.stringify({ type: "goodads-oauth-complete", provider: connection.provider, success: true });
+    res.set("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'");
+    return res.type("html").send(`<!doctype html><meta charset="utf-8"><title>Account connected</title><style>body{font-family:system-ui;padding:40px;text-align:center}p{color:#475569}</style><h1>Account connected</h1><p>You can return to GoodAds.</p><script>if(window.opener){window.opener.postMessage(${payload},${JSON.stringify(targetOrigin)})}window.close()</script>`);
+  }).catch((requestError) => {
+    console.error("GoodAds OAuth callback failed:", requestError.message);
+    return res.status(requestError.statusCode || 500).type("html").send("<!doctype html><title>Connection failed</title><p>The social account could not be connected. Return to GoodAds and try again.</p>");
+  });
+});
 
 function requireGoodAdsAccess(req, res, next) {
   const role = String(req.user?.platformRole || req.user?.role || "").toLowerCase();
@@ -41,11 +61,36 @@ router.use(authRequired, tenantContext, requireGoodAdsAccess);
 router.get("/dashboard", (req, res) => handle(res, "dashboard", service.dashboard(req.tenantContext)));
 router.get("/workspace", (req, res) => handle(res, "workspace", service.workspace(req.tenantContext)));
 router.get("/workspace/brand", (req, res) => handle(res, "brand", service.listResources({ type: "brand", context: req.tenantContext, limit: 1 })));
-router.get("/connections/:platform/authorize", (req, res) => res.status(501).json({
-  success: false,
-  code: "GOODADS_PROVIDER_NOT_CONFIGURED",
-  message: `${req.params.platform} OAuth credentials are not configured in GoodBase.`,
+router.get("/connections/providers", (_req, res) => success(res, { data: social.publicProviders() }));
+router.get("/connections", (req, res) => handle(res, "connections.list", social.listConnections({
+  context: req.tenantContext,
+  userId: req.user.id,
+})));
+router.get("/connections/:platform/authorize", (req, res) => social.beginAuthorization({
+  provider: req.params.platform,
+  context: req.tenantContext,
+  userId: req.user.id,
+  returnOrigin: "https://ads.goodos.app",
+}).then((url) => res.redirect(302, url)).catch((requestError) => {
+  console.error("GoodAds OAuth start failed:", requestError.message);
+  return res.status(requestError.statusCode || 500).json({
+    success: false,
+    code: requestError.code || "GOODADS_OAUTH_START_FAILED",
+    message: requestError.message,
+  });
 }));
+router.delete("/connections/:platform", (req, res) => handle(res, "connections.disconnect", social.disconnect({
+  context: req.tenantContext,
+  userId: req.user.id,
+  provider: req.params.platform,
+})));
+router.post("/publishing/jobs", (req, res) => handle(res, "publishing.create", social.publish({
+  context: req.tenantContext,
+  userId: req.user.id,
+  idempotencyKey: req.get("Idempotency-Key"),
+  providers: req.body?.providers,
+  content: req.body?.content,
+})));
 
 function registerResource(path, type) {
   router.get(`/${path}`, (req, res) => handle(res, `${type}.list`, service.listResources({
@@ -93,8 +138,6 @@ function registerResource(path, type) {
   ["content", "content"],
   ["approvals", "approvals"],
   ["calendar", "calendar"],
-  ["connections", "connections"],
-  ["publishing/jobs", "publishing_jobs"],
   ["analytics", "analytics"],
   ["media", "media"],
   ["link-hubs", "link_hubs"],
