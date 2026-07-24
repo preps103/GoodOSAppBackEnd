@@ -7280,7 +7280,7 @@ window.createUserInvite = async function createUserInvite() {
   if (!email) return;
 
   const platformRole = prompt("Platform role: owner, admin, manager, developer, user, viewer", "user") || "user";
-  const appId = prompt("Optional app id for first app access. Leave blank for none:", "goodhub") || "";
+  const appId = prompt("Optional app id for first app access. Leave blank for none:", "goodbase") || "";
   const appRole = appId ? (prompt("App role: owner, admin, manager, developer, member, viewer", "member") || "member") : "member";
 
   try {
@@ -7377,7 +7377,7 @@ window.updateUserPlatformRole = async function updateUserPlatformRole(id, curren
 };
 
 window.addUserMembership = async function addUserMembership(userId) {
-  const appId = prompt("App id to grant:", "goodhub");
+  const appId = prompt("App id to grant:", "goodbase");
   if (!appId) return;
 
   const role = prompt("Role: owner, admin, manager, developer, member, viewer", "member") || "member";

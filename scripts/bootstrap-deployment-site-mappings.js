@@ -22,7 +22,6 @@ const PROCESS_BY_APP = {
   goodeditor: "goodeditor",
   goodescrow: "goodescrow",
   goodfleet: "goodfleet",
-  goodhub: "goodhub",
   goodos: "goodos",
   goodqr: "goodqr",
   goodscan: "goodscan",
@@ -72,14 +71,15 @@ async function main() {
       repository_url AS "repositoryUrl",
       health_url AS "healthUrl"
     FROM backend_deployment_sites
+    WHERE status <> 'retired'
     ORDER BY name
   `);
 
   const sites = siteResult.rows;
 
-  if (sites.length !== 16) {
+  if (sites.length !== 15) {
     throw new Error(
-      `Expected 16 deployment sites; found ${sites.length}.`
+      `Expected 15 active deployment sites; found ${sites.length}.`
     );
   }
 
@@ -211,7 +211,7 @@ async function main() {
 
   if (!APPLY) {
     console.log(
-      "PASS: All 16 exact PM2 mappings are safe to apply."
+      "PASS: All 15 exact PM2 mappings are safe to apply."
     );
     return;
   }
