@@ -15,9 +15,13 @@ test("backend console loads the themed ADA control", () => {
   assert.match(consoleHtml, /src="\/backend-ada\.js"/);
   assert.match(routes, /router\.get\("\/backend-ada\.css"/);
   assert.match(routes, /router\.get\("\/backend-ada\.js"/);
-  assert.equal(
-    (routes.match(/Cross-Origin-Resource-Policy", "cross-origin"/g) || []).length,
-    2,
+  assert.match(
+    routes,
+    /router\.get\("\/backend-ada\.js"[\s\S]*?Cross-Origin-Resource-Policy", "cross-origin"[\s\S]*?\n}\);/,
+  );
+  assert.match(
+    routes,
+    /router\.get\("\/backend-ada\.css"[\s\S]*?Cross-Origin-Resource-Policy", "cross-origin"[\s\S]*?\n}\);/,
   );
 });
 
