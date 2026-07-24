@@ -61,6 +61,7 @@ async function getSmtpConfig() {
     host,
     port: Number((await secretOrEnv("SMTP_PORT")) || 587),
     secure: String((await secretOrEnv("SMTP_SECURE")) || "false") === "true",
+    servername: (await secretOrEnv("SMTP_TLS_SERVERNAME")) || host,
     user,
     pass,
     fromEmail: (await secretOrEnv("MAIL_FROM")) || (await secretOrEnv("SMTP_FROM")) || "no-reply@goodos.app",
@@ -84,6 +85,10 @@ async function createTransporter() {
     auth: {
       user: config.user,
       pass: config.pass,
+    },
+    tls: {
+      servername: config.servername,
+      rejectUnauthorized: true,
     },
   });
 }
