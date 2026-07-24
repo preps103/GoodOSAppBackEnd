@@ -232,6 +232,20 @@ router.get("/backend-topbar.css", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/backend-topbar.css"));
 });
 
+router.get("/backend-login.css", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
+  res.type("text/css");
+  res.sendFile(path.join(__dirname, "../public/backend-login.css"));
+});
+
+router.get("/app-notification-center.js", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
+  res.type("application/javascript");
+  res.sendFile(path.join(__dirname, "../public/app-notification-center.js"));
+});
+
 router.get("/backend-collapsible-sections.js", (req, res) => {
   res.type("application/javascript");
   res.sendFile(path.join(__dirname, "../public/backend-collapsible-sections.js"));

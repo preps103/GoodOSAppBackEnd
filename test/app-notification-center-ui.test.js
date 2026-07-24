@@ -5,6 +5,7 @@ const test = require("node:test");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "src", "public", "app-notification-center.js"), "utf8");
 const consoleHtml = fs.readFileSync(path.join(__dirname, "..", "src", "public", "console.html"), "utf8");
+const routes = fs.readFileSync(path.join(__dirname, "..", "src", "routes", "index.js"), "utf8");
 
 test("GoodBase notification center is strictly application scoped", () => {
   assert.match(source, /const appId = "goodbase"/);
@@ -19,4 +20,5 @@ test("GoodBase notification center exposes the complete user workflow", () => {
   }
   assert.match(consoleHtml, /goodbase:notifications/);
   assert.match(consoleHtml, /app-notification-center\.js/);
+  assert.match(routes, /router\.get\("\/app-notification-center\.js"/);
 });
