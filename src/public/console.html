@@ -859,29 +859,248 @@
     .login {
       min-height: 100vh;
       display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(520px, .92fr);
+      background: #f5f7fb;
+      color: #0f172a;
+    }
+
+    .login-story {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 48px clamp(48px, 6vw, 96px);
+      background:
+        radial-gradient(circle at 78% 28%, rgba(14,165,233,.22), transparent 33%),
+        radial-gradient(circle at 42% 105%, rgba(79,70,229,.3), transparent 38%),
+        #04172f;
+      color: #fff;
+    }
+
+    .login-story-brand,
+    .login-mobile-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: -.02em;
+    }
+
+    .login-story-brand .logo,
+    .login-mobile-brand .logo {
+      display: grid;
       place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #38bdf8, #4f46e5 58%, #a855f7);
+      box-shadow: 0 14px 34px rgba(15,23,42,.38);
+      color: #fff;
+    }
+
+    .login-story-copy {
+      position: relative;
+      z-index: 1;
+      margin: auto 0;
+      max-width: 760px;
+      padding: 70px 0;
+    }
+
+    .login-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 15px;
+      border: 1px solid rgba(186,230,253,.2);
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: #bae6fd;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .login-story h1 {
+      max-width: 760px;
+      margin: 34px 0 0;
+      color: #fff;
+      font-size: clamp(48px, 5vw, 76px);
+      font-weight: 650;
+      line-height: 1.04;
+      letter-spacing: -.055em;
+    }
+
+    .login-story-copy > p {
+      max-width: 700px;
+      margin: 28px 0 0;
+      color: #cbd5e1;
+      font-size: 19px;
+      line-height: 1.75;
+    }
+
+    .login-benefits {
+      display: grid;
+      gap: 17px;
+      margin-top: 36px;
+      color: #e2e8f0;
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .login-benefit {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .login-benefit span {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      border-radius: 999px;
+      background: rgba(52,211,153,.14);
+      color: #6ee7b7;
+    }
+
+    .login-story-cards {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .login-story-card {
       padding: 20px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px;
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(12px);
+    }
+
+    .login-story-card strong {
+      display: block;
+      margin-top: 18px;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .login-story-card small {
+      display: block;
+      margin-top: 5px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .login-auth {
+      display: flex;
+      min-height: 100vh;
+      padding: 36px clamp(34px, 5vw, 78px);
+      background: #f5f7fb;
     }
 
     .login-card {
       width: 100%;
-      max-width: 430px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 32px;
-      box-shadow: 0 28px 90px rgba(0,0,0,.42);
+      max-width: 570px;
+      margin: auto;
+      padding: 34px 0;
+      color: #0f172a;
     }
 
-    .login-card h1 {
-      margin: 16px 0 0;
-      font-size: 30px;
-      letter-spacing: -.04em;
+    .login-mobile-brand { display: none; margin-bottom: 38px; }
+
+    .login-card .login-eyebrow {
+      margin: 0;
+      color: #0284c7;
+      font-size: 14px;
+      font-weight: 900;
     }
 
-    .login-card p {
-      color: var(--muted);
-      line-height: 1.6;
+    .login-card h2 {
+      margin: 10px 0 0;
+      color: #020617;
+      font-size: clamp(39px, 4vw, 52px);
+      font-weight: 650;
+      line-height: 1.04;
+      letter-spacing: -.05em;
+    }
+
+    .login-card .login-description {
+      margin: 15px 0 0;
+      color: #64748b;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .social-logins {
+      display: grid;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .social-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 18px;
+      border: 1px solid #dbe3ee;
+      border-radius: 15px;
+      background: #fff;
+      color: #334155;
+      box-shadow: 0 2px 5px rgba(15,23,42,.06);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 850;
+      cursor: pointer;
+      transition: border-color .18s, background .18s, transform .18s;
+    }
+
+    .social-login:hover {
+      border-color: #7dd3fc;
+      background: #f0f9ff;
+      transform: translateY(-1px);
+    }
+
+    .social-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      font-weight: 950;
+    }
+
+    .microsoft-icon {
+      display: grid;
+      grid-template-columns: repeat(2, 8px);
+      gap: 2px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin: 27px 0 4px;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .18em;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: #dbe3ee;
     }
 
     label {
@@ -896,37 +1115,104 @@
 
     .login input {
       width: 100%;
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,.22);
-      color: white;
-      padding: 14px;
-      border-radius: 14px;
+      border: 1px solid #dbe3ee;
+      background: #fff;
+      color: #0f172a;
+      padding: 16px;
+      border-radius: 15px;
       outline: none;
+      box-shadow: 0 2px 5px rgba(15,23,42,.05);
+      font-size: 15px;
+    }
+
+    .login input:focus {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 4px rgba(14,165,233,.12);
+    }
+
+    .login-field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    .login-field-row label { margin: 0; }
+
+    .forgot-link,
+    .back-to-login {
+      border: 0;
+      background: transparent;
+      color: #0369a1;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .login-trust {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 17px;
+      border: 1px solid #dbe3ee;
+      border-radius: 16px;
+      background: rgba(255,255,255,.72);
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.55;
     }
 
     .primary {
       width: 100%;
       border: 0;
-      background: var(--indigo);
+      background: #071e3d;
       color: white;
       margin-top: 20px;
-      padding: 14px;
-      border-radius: 14px;
-      font-weight: 950;
-      text-transform: uppercase;
-      letter-spacing: .12em;
+      padding: 16px;
+      border-radius: 15px;
+      font-weight: 850;
       cursor: pointer;
     }
 
     .error {
       background: rgba(251,113,133,.1);
       border: 1px solid rgba(251,113,133,.25);
-      color: #fecdd3;
+      color: #b91c1c;
+      background: #fef2f2;
+      border-color: #fecaca;
       padding: 12px;
       border-radius: 14px;
       margin-top: 16px;
       display: none;
       font-size: 13px;
+    }
+
+    .success {
+      display: none;
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid #a7f3d0;
+      border-radius: 14px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .login { display: block; }
+      .login-story { display: none; }
+      .login-auth { min-height: 100vh; padding: 24px; }
+      .login-card { max-width: 600px; padding: 20px 0 40px; }
+      .login-mobile-brand { display: flex; }
+    }
+
+    @media (max-width: 520px) {
+      .login-auth { padding: 20px; }
+      .login-card h2 { font-size: 38px; }
+      .social-login { padding: 13px; }
     }
 
     .update-sites-link {
@@ -5141,17 +5427,55 @@
 </head>
 <body>
   <div id="login" class="login hidden">
-    <form class="login-card" id="loginForm">
-      <div class="logo">G</div>
-      <h1>Goodbase</h1>
-      <p>Sign in with your GoodOS owner account to access the production backend console.</p>
-      <div id="loginError" class="error"></div>
-      <label>Email</label>
-      <input id="email" type="email" value="maurice@goodos.app" required />
-      <label>Password</label>
-      <input id="password" type="password" required />
-      <button class="primary" type="submit">Sign In</button>
-    </form>
+    <section class="login-story" aria-label="GoodBase platform">
+      <div class="login-story-brand"><div class="logo">G</div><span>GoodBase</span></div>
+      <div class="login-story-copy">
+        <div class="login-kicker">✦ Infrastructure, unified</div>
+        <h1>Build and operate every GoodOS application with confidence.</h1>
+        <p>GoodBase brings authentication, data, storage, functions, and production operations into one secure platform.</p>
+        <div class="login-benefits">
+          <div class="login-benefit"><span>✓</span>Identity, users, and application access in one place</div>
+          <div class="login-benefit"><span>✓</span>Real-time visibility across production services</div>
+          <div class="login-benefit"><span>✓</span>Secure infrastructure built for the entire GoodOS ecosystem</div>
+        </div>
+      </div>
+      <div class="login-story-cards">
+        <div class="login-story-card">◈<strong>Secure</strong><small>Identity + access</small></div>
+        <div class="login-story-card">⌁<strong>Real-time</strong><small>Platform insight</small></div>
+        <div class="login-story-card">✦<strong>One platform</strong><small>Complete operations</small></div>
+      </div>
+    </section>
+    <section class="login-auth">
+      <form class="login-card" id="loginForm">
+        <div class="login-mobile-brand"><div class="logo">G</div><span>GoodBase</span></div>
+        <p class="login-eyebrow" id="loginEyebrow">Welcome back</p>
+        <h2 id="loginTitle">Sign in to GoodBase</h2>
+        <p class="login-description" id="loginDescription">Access your applications, infrastructure, users, and production workspace.</p>
+        <div id="loginError" class="error"></div>
+        <div id="loginSuccess" class="success"></div>
+        <div id="socialLogins" class="social-logins">
+          <button class="social-login" type="button" data-social-provider="google"><span class="social-icon" style="color:#4285f4">G</span>Sign in with Google</button>
+          <button class="social-login" type="button" data-social-provider="apple"><span class="social-icon" style="color:#111827;font-size:21px">●</span>Sign in with Apple</button>
+          <button class="social-login" type="button" data-social-provider="microsoft">
+            <span class="microsoft-icon" aria-hidden="true"><i style="background:#f25022"></i><i style="background:#7fba00"></i><i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>
+            Sign in with Microsoft
+          </button>
+        </div>
+        <div id="loginDivider" class="auth-divider">OR USE EMAIL</div>
+        <label>Email address</label>
+        <input id="email" type="email" autocomplete="username" placeholder="you@company.com" required />
+        <div id="passwordGroup">
+          <div class="login-field-row">
+            <label>Password</label>
+            <button id="forgotPasswordBtn" class="forgot-link" type="button">Forgot your password?</button>
+          </div>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+        </div>
+        <button class="primary" id="loginSubmitBtn" type="submit">Sign in securely →</button>
+        <button class="back-to-login hidden" id="backToLoginBtn" type="button">← Back to sign in</button>
+        <div class="login-trust"><span style="color:#10b981;font-size:18px">◇</span><span>Authentication and account security are managed securely through GoodBase.</span></div>
+      </form>
+    </section>
   </div>
 
   <div id="app" class="shell hidden">
@@ -13871,12 +14195,100 @@ document.querySelectorAll("[data-view]").forEach(btn => {
   });
 });
 
+let loginRecoveryMode = false;
+let socialAuthProviders = [];
+
+function showLoginMessage(message, type = "error") {
+  const error = document.getElementById("loginError");
+  const success = document.getElementById("loginSuccess");
+  error.style.display = "none";
+  success.style.display = "none";
+  const target = type === "success" ? success : error;
+  target.textContent = message;
+  target.style.display = "block";
+}
+
+function setLoginRecoveryMode(enabled) {
+  loginRecoveryMode = enabled;
+  document.getElementById("socialLogins").classList.toggle("hidden", enabled);
+  document.getElementById("loginDivider").classList.toggle("hidden", enabled);
+  document.getElementById("passwordGroup").classList.toggle("hidden", enabled);
+  document.getElementById("backToLoginBtn").classList.toggle("hidden", !enabled);
+  document.getElementById("password").required = !enabled;
+  document.getElementById("loginEyebrow").textContent = enabled ? "Account recovery" : "Welcome back";
+  document.getElementById("loginTitle").textContent = enabled ? "Reset your password" : "Sign in to GoodBase";
+  document.getElementById("loginDescription").textContent = enabled
+    ? "Enter the email connected to your GoodOS account. We will send secure reset instructions."
+    : "Access your applications, infrastructure, users, and production workspace.";
+  document.getElementById("loginSubmitBtn").textContent = enabled ? "Send reset instructions →" : "Sign in securely →";
+  document.getElementById("loginError").style.display = "none";
+  document.getElementById("loginSuccess").style.display = "none";
+}
+
+function socialProviderAliases(type) {
+  if (type === "microsoft") return ["microsoft", "azure", "azure_ad", "entra", "entra_id"];
+  return [type];
+}
+
+function findSocialProvider(type) {
+  const aliases = socialProviderAliases(type);
+  return socialAuthProviders.find(provider =>
+    aliases.includes(String(provider.provider_type || "").toLowerCase())
+  );
+}
+
+async function loadSocialAuthProviders() {
+  try {
+    const payload = await request("/api/goodbase/v1/growth/auth/providers");
+    socialAuthProviders = Array.isArray(payload.providers) ? payload.providers : [];
+  } catch {
+    socialAuthProviders = [];
+  }
+}
+
+document.querySelectorAll("[data-social-provider]").forEach(button => {
+  button.addEventListener("click", () => {
+    const type = button.dataset.socialProvider;
+    const provider = findSocialProvider(type);
+    const name = type.charAt(0).toUpperCase() + type.slice(1);
+    if (!provider || provider.available !== true) {
+      showLoginMessage(`${name} sign-in is not enabled in GoodBase yet. Configure its provider credentials, then try again.`);
+      return;
+    }
+    const returnTo = encodeURIComponent(`${window.location.origin}/`);
+    window.location.assign(`/api/oidc/start/${encodeURIComponent(provider.id)}?returnTo=${returnTo}`);
+  });
+});
+
+document.getElementById("forgotPasswordBtn").addEventListener("click", () => {
+  setLoginRecoveryMode(true);
+  document.getElementById("email").focus();
+});
+
+document.getElementById("backToLoginBtn").addEventListener("click", () => {
+  setLoginRecoveryMode(false);
+});
+
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const error = document.getElementById("loginError");
   error.style.display = "none";
 
   try {
+    if (loginRecoveryMode) {
+      const result = await request("/api/auth/password-reset/request", {
+        method: "POST",
+        body: JSON.stringify({
+          email: document.getElementById("email").value.trim().toLowerCase()
+        })
+      });
+      showLoginMessage(
+        result.message || "If an active account exists for that email, reset instructions are on the way.",
+        "success"
+      );
+      return;
+    }
+
     await request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
@@ -13891,6 +14303,8 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
     error.style.display = "block";
   }
 });
+
+loadSocialAuthProviders();
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
   await request("/api/auth/logout", { method: "POST" }).catch(() => null);
