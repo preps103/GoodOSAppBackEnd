@@ -224,6 +224,14 @@ router.get("/backend-ada.css", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/backend-ada.css"));
 });
 
+router.get("/backend-topbar.css", (req, res) => {
+  const crossOriginResourcePolicy = "Cross-Origin-Resource-Policy";
+  res.set("Cache-Control", "public, max-age=300");
+  res.set(crossOriginResourcePolicy, "cross-origin");
+  res.type("text/css");
+  res.sendFile(path.join(__dirname, "../public/backend-topbar.css"));
+});
+
 router.get("/backend-collapsible-sections.js", (req, res) => {
   res.type("application/javascript");
   res.sendFile(path.join(__dirname, "../public/backend-collapsible-sections.js"));

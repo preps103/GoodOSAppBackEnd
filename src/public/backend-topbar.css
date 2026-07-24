@@ -1,0 +1,326 @@
+:root {
+  --goodos-topbar-height: 77px;
+  --goodos-topbar-edge-space: 36px;
+  --goodos-topbar-gap: 18px;
+  --goodos-topbar-brand-mark-size: 36px;
+  --goodos-topbar-workspace-width: 246px;
+  --goodos-topbar-workspace-height: 38px;
+  --goodos-topbar-search-width: 544px;
+  --goodos-topbar-search-height: 46px;
+  --goodos-topbar-control-size: 34px;
+  --goodos-topbar-surface: rgba(12, 17, 33, 0.98);
+  --goodos-topbar-raised: rgba(24, 31, 56, 0.82);
+  --goodos-topbar-border: rgba(148, 163, 184, 0.16);
+  --goodos-topbar-text: #f8fafc;
+  --goodos-topbar-muted: #929bb6;
+  --goodos-topbar-accent: #7c72ff;
+  --goodos-topbar-focus: #60a5fa;
+}
+
+/*
+ * Universal GoodOS top-bar contract.
+ *
+ * Required zone order:
+ * 1. identity/workspace, 2. search, 3. app actions, 4. universal controls.
+ *
+ * Applications theme the bar by overriding the color tokens above. Structural
+ * dimensions and zone order are intentionally shared across every application.
+ */
+:where(.goodos-topbar, [data-goodos-topbar]) {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns:
+    auto
+    minmax(280px, var(--goodos-topbar-search-width))
+    minmax(0, 1fr)
+    auto;
+  align-items: center;
+  column-gap: var(--goodos-topbar-gap);
+  width: 100%;
+  min-width: 0;
+  height: var(--goodos-topbar-height);
+  padding: 0 var(--goodos-topbar-edge-space);
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--goodos-topbar-border);
+  color: var(--goodos-topbar-text);
+  background: var(--goodos-topbar-surface);
+  box-shadow: 0 10px 34px rgba(2, 6, 23, 0.18);
+  backdrop-filter: blur(18px);
+}
+
+:where(
+  .goodos-topbar__identity,
+  [data-goodos-topbar-identity],
+  .goodos-topbar__actions,
+  [data-goodos-topbar-actions],
+  .goodos-topbar__controls,
+  [data-goodos-topbar-controls]
+) {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+:where(.goodos-topbar__identity, [data-goodos-topbar-identity]) {
+  grid-column: 1;
+  gap: 16px;
+}
+
+:where(.goodos-topbar__search, [data-goodos-topbar-search]) {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  max-width: var(--goodos-topbar-search-width);
+  height: var(--goodos-topbar-search-height);
+  min-width: 0;
+  padding: 0 12px 0 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--goodos-topbar-border);
+  border-radius: 11px;
+  color: var(--goodos-topbar-muted);
+  background: color-mix(in srgb, var(--goodos-topbar-raised) 84%, transparent);
+}
+
+:where(.goodos-topbar__search, [data-goodos-topbar-search]) input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--goodos-topbar-text);
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+}
+
+:where(.goodos-topbar__search, [data-goodos-topbar-search]) input::placeholder {
+  color: var(--goodos-topbar-muted);
+}
+
+:where(.goodos-topbar__actions, [data-goodos-topbar-actions]) {
+  grid-column: 3;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+:where(.goodos-topbar__actions, [data-goodos-topbar-actions])::-webkit-scrollbar {
+  display: none;
+}
+
+:where(.goodos-topbar__controls, [data-goodos-topbar-controls]) {
+  grid-column: 4;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+:where(.goodos-topbar__brand, [data-goodos-topbar-brand]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  color: var(--goodos-topbar-text);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+:where(.goodos-topbar__brand-mark, [data-goodos-topbar-brand-mark]) {
+  display: grid;
+  place-items: center;
+  width: var(--goodos-topbar-brand-mark-size);
+  height: var(--goodos-topbar-brand-mark-size);
+  flex: 0 0 var(--goodos-topbar-brand-mark-size);
+  border-radius: 12px;
+}
+
+:where(.goodos-topbar__workspace, [data-goodos-topbar-workspace]) {
+  width: var(--goodos-topbar-workspace-width);
+  min-width: var(--goodos-topbar-workspace-width);
+  height: var(--goodos-topbar-workspace-height);
+  padding: 0 38px 0 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--goodos-topbar-border);
+  border-radius: 10px;
+  outline: 0;
+  color: var(--goodos-topbar-text);
+  background-color: var(--goodos-topbar-raised);
+  font: inherit;
+  font-size: 15px;
+}
+
+:where(
+  .goodos-topbar__action,
+  [data-goodos-topbar-action],
+  .goodos-topbar__control,
+  [data-goodos-topbar-control]
+) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: var(--goodos-topbar-control-size);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--goodos-topbar-muted);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+:where(.goodos-topbar__action, [data-goodos-topbar-action]) {
+  gap: 7px;
+  height: var(--goodos-topbar-control-size);
+  padding: 0 11px;
+  white-space: nowrap;
+}
+
+:where(.goodos-topbar__control, [data-goodos-topbar-control]) {
+  width: var(--goodos-topbar-control-size);
+  height: var(--goodos-topbar-control-size);
+  padding: 0;
+}
+
+:where([data-goodos-notifications]) {
+  position: relative;
+}
+
+:where(.goodos-topbar__notification-badge, [data-goodos-notification-badge]) {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border: 2px solid var(--goodos-topbar-surface);
+  border-radius: 9999px;
+  color: #fff;
+  background: #e11d48;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 12px;
+}
+
+:where(.goodos-topbar__notification-badge, [data-goodos-notification-badge])[hidden],
+:where(.goodos-topbar__notification-preview, [data-goodos-notification-preview])[hidden] {
+  display: none;
+}
+
+:where(.goodos-topbar__notification-preview, [data-goodos-notification-preview]) {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(560px, 75vh);
+  overflow: auto;
+  border: 1px solid var(--goodos-topbar-border);
+  border-radius: 16px;
+  color: var(--goodos-topbar-text);
+  background: var(--goodos-topbar-surface);
+  box-shadow: 0 24px 64px rgba(2, 6, 23, 0.38);
+}
+
+:where(
+  .goodos-topbar__action,
+  [data-goodos-topbar-action],
+  .goodos-topbar__control,
+  [data-goodos-topbar-control]
+):hover {
+  border-color: color-mix(in srgb, var(--goodos-topbar-accent) 22%, transparent);
+  color: var(--goodos-topbar-text);
+  background: color-mix(in srgb, var(--goodos-topbar-accent) 14%, transparent);
+}
+
+:where(
+  .goodos-topbar__search,
+  [data-goodos-topbar-search],
+  .goodos-topbar__workspace,
+  [data-goodos-topbar-workspace],
+  .goodos-topbar__action,
+  [data-goodos-topbar-action],
+  .goodos-topbar__control,
+  [data-goodos-topbar-control]
+):focus-within,
+:where(
+  .goodos-topbar__workspace,
+  [data-goodos-topbar-workspace],
+  .goodos-topbar__action,
+  [data-goodos-topbar-action],
+  .goodos-topbar__control,
+  [data-goodos-topbar-control]
+):focus-visible {
+  outline: 2px solid var(--goodos-topbar-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1480px) {
+  :where(.goodos-topbar, [data-goodos-topbar]) {
+    grid-template-columns: auto minmax(240px, 1fr) minmax(0, auto) auto;
+    column-gap: 14px;
+    padding-inline: 24px;
+  }
+
+  :where(.goodos-topbar__workspace, [data-goodos-topbar-workspace]) {
+    width: 200px;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 1120px) {
+  :where(.goodos-topbar__workspace, [data-goodos-topbar-workspace]) {
+    display: none;
+  }
+
+  :where(.goodos-topbar__actions, [data-goodos-topbar-actions]) {
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 760px) {
+  :where(.goodos-topbar, [data-goodos-topbar]) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: 44px 46px;
+    gap: 10px;
+    height: auto;
+    min-height: 116px;
+    padding: 10px 16px;
+  }
+
+  :where(.goodos-topbar__identity, [data-goodos-topbar-identity]) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :where(.goodos-topbar__search, [data-goodos-topbar-search]) {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  :where(.goodos-topbar__actions, [data-goodos-topbar-actions]) {
+    grid-column: 3;
+    grid-row: 2;
+    max-width: 38vw;
+  }
+
+  :where(.goodos-topbar__controls, [data-goodos-topbar-controls]) {
+    grid-column: 2 / 4;
+    grid-row: 1;
+  }
+
+  :where(.goodos-topbar__brand, [data-goodos-topbar-brand]) > :not(
+    .goodos-topbar__brand-mark,
+    [data-goodos-topbar-brand-mark]
+  ) {
+    display: none;
+  }
+}
