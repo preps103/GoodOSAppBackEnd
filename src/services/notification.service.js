@@ -93,12 +93,52 @@ async function createNotification(input = {}) {
   const owner = ownerResult.rows[0] || {};
   const variables = input.variables || input.payload || {};
   const template = input.templateKey ? await getTemplate(input.templateKey) : null;
+  const inputPayload =
+    input.payload &&
+    typeof input.payload === "object" &&
+    !Array.isArray(input.payload)
+      ? input.payload
+      : {};
+  const inputMetadata =
+    input.metadata &&
+    typeof input.metadata === "object" &&
+    !Array.isArray(input.metadata)
+      ? input.metadata
+      : {};
+  const appId = String(
+    input.appId ||
+    inputMetadata.appId ||
+    inputMetadata.app_id ||
+    inputPayload.appId ||
+    inputPayload.app_id ||
+    "goodos"
+  ).trim().slice(0, 120) || "goodos";
+  const payload = {
+    ...inputPayload,
+    appId,
+  };
+  const metadata = {
+    ...inputMetadata,
+    appId,
+  };
 
   const title = input.title || renderTemplate(template?.subject_template || "GoodOS notification", variables);
   const message = input.message || renderTemplate(template?.body_text_template || "", variables);
   const html = template?.body_html_template ? renderTemplate(template.body_html_template, variables) : null;
-  const recipientUserId = input.recipientUserId || input.userId || owner.id || null;
-  const recipientEmail = input.recipientEmail || input.email || owner.email || null;
+  const explicitRecipientUserId = input.recipientUserId || input.userId || null;
+  const explicitRecipientEmail = input.recipientEmail || input.email || null;
+  const hasExplicitRecipient = Boolean(
+    explicitRecipientUserId ||
+    explicitRecipientEmail
+  );
+  const recipientUserId =
+    explicitRecipientUserId ||
+    (!hasExplicitRecipient ? owner.id : null) ||
+    null;
+  const recipientEmail =
+    explicitRecipientEmail ||
+    (!hasExplicitRecipient ? owner.email : null) ||
+    null;
   const channel = input.channel || "in_app";
   const severity = input.severity || "info";
   const category = input.category || template?.category || "system";
@@ -142,8 +182,8 @@ async function createNotification(input = {}) {
       input.source || "notification-service",
       input.sourceId || null,
       input.actionUrl || null,
-      JSON.stringify(input.payload || variables || {}),
-      JSON.stringify(input.metadata || {}),
+      JSON.stringify(payload),
+      JSON.stringify(metadata),
       input.organizationId || "org_goodos",
       input.projectId || "proj_goodos_platform",
       input.environmentId || "env_goodos_production",
@@ -180,7 +220,10 @@ async function createNotification(input = {}) {
       message,
       severity,
       input.actionUrl || null,
-      JSON.stringify({ source: input.source || "notification-service" }),
+      JSON.stringify({
+        source: input.source || "notification-service",
+        appId,
+      }),
       input.organizationId || "org_goodos",
       input.projectId || "proj_goodos_platform",
       input.environmentId || "env_goodos_production",
@@ -213,7 +256,10 @@ async function createNotification(input = {}) {
       channel,
       Number(input.priority || 100),
       JSON.stringify({ title, message, severity }),
-      JSON.stringify({ messageId }),
+      JSON.stringify({
+        messageId,
+        appId,
+      }),
       input.organizationId || "org_goodos",
       input.projectId || "proj_goodos_platform",
       input.environmentId || "env_goodos_production",
@@ -248,6 +294,7 @@ async function createNotification(input = {}) {
     severity,
     category,
     recipientEmail,
+    appId,
   };
 }
 

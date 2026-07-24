@@ -56,6 +56,73 @@ function allowedApps(apiKey) {
   return normalizeList(apiKey.allowedAppIds || apiKey.allowed_app_ids, ["*"]);
 }
 
+function apiError(message, statusCode = 400) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+async function notificationAppForRequest(apiKey, body = {}) {
+  const allowedAppIds = allowedApps(apiKey);
+  const requestedAppId = String(
+    body.appId ||
+    body.app_id ||
+    body.metadata?.appId ||
+    body.metadata?.app_id ||
+    body.payload?.appId ||
+    body.payload?.app_id ||
+    ""
+  ).trim().slice(0, 120);
+
+  const boundAppIds = allowedAppIds.filter(
+    (appId) => appId !== "*"
+  );
+
+  const appId =
+    requestedAppId ||
+    (
+      boundAppIds.length === 1
+        ? boundAppIds[0]
+        : "goodos"
+    );
+
+  if (
+    !allowedAppIds.includes("*") &&
+    !allowedAppIds.includes(appId)
+  ) {
+    throw apiError(
+      "This API key is not authorized to publish notifications for the requested application.",
+      403
+    );
+  }
+
+  const result = await dbQuery(
+    `
+      SELECT
+        id,
+        name,
+        domain
+
+      FROM apps
+
+      WHERE id = $1
+        AND status = 'active'
+
+      LIMIT 1
+    `,
+    [appId]
+  );
+
+  if (!result.rows[0]) {
+    throw apiError(
+      "Notification appId must identify an active GoodOS application.",
+      400
+    );
+  }
+
+  return result.rows[0];
+}
+
 async function apiKeyRequired(req, res, next) {
   try {
     const key = extractApiKey(req);
@@ -1234,6 +1301,11 @@ router.post("/notifications", apiKeyRequired, requireScope("write:notifications"
       context: { route: "/notifications", method: req.method }
     }).catch(() => null);
 
+    const notificationApp = await notificationAppForRequest(
+      req.goodosApiKey,
+      req.body || {}
+    );
+
     const notification = await notificationService.createNotification({
       title: req.body?.title || "GoodOS API Notification",
       message: req.body?.message || "",
@@ -1244,9 +1316,19 @@ router.post("/notifications", apiKeyRequired, requireScope("write:notifications"
       recipientUserId: req.body?.recipientUserId || null,
       source: "public-api",
       sourceId: req.goodosApiKey.id,
+      appId: notificationApp.id,
+      notificationKey: req.body?.notificationKey || req.body?.eventType || null,
+      actionUrl: req.body?.actionUrl || null,
       templateKey: req.body?.templateKey || null,
       variables: req.body?.variables || {},
       payload: req.body?.payload || {},
+      metadata: {
+        ...(req.body?.metadata || {}),
+        appId: notificationApp.id,
+        appName: notificationApp.name,
+        appDomain: notificationApp.domain,
+        publisherApiKeyId: req.goodosApiKey.id,
+      },
       queueEmail: req.body?.queueEmail === true,
       organizationId: req.goodosApiKey.organizationId || "org_goodos",
       projectId: req.goodosApiKey.projectId || "proj_goodos_platform",

@@ -882,7 +882,7 @@
       },
       "post": {
         "summary": "Create notification",
-        "description": "Requires scope: write:notifications.",
+        "description": "Publishes an app-scoped notification into GoodBase. The same notification and read state are available to the app's own notification center and to the GoodOS master Notification Center. Requires scope: write:notifications and an API key authorized for the supplied appId.",
         "security": [
           {
             "GoodOSApiKey": []
@@ -897,11 +897,14 @@
           "content": {
             "application/json": {
               "example": {
+                "appId": "goodqr",
                 "title": "System notice",
                 "message": "Hello from GoodOS Notifications V2",
                 "severity": "info",
                 "category": "system",
-                "channel": "in_app"
+                "channel": "in_app",
+                "recipientUserId": "00000000-0000-0000-0000-000000000000",
+                "actionUrl": "https://qr.goodos.app/notifications"
               }
             }
           }
