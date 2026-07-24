@@ -27,7 +27,9 @@ test("Fleet schema enforces tenant uniqueness, compliance, and buffered booking 
   const migration = read("migrations/20260722_goodfleet_core_v1.sql");
   assert.match(migration, /UNIQUE \(organization_id, vin\)/);
   assert.match(migration, /UNIQUE \(organization_id, license_plate\)/);
-  assert.match(migration, /tstzrange\(pickup_at - interval '2 hours', return_at \+ interval '2 hours'/);
+  assert.match(migration, /tsrange\(/);
+  assert.match(migration, /pickup_at AT TIME ZONE 'UTC'\) - interval '2 hours'/);
+  assert.match(migration, /return_at AT TIME ZONE 'UTC'\) \+ interval '2 hours'/);
   assert.match(migration, /EXCLUDE USING gist/);
   assert.match(migration, /fleet_audit_events/);
 });

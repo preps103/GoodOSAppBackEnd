@@ -90,7 +90,11 @@ ALTER TABLE fleet_bookings
   EXCLUDE USING gist (
     organization_id WITH =,
     vehicle_id WITH =,
-    tstzrange(pickup_at - interval '2 hours', return_at + interval '2 hours', '[)') WITH &&
+    tsrange(
+      (pickup_at AT TIME ZONE 'UTC') - interval '2 hours',
+      (return_at AT TIME ZONE 'UTC') + interval '2 hours',
+      '[)'
+    ) WITH &&
   )
   WHERE (
     vehicle_id IS NOT NULL AND status IN (
