@@ -354,13 +354,13 @@ INSERT INTO backend_jobs(id,name,display_name,description,job_type,handler_key,s
  ('job_goodbase_commercial_reconcile','goodbase.commercial.reconcile','Reconcile Commercial Controls','Reconciles immutable meters, quotas, spend and service status.','scheduled','goodbase.commercial.reconcile','active',20,300,300,3,'goodbase.commercial.reconcile',NOW(),' {"phase":38}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1))
 ON CONFLICT(id) DO UPDATE SET handler_key=EXCLUDED.handler_key,status='active',schedule_seconds=EXCLUDED.schedule_seconds,description=EXCLUDED.description;
 
-INSERT INTO backend_job_schedules(id,job_id,schedule_type,interval_seconds,timezone,enabled,next_run_at) VALUES
- ('schedule_goodbase_analytics_rollup','job_goodbase_analytics_rollup','interval',300,'UTC',TRUE,NOW()),
- ('schedule_goodbase_telemetry_regressions','job_goodbase_telemetry_regressions','interval',300,'UTC',TRUE,NOW()),
- ('schedule_goodbase_experiments_evaluate','job_goodbase_experiments_evaluate','interval',300,'UTC',TRUE,NOW()),
- ('schedule_goodbase_distribution_dispatch','job_goodbase_distribution_dispatch','interval',15,'UTC',TRUE,NOW()),
- ('schedule_goodbase_cdn_dispatch','job_goodbase_cdn_dispatch','interval',10,'UTC',TRUE,NOW()),
- ('schedule_goodbase_commercial_reconcile','job_goodbase_commercial_reconcile','interval',300,'UTC',TRUE,NOW())
-ON CONFLICT(id) DO UPDATE SET interval_seconds=EXCLUDED.interval_seconds,enabled=TRUE;
+INSERT INTO backend_job_schedules(id,job_id,schedule_type,interval_seconds,timezone,enabled,next_run_at,organization_id,project_id,environment_id) VALUES
+ ('schedule_goodbase_analytics_rollup','job_goodbase_analytics_rollup','interval',300,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_telemetry_regressions','job_goodbase_telemetry_regressions','interval',300,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_experiments_evaluate','job_goodbase_experiments_evaluate','interval',300,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_distribution_dispatch','job_goodbase_distribution_dispatch','interval',15,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_cdn_dispatch','job_goodbase_cdn_dispatch','interval',10,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_commercial_reconcile','job_goodbase_commercial_reconcile','interval',300,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production')
+ON CONFLICT(id) DO UPDATE SET interval_seconds=EXCLUDED.interval_seconds,enabled=TRUE,organization_id=EXCLUDED.organization_id,project_id=EXCLUDED.project_id,environment_id=EXCLUDED.environment_id;
 
 COMMIT;

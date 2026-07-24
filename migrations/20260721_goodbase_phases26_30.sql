@@ -436,11 +436,11 @@ VALUES
  ('job_goodbase_messaging_dispatch','goodbase.messaging.dispatch','Dispatch Push Messaging','Dispatches queued APNs, FCM and Web Push messages.','scheduled','goodbase.messaging.dispatch','active',5,5,180,5,'goodbase.messaging.dispatch',NOW(),'{"phase":30}'::jsonb,'org_goodos','proj_goodos_platform','env_goodos_production',(SELECT id FROM users ORDER BY created_at LIMIT 1))
 ON CONFLICT(id) DO UPDATE SET handler_key=EXCLUDED.handler_key,display_name=EXCLUDED.display_name,description=EXCLUDED.description,status='active',schedule_seconds=EXCLUDED.schedule_seconds;
 
-INSERT INTO backend_job_schedules(id,job_id,schedule_type,interval_seconds,timezone,enabled,next_run_at)
+INSERT INTO backend_job_schedules(id,job_id,schedule_type,interval_seconds,timezone,enabled,next_run_at,organization_id,project_id,environment_id)
 VALUES
- ('schedule_goodbase_assurance_daily','job_goodbase_assurance_daily','interval',86400,'UTC',TRUE,NOW()),
- ('schedule_goodbase_sms_dispatch','job_goodbase_sms_dispatch','interval',10,'UTC',TRUE,NOW()),
- ('schedule_goodbase_messaging_dispatch','job_goodbase_messaging_dispatch','interval',5,'UTC',TRUE,NOW())
-ON CONFLICT(id) DO UPDATE SET interval_seconds=EXCLUDED.interval_seconds,enabled=TRUE;
+ ('schedule_goodbase_assurance_daily','job_goodbase_assurance_daily','interval',86400,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_sms_dispatch','job_goodbase_sms_dispatch','interval',10,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production'),
+ ('schedule_goodbase_messaging_dispatch','job_goodbase_messaging_dispatch','interval',5,'UTC',TRUE,NOW(),'org_goodos','proj_goodos_platform','env_goodos_production')
+ON CONFLICT(id) DO UPDATE SET interval_seconds=EXCLUDED.interval_seconds,enabled=TRUE,organization_id=EXCLUDED.organization_id,project_id=EXCLUDED.project_id,environment_id=EXCLUDED.environment_id;
 
 COMMIT;
