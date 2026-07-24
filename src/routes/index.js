@@ -17,6 +17,7 @@ const sqlEditorRoutes = require("./sql-editor.routes");
 const databaseManagementRoutes = require("./database-management.routes");
 const voiceRoutes = require("./voice.routes");
 const teamsRoutes = require("./teams.routes");
+const goodAdsRoutes = require("./goodads.routes");
 
 
 const billingRoutes = require("./billing.routes");
@@ -194,6 +195,7 @@ router.get("/api", (req, res) => {
 });
 
 router.use("/health", healthRoutes);
+router.use("/api/apps/goodads/v1", goodAdsRoutes);
 router.use("/api/apps", appsRoutes);
 router.use("/api/db", dbRoutes);
 router.use("/api/auth", authRoutes);
