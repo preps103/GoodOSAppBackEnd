@@ -15,6 +15,10 @@ test("backend console loads the themed ADA control", () => {
   assert.match(consoleHtml, /src="\/backend-ada\.js"/);
   assert.match(routes, /router\.get\("\/backend-ada\.css"/);
   assert.match(routes, /router\.get\("\/backend-ada\.js"/);
+  assert.equal(
+    (routes.match(/Cross-Origin-Resource-Policy", "cross-origin"/g) || []).length,
+    2,
+  );
 });
 
 test("ADA control preserves the GoodOS accessibility contract", () => {
@@ -37,6 +41,33 @@ test("ADA control preserves the GoodOS accessibility contract", () => {
   assert.match(client, /event\.key === "Escape"/);
   assert.match(styles, /html\.ada-reduce-motion/);
   assert.match(styles, /html\.ada-focus-indicators/);
+});
+
+test("ADA launcher and panel use the universal GoodOS dimensions", () => {
+  const styles = read("src/public/backend-ada.css");
+
+  for (const requiredRule of [
+    "right: 24px",
+    "bottom: 24px",
+    "z-index: 50",
+    "width: 90px",
+    "height: 46px",
+    "padding: 12px 16px",
+    "gap: 8px",
+    "font-size: 12px",
+    "font-weight: 700",
+    "line-height: 16px",
+    "letter-spacing: 0.05em",
+    "border-radius: 9999px",
+    "bottom: 96px",
+    "z-index: 100",
+    "width: 400px",
+    "height: 750px",
+    "max-height: 85vh",
+    "border-radius: 24px",
+  ]) {
+    assert.ok(styles.includes(requiredRule), `${requiredRule} must remain standardized`);
+  }
 });
 
 test("PostgREST exposes its local-only admin readiness endpoint", () => {

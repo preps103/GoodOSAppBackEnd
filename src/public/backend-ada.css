@@ -7,30 +7,33 @@
 
 .backend-ada-root {
   position: relative;
-  z-index: 10000;
+  z-index: 50;
 }
 
 .backend-ada-trigger {
   position: fixed;
-  right: 22px;
-  bottom: 76px;
-  z-index: 10000;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  min-width: 92px;
-  height: 56px;
-  padding: 0 17px;
+  gap: 8px;
+  width: 90px;
+  height: 46px;
+  padding: 12px 16px;
+  box-sizing: border-box;
   border: 1px solid rgba(171, 163, 255, 0.5);
-  border-radius: 999px;
+  border-radius: 9999px;
   color: #fff;
   background: linear-gradient(145deg, #7768ff, #5145cd 60%, #3069bd);
   box-shadow: 0 18px 44px rgba(38, 30, 112, 0.42), inset 0 1px rgba(255, 255, 255, 0.24);
   font: inherit;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
@@ -60,10 +63,13 @@
 }
 
 .backend-ada-trigger-label {
-  line-height: 1;
+  line-height: 16px;
 }
 
 .backend-ada-active-count {
+  position: absolute;
+  top: -7px;
+  right: -7px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -81,16 +87,18 @@
 
 .backend-ada-panel {
   position: fixed;
-  right: 22px;
-  bottom: 144px;
-  z-index: 10001;
+  right: 24px;
+  bottom: 96px;
+  z-index: 100;
   display: flex;
   overflow: hidden;
   flex-direction: column;
-  width: min(390px, calc(100vw - 32px));
-  max-height: min(690px, calc(100vh - 168px));
+  width: 400px;
+  height: 750px;
+  max-width: calc(100vw - 32px);
+  max-height: 85vh;
   border: 1px solid var(--backend-ada-border);
-  border-radius: 22px;
+  border-radius: 24px;
   color: #edf1ff;
   background:
     radial-gradient(circle at 100% 0, rgba(83, 103, 207, 0.2), transparent 38%),
@@ -359,17 +367,20 @@
 }
 
 html.ada-high-contrast #app,
-html.ada-high-contrast #login {
+html.ada-high-contrast #login,
+html.ada-high-contrast body > :not(.backend-ada-root) {
   filter: contrast(1.2);
 }
 
 html.ada-grayscale #app,
-html.ada-grayscale #login {
+html.ada-grayscale #login,
+html.ada-grayscale body > :not(.backend-ada-root) {
   filter: grayscale(1);
 }
 
 html.ada-high-contrast.ada-grayscale #app,
-html.ada-high-contrast.ada-grayscale #login {
+html.ada-high-contrast.ada-grayscale #login,
+html.ada-high-contrast.ada-grayscale body > :not(.backend-ada-root) {
   filter: grayscale(1) contrast(1.2);
 }
 
@@ -383,14 +394,16 @@ html.ada-reduce-motion *::after {
 }
 
 html.ada-highlight-links #app a,
-html.ada-highlight-links #login a {
+html.ada-highlight-links #login a,
+html.ada-highlight-links body > :not(.backend-ada-root) a {
   text-decoration: underline !important;
   text-decoration-thickness: 2px !important;
   text-underline-offset: 3px !important;
 }
 
 html.ada-focus-indicators #app :focus-visible,
-html.ada-focus-indicators #login :focus-visible {
+html.ada-focus-indicators #login :focus-visible,
+html.ada-focus-indicators body > :not(.backend-ada-root) :focus-visible {
   outline: 3px solid var(--backend-ada-cyan) !important;
   outline-offset: 3px !important;
 }
@@ -398,22 +411,4 @@ html.ada-focus-indicators #login :focus-visible {
 @keyframes backend-ada-panel-enter {
   from { opacity: 0; transform: translateY(12px) scale(0.975); }
   to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@media (max-width: 760px) {
-  .backend-ada-trigger {
-    right: 14px;
-    bottom: 70px;
-    min-width: 84px;
-    height: 52px;
-    padding: 0 14px;
-  }
-
-  .backend-ada-panel {
-    right: 14px;
-    bottom: 132px;
-    width: calc(100vw - 28px);
-    max-height: calc(100vh - 152px);
-    border-radius: 19px;
-  }
 }

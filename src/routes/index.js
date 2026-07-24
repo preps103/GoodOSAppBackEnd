@@ -211,11 +211,15 @@ router.get("/goodbase-auth.js", (req, res) => {
 });
 
 router.get("/backend-ada.js", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
   res.type("application/javascript");
   res.sendFile(path.join(__dirname, "../public/backend-ada.js"));
 });
 
 router.get("/backend-ada.css", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
   res.type("text/css");
   res.sendFile(path.join(__dirname, "../public/backend-ada.css"));
 });
