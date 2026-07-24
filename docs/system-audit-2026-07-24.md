@@ -77,7 +77,7 @@ only their compiled output.
 
 - Registry contains exactly 15 active entries: GoodOS plus 14 products.
 - GoodBase is canonical as `goodbase` at `base.goodos.app`.
-- There are zero `goodbackend` or `backend.goodos.app` values across every
+- There are zero retired GoodBackend identifiers or retired backend-host values across every
   production `app_id` column.
 - There are zero retired GoodBackend references in notification metadata or
   payloads.
@@ -131,7 +131,6 @@ authorization.
 
 ### Retired DNS records
 
-Origin routes and certificates for `backend.goodos.app` and `hub.goodos.app`
+Origin routes and certificates for the retired backend and GoodHub hostnames
 are retired, but the DNS records still resolve through Cloudflare. They must be
 deleted at the DNS provider to complete domain retirement.
-
