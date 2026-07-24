@@ -3,6 +3,11 @@
   --backend-ada-cyan: #47d7ef;
   --backend-ada-surface: rgba(12, 17, 30, 0.985);
   --backend-ada-border: rgba(137, 151, 192, 0.2);
+  --backend-ada-trigger-color: #fff;
+  --backend-ada-trigger-border: rgba(171, 163, 255, 0.5);
+  --backend-ada-trigger-background: linear-gradient(145deg, #7768ff, #5145cd 60%, #3069bd);
+  --backend-ada-trigger-shadow: 0 18px 44px rgba(38, 30, 112, 0.42), inset 0 1px rgba(255, 255, 255, 0.24);
+  --backend-ada-trigger-hover-shadow: 0 23px 52px rgba(38, 30, 112, 0.52), inset 0 1px rgba(255, 255, 255, 0.28);
 }
 
 .backend-ada-root {
@@ -25,15 +30,20 @@ button[aria-label="Open accessibility options"]:not(.backend-ada-trigger) {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 90px;
-  height: 46px;
-  padding: 12px 16px;
+  width: 90px !important;
+  min-width: 90px !important;
+  max-width: 90px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  padding: 12px 16px !important;
   box-sizing: border-box;
-  border: 1px solid rgba(171, 163, 255, 0.5);
+  flex: 0 0 90px;
+  border: 1px solid var(--backend-ada-trigger-border);
   border-radius: 9999px;
-  color: #fff;
-  background: linear-gradient(145deg, #7768ff, #5145cd 60%, #3069bd);
-  box-shadow: 0 18px 44px rgba(38, 30, 112, 0.42), inset 0 1px rgba(255, 255, 255, 0.24);
+  color: var(--backend-ada-trigger-color);
+  background: var(--backend-ada-trigger-background);
+  box-shadow: var(--backend-ada-trigger-shadow);
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -47,7 +57,7 @@ button[aria-label="Open accessibility options"]:not(.backend-ada-trigger) {
 .backend-ada-trigger:hover {
   filter: brightness(1.08);
   transform: translateY(-3px);
-  box-shadow: 0 23px 52px rgba(38, 30, 112, 0.52), inset 0 1px rgba(255, 255, 255, 0.28);
+  box-shadow: var(--backend-ada-trigger-hover-shadow);
 }
 
 .backend-ada-trigger:active {
