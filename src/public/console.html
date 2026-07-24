@@ -14563,7 +14563,7 @@ document.getElementById("userPill").addEventListener("click", event => {
 
 document.getElementById("profileMenuBtn").addEventListener("click", () => openTopbarView("profile"));
 document.getElementById("themeBtn").addEventListener("click", () => openTopbarView("preferences"));
-document.getElementById("notificationsBtn").addEventListener("click", () => openTopbarView("alerts"));
+document.getElementById("notificationsBtn").addEventListener("click", () => window.dispatchEvent(new CustomEvent("goodbase:notifications")));
 
 document.addEventListener("click", event => {
   const user = document.querySelector(".topbar-user");
@@ -22781,6 +22781,7 @@ if (!window.__goodosGlobalSearchListenerInstalled) {
 <script src="/account-settings.js?v=752e8dd"></script>
 <script src="/backend-ada.js" defer></script>
 <script src="/backend-collapsible-sections.js?v=20260720-1236" defer></script>
+<script src="/app-notification-center.js?v=20260724" defer></script>
 
 <!-- GOODOS_UPDATE_SITES_FLOATING_LINK -->
 <a class="update-sites-link" href="/update-sites">Update Sites</a>
