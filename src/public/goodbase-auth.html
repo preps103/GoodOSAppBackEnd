@@ -1,4 +1,84 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in with Goodbase</title><link rel="canonical" href="https://base.goodos.app/auth/ui"><style>html{color-scheme:dark}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#07090f;color:#f6f7fb;font:16px system-ui}.card{width:min(420px,calc(100vw - 40px));padding:32px;border:1px solid #2b3040;border-radius:24px;background:#111520}h1{margin:12px 0 8px}p{color:#aab0c0}.field{display:grid;gap:8px;margin:18px 0}input,button{box-sizing:border-box;width:100%;padding:14px 16px;border-radius:12px;border:1px solid #343a4b;background:#0b0e15;color:inherit}button{cursor:pointer;background:#6d5dfc;border:0;font-weight:700}.providers{display:grid;gap:10px;margin-top:18px}.provider{background:#191e2b;border:1px solid #343a4b}.status{min-height:24px;color:#8ee6bd}.hidden{display:none}</style></head>
-<body><main class="card"><div aria-hidden="true">◆</div><h1>Sign in with Goodbase</h1><p>Secure access for GoodOS applications.</p><form id="email-form"><label class="field">Email<input id="email" type="email" autocomplete="email" required></label><button type="submit">Send a one-time code</button></form><form id="code-form" class="hidden"><label class="field">One-time code<input id="code" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="6" required></label><button type="submit">Verify and sign in</button></form><div id="providers" class="providers" aria-label="Identity providers"></div><p id="status" class="status" role="status"></p></main><script src="/goodbase-auth.js" defer></script></body></html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Sign in to GoodBase</title>
+  <link rel="canonical" href="https://base.goodos.app/auth/ui">
+  <link rel="stylesheet" href="/backend-login.css?v=20260724">
+  <style>
+    :root{--goodbase-login-accent:#6555f5;--goodbase-login-brand-bg:#080b12}
+    .base-brand{box-sizing:border-box;min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;padding:64px;background:radial-gradient(circle at 76% 18%,rgba(101,85,245,.3),transparent 35%),radial-gradient(circle at 28% 100%,rgba(6,182,212,.18),transparent 38%),#080b12}
+    .base-brand__logo{display:flex;align-items:center;gap:14px;font-size:22px;font-weight:900}.base-brand__mark{width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(129,140,248,.35);border-radius:14px;background:rgba(99,102,241,.16);color:#a5b4fc}
+    .base-brand__content{max-width:720px}.base-brand__eyebrow{color:#a5b4fc;font-size:12px;font-weight:800;letter-spacing:.18em}.base-brand h1{max-width:650px;margin:26px 0 0;font-size:58px;line-height:1.06;letter-spacing:-.045em}.base-brand p{max-width:620px;margin:24px 0 0;color:#cbd5e1;font-size:18px;line-height:1.75}
+    .base-brand__cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.base-brand__card{border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(255,255,255,.055);padding:20px}.base-brand__card strong{display:block}.base-brand__card span{display:block;margin-top:6px;color:#94a3b8;font-size:12px}
+    .hidden{display:none!important}
+  </style>
+</head>
+<body>
+  <main data-goodbase-login>
+    <section data-goodbase-login-brand class="base-brand">
+      <div class="base-brand__logo"><span class="base-brand__mark">◇</span><span>GOODBASE</span></div>
+      <div class="base-brand__content">
+        <div class="base-brand__eyebrow">IDENTITY · ACCESS · INFRASTRUCTURE</div>
+        <h1>The secure foundation for every GoodOS application.</h1>
+        <p>One trusted identity connects your applications, teams, permissions, and account security across the GoodOS ecosystem.</p>
+      </div>
+      <div class="base-brand__cards">
+        <div class="base-brand__card"><strong>Secure</strong><span>Protected identity</span></div>
+        <div class="base-brand__card"><strong>Connected</strong><span>One shared session</span></div>
+        <div class="base-brand__card"><strong>Controlled</strong><span>Application access</span></div>
+      </div>
+    </section>
+    <section data-goodbase-login-auth>
+      <div data-goodbase-login-panel>
+        <p class="goodbase-login-kicker" id="kicker">Welcome back</p>
+        <h2 class="goodbase-login-title" id="title">Sign in to GoodBase</h2>
+        <p class="goodbase-login-subtitle" id="subtitle">Access your GoodOS applications with one secure identity.</p>
+        <p data-goodbase-login-error id="error" class="hidden" role="alert"></p>
+        <p id="notice" class="goodbase-login-notice hidden" role="status"></p>
+
+        <div id="login-only">
+          <div data-goodbase-login-providers id="providers" aria-label="Social sign in"></div>
+          <button data-goodbase-login-provider id="goodos-sso" type="button">
+            <span class="goodbase-login-provider-mark" aria-hidden="true">◇</span>
+            Sign in with GoodOS SSO
+          </button>
+          <div data-goodbase-login-divider>OR USE EMAIL</div>
+        </div>
+
+        <form data-goodbase-login-fields id="auth-form">
+          <div id="name-fields" class="hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <label data-goodbase-login-field>
+              First name
+              <input id="first-name" type="text" autocomplete="given-name" maxlength="80">
+            </label>
+            <label data-goodbase-login-field>
+              Last name
+              <input id="last-name" type="text" autocomplete="family-name" maxlength="80">
+            </label>
+          </div>
+          <label data-goodbase-login-field id="email-field">
+            Email address
+            <input id="email" type="email" autocomplete="username" maxlength="320" required placeholder="you@company.com">
+          </label>
+          <label data-goodbase-login-field id="password-field">
+            <span><span id="password-label">Password</span><button data-goodbase-login-recovery id="forgot" type="button">Forgot your password?</button></span>
+            <input id="password" type="password" autocomplete="current-password" maxlength="128" required placeholder="Enter your password">
+          </label>
+          <label data-goodbase-login-field id="confirm-field" class="hidden">
+            Confirm new password
+            <input id="confirm-password" type="password" autocomplete="new-password" maxlength="128">
+          </label>
+          <button data-goodbase-login-submit id="submit" type="submit">Sign in securely →</button>
+        </form>
+        <button class="goodbase-login-back hidden" id="back" type="button">← Back to sign in</button>
+        <p class="goodbase-login-create" id="create">New to GoodOS? <a data-goodbase-login-recovery id="create-link" href="/register">Create account</a></p>
+        <p class="goodbase-login-security">Authentication and account security are managed through GoodBase.</p>
+      </div>
+    </section>
+  </main>
+  <script src="/goodbase-auth.js?v=20260724" defer></script>
+</body>
+</html>

@@ -204,6 +204,11 @@ router.get("/auth/ui", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/goodbase-auth.html"));
 });
 
+router.get("/register", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.sendFile(path.join(__dirname, "../public/goodbase-auth.html"));
+});
+
 router.get("/goodbase-auth.js", (req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   res.type("application/javascript");
