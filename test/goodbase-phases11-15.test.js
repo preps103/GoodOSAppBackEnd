@@ -19,7 +19,7 @@ test("application launcher renders every registered GoodOS application beneath V
   assert.match(source, /goodos-app-launcher-list/);
   assert.doesNotMatch(source, /GoodFleet|GoodQR|GoodTrusts/);
   assert.match(migration, /domain='base\.goodos\.app'/);
-  assert.match(migration, /name='Goodbase'/);
+  assert.match(migration, /name='GoodBase'/);
 });
 
 test("Phase 11 provides single-use passwordless auth and tenant-isolated identity controls", () => {

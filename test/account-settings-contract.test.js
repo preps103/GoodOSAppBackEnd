@@ -13,7 +13,7 @@ test("backend console exposes user, business, and personal settings navigation",
   assert.match(consoleHtml, /data-view="profile">User Profile/);
   assert.match(consoleHtml, /data-view="business-profile">Business Profile/);
   assert.match(consoleHtml, /data-view="preferences">My Settings/);
-  assert.match(consoleHtml, /src="\/account-settings\.js"/);
+  assert.match(consoleHtml, /src="\/account-settings\.js(?:\?[^"]*)?"/);
 });
 
 test("account settings client wires profile, logo, preferences, password, sessions, and export APIs", () => {
