@@ -9,7 +9,6 @@ const { preserveEvidence, validCommit } = require("./lib/goodbase-evidence");
 const root = path.resolve(__dirname, "..");
 const commit = process.env.GOODBASE_RELEASE_COMMIT || process.env.GITHUB_SHA || "unknown";
 const canonicalOrigin = process.env.GOODBASE_CANONICAL_ORIGIN || "https://base.goodos.app";
-const legacyOrigin = process.env.GOODBASE_LEGACY_ORIGIN || "https://backend.goodos.app";
 const reportOnly = process.argv.includes("--report-only");
 
 async function http(name, url, accepted, inspect = () => true) {
@@ -46,10 +45,9 @@ async function main() {
     passed: fs.existsSync(path.join(root, file))
   }));
 
-  const [baseReady, canonicalHeader, legacyRedirect, canonicalSdk, legacySdk] = await Promise.all([
+  const [baseReady, canonicalHeader, canonicalSdk, legacySdk] = await Promise.all([
     http("canonical-readiness", `${canonicalOrigin}/api/health/ready`, [200]),
     http("canonical-response-header", `${canonicalOrigin}/api/health/live`, [200], (response) => response.headers.get("x-goodbase-canonical-origin") === canonicalOrigin),
-    http("legacy-308", `${legacyOrigin}/api/health/ready`, [308], (response) => response.headers.get("location") === `${canonicalOrigin}/api/health/ready`),
     http("canonical-sdk", `${canonicalOrigin}/sdk/goodbase.js`, [200]),
     http("legacy-sdk-deprecation", `${canonicalOrigin}/sdk/goodos.js`, [200], (response) => response.headers.get("deprecation") === "true" && Boolean(response.headers.get("sunset")))
   ]);
@@ -85,7 +83,7 @@ async function main() {
   };
 
   const phases = [
-    phase(39, "canonical production cutover", [baseReady, canonicalHeader, legacyRedirect, canonicalSdk, legacySdk]),
+    phase(39, "canonical production cutover", [baseReady, canonicalHeader, canonicalSdk, legacySdk]),
     phase(40, "external providers and controllers", [
       { name: "controllers", passed: values.readyControllers >= 10, observed: values.readyControllers, required: 10 },
       { name: "authentication-providers", passed: values.enabledAuthProviders >= 10, observed: values.enabledAuthProviders, required: 10 },

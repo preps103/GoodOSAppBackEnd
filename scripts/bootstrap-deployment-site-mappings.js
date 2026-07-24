@@ -15,7 +15,7 @@ const APPLY =
 
 const PROCESS_BY_APP = {
   goodads: "goodads",
-  goodbackend: "goodapp-backend",
+  goodbase: "goodapp-backend",
   goodboost: "goodboost",
   goodcustoms: "goodcustoms",
   gooddesigner: "gooddesigner",

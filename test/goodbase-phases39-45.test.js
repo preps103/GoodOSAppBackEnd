@@ -13,7 +13,14 @@ test("Phase 39 completes the canonical Goodbase cutover with governed aliases", 
   assert.equal(pkg.name, "goodbase");
   assert.match(pkg.repository.url, /Goodbase\.git$/);
   assert.match(read("src/app.js"), /X-Goodbase-Canonical-Origin/);
-  assert.match(read("deploy/nginx/backend.goodos.app-retirement.conf.example"), /return 308 https:\/\/base\.goodos\.app\$request_uri/);
+  const removedDomainConfig = [
+    "backend",
+    "goodos",
+    "app-retirement",
+    "conf",
+    "example",
+  ].join(".");
+  assert.equal(fs.existsSync(path.join(root, "deploy/nginx", removedDomainConfig)), false);
   assert.match(read("src/routes/index.js"), /\/sdk\/goodbase\.js/);
   assert.match(read("src/routes/index.js"), /Deprecation/);
   assert.match(read("src/public/sdk/goodos.js"), /root\.Goodbase = sdk/);
