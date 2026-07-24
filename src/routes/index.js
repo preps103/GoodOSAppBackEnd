@@ -21,6 +21,8 @@ const teamsRoutes = require("./teams.routes");
 const goodboostRoutes = require("./goodboost.routes");
 const goodswapzRoutes = require("./goodswapz.routes");
 const goodAdsRoutes = require("./goodads.routes");
+const fleetRoutes = require("./fleet.routes");
+const fleetCommunicationsRoutes = require("./fleet-communications.routes");
 
 
 const billingRoutes = require("./billing.routes");
@@ -328,6 +330,8 @@ router.use(
 router.use("/api/voice", voiceRoutes);
 router.use("/api/goodspeech/v1", goodSpeechRoutes);
 router.use("/api/teams", teamsRoutes);
+router.use("/api/fleet/v1", fleetRoutes);
+router.use("/api/fleet/v1/communications", fleetCommunicationsRoutes);
 router.use(
   "/storage/v2",
   storageV2CdnRoutes

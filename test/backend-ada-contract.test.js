@@ -51,6 +51,10 @@ test("ADA control preserves the GoodOS accessibility contract", () => {
 
 test("ADA launcher and panel use the universal GoodOS dimensions", () => {
   const styles = read("src/public/backend-ada.css");
+  const triggerRule = styles.match(/\.backend-ada-trigger\s*\{([\s\S]*?)\}/)?.[1] || "";
+  const triggerIconRule =
+    styles.match(/\.backend-ada-trigger svg,[\s\S]*?\{([\s\S]*?)\}/)?.[1] || "";
+  const panelRule = styles.match(/\.backend-ada-panel\s*\{([\s\S]*?)\}/)?.[1] || "";
 
   for (const requiredRule of [
     "right: 24px",
@@ -77,6 +81,46 @@ test("ADA launcher and panel use the universal GoodOS dimensions", () => {
     "border-radius: 24px",
   ]) {
     assert.ok(styles.includes(requiredRule), `${requiredRule} must remain standardized`);
+  }
+
+  for (const requiredTriggerRule of [
+    "right: 24px",
+    "bottom: 24px",
+    "z-index: 50",
+    "width: 90px",
+    "height: 46px",
+    "padding: 12px 16px",
+    "gap: 8px",
+    "border: 1px",
+    "border-radius: 9999px",
+    "font-size: 12px",
+    "font-weight: 700",
+    "line-height: 16px",
+    "letter-spacing: 0.05em",
+    "text-transform: uppercase",
+  ]) {
+    assert.ok(
+      triggerRule.includes(requiredTriggerRule),
+      `${requiredTriggerRule} must remain on the universal launcher`,
+    );
+  }
+
+  assert.match(triggerIconRule, /width:\s*20px/);
+  assert.match(triggerIconRule, /height:\s*20px/);
+
+  for (const requiredPanelRule of [
+    "right: 24px",
+    "bottom: 96px",
+    "z-index: 100",
+    "width: 400px",
+    "height: 750px",
+    "max-height: 85vh",
+    "border-radius: 24px",
+  ]) {
+    assert.ok(
+      panelRule.includes(requiredPanelRule),
+      `${requiredPanelRule} must remain on the universal panel`,
+    );
   }
 });
 
