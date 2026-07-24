@@ -412,9 +412,9 @@
       height: var(--suite-topbar-height);
       border-bottom: 1px solid var(--nav-border);
       display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--suite-search-width) minmax(0, 1fr);
+      grid-template-columns: auto minmax(280px, var(--suite-search-width)) minmax(0, 1fr) auto;
       align-items: center;
-      gap: 24px;
+      gap: 18px;
       padding: 0 var(--suite-edge-space);
       background:
         linear-gradient(90deg, rgba(14,19,37,.98), rgba(18,24,45,.98) 52%, rgba(12,17,33,.98));
@@ -428,6 +428,7 @@
     }
 
     .topbar-left,
+    .topbar-actions,
     .topbar-right {
       display: flex;
       align-items: center;
@@ -435,6 +436,12 @@
     }
 
     .topbar-left { gap: 16px; }
+    .topbar-actions {
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .topbar-actions::-webkit-scrollbar { display: none; }
     .topbar-right { justify-content: flex-end; gap: 9px; }
 
     .topbar-brand {
@@ -1421,7 +1428,7 @@
       .two { grid-template-columns: 1fr; }
       .cards[data-card-count="4"],
       .cards[data-card-count="5"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .topbar { grid-template-columns: auto minmax(280px, 1fr) auto; padding: 0 16px; gap: 14px; }
+      .topbar { grid-template-columns: auto minmax(280px, 1fr) minmax(0, auto) auto; padding: 0 16px; gap: 14px; }
       .workspace-select { display: none; }
       .topbar-user-button { min-width: 52px; }
       .topbar-user-copy, .topbar-user-chevron { display: none; }
@@ -1442,7 +1449,7 @@
       .brand { padding-bottom: 8px; }
       .nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; }
       .nav-section { margin-top: 10px; }
-      .topbar { position: sticky; grid-template-columns: auto minmax(160px, 1fr) auto; min-height: var(--suite-topbar-height); padding-block: 12px; gap: 10px; }
+      .topbar { position: sticky; grid-template-columns: auto minmax(160px, 1fr) minmax(0, auto) auto; min-height: var(--suite-topbar-height); padding-block: 12px; gap: 10px; }
       .topbar-brand > span:last-child { display: none; }
       .topbar-left { gap: 0; }
       .topbar-right .topbar-icon-button:not(.topbar-help) { display: none; }
@@ -5611,6 +5618,7 @@
 }
 </style>
 <link rel="stylesheet" href="/account-settings.css?v=752e8dd" />
+<link rel="stylesheet" href="/backend-topbar.css" />
 <link rel="stylesheet" href="/backend-ada.css" />
 <link rel="stylesheet" href="/backend-collapsible-sections.css?v=20260720-1236" />
 </head>
@@ -5668,37 +5676,40 @@
   </div>
 
   <div id="app" class="shell hidden">
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="topbar-brand">
-          <span class="topbar-brand-mark" aria-hidden="true">
+    <header class="topbar goodos-topbar" data-goodos-topbar>
+      <div class="topbar-left goodos-topbar__identity" data-goodos-topbar-identity>
+        <div class="topbar-brand goodos-topbar__brand" data-goodos-topbar-brand>
+          <span class="topbar-brand-mark goodos-topbar__brand-mark" data-goodos-topbar-brand-mark aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m12 3 7.5 4.2v9.6L12 21l-7.5-4.2V7.2L12 3Z" stroke="currentColor" stroke-width="1.8"/><path d="m4.8 7.4 7.2 4.1 7.2-4.1M12 11.5V21" stroke="currentColor" stroke-width="1.8"/></svg>
           </span>
           <span>GoodBase</span>
         </div>
-        <select class="workspace-select" id="workspaceSelect" aria-label="Current workspace">
+        <select class="workspace-select goodos-topbar__workspace" data-goodos-topbar-workspace id="workspaceSelect" aria-label="Current workspace">
           <option>GoodBase Owner Workspace</option>
         </select>
       </div>
-      <div class="search">
+      <div class="search goodos-topbar__search" data-goodos-topbar-search>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <input id="searchInput" placeholder="Search applications, tools, and commands..." />
         <span class="search-shortcut">CTRL K</span>
       </div>
-      <div class="topbar-right">
-        <button class="topbar-icon-button" id="themeBtn" type="button" aria-label="Display settings">
+      <nav class="topbar-actions goodos-topbar__actions" data-goodos-topbar-actions aria-label="GoodBase application actions"></nav>
+      <div class="topbar-right goodos-topbar__controls" data-goodos-topbar-controls>
+        <button class="topbar-icon-button goodos-topbar__control" data-goodos-topbar-control="theme" id="themeBtn" type="button" aria-label="Display settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
-        <button class="topbar-icon-button" id="notificationsBtn" type="button" aria-label="Notifications">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="notification-badge hidden" id="notificationBadge">0</span>
-        </button>
-        <a class="topbar-icon-button topbar-help" href="/docs" aria-label="Help">
+        <div data-goodos-notifications data-goodos-notification-mode="application" data-goodos-notification-app-id="goodbase">
+          <button class="topbar-icon-button goodos-topbar__control" data-goodos-topbar-control="notifications" data-goodos-notification-trigger id="notificationsBtn" type="button" aria-label="GoodBase notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="notification-badge hidden" data-goodos-notification-badge id="notificationBadge">0</span>
+          </button>
+        </div>
+        <a class="topbar-icon-button topbar-help goodos-topbar__control" data-goodos-topbar-control="help" href="/docs" aria-label="Help">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9.7 9a2.4 2.4 0 1 1 3.8 2c-1 .7-1.5 1.1-1.5 2.3M12 17h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </a>
         <span class="topbar-divider"></span>
         <div class="topbar-user">
-          <button class="topbar-user-button" id="userPill" type="button" aria-haspopup="menu" aria-expanded="false">Loading...</button>
+          <button class="topbar-user-button" data-goodos-topbar-control="account" id="userPill" type="button" aria-haspopup="menu" aria-expanded="false">Loading...</button>
           <div class="topbar-user-menu hidden" id="userMenu" role="menu">
             <button type="button" id="profileMenuBtn" role="menuitem">Profile settings</button>
             <button type="button" id="logoutBtn" role="menuitem">Sign out</button>

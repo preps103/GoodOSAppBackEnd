@@ -29,7 +29,27 @@ test("GoodBase uses the shared GoodApps desktop top-bar sizing contract", () => 
 
   assert.match(
     consoleHtml,
-    /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*var\(--suite-search-width\)\s*minmax\(0,\s*1fr\)\s*;/
+    /grid-template-columns:\s*auto\s*minmax\(280px,\s*var\(--suite-search-width\)\)\s*minmax\(0,\s*1fr\)\s*auto\s*;/
   );
   assert.match(consoleHtml, /padding:\s*0\s+var\(--suite-edge-space\)\s*;/);
+});
+
+test("GoodBase implements the ordered shared top-bar zones", () => {
+  const identity = consoleHtml.indexOf("data-goodos-topbar-identity");
+  const search = consoleHtml.indexOf("data-goodos-topbar-search");
+  const actions = consoleHtml.indexOf("data-goodos-topbar-actions");
+  const controls = consoleHtml.indexOf("data-goodos-topbar-controls");
+
+  assert.ok(identity >= 0);
+  assert.ok(search > identity);
+  assert.ok(actions > search);
+  assert.ok(controls > actions);
+  assert.match(consoleHtml, /href="\/backend-topbar\.css"/);
+});
+
+test("GoodBase notifications remain explicitly application scoped", () => {
+  assert.match(consoleHtml, /data-goodos-notification-mode="application"/);
+  assert.match(consoleHtml, /data-goodos-notification-app-id="goodbase"/);
+  assert.doesNotMatch(consoleHtml, /data-goodos-notification-mode="master"/);
+  assert.doesNotMatch(consoleHtml, /data-goodos-notification-app-id="goodbackend"/);
 });
