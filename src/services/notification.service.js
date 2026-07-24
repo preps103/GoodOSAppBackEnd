@@ -93,6 +93,46 @@ async function createTransporter() {
   });
 }
 
+async function syncFleetEmailDelivery(email, status, providerReference = null, errorCode = null) {
+  if (!String(email?.id || "").startsWith("gfemail_")) return;
+  const notificationId = String(email.notification_id || "");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(notificationId)) return;
+
+  try {
+    await dbQuery(
+      `
+        UPDATE fleet_customer_notification_deliveries
+        SET status = $2,
+            attempted_at = NOW(),
+            delivered_at = CASE WHEN $2 = 'delivered' THEN NOW() ELSE delivered_at END,
+            provider_reference = COALESCE($3, provider_reference),
+            error_code = $4,
+            updated_at = NOW()
+        WHERE notification_id = $1::uuid
+          AND channel = 'email'
+      `,
+      [notificationId, status, providerReference, errorCode]
+    );
+
+    if (status !== "pending") {
+      await dbQuery(
+        `
+          UPDATE fleet_customer_notifications
+          SET status = CASE WHEN $2 = 'delivered' THEN 'delivered' ELSE 'partially_delivered' END
+          WHERE id = $1::uuid
+        `,
+        [notificationId, status]
+      );
+    }
+  } catch (error) {
+    console.error("Unable to synchronize GoodFleet email delivery status", {
+      notificationId,
+      status,
+      message: error.message,
+    });
+  }
+}
+
 async function createNotification(input = {}) {
   const ownerResult = await dbQuery("SELECT id, email, display_name FROM users ORDER BY created_at ASC LIMIT 1");
   const owner = ownerResult.rows[0] || {};
@@ -410,6 +450,7 @@ async function processEmailQueue(limit = 10) {
           ]
         );
 
+        await syncFleetEmailDelivery(email, "failed", `dryrun_${email.id}`, "SMTP_NOT_CONFIGURED");
         processed.push({ id: email.id, status: "simulated" });
         continue;
       }
@@ -437,9 +478,10 @@ async function processEmailQueue(limit = 10) {
         [email.id, info.messageId || null]
       );
 
+      await syncFleetEmailDelivery(email, "delivered", info.messageId || null);
       processed.push({ id: email.id, status: "sent", providerMessageId: info.messageId || null });
     } catch (error) {
-      await dbQuery(
+      const retryResult = await dbQuery(
         `
           UPDATE backend_email_queue
           SET status = CASE WHEN attempts + 1 >= max_attempts THEN 'failed' ELSE 'pending' END,
@@ -448,10 +490,17 @@ async function processEmailQueue(limit = 10) {
               error_message = $2,
               updated_at = NOW()
           WHERE id = $1
+          RETURNING status
         `,
         [email.id, error.message]
       );
 
+      await syncFleetEmailDelivery(
+        email,
+        retryResult.rows[0]?.status === "failed" ? "failed" : "pending",
+        null,
+        retryResult.rows[0]?.status === "failed" ? "EMAIL_DELIVERY_FAILED" : null
+      );
       processed.push({ id: email.id, status: "failed", error: error.message });
     }
   }
